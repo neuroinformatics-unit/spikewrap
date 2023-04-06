@@ -7,7 +7,12 @@ from .sort import run_sorting
 
 
 def run_full_pipeline(
-    base_path, sub_name, run_name, preprocessing_settings="test", sorter="kilosort2_5"
+    base_path,
+    sub_name,
+    run_name,
+    preprocessing_settings="test",
+    sorter="kilosort2_5",
+    use_existing=False,  # handle
 ):
     """
     Must be run in main() as uses multiprocessing
@@ -22,7 +27,7 @@ def run_full_pipeline(
 
     # Run sorting. This will save the final preprocessing step
     # recording to disk prior to sorting.
-    run_sorting(data, sorter)
+    run_sorting(data, sorter, use_existing)
 
     # will save spikeinterface 'waveforms' output (TODO: currently, this is large)
     # to the sorter output dir. Quality checks are run and .csv of checks

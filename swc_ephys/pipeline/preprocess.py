@@ -3,8 +3,9 @@ import json
 import numpy as np
 import spikeinterface.extractors as se
 import spikeinterface.preprocessing as spre
-import utils
-from data_class import Data
+
+from ..utils import utils
+from .data_class import Data
 
 pp_funcs = {
     "phase_shift": spre.phase_shift,

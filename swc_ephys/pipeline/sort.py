@@ -6,7 +6,7 @@ import spikeinterface.sorters as ss
 from ..utils import utils
 
 
-def run_sorting(data, sorter="kilosort2_5"):
+def run_sorting(data, sorter="kilosort2_5", use_existing=False):
     """
     TODO: accepts data object OR path to written binary
     """
@@ -15,8 +15,17 @@ def run_sorting(data, sorter="kilosort2_5"):
 
     if isinstance(data, str) or isinstance(data, Path):
         utils.message_user(f"\nLoading binary preprocessed data from {data}\n")
-
         data, recording = utils.load_data_and_recording(data)
+
+    elif (
+        use_existing and data.preprocessed_binary_data_path.is_dir()
+    ):  # TODO: need more checks here
+        utils.message_user(
+            f"\n"
+            f"use_existing=True. "
+            f"Loading binary preprocessed data from {data.preprocessed_output_path}\n"
+        )
+        data, recording = utils.load_data_and_recording(data.preprocessed_output_path)
     else:
         utils.message_user(
             f"\nSaving data class and binary preprocessed data to "
