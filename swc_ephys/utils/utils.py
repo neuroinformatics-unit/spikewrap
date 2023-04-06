@@ -1,6 +1,8 @@
-import numpy as np
-from pathlib import Path
 import pickle
+from pathlib import Path
+
+import numpy as np
+
 
 def get_keys_first_char(dict_, as_int=False):
     """
@@ -11,12 +13,16 @@ def get_keys_first_char(dict_, as_int=False):
     else:
         return [key[0] for key in dict_.keys()]
 
-def get_dict_value_from_step_num(dict_, step_num):
 
+def get_dict_value_from_step_num(dict_, step_num):
     if step_num == "last":
         pp_key_nums = get_keys_first_char(dict_, as_int=True)
-        step_num = str(int(np.max(pp_key_nums)))  # TODO: for now, complete overkill but this is critical
-        assert int(step_num) == len(dict_.keys()) - 1, "the last key has been taken incorrectly"
+        step_num = str(
+            int(np.max(pp_key_nums))
+        )  # TODO: for now, complete overkill but this is critical
+        assert (
+            int(step_num) == len(dict_.keys()) - 1
+        ), "the last key has been taken incorrectly"
 
     pp_key = [key for key in dict_.keys() if key[0] == step_num]
 
@@ -26,10 +32,11 @@ def get_dict_value_from_step_num(dict_, step_num):
 
     return dict_[full_key], full_key
 
+
 def message_user(message):
-    """
-    """
+    """ """
     print(message)
+
 
 def load_data_and_recording(preprocessed_output_path):
     """
@@ -40,6 +47,7 @@ def load_data_and_recording(preprocessed_output_path):
     recording = data.load_preprocessed_binary()
 
     return data, recording
+
 
 def get_sorter_path(sorter):
     """
