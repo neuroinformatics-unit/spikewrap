@@ -1,15 +1,11 @@
-from preprocess import preprocess
-from visualise import visualise
-import spikeinterface.sorters  as ss
-import utils
 import os
 from pathlib import Path
-import pickle
-import spikeinterface as si
 
-def run_sorting(data,
-                sorter="kilosort2_5"
-                ):
+import spikeinterface.sorters as ss
+import utils
+
+
+def run_sorting(data, sorter="kilosort2_5"):
     """
     TODO: accepts data object OR path to written binary
     """
@@ -21,7 +17,10 @@ def run_sorting(data,
 
         data, recording = utils.load_data_and_recording(data)
     else:
-        utils.message_user(f"\nSaving data class and binary preprocessed data to {data.preprocessed_binary_data_path}\n")
+        utils.message_user(
+            f"\nSaving data class and binary preprocessed data to "
+            f"{data.preprocessed_binary_data_path}\n"
+        )
 
         data.save_all_preprocessed_data()
         recording, __ = utils.get_dict_value_from_step_num(data, "last")
@@ -33,10 +32,12 @@ def run_sorting(data,
     os.chdir(data.base_path)
 
     utils.message_user(f"Starting {sorter} sorting...")
-    sorting_output = ss.run_sorter(sorter,
-                                   recording,
-                                   output_folder=data.sorter_base_output_path,
-                                   singularity_image=utils.get_sorter_path(sorter))
+    sorting_output = ss.run_sorter(
+        sorter,
+        recording,
+        output_folder=data.sorter_base_output_path,
+        singularity_image=utils.get_sorter_path(sorter),
+    )
 
     # TODO: dump some kind of config with data configs in the sorter output too
     utils.message_user(f"Saving sorter output to {data.sorter_output_path}")
