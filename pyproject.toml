@@ -1,5 +1,5 @@
 [project]
-name = "swc_epys"
+name = "swc_ephys"
 authors = [{name = "Joe Ziminski", email= "joseph.j.ziminski@gmail.com"}]
 description = "Manage extracellular electrophysiology analysis"
 readme = "README.md"
@@ -20,11 +20,11 @@ classifiers = [
 ]
 
 [project.urls]
-homepage = "https://github.com/JoeZiminski/swc_epys"
-bug_tracker = "https://github.com/JoeZiminski/swc_epys/issues"
-documentation = "https://github.com/JoeZiminski/swc_epys"
-source_code = "https://github.com/JoeZiminski/swc_epys"
-user_support = "https://github.com/JoeZiminski/swc_epys/issues"
+homepage = "https://github.com/JoeZiminski/swc_ephys"
+bug_tracker = "https://github.com/JoeZiminski/swc_ephys/issues"
+documentation = "https://github.com/JoeZiminski/swc_ephys"
+source_code = "https://github.com/JoeZiminski/swc_ephys"
+user_support = "https://github.com/JoeZiminski/swc_ephys/issues"
 
 [project.optional-dependencies]
 dev = [
@@ -37,6 +37,7 @@ dev = [
   "pre-commit",
   "ruff",
   "setuptools_scm",
+  "types-PyYAML"
 ]
 
 [build-system]
@@ -51,11 +52,11 @@ build-backend = "setuptools.build_meta"
 include-package-data = true
 
 [tool.setuptools.packages.find]
-include = ["swc_epys*"]
+include = ["swc_ephys*"]
 exclude = ["tests*"]
 
 [tool.pytest.ini_options]
-addopts = "--cov=swc_epys"
+addopts = "--cov=swc_ephys"
 
 [tool.black]
 target-version = ['py38', 'py39', 'py310']
@@ -75,7 +76,7 @@ ignore = [
 ]
 
 [tool.ruff]
-line-length = 79
+line-length = 88
 exclude = ["__init__.py","build",".eggs"]
 select = ["I", "E", "F"]
 fix = true

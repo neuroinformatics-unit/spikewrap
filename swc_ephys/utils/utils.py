@@ -1,8 +1,16 @@
-import numpy as np
-from pathlib import Path
 import pickle
+from pathlib import Path
+from typing import List, Tuple, Union
 
-def get_keys_first_char(dict_, as_int=False):
+import numpy as np
+from spikeinterface.core import BaseRecording
+
+from ..pipeline.data_class import Data
+
+
+def get_keys_first_char(
+    dict_: Data, as_int: bool = False
+) -> Union[List[str], List[int]]:
     """
     TODO: horrible?
     """
@@ -11,12 +19,19 @@ def get_keys_first_char(dict_, as_int=False):
     else:
         return [key[0] for key in dict_.keys()]
 
-def get_dict_value_from_step_num(dict_, step_num):
 
+def get_dict_value_from_step_num(
+    dict_: Data, step_num: str
+) -> Tuple[BaseRecording, str]:
+    """ """
     if step_num == "last":
         pp_key_nums = get_keys_first_char(dict_, as_int=True)
-        step_num = str(int(np.max(pp_key_nums)))  # TODO: for now, complete overkill but this is critical
-        assert int(step_num) == len(dict_.keys()) - 1, "the last key has been taken incorrectly"
+        step_num = str(
+            int(np.max(pp_key_nums))
+        )  # TODO: for now, complete overkill but this is critical
+        assert (
+            int(step_num) == len(dict_.keys()) - 1
+        ), "the last key has been taken incorrectly"
 
     pp_key = [key for key in dict_.keys() if key[0] == step_num]
 
@@ -26,12 +41,13 @@ def get_dict_value_from_step_num(dict_, step_num):
 
     return dict_[full_key], full_key
 
-def message_user(message):
-    """
-    """
+
+def message_user(message: str):
+    """ """
     print(message)
 
-def load_data_and_recording(preprocessed_output_path):
+
+def load_data_and_recording(preprocessed_output_path: Path):
     """
     TODO: think about type, enforce higher
     """
@@ -41,7 +57,8 @@ def load_data_and_recording(preprocessed_output_path):
 
     return data, recording
 
-def get_sorter_path(sorter):
+
+def get_sorter_path(sorter: str) -> Path:
     """
     TODO: these should be loaded on a module.
     This is NOT good!
