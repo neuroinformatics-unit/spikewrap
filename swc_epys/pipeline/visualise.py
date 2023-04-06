@@ -1,8 +1,9 @@
 import matplotlib.pyplot as plt
 import numpy as np
 import spikeinterface.widgets as sw
-import utils
 from spikeinterface.core import order_channels_by_depth
+
+from ..utils import utils
 
 
 def visualise(

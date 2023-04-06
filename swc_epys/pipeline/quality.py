@@ -1,11 +1,10 @@
 """
 """
-
-
 import spikeinterface as si
-import utils
 from spikeinterface import curation
 from spikeinterface.extractors import KiloSortSortingExtractor
+
+from ..utils import utils
 
 
 def quality_check(preprocessed_output_path, sorter="kilosort2_5"):

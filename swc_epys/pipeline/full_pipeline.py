@@ -1,9 +1,9 @@
 """
 """
-from configs.configs import get_configs
-from preprocess import preprocess
-from quality import quality_check
-from sort import run_sorting
+from ..configs.configs import get_configs
+from .preprocess import preprocess
+from .quality import quality_check
+from .sort import run_sorting
 
 
 def run_full_pipeline(

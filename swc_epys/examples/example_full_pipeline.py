@@ -63,7 +63,7 @@ f"TODO: check how this is handled in SI"
 """
 from pathlib import Path
 
-from full_pipeline import run_full_pipeline
+from .pipeline.full_pipeline import run_full_pipeline
 
 base_path = Path(r"/ceph/neuroinformatics/neuroinformatics/scratch/ece_ephys_learning")
 sub_name = "1110925"

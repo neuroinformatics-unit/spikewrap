@@ -2,7 +2,8 @@ import os
 from pathlib import Path
 
 import spikeinterface.sorters as ss
-import utils
+
+from ..utils import utils
 
 
 def run_sorting(data, sorter="kilosort2_5"):

@@ -5,7 +5,8 @@ from collections.abc import ItemsView, KeysView, ValuesView
 from pathlib import Path
 
 import spikeinterface as si
-import utils
+
+from ..utils import utils
 
 
 class Data(UserDict):
