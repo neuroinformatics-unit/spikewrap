@@ -1,5 +1,7 @@
 """
 """
+from pathlib import Path
+
 import spikeinterface as si
 from spikeinterface import curation
 from spikeinterface.extractors import KiloSortSortingExtractor
@@ -26,4 +28,4 @@ def quality_check(preprocessed_output_path, sorter="kilosort2_5"):
         waveforms = si.load_waveforms(data.waveforms_output_path)
 
     metrics = si.qualitymetrics.compute_quality_metrics(waveforms)
-    metrics.to_csv(data.quality_metrics_pathoutput_path / "quality_metrics.csv")
+    metrics.to_csv(data.quality_metrics_path)

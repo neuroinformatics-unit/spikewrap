@@ -1,10 +1,14 @@
 import pickle
 from pathlib import Path
-from typing import Dict, List, Union, Tuple
+from typing import Dict, List, Tuple, Union
+
 import numpy as np
 from spikeinterface.core import BaseRecording
 
-def get_keys_first_char(dict_: Dict, as_int: bool = False) -> Union[List[str], List[int]]:
+
+def get_keys_first_char(
+    dict_: Dict, as_int: bool = False
+) -> Union[List[str], List[int]]:
     """
     TODO: horrible?
     """
@@ -14,9 +18,10 @@ def get_keys_first_char(dict_: Dict, as_int: bool = False) -> Union[List[str], L
         return [key[0] for key in dict_.keys()]
 
 
-def get_dict_value_from_step_num(dict_: Dict, step_num: str) -> Tuple[BaseRecording, str]:
-    """
-    """
+def get_dict_value_from_step_num(
+    dict_: Dict, step_num: str
+) -> Tuple[BaseRecording, str]:
+    """ """
     if step_num == "last":
         pp_key_nums = get_keys_first_char(dict_, as_int=True)
         step_num = str(
