@@ -1,5 +1,7 @@
 """
 """
+from pathlib import Path
+
 import spikeinterface as si
 from spikeinterface import curation
 from spikeinterface.extractors import KiloSortSortingExtractor
