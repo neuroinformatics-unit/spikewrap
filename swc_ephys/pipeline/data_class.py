@@ -3,14 +3,18 @@ import pickle  # TODO: explore cPickle
 from collections import UserDict
 from collections.abc import ItemsView, KeysView, ValuesView
 from pathlib import Path
+from typing import Dict, Union
 
 import spikeinterface as si
+from spikeinterface.extractors import BaseExtractor
 
 from ..utils import utils
 
 
 class Data(UserDict):
-    def __init__(self, base_path, sub_name, run_name, pp_steps):
+    def __init__(
+        self, base_path: Union[Path, str], sub_name: str, run_name: str, pp_steps: Dict
+    ):
         super(Data, self).__init__()
 
         self.base_path = Path(base_path)
@@ -24,23 +28,23 @@ class Data(UserDict):
         self.sub_name = sub_name
         self.run_name = run_name
         self.pp_steps = pp_steps
-        self.data = {"0-raw": None}
-        self.opts = {"0-raw": None}
+        self.data: Dict = {"0-raw": None}
+        self.opts: Dict = {"0-raw": None}
 
         # TODO: this requires gate number to be known
         # which is passed at runtime. There is probably
         # better way to handle this.
-        self.run_level_path = None
+        self.run_level_path = Path()
 
         # These are dynamically set by the sorter
         # chosen at runtime.
-        self.preprocessed_output_path = None
-        self.sorter_output_path = None
-        self.waveform_output_path = None
-        self.preprocessed_data_class_path = None
-        self.preprocessed_binary_data_path = None
-        self.waveforms_output_path = None
-        self.quality_metrics_path = None
+        self.preprocessed_output_path = Path()
+        self.sorter_output_path = Path()
+        self.waveform_output_path = Path()
+        self.preprocessed_data_class_path = Path()
+        self.preprocessed_binary_data_path = Path()
+        self.waveforms_output_path = Path()
+        self.quality_metrics_path = Path()
 
     # Load and Save --------------------------------------------------------------------
 
@@ -55,7 +59,7 @@ class Data(UserDict):
         recording, __ = utils.get_dict_value_from_step_num(self, "last")
         recording.save(folder=self.preprocessed_binary_data_path)
 
-    def load_preprocessed_binary(self):
+    def load_preprocessed_binary(self) -> BaseExtractor:
         return si.load_extractor(self.preprocessed_binary_data_path)
 
     def save_data_class(self):

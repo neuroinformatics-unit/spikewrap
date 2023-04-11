@@ -1,6 +1,7 @@
 """
 """
 from pathlib import Path
+from typing import Union
 
 import spikeinterface as si
 from spikeinterface import curation
@@ -9,7 +10,9 @@ from spikeinterface.extractors import KiloSortSortingExtractor
 from ..utils import utils
 
 
-def quality_check(preprocessed_output_path, sorter="kilosort2_5"):
+def quality_check(
+    preprocessed_output_path: Union[Path, str], sorter: str = "kilosort2_5"
+):
     """ """
     data, recording = utils.load_data_and_recording(Path(preprocessed_output_path))
     data.set_sorter_output_paths(sorter)

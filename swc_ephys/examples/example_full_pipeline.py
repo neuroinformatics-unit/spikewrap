@@ -7,6 +7,7 @@
 # Need to handle gate,trigger explicitly checking SI due to concatenation requirements
 # probe number only requires iterating across user-passed probe numbers
 
+# good Q should BD detection be before or after pp?
 
 preprocess class
 # note all LAZY
