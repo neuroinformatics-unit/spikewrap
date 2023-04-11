@@ -1,12 +1,19 @@
 import os
 from pathlib import Path
+from typing import Dict, Optional
 
 import spikeinterface.sorters as ss
 
 from ..utils import utils
+from .data_class import Data
 
 
-def run_sorting(data, sorter="kilosort2_5", sorter_options=None, use_existing=False):
+def run_sorting(
+    data: Data,
+    sorter: str = "kilosort2_5",
+    sorter_options: Optional[Dict] = None,
+    use_existing: bool = False,
+):
     """
     TODO: accepts data object OR path to written binary
     """
@@ -49,7 +56,7 @@ def run_sorting(data, sorter="kilosort2_5", sorter_options=None, use_existing=Fa
         sorter,
         recording,
         output_folder=data.sorter_base_output_path,
-        singularity_image=utils.get_sorter_path(sorter),
+        singularity_image=str(utils.get_sorter_path(sorter)),
         **sorter_options[sorter],
     )
 

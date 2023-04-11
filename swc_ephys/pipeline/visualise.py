@@ -1,19 +1,22 @@
+from typing import List, Optional, Tuple, Union
+
 import matplotlib.pyplot as plt
 import numpy as np
 import spikeinterface.widgets as sw
 from spikeinterface.core import order_channels_by_depth
 
 from ..utils import utils
+from .data_class import Data
 
 
 def visualise(
-    data,
-    steps,
-    mode="auto",
-    as_subplot=False,
-    channels_to_show=None,
-    time_range=None,
-    show_channel_ids=None,
+    data: Data,
+    steps: Union[List, str],
+    mode: str = "auto",
+    as_subplot: bool = False,
+    channels_to_show: Union[List, Tuple, np.ndarray, None] = None,
+    time_range: Optional[Tuple] = None,
+    show_channel_ids: bool = False,
 ):
     """
     channels to show must be indexes

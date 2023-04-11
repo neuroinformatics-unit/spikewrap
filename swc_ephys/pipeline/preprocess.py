@@ -77,7 +77,7 @@ def perform_preprocessing_step(
     data.opts[new_name] = pp_options
 
 
-def check_and_sort_pp_steps(pp_steps):
+def check_and_sort_pp_steps(pp_steps: Dict) -> Tuple[Dict, List[str]]:
     """
     TODO: TEST THOROUGHLY!
     """

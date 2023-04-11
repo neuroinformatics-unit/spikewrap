@@ -3,7 +3,7 @@ import pickle  # TODO: explore cPickle
 from collections import UserDict
 from collections.abc import ItemsView, KeysView, ValuesView
 from pathlib import Path
-from typing import Dict, Optional, Union
+from typing import Dict, Union
 
 import spikeinterface as si
 from spikeinterface.extractors import BaseExtractor
@@ -34,17 +34,17 @@ class Data(UserDict):
         # TODO: this requires gate number to be known
         # which is passed at runtime. There is probably
         # better way to handle this.
-        self.run_level_path: Optional[Path] = None
+        self.run_level_path = Path()
 
         # These are dynamically set by the sorter
         # chosen at runtime.
-        self.preprocessed_output_path: Optional[Path] = None
-        self.sorter_output_path: Optional[Path] = None
-        self.waveform_output_path: Optional[Path] = None
-        self.preprocessed_data_class_path: Optional[Path] = None
-        self.preprocessed_binary_data_path: Optional[Path] = None
-        self.waveforms_output_path: Optional[Path] = None
-        self.quality_metrics_path: Optional[Path] = None
+        self.preprocessed_output_path = Path()
+        self.sorter_output_path = Path()
+        self.waveform_output_path = Path()
+        self.preprocessed_data_class_path = Path()
+        self.preprocessed_binary_data_path = Path()
+        self.waveforms_output_path = Path()
+        self.quality_metrics_path = Path()
 
     # Load and Save --------------------------------------------------------------------
 

@@ -1,10 +1,11 @@
 import os
 from pathlib import Path
+from typing import Dict, Tuple
 
 import yaml
 
 
-def get_configs(name):
+def get_configs(name: str) -> Tuple[Dict, Dict]:
     """
     TODO: must be a better way to handle path
     """
