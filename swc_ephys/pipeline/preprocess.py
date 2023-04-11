@@ -1,4 +1,6 @@
 import json
+from pathlib import Path
+from typing import Dict, List, Optional, Tuple, Union
 
 import numpy as np
 import spikeinterface.extractors as se
@@ -14,13 +16,15 @@ pp_funcs = {
 }
 
 
-def preprocess(base_path, sub_name, run_name, pp_steps=None):
+def preprocess(
+    base_path: Union[Path, str], sub_name: str, run_name: str, pp_steps: Optional[Dict]
+) -> Data:
     """ """
     if not pp_steps:
         pp_steps = {
-            "1": ["phase_shift", {}],  # TODO: move
-            "2": ["bandpass_filter", {"freq_min": 300, "freq_max": 6000}],
-            "3": ["common_reference", {"operator": "median", "reference": "global"}],
+            "1": ("phase_shift", {}),  # TODO: move
+            "2": ("bandpass_filter", {"freq_min": 300, "freq_max": 6000}),
+            "3": ("common_reference", {"operator": "median", "reference": "global"}),
         }
 
     checked_pp_steps, pp_step_names = check_and_sort_pp_steps(pp_steps)
@@ -38,14 +42,13 @@ def preprocess(base_path, sub_name, run_name, pp_steps=None):
         perform_preprocessing_step(step_num, pp_info, data, pp_step_names)
 
     handle_bad_channels(data)
+
     return data
 
 
-def handle_bad_channels(data):
+def handle_bad_channels(data: Data):
     """ """
-    bad_channels = spre.detect_bad_channels(
-        data["0-raw"]
-    )  # good Q should BD detection be before or after pp?
+    bad_channels = spre.detect_bad_channels(data["0-raw"])
 
     utils.message_user(
         f"The following channels were detected as dead / noise: {bad_channels[0]}\n"
@@ -56,7 +59,9 @@ def handle_bad_channels(data):
     )
 
 
-def perform_preprocessing_step(step_num, pp_info, data, pp_step_names):
+def perform_preprocessing_step(
+    step_num: str, pp_info: Tuple[str, Dict], data: Data, pp_step_names: List
+):
     """ """
     pp_name, pp_options = pp_info
 

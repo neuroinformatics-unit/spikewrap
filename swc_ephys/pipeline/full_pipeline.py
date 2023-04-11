@@ -1,5 +1,8 @@
 """
 """
+from pathlib import Path
+from typing import Union
+
 from ..configs.configs import get_configs
 from .preprocess import preprocess
 from .quality import quality_check
@@ -7,12 +10,12 @@ from .sort import run_sorting
 
 
 def run_full_pipeline(
-    base_path,
-    sub_name,
-    run_name,
-    preprocessing_settings="test",
-    sorter="kilosort2_5",
-    use_existing=False,  # handle
+    base_path: Union[Path, str],
+    sub_name: str,
+    run_name: str,
+    preprocessing_settings: str = "test",
+    sorter: str = "kilosort2_5",
+    use_existing: bool = False,  # TODO: handle better
 ):
     """
     Must be run in main() as uses multiprocessing

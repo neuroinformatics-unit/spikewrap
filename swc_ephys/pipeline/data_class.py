@@ -3,7 +3,7 @@ import pickle  # TODO: explore cPickle
 from collections import UserDict
 from collections.abc import ItemsView, KeysView, ValuesView
 from pathlib import Path
-from typing import Dict, Optional
+from typing import Dict, Optional, Union
 
 import spikeinterface as si
 from spikeinterface.extractors import BaseExtractor
@@ -12,7 +12,9 @@ from ..utils import utils
 
 
 class Data(UserDict):
-    def __init__(self, base_path: Path, sub_name: str, run_name: str, pp_steps: Dict):
+    def __init__(
+        self, base_path: Union[Path, str], sub_name: str, run_name: str, pp_steps: Dict
+    ):
         super(Data, self).__init__()
 
         self.base_path = Path(base_path)
