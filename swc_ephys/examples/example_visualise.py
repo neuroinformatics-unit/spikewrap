@@ -2,8 +2,8 @@
 # this is actually very inefficient because
 # for each chain it needs to pp all the way up (e.g. (0), (0-1), (0-1-2), (0-1-2-3))
 """
-from preprocess import preprocess
-from visualise import visualise
+from swc_ephys.pipeline.preprocess import preprocess
+from swc_ephys.pipeline.visualise import visualise
 
 base_path = r"/ceph/neuroinformatics/neuroinformatics/scratch/ece_ephys_learning"
 sub_name = "1110925"

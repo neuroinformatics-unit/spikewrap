@@ -17,7 +17,7 @@ def run_full_pipeline(
     """
     Must be run in main() as uses multiprocessing
     """
-    pp_steps = get_configs(preprocessing_settings)
+    pp_steps, sorter_options = get_configs(preprocessing_settings)
 
     # Get the recording object. This is lazy - no preprocessing
     # done yet
@@ -27,7 +27,7 @@ def run_full_pipeline(
 
     # Run sorting. This will save the final preprocessing step
     # recording to disk prior to sorting.
-    run_sorting(data, sorter, use_existing)
+    run_sorting(data, sorter, sorter_options, use_existing)
 
     # will save spikeinterface 'waveforms' output (TODO: currently, this is large)
     # to the sorter output dir. Quality checks are run and .csv of checks

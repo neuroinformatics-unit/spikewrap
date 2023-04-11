@@ -60,10 +60,12 @@ f"by setting XXX as a preprocessing option\n"
 f"TODO: check how this is handled in SI"
 )
 
+example how to handle output when chaing options
+
 """
 from pathlib import Path
 
-from .pipeline.full_pipeline import run_full_pipeline
+from swc_ephys.pipeline.full_pipeline import run_full_pipeline
 
 base_path = Path(r"/ceph/neuroinformatics/neuroinformatics/scratch/ece_ephys_learning")
 sub_name = "1110925"
@@ -73,4 +75,6 @@ pp_config = "test"  # or custom config file path
 sorter = "kilosort2_5"
 
 if __name__ == "__main__":
-    run_full_pipeline(base_path, sub_name, run_name, pp_config, sorter)
+    run_full_pipeline(
+        base_path, sub_name, run_name, pp_config, sorter, use_existing=True
+    )
