@@ -61,8 +61,11 @@ f"by setting XXX as a preprocessing option\n"
 f"TODO: check how this is handled in SI"
 )
 
+what is remove exess spikes doing : sorting_without_excess_spikes =
+    curation.remove_excess_spikes(sorting, recording)
 example how to handle output when chaing options
 
+for testing, use annotations
 """
 from pathlib import Path
 
@@ -72,10 +75,15 @@ base_path = Path(r"/ceph/neuroinformatics/neuroinformatics/scratch/ece_ephys_lea
 sub_name = "1110925"
 run_name = "1110925_test_shank1"
 
-pp_config = "test"  # or custom config file path
+configs_name = "test"  # or custom config file path
 sorter = "kilosort2_5"
 
 if __name__ == "__main__":
     run_full_pipeline(
-        base_path, sub_name, run_name, pp_config, sorter, use_existing=True
+        base_path,
+        sub_name,
+        run_name,
+        configs_name,
+        sorter,
+        use_existing_preprocessed_file=True,
     )
