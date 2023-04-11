@@ -6,7 +6,7 @@ from pathlib import Path
 from typing import Dict, Union
 
 import spikeinterface as si
-from spikeinterface.extractors import BaseExtractor
+from spikeinterface.core.base import BaseExtractor
 
 from ..utils import utils
 
@@ -15,6 +15,37 @@ class Data(UserDict):
     def __init__(
         self, base_path: Union[Path, str], sub_name: str, run_name: str, pp_steps: Dict
     ):
+        """
+        Dictionary to store spikeinterface preprocessing objects. These are
+        lazy and preprocessing only run when the recording.get_traces() is
+        called, or the data is saved to binary.
+
+        Details on the preprocessing steps are held in the dictionary keys e.g.
+        e.g. 0-raw, 1-raw-bandpass_filter, 2-raw_bandpass_filter-common_average
+
+        recording objects are held in the value.
+
+        The class also contains information on the path. The paths to the
+        raw_data file are stored based on the variables set when the class
+        was initialised. The derivatives paths are generated on the fly
+        (e.g. set_sorter_output_paths) so that different sorters can be used
+        dynamically.
+
+        The class also contains methods for writing the class itself and
+        spikeinterface recordings to disk, as required for sorting.
+
+        Parameters
+        ----------
+
+        base_path : path where the rawdata folder containing subjects
+
+        sub_name : subject to preprocess. The subject top level dir should reside in
+                   base_path/rawdata/
+
+        run_name : the spikeglx run name (i.e. not including the gate index)
+
+        pp_steps : preprocessing step dictionary, see swc_ephys/configs
+        """
         super(Data, self).__init__()
 
         self.base_path = Path(base_path)
@@ -39,7 +70,8 @@ class Data(UserDict):
         # These are dynamically set by the sorter
         # chosen at runtime.
         self.preprocessed_output_path = Path()
-        self.sorter_output_path = Path()
+        self.sorter_base_output_path = Path()
+        self.sorter_run_output_path = Path()
         self.waveform_output_path = Path()
         self.preprocessed_data_class_path = Path()
         self.preprocessed_binary_data_path = Path()
@@ -100,9 +132,9 @@ class Data(UserDict):
             / self.run_level_path.relative_to(self.rawdata_path)
             / f"{sorter}-sorting"
         )
-        self.sorter_run_output_path = (
-            self.sorter_base_output_path / "sorter_output"
-        )  # canonical name, is where SI automatically saves sorter output,
+        # canonical name, is where spikeinterface automatically saves sorter output
+        self.sorter_run_output_path = self.sorter_base_output_path / "sorter_output"
+
         self.waveforms_output_path = self.sorter_base_output_path / "waveforms"
         self.quality_metrics_path = self.sorter_base_output_path / "quality_metrics.csv"
 
