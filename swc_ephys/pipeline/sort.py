@@ -13,7 +13,7 @@ def run_sorting(
     data: Union[Data, Path, str],
     sorter: str = "kilosort2_5",
     sorter_options: Optional[Dict] = None,
-    use_existing: bool = False,
+    use_existing_preprocessed_file: bool = False,
 ):
     """
     Run a sorter on pre-processed data. Takes a Data (pipeline.data_class)
@@ -34,10 +34,11 @@ def run_sorting(
 
     sorter_options : kwargs to pass to spikeinterface sorter class
 
-    use_existing : by default, if the 'preprocessed' folder for the subject on
-                   Data already exists, an error is raised. If use_existing is True,
-                   instead the 'preprocessed' folder will be loaded and used
-                   passed to the sorter.
+    use_existing_preprocessed_file : by default, if the 'preprocessed' folder for the
+                                     subject on Data already exists, an error is raised.
+                                     If use_existing_preprocessed_file is True, instead
+                                     the 'preprocessed' folder will be loaded and used
+                                     passed to the sorter.
 
     """
     supported_sorters = ["kilosort2", "kilosort2_5", "kilosort3"]
@@ -46,7 +47,9 @@ def run_sorting(
     if sorter_options is None:
         sorter_options = {}
 
-    loaded_data, recording = get_data_and_recording(data, use_existing)
+    loaded_data, recording = get_data_and_recording(
+        data, use_existing_preprocessed_file
+    )
 
     loaded_data.set_sorter_output_paths(sorter)
 
@@ -69,7 +72,7 @@ def run_sorting(
 
 
 def get_data_and_recording(
-    data: Union[Data, Path, str], use_existing: bool
+    data: Union[Data, Path, str], use_existing_preprocessed_file: bool
 ) -> Tuple[Data, BaseRecording]:
     """
 
@@ -84,10 +87,12 @@ def get_data_and_recording(
           chain will be saved to binary form as required for sorting and the recording
           object returned.
 
-    use_existing : By default, an error will be thrown if the preprocessed directory
-                   already exists for the subject stored in the Data class.
-                   If use_existing is True, the preprocessed directory will be loaded
-                   and used for sorting and no error thrown.
+    use_existing_preprocessed_file : By default, an error will be thrown if the
+                                     'preprocessed' directory already exists for the
+                                     subject stored in the Data class.
+                                     If use_existing_preprocessed_file is True, the
+                                     'preprocessed' directory will be loaded
+                                     and used for sorting and no error thrown.
 
     Returns
     -------
@@ -101,10 +106,10 @@ def get_data_and_recording(
         utils.message_user(f"\nLoading binary preprocessed data from {data}\n")
         data, recording = utils.load_data_and_recording(Path(data))
 
-    elif use_existing and data.preprocessed_binary_data_path.is_dir():
+    elif use_existing_preprocessed_file and data.preprocessed_binary_data_path.is_dir():
         utils.message_user(
             f"\n"
-            f"use_existing=True. "
+            f"use_existing_preprocessed_file=True. "
             f"Loading binary preprocessed data from {data.preprocessed_output_path}\n"
         )
         data, recording = utils.load_data_and_recording(data.preprocessed_output_path)

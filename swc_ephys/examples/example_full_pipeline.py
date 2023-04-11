@@ -80,5 +80,10 @@ sorter = "kilosort2_5"
 
 if __name__ == "__main__":
     run_full_pipeline(
-        base_path, sub_name, run_name, pp_config, sorter, use_existing=True
+        base_path,
+        sub_name,
+        run_name,
+        pp_config,
+        sorter,
+        use_existing_preprocessed_file=True,
     )

@@ -12,45 +12,62 @@ def get_keys_first_char(
     dict_: Data, as_int: bool = False
 ) -> Union[List[str], List[int]]:
     """
-    TODO: horrible?
+    Get the first character of all keys in a dictionary. Expected
+    that the first characters are integers (as str type).
+
+    as_int : if True, the first character of the keys are cast
+             to integer type.
     """
-    if as_int:
-        return [int(key[0]) for key in dict_.keys()]
-    else:
-        return [key[0] for key in dict_.keys()]
+    return [int(key[0]) if as_int else key[0] for key in dict_.keys()]
 
 
 def get_dict_value_from_step_num(
     dict_: Data, step_num: str
 ) -> Tuple[BaseRecording, str]:
-    """ """
+    """
+    pipeline.data_class.Data contain keys indicating the
+    preprocessing steps, starting with the preprocessing step number.
+    e.g. 0-raw, 1-raw-bandpass_filter, 2-raw_bandpass_filter-common_average
+
+    Return the value of the dict (spikeinterface recording object)
+    from the dict using only the step number
+    """
     if step_num == "last":
         pp_key_nums = get_keys_first_char(dict_, as_int=True)
-        step_num = str(
-            int(np.max(pp_key_nums))
-        )  # TODO: for now, complete overkill but this is critical
+
+        # TODO: for now, complete overkill but this is critical
+        step_num = str(int(np.max(pp_key_nums)))
         assert (
             int(step_num) == len(dict_.keys()) - 1
         ), "the last key has been taken incorrectly"
 
-    pp_key = [key for key in dict_.keys() if key[0] == step_num]
+    select_step_pp_key = [key for key in dict_.keys() if key[0] == step_num]
 
-    assert len(pp_key) == 1, "pp_key must always have unique first char "
+    assert len(select_step_pp_key) == 1, "pp_key must always have unique first char"
 
-    full_key = pp_key[0]
+    pp_key: str = select_step_pp_key[0]
 
-    return dict_[full_key], full_key
+    return dict_[pp_key], pp_key
 
 
 def message_user(message: str):
-    """ """
+    """
+    Method to interact with user.
+    """
     print(message)
 
 
 def load_data_and_recording(
     preprocessed_output_path: Path,
 ) -> Tuple[Data, BaseRecording]:
-    """ """
+    """
+    During sorting, preprocessed data is saved to
+    derivatives/<sub level dirs>/preprocessed. The spikeinterface
+    recording (si_recording) and Data (data_class.pkl) are saved.
+
+    This returns the Data and recording object loaded from
+    the passed preprocess path.
+    """
     with open(Path(preprocessed_output_path) / "data_class.pkl", "rb") as file:
         data = pickle.load(file)
     recording = data.load_preprocessed_binary()
@@ -60,8 +77,12 @@ def load_data_and_recording(
 
 def get_sorter_path(sorter: str) -> Path:
     """
-    TODO: these should be loaded on a module.
-    This is NOT good!
+    Return the path to the sorter image on the HCP.
+    Currently, this is just in NIU scratch.
+
+    TODO
+    ----
+    these should be loaded on a module.
     """
     base_path = Path("/ceph/neuroinformatics/neuroinformatics/scratch/sorter_images")
     return base_path / sorter / f"{sorter}-compiled-base.sif"
