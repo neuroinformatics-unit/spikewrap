@@ -1,10 +1,10 @@
 import pickle
 from pathlib import Path
-
+from typing import Dict, List, Union, Tuple
 import numpy as np
+from spikeinterface.core import BaseRecording
 
-
-def get_keys_first_char(dict_, as_int=False):
+def get_keys_first_char(dict_: Dict, as_int: bool = False) -> Union[List[str], List[int]]:
     """
     TODO: horrible?
     """
@@ -14,7 +14,9 @@ def get_keys_first_char(dict_, as_int=False):
         return [key[0] for key in dict_.keys()]
 
 
-def get_dict_value_from_step_num(dict_, step_num):
+def get_dict_value_from_step_num(dict_: Dict, step_num: str) -> Tuple[BaseRecording, str]:
+    """
+    """
     if step_num == "last":
         pp_key_nums = get_keys_first_char(dict_, as_int=True)
         step_num = str(
@@ -33,12 +35,12 @@ def get_dict_value_from_step_num(dict_, step_num):
     return dict_[full_key], full_key
 
 
-def message_user(message):
+def message_user(message: str):
     """ """
     print(message)
 
 
-def load_data_and_recording(preprocessed_output_path):
+def load_data_and_recording(preprocessed_output_path: Path):
     """
     TODO: think about type, enforce higher
     """
@@ -49,7 +51,7 @@ def load_data_and_recording(preprocessed_output_path):
     return data, recording
 
 
-def get_sorter_path(sorter):
+def get_sorter_path(sorter: str) -> Path:
     """
     TODO: these should be loaded on a module.
     This is NOT good!
