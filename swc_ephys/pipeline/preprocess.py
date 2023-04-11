@@ -6,28 +6,46 @@ import numpy as np
 import spikeinterface.extractors as se
 import spikeinterface.preprocessing as spre
 
+from ..configs import configs
 from ..utils import utils
 from .data_class import Data
-
-pp_funcs = {
-    "phase_shift": spre.phase_shift,
-    "bandpass_filter": spre.bandpass_filter,
-    "common_reference": spre.common_reference,
-}
 
 
 def preprocess(
     base_path: Union[Path, str], sub_name: str, run_name: str, pp_steps: Optional[Dict]
 ) -> Data:
-    """ """
-    if not pp_steps:
-        pp_steps = {
-            "1": ("phase_shift", {}),  # TODO: move
-            "2": ("bandpass_filter", {"freq_min": 300, "freq_max": 6000}),
-            "3": ("common_reference", {"operator": "median", "reference": "global"}),
-        }
+    """
+    Returns a dictionary of spikeinterface recording objects setup in
+    the order and with the options specified in pp_steps. Spikeinterface
+    preprocessing is lazy - no preprocessing is done until the data is written
+    to file or the get_traces() method on the recording object is called.
 
-    checked_pp_steps, pp_step_names = check_and_sort_pp_steps(pp_steps)
+    Parameters
+    ----------
+
+    base_path: path containing the "rawdata" folder, that contains
+               subject-level folders.
+
+    sub_name: subject name (i.e. name of the folder in rawdata) to run
+
+    run_name: spikeglx run name (not including the gate index). Currently only
+              single gate / trigger recordings are supported (e.g. g0 and t0 only).
+
+    pp_steps: pp_steps dictionary, see configs/configs.py for details.
+
+    Returns
+    -------
+
+    data : swc_ephys Data UserDict containing preprocessing spikeinterface
+           recording objects. see pipeline.data_class
+
+    """
+    if not pp_steps:
+        pp_steps, __ = configs.get_configs("test")
+
+    pp_funcs = get_pp_funcs()
+
+    checked_pp_steps, pp_step_names = check_and_sort_pp_steps(pp_steps, pp_funcs)
 
     data = Data(base_path, sub_name, run_name, pp_steps)
 
@@ -39,7 +57,7 @@ def preprocess(
     )
 
     for step_num, pp_info in checked_pp_steps.items():
-        perform_preprocessing_step(step_num, pp_info, data, pp_step_names)
+        perform_preprocessing_step(step_num, pp_info, data, pp_step_names, pp_funcs)
 
     handle_bad_channels(data)
 
@@ -47,43 +65,55 @@ def preprocess(
 
 
 def handle_bad_channels(data: Data):
-    """ """
+    """
+    Placeholder function to begin handling bad channel detection. Even if not
+    requested, it will always be useful to highlight the bad channels.
+
+    However, it is not clear whether to print these / log these / provide simple
+    API argument to remove bad channels.
+    """
     bad_channels = spre.detect_bad_channels(data["0-raw"])
 
     utils.message_user(
         f"The following channels were detected as dead / noise: {bad_channels[0]}\n"
         f"TODO: DO SOMETHING BETTER WITH THIS INFORMATION. SAVE IT SOMEHWERE\n"
         f"You may like to automatically remove bad channels "
-        f"by setting XXX as a preprocessing option\n"
+        f"by setting [TO IMPLEMENT]] as a preprocessing option\n"
         f"TODO: check how this is handled in SI"
     )
 
 
-def perform_preprocessing_step(
-    step_num: str, pp_info: Tuple[str, Dict], data: Data, pp_step_names: List
-):
-    """ """
-    pp_name, pp_options = pp_info
-
-    last_pp_step_output, __ = utils.get_dict_value_from_step_num(
-        data, step_num=str(int(step_num) - 1)
-    )  # TODO: check annotation at this point
-
-    new_name = f"{step_num}-" + "-".join(["raw"] + pp_step_names[: int(step_num)])
-
-    assert pp_funcs[pp_name].__name__ == pp_name, "something is wrong in func dict"
-
-    data[new_name] = pp_funcs[pp_name](last_pp_step_output, **pp_options)
-    data.opts[new_name] = pp_options
-
-
-def check_and_sort_pp_steps(pp_steps: Dict) -> Tuple[Dict, List[str]]:
+def check_and_sort_pp_steps(pp_steps: Dict, pp_funcs: Dict) -> Tuple[Dict, List[str]]:
     """
-    TODO: TEST THOROUGHLY!
+    Sort the preprocessing steps dictionary by order to be run (based on the
+    keys) and check the dictionary is valid.
+
+    Parameters
+    ----------
+
+    pp_steps : a dictionary with keys as numbers indicating the order that
+               preprocessing steps are run (starting at "1"). The values are a
+               (preprocessing name, preprocessing kwargs) tuple containing the
+               spikeinterface preprocessing function name, and kwargs to pass to it.
+
+    Returns
+    -------
+
+    sorted_pp_steps : a sorted and checked preprocessing steps dictionary.
+
+    pp_step_names : list of preprocessing step names (e.g. "bandpass_filter"] in order
+                    that they are to be run.
+
+    Notes
+    -------
+
+    This will soon be deprecated and replaced by validation
+    of the config file itself on load.
     """
     sorted_pp_steps = {k: pp_steps[k] for k in sorted(pp_steps.keys())}
+    pp_step_names = [item[0] for item in sorted_pp_steps.values()]
 
-    # check keys
+    # Check keys are numbers starting at 1 increasing by 1
     assert all(
         key.isdigit() for key in sorted_pp_steps.keys()
     ), "pp_steps keys must be integers"
@@ -96,8 +126,7 @@ def check_and_sort_pp_steps(pp_steps: Dict) -> Tuple[Dict, List[str]]:
     assert np.unique(diffs).size == 1, "all dict keys must increase in steps of 1"
     assert diffs[0] == 1, "all dict keys must increase in steps of 1"
 
-    # key names
-    pp_step_names = [item[0] for item in sorted_pp_steps.values()]
+    # Check the preprocessing function names are valid
     canonical_step_names = list(pp_funcs.keys())
 
     for user_passed_name in pp_step_names:
@@ -105,11 +134,70 @@ def check_and_sort_pp_steps(pp_steps: Dict) -> Tuple[Dict, List[str]]:
             user_passed_name in canonical_step_names
         ), f"{user_passed_name} not in allowed names: ({canonical_step_names}"
 
-    # check options... or better (?), validate a config file.
-
+    # Print the preprocessing dict used
     utils.message_user(
         f"\nThe preprocessing options dictionary is "
         f"{json.dumps(sorted_pp_steps, indent=4, sort_keys=True)}"
     )
 
     return sorted_pp_steps, pp_step_names
+
+
+def perform_preprocessing_step(
+    step_num: str,
+    pp_info: Tuple[str, Dict],
+    data: Data,
+    pp_step_names: List,
+    pp_funcs: Dict,
+):
+    """
+    Given the preprocessing step and data UserDict containing
+    spikeinterface BaseRecordings, apply a preprocessing step to the
+    last preprocessed recording and save the recording object to Data.
+    For example, if step_num = "3", get the recording of the second
+    preprocessing step from data and apply the 3rd preprocessing step
+    as specified in pp_info.
+
+    Parameters
+    ----------
+    step_num : preprocessing step to run (e.g. "1", corresponds to the
+              key in pp_dict).
+
+    pp_info : (preprocessing name, preprocessing kwargs) tuple (they value from
+              the pp_dict).
+
+    data : swc_ephys Data class (a UserDict in which key-values are
+           the preprocessing chain name : spikeinterface recording objects).
+
+    pp_step_names : ordered list of preprocessing step names that are being
+                    applied across the entire preprocessing chain.
+
+    """
+    pp_name, pp_options = pp_info
+
+    last_pp_step_output, __ = utils.get_dict_value_from_step_num(
+        data, step_num=str(int(step_num) - 1)
+    )
+
+    new_name = f"{step_num}-" + "-".join(["raw"] + pp_step_names[: int(step_num)])
+
+    assert pp_funcs[pp_name].__name__ == pp_name, "something is wrong in func dict"
+
+    data[new_name] = pp_funcs[pp_name](last_pp_step_output, **pp_options)
+    data.opts[new_name] = pp_options
+
+
+def get_pp_funcs() -> Dict:
+    """
+    Get the spikeinterface preprocessing function
+    from its name. TODO: it should be possible to
+    generate this on the fly from SI __init__ rather
+    than hard code like this
+    """
+    pp_funcs = {
+        "phase_shift": spre.phase_shift,
+        "bandpass_filter": spre.bandpass_filter,
+        "common_reference": spre.common_reference,
+    }
+
+    return pp_funcs

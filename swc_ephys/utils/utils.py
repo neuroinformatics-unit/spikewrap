@@ -47,10 +47,10 @@ def message_user(message: str):
     print(message)
 
 
-def load_data_and_recording(preprocessed_output_path: Path):
-    """
-    TODO: think about type, enforce higher
-    """
+def load_data_and_recording(
+    preprocessed_output_path: Path,
+) -> Tuple[Data, BaseRecording]:
+    """ """
     with open(Path(preprocessed_output_path) / "data_class.pkl", "rb") as file:
         data = pickle.load(file)
     recording = data.load_preprocessed_binary()

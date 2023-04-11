@@ -61,8 +61,11 @@ f"by setting XXX as a preprocessing option\n"
 f"TODO: check how this is handled in SI"
 )
 
+what is remove exess spikes doing : sorting_without_excess_spikes =
+    curation.remove_excess_spikes(sorting, recording)
 example how to handle output when chaing options
 
+for testing, use annotations
 """
 from pathlib import Path
 
