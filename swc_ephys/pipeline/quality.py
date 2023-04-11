@@ -9,7 +9,7 @@ from ..utils import utils
 
 def quality_check(preprocessed_output_path, sorter="kilosort2_5"):
     """ """
-    data, recording = utils.load_data_and_recording(preprocessed_output_path)
+    data, recording = utils.load_data_and_recording(Path(preprocessed_output_path))
     data.set_sorter_output_paths(sorter)
 
     sorting = KiloSortSortingExtractor(

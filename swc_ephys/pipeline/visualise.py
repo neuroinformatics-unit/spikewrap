@@ -40,7 +40,7 @@ def visualise(
         fig, ax = plt.subplots(num_rows, num_cols)
 
     for idx, step in enumerate(steps):
-        rec, full_key = utils.get_dict_value_from_step_num(data, str(step))
+        recording, full_key = utils.get_dict_value_from_step_num(data, str(step))
 
         if as_subplot:
             idx = np.unravel_index(idx, shape=(num_rows, num_cols))
@@ -51,16 +51,16 @@ def visualise(
         if channels_to_show is None:
             channel_ids_to_show = None
         else:
-            channel_ids = rec.get_channel_ids()
+            channel_ids = recording.get_channel_ids()
 
             order_f, order_r = order_channels_by_depth(
-                recording=rec, dimensions=("x", "y")
+                recording=recording, dimensions=("x", "y")
             )
 
             channel_ids_to_show = channel_ids[order_f][channels_to_show]
 
         sw.plot_timeseries(
-            rec,  # this takes a dict but just shows overlay
+            recording,  # this takes a dict but just shows overlay
             channel_ids=channel_ids_to_show,
             order_channel_by_depth=True,
             time_range=time_range,

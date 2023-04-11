@@ -15,7 +15,7 @@ def run_sorting(data, sorter="kilosort2_5", use_existing=False):
 
     if isinstance(data, str) or isinstance(data, Path):
         utils.message_user(f"\nLoading binary preprocessed data from {data}\n")
-        data, recording = utils.load_data_and_recording(data)
+        data, recording = utils.load_data_and_recording(Path(data))
 
     elif (
         use_existing and data.preprocessed_binary_data_path.is_dir()
