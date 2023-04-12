@@ -1,7 +1,3 @@
-"""
-# this is actually very inefficient because
-# for each chain it needs to pp all the way up (e.g. (0), (0-1), (0-1-2), (0-1-2-3))
-"""
 from pathlib import Path
 
 from swc_ephys.pipeline.preprocess import preprocess
@@ -17,4 +13,4 @@ if __name__ == "__main__":
     # sorting uses multiprocessing so must be in __main__
     run_sorting(
         data, sorter="kilosort2_5", sorter_options={"kilosort2_5": {"car": False}}
-    )  # TODO: this is stupid
+    )

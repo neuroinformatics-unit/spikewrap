@@ -19,12 +19,18 @@ classifiers = [
     "License :: OSI Approved :: BSD License",
 ]
 
+dependencies = [
+    "spikeinterface[full] @git+https://github.com/SpikeInterface/spikeinterface",
+    "spython",  # I think missing from SI?
+]
+
 [project.urls]
 homepage = "https://github.com/JoeZiminski/swc_ephys"
 bug_tracker = "https://github.com/JoeZiminski/swc_ephys/issues"
 documentation = "https://github.com/JoeZiminski/swc_ephys"
 source_code = "https://github.com/JoeZiminski/swc_ephys"
 user_support = "https://github.com/JoeZiminski/swc_ephys/issues"
+
 
 [project.optional-dependencies]
 dev = [
@@ -86,3 +92,6 @@ build = "cp38-* cp39-* cp310-*"
 
 [tool.cibuildwheel.macos]
 archs = ["x86_64", "arm64"]
+
+[project.scripts]
+swc_ephys = "swc_ephys.command_line_interface:main"
