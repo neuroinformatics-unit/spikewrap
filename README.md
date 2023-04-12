@@ -6,6 +6,7 @@
 > - requires standard input folder format
 > - has limited preprocessing options (`tshift`, `bandpass_filter`, `common median reference`)
 > - no options to remove potentially large intermediate files
+> - installation / running on HPC is a bit clunky. In future this can be simplified with SLURM jobs organised under the hood.
 > - untested!
 
 
