@@ -6,7 +6,7 @@ from pathlib import Path
 from typing import Dict, Union
 
 import spikeinterface as si
-from spikeinterface.extractors import BaseExtractor
+from spikeinterface.core.base import BaseExtractor
 
 from ..utils import utils
 
