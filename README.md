@@ -2,26 +2,32 @@
 > **SWC Ephys is not sufficiently tested to be used in analysis. This release is only for testing. Do not use for your final analyses.**
 
 > **Warning** **Limitations**
-> - works only on SpikeGLX recordings with 1 gate, trigger, probe (per run)
+> - works only on SpikeGLX recordings with 1 gate, 1 trigger, 1 probe (per run, e.g. g0, t0, imec0)
 > - requires standard input folder format
 > - has limited preprocessing options (`tshift`, `bandpass_filter`, `common median reference`)
 > - no options to remove potentially large intermediate files
 > - untested!
 
 
-# Installation
+# Local Installation
 
-Clone [the repository]() using git. Change directory to the repo and install using
+Sorting requires a NVIDIA GPU and so is currently only available using the SWC's High-Performance Computer (HPC). However, local installation is useful for visualising the preprocessing steps prior to running the full pipeline (see 'Visualsation' below).
+
+To install locally, clone the repoisitory to your local machine using git. 
+
+`git clone git@github.com:neuroinformatics-unit/swc_ephys.git`
+
+Change directory to the repo and install using
 
 `pip install -e .`
 
 or, to also install developer dependencies
 
-`pip install -e .[dev]` (Windows)
-or
-`pip install -e '.[dev]'` (macOS / Linux)
+`pip install -e .[dev]` 
+or if using the zsh shell
+`pip install -e ".[dev]"` 
 
-After installation, the module can be imported with `import swc_ephys`. Local installations can be used to visualise preprocessing results (see below). To run sorting, running on the SWC HPC is currently required.
+After installation, the module can be imported with `import swc_ephys`.
 
 #### Running on the HPC
 
