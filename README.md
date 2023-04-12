@@ -146,7 +146,7 @@ Preprocessing options available in SpikeInterface may be run. Currently supporte
 
 Preprocessing options are set in `yaml` configuration files stored in `sbi_ephys/sbi_ephys/configs/`.  A default pipeline is stored in `test.yaml`.
 
-Custom preprocessing configuration files may be passed to the `config_name` argument, by passing the full path to the `.yaml` configuration file **TODO**. Configuration files are structured as a dictinoary with keys indicating the order ro run preprocessing, and values containing a list in which the first element in the name of the preprocessing to run, and the second element a dictionary containing options.
+Custom preprocessing configuration files may be passed to the `config_name` argument, by passing the full path to the `.yaml` configuration file. Configuration files are structured as a dictinoary with keys indicating the order ro run preprocessing, and values containing a list in which the first element in the name of the preprocessing to run, and the second element a dictionary containing options.
 
 ### Visualise Preprocessing
 
