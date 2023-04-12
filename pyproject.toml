@@ -19,12 +19,18 @@ classifiers = [
     "License :: OSI Approved :: BSD License",
 ]
 
+dependencies = [
+    "spikeinterface@git+https://github.com/SpikeInterface/spikeinterface#extras=full",
+    "spython",  # I think missing from SI?
+]
+
 [project.urls]
 homepage = "https://github.com/JoeZiminski/swc_ephys"
 bug_tracker = "https://github.com/JoeZiminski/swc_ephys/issues"
 documentation = "https://github.com/JoeZiminski/swc_ephys"
 source_code = "https://github.com/JoeZiminski/swc_ephys"
 user_support = "https://github.com/JoeZiminski/swc_ephys/issues"
+
 
 [project.optional-dependencies]
 dev = [
