@@ -175,4 +175,4 @@ visualise(
 
 This will display a plot showing data from all preprocessing steps,  displaying channels with idx 10 - 50, over time period 1-2. Note this requires a GUI (i.e. not run on the HPC terminal) and is best run locally.
 
-![[Pasted image 20230412145101.png]]
+![plot](./readme_image.png)
