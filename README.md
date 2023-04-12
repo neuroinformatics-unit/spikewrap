@@ -1,6 +1,7 @@
-> [!warning] SWC Ephys is not sufficiently tested to be used in analysis. This release is only for testing. Do not use for your final analyses.
+> **Warning** 
+> SWC Ephys is not sufficiently tested to be used in analysis. This release is only for testing. Do not use for your final analyses.
 
-> [!warning] Limitations
+> **Warning** Limitations
 > - works only on SpikeGLX recordings with 1 gate, trigger, probe (per run)
 > - requires standard input folder format
 > - has limited preprocessing options (`tshift`, `bandpass_filter`, `common median reference`)
