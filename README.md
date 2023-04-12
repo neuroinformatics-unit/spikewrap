@@ -1,7 +1,7 @@
 > [!warning] SWC Ephys is not sufficiently tested to be used in analysis. This release is only for testing. Do not use for your analyses.
 
 > [!warning] Limitations
-> - works only on SpikeGLX recordings with 1 gate, trigger, probe used
+> - works only on SpikeGLX recordings with 1 gate, trigger, probe (per run)
 > - requires standard input folder format
 > - has limited preprocessing options (`tshift`, `bandpass_filter`, `common median reference`)
 > - no options to remove potentially large intermediate files
@@ -154,3 +154,6 @@ visualise(
 ```
 
 This will display a plot showing data from all preprocessing steps,  displaying channels with idx 10 - 50, over time period 1-2. Note this requires a GUI (i.e. not run on the HPC terminal) and is best run locally.
+
+![[Pasted image 20230412145101.png]]
+
