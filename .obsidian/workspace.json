@@ -148,10 +148,10 @@
   },
   "active": "0c9d1f6bc8ee53ad",
   "lastOpenFiles": [
+    "swc_ephys/pipeline/data_class.py~",
     "swc_ephys/examples/example_sort.py~",
     "Pasted image 20230412145101.png",
     "swc_ephys/pipeline/__pycache__/visualise.cpython-39.pyc",
-    "swc_ephys/pipeline/data_class.py~",
     "swc_ephys/configs/__pycache__/configs.cpython-39.pyc",
     "swc_ephys/configs/__pycache__",
     "swc_ephys/examples/example_visualise.py~"
