@@ -18,6 +18,6 @@
   'kilosort2_5':
     'car': False
     'freq_min': 150
-  'kilosort_3':
+  'kilosort3':
     'car': False
     'freq_min': 300

@@ -59,16 +59,13 @@ def run_sorting(
 
     utils.message_user(f"Starting {sorter} sorting...")
 
-    sorting_output = ss.run_sorter(
+    ss.run_sorter(
         sorter,
         recording,
         output_folder=loaded_data.sorter_base_output_path,
         singularity_image=str(utils.get_sorter_path(sorter)),
         **sorter_options[sorter],
     )
-
-    utils.message_user(f"Saving sorter output to {loaded_data.sorter_output_path}")
-    sorting_output.save(folder=loaded_data.sorter_output_path)
 
 
 def get_data_and_recording(

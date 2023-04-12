@@ -75,7 +75,7 @@ base_path = Path(r"/ceph/neuroinformatics/neuroinformatics/scratch/ece_ephys_lea
 sub_name = "1110925"
 run_name = "1110925_test_shank1_cut"
 
-configs_name = "test"  # or custom config file path
+config_name = "test"  # or custom config file path
 sorter = "kilosort2_5"
 
 if __name__ == "__main__":
@@ -83,7 +83,7 @@ if __name__ == "__main__":
         base_path,
         sub_name,
         run_name,
-        configs_name,
+        config_name,
         sorter,
         use_existing_preprocessed_file=True,
     )
