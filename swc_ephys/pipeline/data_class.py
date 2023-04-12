@@ -70,7 +70,8 @@ class Data(UserDict):
         # These are dynamically set by the sorter
         # chosen at runtime.
         self.preprocessed_output_path = Path()
-        self.sorter_output_path = Path()
+        self.sorter_base_output_path = Path()
+        self.sorter_run_output_path = Path()
         self.waveform_output_path = Path()
         self.preprocessed_data_class_path = Path()
         self.preprocessed_binary_data_path = Path()

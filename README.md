@@ -1,4 +1,4 @@
-> [!warning] SWC Ephys is not sufficiently tested to be used in analysis. This release is only for testing. Do not use for your analyses.
+> [!warning] SWC Ephys is not sufficiently tested to be used in analysis. This release is only for testing. Do not use for your final analyses.
 
 > [!warning] Limitations
 > - works only on SpikeGLX recordings with 1 gate, trigger, probe (per run)
@@ -45,10 +45,12 @@ and install swc_ephys and it's dependencies
 `cd swc_ephys`
 `pip install -e .`
 
-Finally, to run the pipeline, create a script to run the pipeline and call it from the HPC, after requesting a GPU node
+Finally, to run the pipeline, create a script to run the pipeline or call from the command line interface (see below) and call it from the HPC, after requesting a GPU node
 
 `srun -p gpu --gres=gpu:2 --mem=50000 --pty bash -i`
-`python -m ./my_pipeline_script.py`
+`module load miniconda`
+`conda activate swc_ephys`
+`python my_pipeline_script.py`
 
 ## Quick Start Guide
 
@@ -64,6 +66,8 @@ SWC Ephys (currently) expects input raw data to be stored in a `rawdata` folder.
 ```
 
 
+#### API (script) 
+
 An example script to analyse this data is below
 
 ```
@@ -77,7 +81,7 @@ if __name__ == "__main__":
         base_path=base_path,  
         sub_name="1110925",  
         run_name="1110925_test_shank1",  
-        configs_name="test",  
+        config_name="test",  
         sorter="kilosort2_5",  
     )
 ```
@@ -85,6 +89,21 @@ if __name__ == "__main__":
 Note `run_full_pipline` must be run in the `if __name__ == "__main__"` block as above as it requires `multiprocessing`.
 
 The `base_path` is the path containing the required `rawdata` folder. `sub_name` is the subject to run, and `run_name` is the SpikeGLX run name to run. `configs_name` contains the name of the preprocessing / sorting settings to use (see below), and `sorter` is the name of the sorter to use (currently supported is `kilosort2`, `kilosort2_5` and `kilosort3`)
+
+#### Command Line Interface
+
+Alternatively, `swc_ephys` can be run using the command line with required poisitional arguments `base_path`, `sub_name` and `run_name` and optional arguments `--config_name` (default `test`), `--sorter` (default `kilosort2_5`) and flag `--use-existing-preprocessed-file`. For example, to run the script above using the command line
+
+```
+swc_ephys \
+/ceph/neuroinformatics/neuroinformatics/scratch/ece_ephys_learning \
+1110925 \
+1110925_test_shank1 \
+--config-name test \
+--sorter kilosort2_5
+```
+
+#### Output
 
 Output of spike sorting will be in a `derivatives` folder at the same level as the `rawdata` where subfolder organisation matches that of `rawdata`. Output are the saved preprocessed data, spike sorting results as well as a list of [quality check measures](https://spikeinterface.readthedocs.io/en/latest/modules/qualitymetrics.html). For example, the full output of a sorting run with the input data as above is:
 
