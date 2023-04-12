@@ -12,7 +12,10 @@ from .data_class import Data
 
 
 def preprocess(
-    base_path: Union[Path, str], sub_name: str, run_name: str, pp_steps: Optional[Dict]
+    base_path: Union[Path, str],
+    sub_name: str,
+    run_name: str,
+    pp_steps: Optional[Dict] = None,
 ) -> Data:
     """
     Returns a dictionary of spikeinterface recording objects setup in
