@@ -20,7 +20,7 @@ classifiers = [
 ]
 
 dependencies = [
-    "spikeinterface@git+https://github.com/SpikeInterface/spikeinterface#extras=full",
+    "spikeinterface[full] @git+https://github.com/SpikeInterface/spikeinterface",
     "spython",  # I think missing from SI?
 ]
 
@@ -92,3 +92,6 @@ build = "cp38-* cp39-* cp310-*"
 
 [tool.cibuildwheel.macos]
 archs = ["x86_64", "arm64"]
+
+[project.scripts]
+swc_ephys = "swc_ephys.command_line_interface:main"
