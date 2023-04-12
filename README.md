@@ -24,39 +24,51 @@ Change directory to the repo and install using
 or, to also install developer dependencies
 
 `pip install -e .[dev]` 
+
 or if using the zsh shell
+
 `pip install -e ".[dev]"` 
 
 After installation, the module can be imported with `import swc_ephys`.
 
 #### Running on the HPC
 
-Currently, sorting is required to run on the SWC HPC with access to `/ceph/neuroinformatics`. This allows KiloSort to be run, which have NVIDIA GPU as a requirement.
+Currently, sorting is required to run on the SWC HPC with access to `/ceph/neuroinformatics`. 
 
 To connect and run on the HPC (e.g. from Windows, macOS or Linux terminal):
 
 `ssh username@ssh.swc.ucl.ac.uk`
+
 `ssh hpc-gw`1
 
-The first time using, it is necessary to steup and install `swc_ephys`. It is strongly recommended to make a new conda environment on the HPC, before installing `swc_ephys` as above.
+The first time using, it is necessary to steup and install `swc_ephys`. It is strongly recommended to make a new conda environment on the HPC, before installing `swc_ephys`.
 
 `module load miniconda`
+
 `conda create --name swc_ephys python=3.10`
+
 `conda activate swc_ephys`
 
-and install swc_ephys and it's dependencies
+and install swc_ephys and it's dependencies:
 
 `mkdir ~/git-repos`
+
 `cd ~/git-repos`
+
 `git clone https://github.com/JoeZiminski/swc_ephys.git`
+
 `cd swc_ephys`
+
 `pip install -e .`
 
-Finally, to run the pipeline, create a script to run the pipeline or call from the command line interface (see below) and call it from the HPC, after requesting a GPU node
+Before running, it is necessary to request use of a GPU node on the HPC to run spike sorting with KiloSort. To run preprocessing and spike sorting, create a script using the API or call from the command line interface (instructions below). 
 
 `srun -p gpu --gres=gpu:2 --mem=50000 --pty bash -i`
+
 `module load miniconda`
+
 `conda activate swc_ephys`
+
 `python my_pipeline_script.py`
 
 ## Quick Start Guide
