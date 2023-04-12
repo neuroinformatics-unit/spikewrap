@@ -16,22 +16,22 @@ Clone [the repository]() using git. Change directory to the repo and install usi
 
 or, to also install developer dependencies
 
-`pip install -e .[dev]` (Windows) 
-or 
+`pip install -e .[dev]` (Windows)
+or
 `pip install -e '.[dev]'` (macOS / Linux)
 
 After installation, the module can be imported with `import swc_ephys`. Local installations can be used to visualise preprocessing results (see below). To run sorting, running on the SWC HPC is currently required.
 
 #### Running on the HPC
 
-Currently, sorting is required to run on the SWC HPC with access to `/ceph/neuroinformatics`. This allows KiloSort to be run, which have NVIDIA GPU as a requirement. 
+Currently, sorting is required to run on the SWC HPC with access to `/ceph/neuroinformatics`. This allows KiloSort to be run, which have NVIDIA GPU as a requirement.
 
 To connect and run on the HPC (e.g. from Windows, macOS or Linux terminal):
 
-`ssh username@ssh.swc.ucl.ac.uk` 
+`ssh username@ssh.swc.ucl.ac.uk`
 `ssh hpc-gw`1
 
-The first time using, it is necessary to steup and install `swc_ephys`. It is strongly recommended to make a new conda environment on the HPC, before installing `swc_ephys` as above. 
+The first time using, it is necessary to steup and install `swc_ephys`. It is strongly recommended to make a new conda environment on the HPC, before installing `swc_ephys` as above.
 
 `module load miniconda`
 `conda create --name swc_ephys python=3.10`
@@ -66,23 +66,23 @@ SWC Ephys (currently) expects input raw data to be stored in a `rawdata` folder.
 ```
 
 
-#### API (script) 
+#### API (script)
 
 An example script to analyse this data is below
 
 ```
-from swc_ephys.pipeline.full_pipeline import run_full_pipeline  
-  
-base_path = "/ceph/neuroinformatics/neuroinformatics/scratch/ece_ephys_learning"  
+from swc_ephys.pipeline.full_pipeline import run_full_pipeline
 
-if __name__ == "__main__":  
+base_path = "/ceph/neuroinformatics/neuroinformatics/scratch/ece_ephys_learning"
 
-    run_full_pipeline(  
-        base_path=base_path,  
-        sub_name="1110925",  
-        run_name="1110925_test_shank1",  
-        config_name="test",  
-        sorter="kilosort2_5",  
+if __name__ == "__main__":
+
+    run_full_pipeline(
+        base_path=base_path,
+        sub_name="1110925",
+        run_name="1110925_test_shank1",
+        config_name="test",
+        sorter="kilosort2_5",
     )
 ```
 
@@ -136,7 +136,7 @@ Output of spike sorting will be in a `derivatives` folder at the same level as t
 		- <u>sorter_output</u>: the full output of the sorter (e.g. kilosort .npy files)
 		- <u>waveforms</u>: spikeinterface [waveforms](https://spikeinterface.readthedocs.io/en/latest/modules/core.html#waveformextractor) output containing AP waveforms for detected spikes
 		- quality_metrics.csv: output of spikeinterface  [quality check measures](https://spikeinterface.readthedocs.io/en/latest/modules/qualitymetrics.html)
-		- spikeinterface*.json: 
+		- spikeinterface*.json:
 
 
 ### Set Preprocessing Options
@@ -152,27 +152,26 @@ Custom preprocessing configuration files may be passed to the `config_name` argu
 Visualsing preprocesing output can be run locally to inspect efficiacy of preprocessing rountines. To visualise preprocessing outputs:
 
 ```
-from swc_ephys.pipeline.preprocess import preprocess  
-from swc_ephys.pipeline.visualise import visualise  
-  
-base_path = "/ceph/neuroinformatics/neuroinformatics/scratch/ece_ephys_learning"  
-sub_name = "1110925"  
-run_name = "1110925_test_shank1"  
-  
-data = preprocess(base_path=base_path, sub_name=sub_name, run_name=run_name)  
-  
-visualise(  
-    data,  
-    steps="all",  
-    mode="map",  
-    as_subplot=True,  
-    channel_idx_to_show=np.arange(10, 50),  
-    show_channel_ids=False,  
-    time_range=(1, 2),  
+from swc_ephys.pipeline.preprocess import preprocess
+from swc_ephys.pipeline.visualise import visualise
+
+base_path = "/ceph/neuroinformatics/neuroinformatics/scratch/ece_ephys_learning"
+sub_name = "1110925"
+run_name = "1110925_test_shank1"
+
+data = preprocess(base_path=base_path, sub_name=sub_name, run_name=run_name)
+
+visualise(
+    data,
+    steps="all",
+    mode="map",
+    as_subplot=True,
+    channel_idx_to_show=np.arange(10, 50),
+    show_channel_ids=False,
+    time_range=(1, 2),
 )
 ```
 
 This will display a plot showing data from all preprocessing steps,  displaying channels with idx 10 - 50, over time period 1-2. Note this requires a GUI (i.e. not run on the HPC terminal) and is best run locally.
 
 ![[Pasted image 20230412145101.png]]
-
