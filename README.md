@@ -9,6 +9,12 @@
 > - untested!
 
 
+# Features
+
+- preprocess SpikeGLX data (`tshift`, `bandpass_filter`, `common median reference`)
+- spike sorting (`kilosort2`, `kilosort2_5`, `kilosort3`)
+- quality check measures on the sorting results
+
 # Local Installation
 
 Sorting requires a NVIDIA GPU and so is currently only available using the SWC's High-Performance Computer (HPC). However, local installation is useful for visualising the preprocessing steps prior to running the full pipeline (see 'Visualsation' below).
@@ -73,7 +79,7 @@ Before running, it is necessary to request use of a GPU node on the HPC to run s
 
 ## Quick Start Guide
 
-SWC Ephys (currently) expects input raw data to be stored in a `rawdata` folder. A subject (e.g. mouse) data should be stored in the `rawdata` folder and contain SpikeGLX format output (example below).**Currently, only recordings with 1 gate, 1 trigger and 1 probe (i.e. index 0 for all gate, trigger probe, `g0`, `t0` and `imec0`)**.
+SWC Ephys (currently) expects input data to be stored in a `rawdata` folder. A subject (e.g. mouse) data should be stored in the `rawdata` folder and contain SpikeGLX output format (example below). **Currently, only recordings with 1 gate, 1 trigger and 1 probe are supported (i.e. index 0 for all gate, trigger probe, `g0`, `t0` and `imec0`)**.
 
 ```
 └── rawdata/
@@ -87,7 +93,7 @@ SWC Ephys (currently) expects input raw data to be stored in a `rawdata` folder.
 
 #### API (script)
 
-An example script to analyse this data is below
+Example code to analyse this data in this format is below:
 
 ```
 from swc_ephys.pipeline.full_pipeline import run_full_pipeline
@@ -105,13 +111,25 @@ if __name__ == "__main__":
     )
 ```
 
-Note `run_full_pipline` must be run in the `if __name__ == "__main__"` block as above as it requires `multiprocessing`.
+`base_path` is the path containing the required `rawdata` folder. 
 
-The `base_path` is the path containing the required `rawdata` folder. `sub_name` is the subject to run, and `run_name` is the SpikeGLX run name to run. `configs_name` contains the name of the preprocessing / sorting settings to use (see below), and `sorter` is the name of the sorter to use (currently supported is `kilosort2`, `kilosort2_5` and `kilosort3`)
+`sub_name` is the subject to run, and `run_name` is the SpikeGLX run name to run. 
+
+`configs_name` contains the name of the preprocessing / sorting settings to use (see below)
+
+`sorter` is the name of the sorter to use (currently supported is `kilosort2`, `kilosort2_5` and `kilosort3`)
+
+Note `run_full_pipline` must be run in the `if __name__ == "__main__"` block as it uses the `multiprocessing` module.
 
 #### Command Line Interface
 
-Alternatively, `swc_ephys` can be run using the command line with required poisitional arguments `base_path`, `sub_name` and `run_name` and optional arguments `--config_name` (default `test`), `--sorter` (default `kilosort2_5`) and flag `--use-existing-preprocessed-file`. For example, to run the script above using the command line
+`swc_ephys` can be run using the command line. 
+
+Required poisitional arguments `base_path`, `sub_name` and `run_name` 
+
+and optional arguments `--config_name` (default `test`), `--sorter` (default `kilosort2_5`) and flag `--use-existing-preprocessed-file`. If set, this last flag will use an existing `preprocessed` recording file for the subject if it is found.
+
+For example, to run the script above using the command line:
 
 ```
 swc_ephys \
@@ -124,7 +142,9 @@ swc_ephys \
 
 #### Output
 
-Output of spike sorting will be in a `derivatives` folder at the same level as the `rawdata` where subfolder organisation matches that of `rawdata`. Output are the saved preprocessed data, spike sorting results as well as a list of [quality check measures](https://spikeinterface.readthedocs.io/en/latest/modules/qualitymetrics.html). For example, the full output of a sorting run with the input data as above is:
+Output of spike sorting will be in a `derivatives` folder at the same level as the `rawdata`. The subfolder organisation of `derivatives` will match `rawdata`. 
+
+Output are the saved preprocessed data, spike sorting results as well as a list of [quality check measures](https://spikeinterface.readthedocs.io/en/latest/modules/qualitymetrics.html). For example, the full output of a sorting run with the input data as above is:
 
 ```
 ├── rawdata/
@@ -148,27 +168,32 @@ Output of spike sorting will be in a `derivatives` folder at the same level as t
 ```
 
 
-**preprocessed**: contains the spikeinterface recording from the last preprocessing step saved in binary format (`si_recording`) and a `data_class.pkl`  used for internal swc_ephys use.
+**preprocessed**: contains 1) the binary spikeinterface recording from the final preprocessing step (`si_recording`) 2) `data_class.pkl` swc_ephys internal use.
 
-**-sorting output (e.g. kilosort2_5-sorting**: Multiple sorters may be run, and the output of different sorters saved here. A sorter output contains:
-		- <u>in_container_sorting</u>:  stored options used to run the sorter
-		- <u>sorter_output</u>: the full output of the sorter (e.g. kilosort .npy files)
-		- <u>waveforms</u>: spikeinterface [waveforms](https://spikeinterface.readthedocs.io/en/latest/modules/core.html#waveformextractor) output containing AP waveforms for detected spikes
-		- quality_metrics.csv: output of spikeinterface  [quality check measures](https://spikeinterface.readthedocs.io/en/latest/modules/qualitymetrics.html)
-		- spikeinterface*.json:
+**-sorting output (e.g. kilosort2_5-sorting, multiple sorters can be run)**: contains:
 
+- <u>in_container_sorting</u>:  stored options used to run the sorter
+
+- <u>sorter_output</u>: the full output of the sorter (e.g. kilosort .npy files)
+
+- <u>waveforms</u>: spikeinterface [waveforms](https://spikeinterface.readthedocs.io/en/latest/modules/core.html#waveformextractor) output containing AP 
+waveforms for detected spikes
+
+- <u>quality_metrics.csv</u>: output of spikeinterface  [quality check measures](https://spikeinterface.readthedocs.io/en/latest/modules/qualitymetrics.html)
 
 ### Set Preprocessing Options
 
-Preprocessing options available in SpikeInterface may be run. Currently supported are multiplexing correction or tshift (termed  `phase shift` here), common median referencing (CMR) (termed `common_reference` here) and bandpass filtering (`bandpass_filter`).
+Currently supported are multiplexing correction or tshift (termed  `phase shift` here), common median referencing (CMR) (termed `common_reference` here) and bandpass filtering (`bandpass_filter`). These options provide an interface to [SpikeInterface preprocessing](https://spikeinterface.readthedocs.io/en/0.13.0/modules/toolkit/plot_1_preprocessing.html) options, more will be added soon.
 
 Preprocessing options are set in `yaml` configuration files stored in `sbi_ephys/sbi_ephys/configs/`.  A default pipeline is stored in `test.yaml`.
 
-Custom preprocessing configuration files may be passed to the `config_name` argument, by passing the full path to the `.yaml` configuration file. Configuration files are structured as a dictinoary with keys indicating the order ro run preprocessing, and values containing a list in which the first element in the name of the preprocessing to run, and the second element a dictionary containing options.
+Custom preprocessing configuration files may be passed to the `config_name` argument, by passing the full path to the `.yaml` configuration file. 
+
+Configuration files are structured as a dictionary where keys indicate the order to run preprocessing The values hold a list in which the first element is the name of the preprocessing step to run, and the second element a dictionary containing kwargs passed to the spikeinterface function.
 
 ### Visualise Preprocessing
 
-Visualsing preprocesing output can be run locally to inspect efficiacy of preprocessing rountines. To visualise preprocessing outputs:
+Visualsing preprocesing output can be run locally to inspect output of preprocessing rountines. To visualise preprocessing outputs:
 
 ```
 from swc_ephys.pipeline.preprocess import preprocess
