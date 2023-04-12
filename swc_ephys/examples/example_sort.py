@@ -1,5 +1,3 @@
-"""
-"""
 from pathlib import Path
 
 from swc_ephys.pipeline.preprocess import preprocess

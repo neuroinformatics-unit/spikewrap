@@ -74,6 +74,14 @@ def handle_bad_channels(data: Data):
 
     However, it is not clear whether to print these / log these / provide simple
     API argument to remove bad channels.
+
+    TODO
+    ----
+    Need to determine when best to run this detection. Definately after
+    filtering, need to ask on Slack
+    see https://spikeinterface.readthedocs.io/en/latest/api.html
+    https://github.com/int-brain-lab/ibl-neuropixel/blob/d913ede52117bc79d \
+    e77f8dc9cdb407807ab8a8c/src/neurodsp/voltage.py#L445
     """
     bad_channels = spre.detect_bad_channels(data["0-raw"])
 
