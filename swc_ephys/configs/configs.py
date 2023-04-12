@@ -1,3 +1,4 @@
+import glob
 import os
 from pathlib import Path
 from typing import Dict, Tuple
@@ -36,7 +37,26 @@ def get_configs(name: str) -> Tuple[Dict, Dict]:
     """
     config_dir = Path(os.path.dirname(os.path.realpath(__file__)))
 
-    with open(config_dir / f"{name}.yaml") as file:
+    available_files = glob.glob((config_dir / "*.yaml").as_posix())
+    available_files = [Path(path_).stem for path_ in available_files]
+
+    if name not in available_files:  # then assume it is a full path
+        assert Path(name).is_file(), (
+            f"{name} is neither the name of an existing "
+            f"config or valid path to configuration file."
+        )
+
+        assert Path(name).suffix in [
+            ".yaml",
+            ".yml",
+        ], f"{name} is not the path to a .yaml file"
+
+        config_filepath = Path(name)
+
+    else:
+        config_filepath = config_dir / f"{name}.yaml"
+
+    with open(config_filepath) as file:
         config = yaml.full_load(file)
 
     pp_steps = config["preprocessing"]
