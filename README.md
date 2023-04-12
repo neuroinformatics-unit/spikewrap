@@ -37,7 +37,7 @@ or if using the zsh shell
 
 After installation, the module can be imported with `import swc_ephys`.
 
-#### Running on the HPC
+## Running on the HPC
 
 Currently, sorting is required to run on the SWC HPC with access to `/ceph/neuroinformatics`. 
 
@@ -77,7 +77,7 @@ Before running, it is necessary to request use of a GPU node on the HPC to run s
 
 `python my_pipeline_script.py`
 
-## Quick Start Guide
+# Quick Start Guide
 
 SWC Ephys (currently) expects input data to be stored in a `rawdata` folder. A subject (e.g. mouse) data should be stored in the `rawdata` folder and contain SpikeGLX output format (example below). **Currently, only recordings with 1 gate, 1 trigger and 1 probe are supported (i.e. index 0 for all gate, trigger probe, `g0`, `t0` and `imec0`)**.
 
@@ -91,7 +91,7 @@ SWC Ephys (currently) expects input data to be stored in a `rawdata` folder. A s
 ```
 
 
-#### API (script)
+## API (script)
 
 Example code to analyse this data in this format is below:
 
@@ -121,7 +121,7 @@ if __name__ == "__main__":
 
 Note `run_full_pipline` must be run in the `if __name__ == "__main__"` block as it uses the `multiprocessing` module.
 
-#### Command Line Interface
+## Command Line Interface
 
 `swc_ephys` can be run using the command line. 
 
@@ -140,7 +140,7 @@ swc_ephys \
 --sorter kilosort2_5
 ```
 
-#### Output
+## Output
 
 Output of spike sorting will be in a `derivatives` folder at the same level as the `rawdata`. The subfolder organisation of `derivatives` will match `rawdata`. 
 
@@ -168,9 +168,11 @@ Output are the saved preprocessed data, spike sorting results as well as a list 
 ```
 
 
-**preprocessed**: contains 1) the binary spikeinterface recording from the final preprocessing step (`si_recording`) 2) `data_class.pkl` swc_ephys internal use.
+**preprocessed**: 
 
-**-sorting output (e.g. kilosort2_5-sorting, multiple sorters can be run)**: contains:
+- Binary-format spikeinterface recording from the final preprocessing step (`si_recording`) 2) `data_class.pkl` swc_ephys internal use.
+
+**-sorting output (e.g. kilosort2_5-sorting, multiple sorters can be run)**: 
 
 - <u>in_container_sorting</u>:  stored options used to run the sorter
 
@@ -181,7 +183,7 @@ waveforms for detected spikes
 
 - <u>quality_metrics.csv</u>: output of spikeinterface  [quality check measures](https://spikeinterface.readthedocs.io/en/latest/modules/qualitymetrics.html)
 
-### Set Preprocessing Options
+# Set Preprocessing Options
 
 Currently supported are multiplexing correction or tshift (termed  `phase shift` here), common median referencing (CMR) (termed `common_reference` here) and bandpass filtering (`bandpass_filter`). These options provide an interface to [SpikeInterface preprocessing](https://spikeinterface.readthedocs.io/en/0.13.0/modules/toolkit/plot_1_preprocessing.html) options, more will be added soon.
 
@@ -191,7 +193,7 @@ Custom preprocessing configuration files may be passed to the `config_name` argu
 
 Configuration files are structured as a dictionary where keys indicate the order to run preprocessing The values hold a list in which the first element is the name of the preprocessing step to run, and the second element a dictionary containing kwargs passed to the spikeinterface function.
 
-### Visualise Preprocessing
+# Visualise Preprocessing
 
 Visualsing preprocesing output can be run locally to inspect output of preprocessing rountines. To visualise preprocessing outputs:
 
