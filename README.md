@@ -18,9 +18,9 @@
 
 # Local Installation
 
-Sorting requires a NVIDIA GPU and so is currently only available using the SWC's High-Performance Computer (HPC). However, local installation is useful for visualising the preprocessing steps prior to running the full pipeline (see 'Visualsation' below).
+Sorting requires a NVIDIA GPU and so is currently only available using the SWC's High-Performance Computer (HPC). However, local installation is useful for visualising the preprocessing steps prior to running the full pipeline (see 'Visualisation' below).
 
-To install locally, clone the repoisitory to your local machine using git. 
+To install locally, clone the repository to your local machine using git. 
 
 `git clone git@github.com:neuroinformatics-unit/swc_ephys.git`
 
@@ -126,7 +126,7 @@ Note `run_full_pipline` must be run in the `if __name__ == "__main__"` block as 
 
 `swc_ephys` can be run using the command line. 
 
-Required poisitional arguments `base_path`, `sub_name` and `run_name` 
+Required positional arguments `base_path`, `sub_name` and `run_name` 
 
 and optional arguments `--config_name` (default `test`), `--sorter` (default `kilosort2_5`) and flag `--use-existing-preprocessed-file`. If set, this last flag will use an existing `preprocessed` recording file for the subject if it is found.
 
@@ -196,7 +196,7 @@ Configuration files are structured as a dictionary where keys indicate the order
 
 # Visualise Preprocessing
 
-Visualsing preprocesing output can be run locally to inspect output of preprocessing rountines. To visualise preprocessing outputs:
+Visualising preprocesing output can be run locally to inspect output of preprocessing routines. To visualise preprocessing outputs:
 
 ```
 from swc_ephys.pipeline.preprocess import preprocess
