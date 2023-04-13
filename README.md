@@ -4,6 +4,7 @@
 > **Warning** **Limitations**
 > - works only on SpikeGLX recordings with 1 gate, 1 trigger, 1 probe (per run, e.g. g0, t0, imec0)
 > - requires standard input folder format
+> - only run one subject / run at a time
 > - has limited preprocessing options (`tshift`, `bandpass_filter`, `common median reference`)
 > - no options to remove potentially large intermediate files
 > - installation / running on HPC is a bit clunky. In future this can be simplified with SLURM jobs organised under the hood.
