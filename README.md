@@ -47,7 +47,7 @@ To connect and run on the HPC (e.g. from Windows, macOS or Linux terminal):
 
 `ssh username@ssh.swc.ucl.ac.uk`
 
-`ssh hpc-gw`1
+`ssh hpc-gw1`
 
 The first time using, it is necessary to steup and install `swc_ephys`. It is strongly recommended to make a new conda environment on the HPC, before installing `swc_ephys`.
 
