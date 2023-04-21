@@ -46,6 +46,8 @@ def run_sorting(
 
     if sorter_options is None:
         sorter_options = {}
+    else:
+        sorter_options = sorter_options[sorter]
 
     loaded_data, recording = get_data_and_recording(
         data, use_existing_preprocessed_file
@@ -64,7 +66,7 @@ def run_sorting(
         recording,
         output_folder=loaded_data.sorter_base_output_path,
         singularity_image=str(utils.get_sorter_path(sorter)),
-        **sorter_options[sorter],
+        **sorter_options,
     )
 
 
