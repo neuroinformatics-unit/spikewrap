@@ -73,6 +73,8 @@ Before running, it is necessary to request use of a GPU node on the HPC to run s
 
 `srun -p gpu --gres=gpu:2 --mem=50000 --pty bash -i`
 
+`module load cuda`
+
 `module load miniconda`
 
 `conda activate swc_ephys`
