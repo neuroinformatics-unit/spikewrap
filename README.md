@@ -71,7 +71,7 @@ and install swc_ephys and it's dependencies:
 
 Before running, it is necessary to request use of a GPU node on the HPC to run spike sorting with KiloSort. To run preprocessing and spike sorting, create a script using the API or call from the command line interface (instructions below). 
 
-`srun -p gpu --gres=gpu:2 --mem=50000 --pty bash -i`
+`srun -p gpu --gres=gpu:1 -n 8 --mem=40GB --pty bash -i`
 
 `module load cuda`
 
