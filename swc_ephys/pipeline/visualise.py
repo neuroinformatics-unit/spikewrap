@@ -55,6 +55,9 @@ def visualise(
         assert len(steps) == 1, "if using 'all' only put one step input"
         steps = utils.get_keys_first_char(data)
 
+    assert len(steps) <= len(data), "The number of steps must be less or equal to the number of steps in the recording"
+
+
     if len(steps) == 1 and as_subplot:
         as_subplot = False
 
@@ -95,6 +98,7 @@ def visualise(
             show_channel_ids=show_channel_ids,
             mode=mode,
             ax=current_ax,
+            segment_index=0,  # TODO: handle this better... or at all
         )
 
         if not as_subplot:
@@ -105,3 +109,21 @@ def visualise(
 
     if as_subplot:
         plt.show()
+
+def visualise_preprocessing_output(preprocessing_path, **kwargs):  # TODO: do something better than kwargs?
+    """
+    
+    """
+    data, recording = utils.load_data_and_recording(preprocessing_path)
+
+    assert "steps" not in kwargs, "Cannot specify 'steps' when visualising preprocessed data. " \
+                                  "Only the final output exists."
+        
+    kwargs.update({"steps": "0"})
+
+    data.clear()
+    data.update({"0_preprocessed": recording})
+
+    visualise(data, **kwargs)
+
+
