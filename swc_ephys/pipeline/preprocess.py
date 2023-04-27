@@ -8,7 +8,6 @@ import spikeinterface.preprocessing as spre
 
 from ..configs import configs
 from ..utils import utils
-from .data_class import Data
 
 
 def preprocess(
@@ -51,14 +50,9 @@ def preprocess(
 
     checked_pp_steps, pp_step_names = check_and_sort_pp_steps(pp_steps, pp_funcs)
 
-    data = Data(base_path, sub_name, run_name, pp_steps)
-
-    data.run_level_path = data.rawdata_path / sub_name / (run_name + "_g0")
-    data.set_preprocessing_output_path()
-
-    data["0-raw"] = se.read_spikeglx(
-        folder_path=data.run_level_path, stream_id="imec0.ap", all_annotations=True
-    )
+    data.pp_steps = pp_steps  # TODO: handle this logic flow properly. Can use a setter but
+                              # probably makes more sense to think about this data class more
+                              # - does it need splitting, - should pp steps be held on it??
 
     for step_num, pp_info in checked_pp_steps.items():
         perform_preprocessing_step(step_num, pp_info, data, pp_step_names, pp_funcs, verbose)
