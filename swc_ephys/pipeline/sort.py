@@ -42,8 +42,12 @@ def run_sorting(
                                      passed to the sorter.
 
     """
+    # TODO: input validation function
     supported_sorters = ["kilosort2", "kilosort2_5", "kilosort3"]
     assert sorter in supported_sorters, f"sorter must be: {supported_sorters}"
+
+    assert utils.check_singularity_install(), \
+        "Singularity must be installed to run sorting."
 
     if sorter_options is None:
         sorter_options = {}
@@ -64,11 +68,19 @@ def run_sorting(
 
     utils.message_user(f"Starting {sorter} sorting...")
 
+    if utils.get_sorter_path(sorter).is_file():
+        singularity_image = str(utils.get_sorter_path(sorter))
+
+    else:
+        singularity_image = True
+        # For now just use singularity Clients management
+        # local_singularity_path = Path.home() / ".swc_ephys" / "singularity_images" / "sorters" / f"{sorter}-compiled-base.sif" # TODO Code duplication from get_sorter_path, should be hard coded somewhere. Along with sorter names! and other cannonical things
+
     ss.run_sorter(
         sorter,
         recording,
         output_folder=loaded_data.sorter_base_output_path,
-        singularity_image=str(utils.get_sorter_path(sorter)),
+        singularity_image=singularity_image,
         **sorter_options,
     )
 
