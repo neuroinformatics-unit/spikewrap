@@ -14,6 +14,7 @@ def run_sorting(
     sorter: str = "kilosort2_5",
     sorter_options: Optional[Dict] = None,
     use_existing_preprocessed_file: bool = False,
+    verbose: bool = True,
 ):
     """
     Run a sorter on pre-processed data. Takes a Data (pipeline.data_class)
@@ -48,6 +49,8 @@ def run_sorting(
         sorter_options = {}
     else:
         sorter_options = sorter_options[sorter]
+
+    sorter_options.update({"verbose": verbose})
 
     loaded_data, recording = get_data_and_recording(
         data, use_existing_preprocessed_file

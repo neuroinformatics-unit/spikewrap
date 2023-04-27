@@ -16,6 +16,7 @@ def preprocess(
     sub_name: str,
     run_name: str,
     pp_steps: Optional[Dict] = None,
+    verbose: bool = True,
 ) -> Data:
     """
     Returns a dictionary of spikeinterface recording objects setup in
@@ -60,7 +61,7 @@ def preprocess(
     )
 
     for step_num, pp_info in checked_pp_steps.items():
-        perform_preprocessing_step(step_num, pp_info, data, pp_step_names, pp_funcs)
+        perform_preprocessing_step(step_num, pp_info, data, pp_step_names, pp_funcs, verbose)
 
     handle_bad_channels(data)
 
@@ -160,6 +161,7 @@ def perform_preprocessing_step(
     data: Data,
     pp_step_names: List,
     pp_funcs: Dict,
+    verbose: bool = True,
 ):
     """
     Given the preprocessing step and data UserDict containing
@@ -185,6 +187,8 @@ def perform_preprocessing_step(
 
     """
     pp_name, pp_options = pp_info
+
+    utils.message_user(f"Running preprocessing step: {pp_name} with options {pp_options}", verbose)
 
     last_pp_step_output, __ = utils.get_dict_value_from_step_num(
         data, step_num=str(int(step_num) - 1)
