@@ -5,7 +5,7 @@ from ..configs.configs import get_configs
 from .preprocess import preprocess
 from .quality import quality_check
 from .sort import run_sorting
-
+from .load_data import load_spikeglx_data
 
 def run_full_pipeline(
     base_path: Union[Path, str],
@@ -49,12 +49,11 @@ def run_full_pipeline(
     """
     pp_steps, sorter_options = get_configs(config_name)
 
+    # Load the data from file (lazy)
+    data = load_spikeglx_data(base_path, sub_name, run_name)
 
-
-    # Get the recording object. This is lazy - no preprocessing done yet
-    data = preprocess(
-        base_path=base_path, sub_name=sub_name, run_name=run_name, pp_steps=pp_steps, verbose=verbose,
-    )
+    # This is lazy - no preprocessing done yet
+    data = preprocess(data, pp_steps, verbose)
 
     # Run sorting. This will save the final preprocessing step
     # recording to disk prior to sorting.

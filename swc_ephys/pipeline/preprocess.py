@@ -11,9 +11,7 @@ from ..utils import utils
 
 
 def preprocess(
-    base_path: Union[Path, str],
-    sub_name: str,
-    run_name: str,
+    data: Data,
     pp_steps: Optional[Dict] = None,
     verbose: bool = True,
 ) -> Data:
@@ -53,6 +51,8 @@ def preprocess(
     data.pp_steps = pp_steps  # TODO: handle this logic flow properly. Can use a setter but
                               # probably makes more sense to think about this data class more
                               # - does it need splitting, - should pp steps be held on it??
+
+    data.set_preprocessing_output_path()
 
     for step_num, pp_info in checked_pp_steps.items():
         perform_preprocessing_step(step_num, pp_info, data, pp_step_names, pp_funcs, verbose)

@@ -19,7 +19,7 @@ def run_sorting(
     """
     Run a sorter on pre-processed data. Takes a Data (pipeline.data_class)
     object that contains spikeinterface recording objects for the preprocessing
-    pipeline (these are lazy until data is saved to binary).
+    pipeline (these are lazy until data is saved to binary). TODO UPDATE
 
     Here, save the preprocessed recording to binary file. Then, run sorting
     on the saved binary. The preprocessed binary and sorting output are
