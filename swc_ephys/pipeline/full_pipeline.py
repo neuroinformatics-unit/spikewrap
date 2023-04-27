@@ -15,6 +15,7 @@ def run_full_pipeline(
     sorter: str = "kilosort2_5",
     use_existing_preprocessed_file: bool = False,
     verbose: bool = True,
+    concat_mode: bool = False,
 ):
     """
     Run preprocessing, sorting and quality checks on SpikeGLX data.
@@ -47,6 +48,8 @@ def run_full_pipeline(
                                      exists, an error will be raised.
     """
     pp_steps, sorter_options = get_configs(config_name)
+
+
 
     # Get the recording object. This is lazy - no preprocessing done yet
     data = preprocess(
