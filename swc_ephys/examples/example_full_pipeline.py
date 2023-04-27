@@ -2,7 +2,7 @@ from pathlib import Path
 
 from swc_ephys.pipeline.full_pipeline import run_full_pipeline
 
-base_path = Path(r"/ceph/neuroinformatics/neuroinformatics/scratch/ece_ephys_learning")
+base_path = Path(r"D:\data\spike-interface\testing\steve")
 sub_name = "1110925"
 run_name = "1110925_test_shank1_cut"
 

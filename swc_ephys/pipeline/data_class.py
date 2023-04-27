@@ -3,7 +3,7 @@ import pickle  # TODO: explore cPickle
 from collections import UserDict
 from collections.abc import ItemsView, KeysView, ValuesView
 from pathlib import Path
-from typing import Dict, Union
+from typing import Dict, Union, Optional
 
 import spikeinterface as si
 from spikeinterface.core.base import BaseExtractor
