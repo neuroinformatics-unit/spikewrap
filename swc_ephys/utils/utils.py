@@ -6,7 +6,7 @@ import numpy as np
 from spikeinterface.core import BaseRecording
 
 from ..pipeline.data_class import Data
-
+import subprocess
 
 def get_keys_first_char(
     dict_: Data, as_int: bool = False
@@ -87,3 +87,11 @@ def get_sorter_path(sorter: str) -> Path:
     """
     base_path = Path("/ceph/neuroinformatics/neuroinformatics/scratch/sorter_images")
     return base_path / sorter / f"{sorter}-compiled-base.sif"
+
+def check_singularity_install():
+    
+    try:
+        subprocess.run("singularity --version", shell=True)
+        return True
+    except FileNotFoundError:
+        return False
