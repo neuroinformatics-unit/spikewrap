@@ -50,11 +50,12 @@ def get_dict_value_from_step_num(
     return dict_[pp_key], pp_key
 
 
-def message_user(message: str):
+def message_user(message: str, verbose: bool = True):
     """
     Method to interact with user.
     """
-    print(message)
+    if verbose:
+        print(message)
 
 
 def load_data_and_recording(
