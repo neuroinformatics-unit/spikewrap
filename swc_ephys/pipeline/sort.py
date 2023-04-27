@@ -7,7 +7,7 @@ from spikeinterface.core import BaseRecording
 
 from ..utils import utils
 from .data_class import Data
-
+from spikeinterface import concatenate_recordings
 
 def run_sorting(
     data: Union[Data, Path, str],
@@ -64,25 +64,26 @@ def run_sorting(
 
     # this must be run from the folder that has both
     # sorter output AND rawdata
-    os.chdir(loaded_data.base_path)
+    os.chdir(loaded_data.base_path)  # TODO: this is super buggy and weird 
 
     utils.message_user(f"Starting {sorter} sorting...")
 
     if utils.get_sorter_path(sorter).is_file():
         singularity_image = str(utils.get_sorter_path(sorter))
-
     else:
-        singularity_image = True
+        singularity_image = True  # TODO: god dammit this just pulls to random pwd repo.
         # For now just use singularity Clients management
         # local_singularity_path = Path.home() / ".swc_ephys" / "singularity_images" / "sorters" / f"{sorter}-compiled-base.sif" # TODO Code duplication from get_sorter_path, should be hard coded somewhere. Along with sorter names! and other cannonical things
 
-    ss.run_sorter(
-        sorter,
-        recording,
-        output_folder=loaded_data.sorter_base_output_path,
-        singularity_image=singularity_image,
-        **sorter_options,
-    )
+    if recording.get_num_segments() > 1:
+        utils.message_user(f"Conatenating {recording.get_num_segments()} into a single segment.")
+        recording = concatenate_recordings([recording])  # TODO: somehow centralise? this is nwo in utils
+
+    ss.run_sorter(sorter,
+                  recording,
+                  output_folder=loaded_data.sorter_base_output_path,
+                  singularity_image=singularity_image, **sorter_options)
+
 
 
 def get_data_and_recording(

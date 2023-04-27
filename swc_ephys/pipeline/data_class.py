@@ -1,3 +1,4 @@
+import copy
 import os
 import pickle  # TODO: explore cPickle
 from collections import UserDict
@@ -13,7 +14,7 @@ from ..utils import utils
 
 class Data(UserDict):
     def __init__(
-        self, base_path: Union[Path, str], sub_name: str, run_name: str, pp_steps: Optional[Dict] = None,
+        self, base_path: Union[Path, str], sub_name: str, run_names: str, pp_steps: Optional[Dict] = None,
     ):
         """
         Dictionary to store spikeinterface preprocessing objects. These are
@@ -57,7 +58,9 @@ class Data(UserDict):
         )
 
         self.sub_name = sub_name
-        self.run_name = run_name
+        self.all_run_names = run_names
+        self.all_run_paths = None  # Holds the full path to all runs used
+        self.run_name = None   # This is the output run name used for concatenating multiple runs
         self.pp_steps = pp_steps
         self.data: Dict = {"0-raw": None}
         self.opts: Dict = {"0-raw": None}
@@ -65,7 +68,7 @@ class Data(UserDict):
         # TODO: this requires gate number to be known
         # which is passed at runtime. There is probably
         # better way to handle this.
-        self.run_level_path = Path()
+        self.run_level_path = Path()  # TODO: new name I think this is output path now 
 
         # These are dynamically set by the sorter
         # chosen at runtime.
@@ -78,7 +81,82 @@ class Data(UserDict):
         self.waveforms_output_path = Path()
         self.quality_metrics_path = Path()
 
+        self.handle_multiple_runs()  # TODO: change name this is key function even for single run
+
     # Load and Save --------------------------------------------------------------------
+
+    def handle_multiple_runs(self):
+        """
+        """
+        make_run_path = lambda name: self.base_path / "rawdata" / self.sub_name / f"{name}"  # TODO just use an actual function...
+
+        if self.all_run_names == ["all"] or len(self.all_run_names) > 1:  # TOOD: rename as run_name
+
+            search_run_paths = list((self.base_path / "rawdata" / self.sub_name).glob(f"*_g0")) # TODO: this is a dumb way to search? too dependent on g0?
+
+            if self.all_run_names == ["all"]:  # TODO: change all_run_names back
+
+                # if "all" always search by datetime
+                search_run_paths_by_creation_time = copy.deepcopy(search_run_paths)  # TODO: fix
+                search_run_paths_by_mod_time = copy.deepcopy(search_run_paths)
+
+                search_run_paths_by_creation_time.sort(key=os.path.getctime)
+                search_run_paths_by_mod_time.sort(key=os.path.getmtime)
+
+                assert search_run_paths_by_creation_time == search_run_paths_by_mod_time, "Run file creation time and modification time do not match. " \
+                                                                                           "Contact Joe as it is not clear what to do in this case."
+                search_run_paths = search_run_paths_by_creation_time
+            else:
+                # if the user has specified runs, for now sanity-check they are in datetime order.
+                # It is highly unlikely they will want to specify out of datetime order
+                # givr an option to override this?
+                search_run_paths_by_creation_time = copy.deepcopy(search_run_paths)
+                search_run_paths_by_creation_time.sort(key=os.path.getctime)
+                assert search_run_paths == search_run_paths_by_creation_time, "run names are not specified in time order. "
+
+            search_run_names = [path_.stem for path_ in search_run_paths]  # to List[Path] to List[str]
+
+            if self.all_run_names != ["all"]:  # TODO: test this case
+                breakpoint()
+                check_run_names = [f"{name}_g0" for name in self.all_run_names]
+                search_run_names = [name for name in search_run_names if
+                                      name in check_run_names]
+
+            self.all_run_paths = [make_run_path(name) for name in search_run_names]  # TODO: we go from path to name, validate then back to path. Must be better logic here
+
+            self.run_name = self.make_run_name_from_multiple_run_names(search_run_names)
+        else:
+            self.all_run_paths = [make_run_path(f"{self.all_run_names[0]}_g0")]
+            self.run_name = self.all_run_names[0]
+
+        assert len(self.all_run_paths) > 0, f"No runs found for {self.run_names}. Make sure to specify run_names without gate / trigger (e.g. no _g0)."
+        
+        check_all_run_paths = copy.deepcopy(self.all_run_paths)  # TODO: streamline this
+        check_all_run_paths.sort(key=os.path.getctime)
+        assert self.all_run_paths == check_all_run_paths, "TODO: something went wrong in processing path creation times"
+
+        self.run_level_path = make_run_path(self.run_name)  # TODO _g0 suffix handling here is a bit fiddly and not clear, TOOD new name this is output path now
+
+    def make_run_name_from_multiple_run_names(self, run_names):
+
+        all_names = []
+        for idx, name in enumerate(run_names):
+            if idx == 0:
+                all_names.extend(name.split("_"))
+            else:
+                split_name = name.split("_")  # TODO: how to handle _g0 here
+                new_name = [n for n in split_name if n not in all_names]  # TODO: is this very dumb?
+                all_names.extend(new_name)
+
+        if "g0" in all_names:
+            all_names.remove("g0")
+
+        run_name =  "_".join(all_names)
+
+        return run_name
+
+
+
 
     def save_all_preprocessed_data(self):
         self.save_preprocessed_binary()

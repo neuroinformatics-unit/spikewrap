@@ -25,7 +25,8 @@ def quality_check(
     sorter : the name of the sorter (e.g. "kilosort2_5").
 
     """
-    data, recording = utils.load_data_and_recording(Path(preprocessed_output_path))
+    data, recording = utils.load_data_and_recording(Path(preprocessed_output_path),
+                                                    concatenate=True)
     data.set_sorter_output_paths(sorter)
 
     utils.message_user(f"Qualitys Checks: sorting path used: {data.sorter_run_output_path}", verbose)
