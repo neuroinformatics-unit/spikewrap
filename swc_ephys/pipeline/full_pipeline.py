@@ -15,7 +15,6 @@ def run_full_pipeline(
     sorter: str = "kilosort2_5",
     use_existing_preprocessed_file: bool = False,
     verbose: bool = True,
-    concat_mode: bool = False,
 ):
     """
     Run preprocessing, sorting and quality checks on SpikeGLX data.
@@ -47,6 +46,11 @@ def run_full_pipeline(
                                      subject, it will be used. If False and this folder
                                      exists, an error will be raised.
     """
+    if not isinstance(run_name, list):
+        run_name = [run_name]
+        if "all" in run_name and len(run_name) != 1:
+            raise BaseException("'all' run name must be used on its own.")  # TODO: handle exceptions properly
+
     pp_steps, sorter_options = get_configs(config_name)
 
     # Load the data from file (lazy)
