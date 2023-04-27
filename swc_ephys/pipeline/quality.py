@@ -11,7 +11,7 @@ from ..utils import utils
 
 
 def quality_check(
-    preprocessed_output_path: Union[Path, str], sorter: str = "kilosort2_5"
+    preprocessed_output_path: Union[Path, str], sorter: str = "kilosort2_5", verbose: bool = True,
 ):
     """
     Save quality metrics on sorting output to a qualitric_metrics.csv file.

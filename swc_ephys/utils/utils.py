@@ -4,9 +4,9 @@ from typing import List, Tuple, Union
 
 import numpy as np
 from spikeinterface.core import BaseRecording
-
+from spikeinterface import concatenate_recordings
 from ..pipeline.data_class import Data
-
+import subprocess
 
 def get_keys_first_char(
     dict_: Data, as_int: bool = False
@@ -60,6 +60,7 @@ def message_user(message: str, verbose: bool = True):
 
 def load_data_and_recording(
     preprocessed_output_path: Path,
+    concatenate: bool = True,
 ) -> Tuple[Data, BaseRecording]:
     """
     During sorting, preprocessed data is saved to
@@ -72,6 +73,9 @@ def load_data_and_recording(
     with open(Path(preprocessed_output_path) / "data_class.pkl", "rb") as file:
         data = pickle.load(file)
     recording = data.load_preprocessed_binary()
+
+    if concatenate:
+        recording = concatenate_recordings([recording])
 
     return data, recording
 
@@ -87,3 +91,11 @@ def get_sorter_path(sorter: str) -> Path:
     """
     base_path = Path("/ceph/neuroinformatics/neuroinformatics/scratch/sorter_images")
     return base_path / sorter / f"{sorter}-compiled-base.sif"
+
+def check_singularity_install():
+    
+    try:
+        subprocess.run("singularity --version", shell=True)
+        return True
+    except FileNotFoundError:
+        return False
