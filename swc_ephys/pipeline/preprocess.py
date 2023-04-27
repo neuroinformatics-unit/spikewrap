@@ -3,12 +3,11 @@ from pathlib import Path
 from typing import Dict, List, Optional, Tuple, Union
 
 import numpy as np
-import spikeinterface.extractors as se
 import spikeinterface.preprocessing as spre
 
 from ..configs import configs
 from ..utils import utils
-
+from .data_class import Data
 
 def preprocess(
     data: Data,

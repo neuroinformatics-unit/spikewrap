@@ -1,5 +1,5 @@
 from .data_class import Data
-
+import spikeinterface.extractors as se
 
 def load_spikeglx_data(base_path, sub_name, run_name):  # TODO: currently only spikeglx supported
     """
