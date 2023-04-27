@@ -7,10 +7,16 @@ from .quality import quality_check
 from .sort import run_sorting
 from .load_data import load_spikeglx_data
 
+# make note that pp is all per-segment (make an option for this later)
+# now we concatenate files together at the segment level. STILL NEED TO CONCAT SEGMETNS PRIOR TO SORTING!?
+# make it super clear g0 not included on run name,... in antipatciaton to handle other gate /trigger. Up until then coould accept.
+# TODO: currently only spikeglx supported
+# should the derivatives output have the gate idx? thinking forward in case gates will be supported 
+
 def run_full_pipeline(
     base_path: Union[Path, str],
     sub_name: str,
-    run_name: str,
+    run_names: str,
     config_name: str = "test",
     sorter: str = "kilosort2_5",
     use_existing_preprocessed_file: bool = False,
@@ -32,7 +38,10 @@ def run_full_pipeline(
     sub_name : subject to preprocess. The subject top level dir should reside in
                base_path/rawdata/
 
-    run_name : the spikeglx run name (i.e. not including the gate index).
+    run_names : the spikeglx run name (i.e. not including the gate index). This can
+                also be a list of run names, or "all", in which case all runs in that
+                folder will be concatenated and sorted together. Preprocessing will still
+                occur per-run. Runs will always be concatenated in date order. TODO: offer key to disable this.
 
     configs_name : the name of the configuration to use. Note this must be the name
                    of .yaml file (not including the extension) stored in
@@ -46,15 +55,15 @@ def run_full_pipeline(
                                      subject, it will be used. If False and this folder
                                      exists, an error will be raised.
     """
-    if not isinstance(run_name, list):
-        run_name = [run_name]
-        if "all" in run_name and len(run_name) != 1:
+    if not isinstance(run_names, list):
+        run_names = [run_names]
+        if "all" in run_names and len(run_names) != 1:
             raise BaseException("'all' run name must be used on its own.")  # TODO: handle exceptions properly
 
     pp_steps, sorter_options = get_configs(config_name)
 
     # Load the data from file (lazy)
-    data = load_spikeglx_data(base_path, sub_name, run_name)
+    data = load_spikeglx_data(base_path, sub_name, run_names)
 
     # This is lazy - no preprocessing done yet
     data = preprocess(data, pp_steps, verbose)
