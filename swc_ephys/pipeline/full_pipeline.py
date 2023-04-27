@@ -14,6 +14,7 @@ def run_full_pipeline(
     config_name: str = "test",
     sorter: str = "kilosort2_5",
     use_existing_preprocessed_file: bool = False,
+    verbose: bool = True,
 ):
     """
     Run preprocessing, sorting and quality checks on SpikeGLX data.
@@ -49,14 +50,14 @@ def run_full_pipeline(
 
     # Get the recording object. This is lazy - no preprocessing done yet
     data = preprocess(
-        base_path=base_path, sub_name=sub_name, run_name=run_name, pp_steps=pp_steps
+        base_path=base_path, sub_name=sub_name, run_name=run_name, pp_steps=pp_steps, verbose=verbose,
     )
 
     # Run sorting. This will save the final preprocessing step
     # recording to disk prior to sorting.
-    run_sorting(data, sorter, sorter_options, use_existing_preprocessed_file)
+    run_sorting(data, sorter, sorter_options, use_existing_preprocessed_file, verbose=verbose)
 
     # Save spikeinterface 'waveforms' output (TODO: currently, this is large)
     # to the sorter output dir. Quality checks are run and .csv of checks
     # output in the sorter folder as quality_metrics.csv
-    quality_check(data.preprocessed_output_path, sorter)
+    quality_check(data.preprocessed_output_path, sorter, verbose)

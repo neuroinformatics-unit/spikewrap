@@ -28,16 +28,27 @@ def quality_check(
     data, recording = utils.load_data_and_recording(Path(preprocessed_output_path))
     data.set_sorter_output_paths(sorter)
 
+    utils.message_user(f"Qualitys Checks: sorting path used: {data.sorter_run_output_path}", verbose)
+
     if not data.waveforms_output_path.is_dir():
+
+        utils.message_user(f"Saving waveforms to {data.waveforms_output_path}")
+
         sorting_without_excess_spikes = load_sorting_output(data, recording, sorter)
+
         waveforms = si.extract_waveforms(
             recording, sorting_without_excess_spikes, folder=data.waveforms_output_path
         )
     else:
+
+        utils.message_user("Loading existing waveforms from: {data.waveforms_output_path}", verbose)
+
         waveforms = si.load_waveforms(data.waveforms_output_path)
 
     metrics = si.qualitymetrics.compute_quality_metrics(waveforms)
     metrics.to_csv(data.quality_metrics_path)
+
+    utils.message_user(f"Quality metrics saved to {data.quality_metrics_path}")
 
 
 def load_sorting_output(data, recording, sorter):
