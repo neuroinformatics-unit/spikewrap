@@ -2,16 +2,17 @@ from pathlib import Path
 from typing import Union
 
 from ..configs.configs import get_configs
+from .load_data import load_spikeglx_data
 from .preprocess import preprocess
 from .quality import quality_check
 from .sort import run_sorting
-from .load_data import load_spikeglx_data
 
 # make note that pp is all per-segment (make an option for this later)
 # now we concatenate files together at the segment level. STILL NEED TO CONCAT SEGMETNS PRIOR TO SORTING!?
 # make it super clear g0 not included on run name,... in antipatciaton to handle other gate /trigger. Up until then coould accept.
 # TODO: currently only spikeglx supported
-# should the derivatives output have the gate idx? thinking forward in case gates will be supported 
+# should the derivatives output have the gate idx? thinking forward in case gates will be supported
+
 
 def run_full_pipeline(
     base_path: Union[Path, str],
@@ -66,8 +67,14 @@ def run_full_pipeline(
 
     # Run sorting. This will save the final preprocessing step
     # recording to disk prior to sorting.
-    run_sorting(data, sorter, sorter_options, use_existing_preprocessed_file, 
-                verbose=verbose, remove_existing_folder=overwrite_existing_sorter_output)
+    run_sorting(
+        data,
+        sorter,
+        sorter_options,
+        use_existing_preprocessed_file,
+        overwrite_existing_sorter_output,
+        verbose,
+    )
 
     # Save spikeinterface 'waveforms' output (TODO: currently, this is large)
     # to the sorter output dir. Quality checks are run and .csv of checks
