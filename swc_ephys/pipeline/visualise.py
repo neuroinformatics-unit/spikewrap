@@ -1,3 +1,5 @@
+import inspect
+from pathlib import Path
 from typing import List, Optional, Tuple, Union
 
 import matplotlib.pyplot as plt
@@ -16,6 +18,7 @@ def visualise(
     channel_idx_to_show: Union[List, Tuple, np.ndarray, None] = None,
     time_range: Optional[Tuple] = None,
     show_channel_ids: bool = False,
+    run_number: int = 1,
 ):
     """
     Plot the data at various preprocessing steps, useful for quality-checking.
@@ -46,17 +49,21 @@ def visualise(
                  range 1- 5 s.
 
     show_channel_ids : if True, channel IDS will be displayed on the plot.
+
+    run_number : The run number to visualise (in the case of a concatenated recording.
+                 Under the hood, each run maps to a SpikeInterface segment_index.
     """
     if not isinstance(steps, list):
         steps = [steps]
 
     if "all" in steps:
-        # TODO: need more validation
         assert len(steps) == 1, "if using 'all' only put one step input"
         steps = utils.get_keys_first_char(data)
 
-    assert len(steps) <= len(data), "The number of steps must be less or equal to the number of steps in the recording"
-
+    assert len(steps) <= len(data), (
+        "The number of steps must be less or equal to the "
+        "number of steps in the recording"
+    )
 
     if len(steps) == 1 and as_subplot:
         as_subplot = False
@@ -98,7 +105,7 @@ def visualise(
             show_channel_ids=show_channel_ids,
             mode=mode,
             ax=current_ax,
-            segment_index=0,  # TODO: handle this better... or at all
+            segment_index=run_number - 1,
         )
 
         if not as_subplot:
@@ -110,20 +117,39 @@ def visualise(
     if as_subplot:
         plt.show()
 
-def visualise_preprocessing_output(preprocessing_path, **kwargs):  # TODO: do something better than kwargs?
-    """
-    
-    """
-    data, recording = utils.load_data_and_recording(preprocessing_path)
 
-    assert "steps" not in kwargs, "Cannot specify 'steps' when visualising preprocessed data. " \
-                                  "Only the final output exists."
-        
+def visualise_preprocessing_output(preprocessing_path: Union[Path, str], **kwargs):
+    """
+    Visualise the saved, preprocessed data that is fed into
+    the sorter.
+
+    preprocessing_path :
+        the path to the 'preprocessed' output folder in 'derivatives'
+        that is generated from a previous preprocessing round
+        (see preprocess.py);
+
+        e.g. r"/base_path/derivatives/1110925/1110925_test_shank1_cut/preprocessed"
+    """
+    data, recording = utils.load_data_and_recording(Path(preprocessing_path))
+
+    # Argument validation
+    visualise_args = inspect.getfullargspec(visualise).args
+
+    for key in kwargs.keys():
+        assert key in visualise_args, (
+            f"The key {key} is not a valid argument to visualise()."
+            f"Must be one of {visualise_args}"
+        )
+
+    assert "steps" not in kwargs, (
+        "Cannot specify 'steps' when visualising preprocessed data. "
+        "Only the final output exists."
+    )
+
+    # Must be 0 step in preprocessed data
     kwargs.update({"steps": "0"})
 
     data.clear()
     data.update({"0_preprocessed": recording})
 
     visualise(data, **kwargs)
-
-
