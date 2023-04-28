@@ -20,6 +20,7 @@ def run_full_pipeline(
     config_name: str = "test",
     sorter: str = "kilosort2_5",
     use_existing_preprocessed_file: bool = False,
+    overwrite_existing_sorter_output: bool = False,
     verbose: bool = True,
 ):
     """
@@ -55,11 +56,6 @@ def run_full_pipeline(
                                      subject, it will be used. If False and this folder
                                      exists, an error will be raised.
     """
-    if not isinstance(run_names, list):
-        run_names = [run_names]
-        if "all" in run_names and len(run_names) != 1:
-            raise BaseException("'all' run name must be used on its own.")  # TODO: handle exceptions properly
-
     pp_steps, sorter_options = get_configs(config_name)
 
     # Load the data from file (lazy)
@@ -70,7 +66,8 @@ def run_full_pipeline(
 
     # Run sorting. This will save the final preprocessing step
     # recording to disk prior to sorting.
-    run_sorting(data, sorter, sorter_options, use_existing_preprocessed_file, verbose=verbose)
+    run_sorting(data, sorter, sorter_options, use_existing_preprocessed_file, 
+                verbose=verbose, remove_existing_folder=overwrite_existing_sorter_output)
 
     # Save spikeinterface 'waveforms' output (TODO: currently, this is large)
     # to the sorter output dir. Quality checks are run and .csv of checks
