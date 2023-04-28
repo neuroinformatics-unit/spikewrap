@@ -3,7 +3,7 @@ import os.path
 import pickle
 import subprocess
 from pathlib import Path
-from typing import List, Tuple, Union
+from typing import Callable, List, Tuple, Union
 
 import numpy as np
 from spikeinterface import concatenate_recordings
@@ -114,11 +114,12 @@ def sort_list_of_paths_by_datetime_order(list_of_paths: List[Path]) -> List[Path
 
 
 def assert_list_of_files_are_in_datetime_order(
-    list_of_paths, creation_or_modification="creation"
-):
+    list_of_paths: List[Path], creation_or_modification: str = "creation"
+) -> None:
     """ """
+    filter: Callable
     filter = (
-        os.path.getmtime if creation_or_modification == "creation" else "modification"
+        os.path.getmtime if creation_or_modification == "creation" else os.path.getctime
     )
 
     list_of_paths_by_mod_time = copy.deepcopy(list_of_paths)

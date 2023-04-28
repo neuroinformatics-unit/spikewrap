@@ -105,16 +105,10 @@ class Data(UserDict):
 
     # Load and Save --------------------------------------------------------------------
 
-    def create_runs_from_single_or_multiple_run_names(self):
-        """
-        # If the user has specified runs, for now sanity-check they are in datetime
-        order.
-        # It is highly unlikely they will want to specify out of datetime order
-        # TODO: this is a dumb way to search? too dependent on g0?
-        # ################# TEST ALL CASES #############
-        # TODO _g0 suffix handling here is a bit fiddly and not clear, TOOD new name
-        this is output path now
-        """
+    def create_runs_from_single_or_multiple_run_names(
+        self,
+    ) -> Tuple[Path, List[Path], str]:
+        """ """
         if self.all_run_names == ["all"] or len(self.all_run_names) > 1:
             all_run_paths, run_name = self.get_multi_run_names_paths()
         else:
@@ -132,10 +126,10 @@ class Data(UserDict):
 
         return run_level_path, all_run_paths, run_name
 
-    def get_multi_run_names_paths(self):
+    def get_multi_run_names_paths(self) -> Tuple[List[Path], str]:
         """ """
         search_run_paths = list(
-            (self.base_path / "rawdata" / self.sub_name).glob("*_g0")
+            Path(self.base_path / "rawdata" / self.sub_name).glob("*_g0")
         )
 
         if self.all_run_names == ["all"]:
@@ -162,17 +156,24 @@ class Data(UserDict):
 
         return all_run_paths, run_name
 
-    def make_run_name_from_multiple_run_names(self, run_names):
-        """ """
+    def make_run_name_from_multiple_run_names(self, run_names: List[str]) -> str:
+        """
+        TODO
+        ----
+        This is somewhat experimental, need to see
+        a) how this works generally
+        b) how to handle _g0 (does it make sense to have on output?
+
+        In general this won't mess anything up, just may lead to some unintuitive
+        output run names
+        """
         all_names = []
         for idx, name in enumerate(run_names):
             if idx == 0:
                 all_names.extend(name.split("_"))
             else:
-                split_name = name.split("_")  # TODO: how to handle _g0 here
-                new_name = [
-                    n for n in split_name if n not in all_names
-                ]  # TODO: is this very dumb?
+                split_name = name.split("_")
+                new_name = [n for n in split_name if n not in all_names]
                 all_names.extend(new_name)
 
         if "g0" in all_names:
@@ -223,7 +224,7 @@ class Data(UserDict):
             self.preprocessed_output_path / "si_recording"
         )
 
-    def set_sorter_output_paths(self, sorter):
+    def set_sorter_output_paths(self, sorter: str):
         """ """
         assert (
             self.run_level_path is not None
@@ -254,5 +255,5 @@ class Data(UserDict):
 
     # ----------------------------------------------------------------------------------
 
-    def make_run_path(self, run_name):
+    def make_run_path(self, run_name: str) -> Path:
         return self.base_path / "rawdata" / self.sub_name / f"{run_name}"
