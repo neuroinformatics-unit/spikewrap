@@ -97,7 +97,7 @@ class Data(UserDict):
         )
         if not isinstance(run_names, list):
             run_names = [run_names]
-            assert (
+            assert not (
                 "all" in run_names and len(run_names) != 1
             ), "'all' run name must be used on its own."
 
