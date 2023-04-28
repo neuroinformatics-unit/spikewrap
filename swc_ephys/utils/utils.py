@@ -1,12 +1,16 @@
+import copy
+import os.path
 import pickle
+import subprocess
 from pathlib import Path
 from typing import List, Tuple, Union
 
 import numpy as np
-from spikeinterface.core import BaseRecording
 from spikeinterface import concatenate_recordings
+from spikeinterface.core import BaseRecording
+
 from ..pipeline.data_class import Data
-import subprocess
+
 
 def get_keys_first_char(
     dict_: Data, as_int: bool = False
@@ -35,7 +39,7 @@ def get_dict_value_from_step_num(
     if step_num == "last":
         pp_key_nums = get_keys_first_char(dict_, as_int=True)
 
-        # TODO: for now, complete overkill but this is critical
+        # complete overkill but this is critical
         step_num = str(int(np.max(pp_key_nums)))
         assert (
             int(step_num) == len(dict_.keys()) - 1
@@ -84,18 +88,44 @@ def get_sorter_path(sorter: str) -> Path:
     """
     Return the path to the sorter image on the HCP.
     Currently, this is just in NIU scratch.
-
-    TODO
-    ----
-    these should be loaded on a module.
     """
     base_path = Path("/ceph/neuroinformatics/neuroinformatics/scratch/sorter_images")
     return base_path / sorter / f"{sorter}-compiled-base.sif"
 
+
 def check_singularity_install():
-    
     try:
         subprocess.run("singularity --version", shell=True)
         return True
     except FileNotFoundError:
         return False
+
+
+def sort_list_of_paths_by_datetime_order(list_of_paths: List[Path]) -> List[Path]:
+    """ """
+    list_of_paths_by_creation_time = copy.deepcopy(list_of_paths)
+    list_of_paths_by_creation_time.sort(key=os.path.getctime)
+
+    assert_list_of_files_are_in_datetime_order(
+        list_of_paths_by_creation_time, "modification"
+    )
+
+    return list_of_paths_by_creation_time
+
+
+def assert_list_of_files_are_in_datetime_order(
+    list_of_paths, creation_or_modification="creation"
+):
+    """ """
+    filter = (
+        os.path.getmtime if creation_or_modification == "creation" else "modification"
+    )
+
+    list_of_paths_by_mod_time = copy.deepcopy(list_of_paths)
+    list_of_paths_by_mod_time.sort(key=filter)
+
+    assert list_of_paths == list_of_paths_by_mod_time, (
+        f"Run list of files are not in {creation_or_modification} datetime order. "
+        f"Files List: {list_of_paths}\n"
+        f"Contact Joe as it is not clear what to do in this case."
+    )
