@@ -73,49 +73,72 @@ def visualise(
     ):
         channel_idx_to_show = np.array(channel_idx_to_show, dtype=np.int32)
 
-    if as_subplot:
-        num_cols = 2
-        num_rows = np.ceil(len(steps) / num_cols).astype(int)
-        fig, ax = plt.subplots(num_rows, num_cols)
+    total_used_shanks = data.get_probe_group_num()
 
-    for idx, step in enumerate(steps):
-        recording, full_key = utils.get_dict_value_from_step_num(data, str(step))
+    for shank_idx in range(total_used_shanks):
+        if as_subplot:
+            num_cols = 2
+            num_rows = np.ceil(len(steps) / num_cols).astype(int)
+            fig, ax = plt.subplots(num_rows, num_cols)
+            fig.tight_layout(rect=[0, 0.03, 1, 0.95])
+
+        for idx, step in enumerate(steps):
+            recording, full_key = utils.get_dict_value_from_step_num(data, str(step))
+
+            # TODO: it is critical this run name is tested extremely
+            # thoroughly. We don't want run IDS swapping!
+            plot_title = (
+                r"$\bf{Run \ name:}$" + f"{data.all_run_names[run_number - 1]}"
+                "\n" + r"$\bf{Preprocessing \ step:}$" + f"{full_key}"
+            )  # TODO: move to utils, same as below
+            # newline must come at start to save space in case not all used
+            recordings = recording.split_by(property="group")
+
+            recording_to_plot = recordings[shank_idx]
+
+            if total_used_shanks > 1:
+                plot_title += (
+                    "\n" + r"$\bf{Shank \ group:}$" + f"{shank_idx}"
+                    "\n"
+                    + r"$\bf{Num \ channels:}$"
+                    + f"{recording_to_plot.get_num_channels()}"
+                )
+
+            if as_subplot:
+                idx_unraveled = np.unravel_index(idx, shape=(num_rows, num_cols))
+                current_ax = ax[idx_unraveled]
+            else:
+                current_ax = None
+
+            if channel_idx_to_show is None:
+                channel_ids_to_show = None
+            else:
+                channel_ids = recording_to_plot.get_channel_ids()
+
+                # channel ids are returned in default order (e.g. 0, 1, 2...)
+                # not ordered by depth.
+                channel_ids_to_show = channel_ids[channel_idx_to_show]
+
+            sw.plot_timeseries(
+                recording_to_plot,
+                channel_ids=channel_ids_to_show,
+                order_channel_by_depth=True,
+                time_range=time_range,
+                return_scaled=True,
+                show_channel_ids=show_channel_ids,
+                mode=mode,
+                ax=current_ax,
+                segment_index=run_number - 1,
+            )
+
+            if not as_subplot:
+                plt.title(plot_title)
+                plt.show()
+            else:
+                current_ax.set_title(plot_title)
 
         if as_subplot:
-            idx = np.unravel_index(idx, shape=(num_rows, num_cols))
-            current_ax = ax[idx]
-        else:
-            current_ax = None
-
-        if channel_idx_to_show is None:
-            channel_ids_to_show = None
-        else:
-            channel_ids = recording.get_channel_ids()
-
-            # channel ids are returned in default order (e.g. 0, 1, 2...)
-            # not ordered by depth.
-            channel_ids_to_show = channel_ids[channel_idx_to_show]
-
-        sw.plot_timeseries(
-            recording,
-            channel_ids=channel_ids_to_show,
-            order_channel_by_depth=True,
-            time_range=time_range,
-            return_scaled=True,
-            show_channel_ids=show_channel_ids,
-            mode=mode,
-            ax=current_ax,
-            segment_index=run_number - 1,
-        )
-
-        if not as_subplot:
-            plt.title(full_key)
             plt.show()
-        else:
-            current_ax.set_title(full_key)
-
-    if as_subplot:
-        plt.show()
 
 
 def visualise_preprocessing_output(preprocessing_path: Union[Path, str], **kwargs):
@@ -137,7 +160,7 @@ def visualise_preprocessing_output(preprocessing_path: Union[Path, str], **kwarg
 
     for key in kwargs.keys():
         assert key in visualise_args, (
-            f"The key {key} is not a valid argument to visualise()."
+            f"The key {key} is not a valid argument to visualise(). "
             f"Must be one of {visualise_args}"
         )
 

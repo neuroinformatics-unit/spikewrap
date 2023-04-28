@@ -1,3 +1,10 @@
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from ..pipeline.data_class import Data
+
 import copy
 import os.path
 import pickle
@@ -8,8 +15,6 @@ from typing import Callable, List, Tuple, Union
 import numpy as np
 from spikeinterface import concatenate_recordings
 from spikeinterface.core import BaseRecording
-
-from ..pipeline.data_class import Data
 
 
 def get_keys_first_char(
