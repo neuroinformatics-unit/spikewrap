@@ -4,9 +4,7 @@ from swc_ephys.pipeline.load_data import load_spikeglx_data
 from swc_ephys.pipeline.preprocess import preprocess
 from swc_ephys.pipeline.sort import run_sorting
 
-base_path = Path(
-    "/home/joe/data"
-)  # Path(r"/ceph/neuroinformatics/neuroinformatics/scratch/ece_ephys_learning")
+base_path = Path("/home/joe/data")
 sub_name = "1110925"
 run_names = "1110925_test_shank1_cut"
 
