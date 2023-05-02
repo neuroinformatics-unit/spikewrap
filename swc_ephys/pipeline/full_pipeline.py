@@ -23,6 +23,7 @@ def run_full_pipeline(
     use_existing_preprocessed_file: bool = False,
     overwrite_existing_sorter_output: bool = False,
     verbose: bool = True,
+    slurm_job: bool = False,
 ):
     """
     Run preprocessing, sorting and quality checks on SpikeGLX data.
@@ -57,6 +58,12 @@ def run_full_pipeline(
                                      subject, it will be used. If False and this folder
                                      exists, an error will be raised.
     """
+    if slurm_job:
+        args_ = locals()
+        local_args.update({"slurm_job": False})
+        breakpoint()
+        slurm.run_full_pipeline(**local_args)
+
     pp_steps, sorter_options = get_configs(config_name)
 
     # Load the data from file (lazy)

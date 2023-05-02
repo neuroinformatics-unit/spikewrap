@@ -24,4 +24,5 @@ if __name__ == "__main__":
         sorter,
         use_existing_preprocessed_file=True,
         overwrite_existing_sorter_output=True,
+        slurm_batch=True,
     )
