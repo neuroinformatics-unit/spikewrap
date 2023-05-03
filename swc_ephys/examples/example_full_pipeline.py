@@ -8,7 +8,12 @@ base_path = Path(
     #   r"/time-short_samenaming"
 )
 sub_name = "1119617"  # "cut_same_name"
-run_names = "all"
+run_names = [
+    "1119617_LSE1_shank12_cut",
+    "1119617_posttest1_shank12_cut",
+    "1119617_pretest1_shank12_cut",
+]
+# "all"
 
 config_name = "test"
 sorter = "kilosort2_5"

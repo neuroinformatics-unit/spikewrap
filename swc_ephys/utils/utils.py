@@ -155,7 +155,7 @@ def assert_list_of_files_are_in_datetime_order(
     assert list_of_paths == list_of_paths_by_mod_time, (
         f"Run list of files are not in {creation_or_modification} datetime order. "
         f"Files List: {list_of_paths}\n"
-        f"Contact Joe as it is not clear what to do in this case."
+        f"Please get in contact if you wish to analyse out of datetime order."
     )
 
 
