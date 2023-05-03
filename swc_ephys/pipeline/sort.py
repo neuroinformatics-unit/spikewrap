@@ -112,6 +112,15 @@ def get_data_and_recording(
     recording : recording object (the last in the preprocessing chain) to be fed
                 to the sorter.
     """
+    if isinstance(data, Data):
+        assert not (
+            data.preprocessed_binary_data_path.is_dir()
+            and use_existing_preprocessed_file is False
+        ), (
+            f"Preprocessed binary already exists at {data.preprocessed_binary_data_path}. "
+            f"To overwrite, set 'use_existing_preprocessed_file' to True"
+        )
+
     if isinstance(data, str) or isinstance(data, Path):
         utils.message_user(f"\nLoading binary preprocessed data from {data}\n")
         data, recording = utils.load_data_and_recording(Path(data))

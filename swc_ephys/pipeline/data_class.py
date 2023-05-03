@@ -176,7 +176,6 @@ class Data(UserDict):
         return si.load_extractor(self.preprocessed_binary_data_path)
 
     def save_data_class(self) -> None:
-        print("CALLED {self.preprocessed_output_path}")
         if not self.preprocessed_output_path.is_dir():
             os.makedirs(self.preprocessed_output_path)
 
