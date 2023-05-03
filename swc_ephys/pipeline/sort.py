@@ -1,10 +1,9 @@
 import copy
 import os
 from pathlib import Path
-from typing import Dict, Optional, Tuple, Union
+from typing import Dict, Literal, Optional, Tuple, Union
 
 import spikeinterface.sorters as ss
-from spikeinterface import concatenate_recordings
 from spikeinterface.core import BaseRecording
 
 from ..utils import slurm, utils
@@ -50,22 +49,11 @@ def run_sorting(
         local_args = copy.deepcopy(locals())
         slurm.run_sorting_slurm(**local_args)
         return
-    assert slurm_batch is False, "SLURM run has slurm_batch set True"
 
-    # TODO: input validation function
-    supported_sorters = ["kilosort2", "kilosort2_5", "kilosort3"]
-    assert sorter in supported_sorters, f"sorter must be: {supported_sorters}"
+    sorter_options_dict = validate_inputs(slurm_batch, sorter, sorter_options, verbose)
 
-    assert (
-        utils.check_singularity_install()
-    ), "Singularity must be installed to run sorting."
-
-    sorter_options_dict = {}
-    if sorter_options is not None:
-        sorter_options_dict = sorter_options[sorter]
-
-    sorter_options_dict.update({"verbose": verbose})
-
+    # Write the data to file prior to sorting, or
+    # load existing preprocessing from file required
     loaded_data, recording = get_data_and_recording(
         data, use_existing_preprocessed_file
     )
@@ -74,28 +62,14 @@ def run_sorting(
 
     # this must be run from the folder that has both
     # sorter output AND rawdata
-    os.chdir(loaded_data.base_path)  # TODO: this is super buggy and weird
+    os.chdir(loaded_data.base_path)
 
-    utils.message_user(f"Starting {sorter} sorting...")
-
-    singularity_image: Union[bool, str]
-    if utils.get_sorter_path(sorter).is_file():
-        singularity_image = str(utils.get_sorter_path(sorter))
-    else:
-        singularity_image = True  # TODO: god dammit this just pulls to random pwd repo.
-        # For now just use singularity Clients management
-        # local_singularity_path = Path.home() / ".swc_ephys" / "singularity_images" /
-        # "sorters" / f"{sorter}-compiled-base.sif" # TODO Code duplication from
-        #  get_sorter_path, should be hard coded somewhere. Along with sorter names!
-        #  and other cannonical things
+    singularity_image = get_singularity_image(sorter)
 
     if recording.get_num_segments() > 1:
-        utils.message_user(
-            f"Conatenating {recording.get_num_segments()} into a single segment."
-        )
-        recording = concatenate_recordings(
-            [recording]
-        )  # TODO: somehow centralise? this is nwo in utils
+        recording = utils.concatenate_runs(recording)
+
+    utils.message_user(f"Starting {sorter} sorting...")
 
     ss.run_sorter(
         sorter,
@@ -159,3 +133,36 @@ def get_data_and_recording(
         recording, __ = utils.get_dict_value_from_step_num(data, "last")
 
     return data, recording
+
+
+def validate_inputs(
+    slurm_batch: bool, sorter: str, sorter_options: Optional[Dict], verbose: bool
+) -> Dict:
+    assert slurm_batch is False, "SLURM run has slurm_batch set True"
+
+    supported_sorters = ["kilosort2", "kilosort2_5", "kilosort3"]
+    assert sorter in supported_sorters, f"sorter must be: {supported_sorters}"
+
+    assert (
+        utils.check_singularity_install()
+    ), "Singularity must be installed to run sorting."
+
+    sorter_options_dict = {}
+    if sorter_options is not None:
+        sorter_options_dict = sorter_options[sorter]
+
+    sorter_options_dict.update({"verbose": verbose})
+
+    return sorter_options_dict
+
+
+def get_singularity_image(sorter: str) -> Union[Literal[True], str]:
+    """"""
+    singularity_image: Union[Literal[True], str]
+
+    if utils.get_sorter_path(sorter).is_file():
+        singularity_image = str(utils.get_sorter_path(sorter))
+    else:
+        singularity_image = True
+
+    return singularity_image

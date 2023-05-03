@@ -1,10 +1,17 @@
 """
 """
+from __future__ import annotations
+
+from typing import TYPE_CHECKING, Union
+
+if TYPE_CHECKING:
+    from ..pipeline.data_class import Data
+
 from pathlib import Path
-from typing import Union
 
 import spikeinterface as si
 from spikeinterface import curation
+from spikeinterface.core import BaseRecording
 from spikeinterface.extractors import KiloSortSortingExtractor
 
 from ..utils import utils
@@ -57,7 +64,7 @@ def quality_check(
     utils.message_user(f"Quality metrics saved to {data.quality_metrics_path}")
 
 
-def load_sorting_output(data, recording, sorter):
+def load_sorting_output(data: Data, recording: BaseRecording, sorter: str):
     """
     Load the output of a sorting run
     """
