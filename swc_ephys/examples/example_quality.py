@@ -3,8 +3,9 @@ from pathlib import Path
 from swc_ephys.pipeline.quality import quality_check
 
 base_path = Path(
-    "/home/joe/data"
-)  # Path(r"/ceph/neuroinformatics/neuroinformatics/scratch/ece_ephys_learning")
+    Path(r"/ceph/neuroinformatics/neuroinformatics/scratch/ece_ephys_learning")
+)
+
 sub_name = "1110925"
 run_name = "1110925_test_shank1_cut"
 

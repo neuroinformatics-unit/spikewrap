@@ -85,6 +85,8 @@ def visualise(
         for idx, step in enumerate(steps):
             recording, full_key = utils.get_dict_value_from_step_num(data, str(step))
 
+            assert_valid_time_range(recording, time_range)
+
             # TODO: it is critical this run name is tested extremely
             # thoroughly. We don't want run IDS swapping!
             plot_title = (
@@ -176,3 +178,7 @@ def visualise_preprocessing_output(preprocessing_path: Union[Path, str], **kwarg
     data.update({"0_preprocessed": recording})
 
     visualise(data, **kwargs)
+
+
+def assert_valid_time_range(recording, time_range):
+    breakpoint()
