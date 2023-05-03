@@ -1,17 +1,27 @@
+import copy
 from pathlib import Path
 from typing import Union
 
 from ..configs.configs import get_configs
+from ..utils import slurm
 from .load_data import load_spikeglx_data
 from .preprocess import preprocess
 from .quality import quality_check
 from .sort import run_sorting
 
 # make note that pp is all per-segment (make an option for this later)
-# now we concatenate files together at the segment level. STILL NEED TO CONCAT SEGMETNS PRIOR TO SORTING!?
-# make it super clear g0 not included on run name,... in antipatciaton to handle other gate /trigger. Up until then coould accept.
+# now we concatenate files together at the segment level.
+# STILL NEED TO CONCAT SEGMETNS PRIOR TO SORTING!?
+# make it super clear g0 not included on run name,... in
+# antipatciaton to handle other gate /trigger. Up until then coould accept.
 # TODO: currently only spikeglx supported
-# should the derivatives output have the gate idx? thinking forward in case gates will be supported
+# should the derivatives output have the gate idx? thinking
+# forward in case gates will be supported
+# TODO: print the preprocessing options used if a preprocessing file already exists!
+# TODO: it is weird that preprocessing is logged as if it is happening, if infact
+# it will be skipped because one already exists. Check things exist before.
+# add slurm configs to configs
+# add quality check cutoff configs to configs
 
 
 def run_full_pipeline(
@@ -23,7 +33,7 @@ def run_full_pipeline(
     use_existing_preprocessed_file: bool = False,
     overwrite_existing_sorter_output: bool = False,
     verbose: bool = True,
-    slurm_job: bool = False,
+    slurm_batch=False,
 ):
     """
     Run preprocessing, sorting and quality checks on SpikeGLX data.
@@ -31,7 +41,7 @@ def run_full_pipeline(
 
     This function must be run in main as uses multiprocessing e.g.
     if __name__ == "__main__":
-        run_full_pipieline(args...)
+        run_full_pipeline(args...)
 
     Parameters
     __________
@@ -43,8 +53,9 @@ def run_full_pipeline(
 
     run_names : the spikeglx run name (i.e. not including the gate index). This can
                 also be a list of run names, or "all", in which case all runs in that
-                folder will be concatenated and sorted together. Preprocessing will still
-                occur per-run. Runs will always be concatenated in date order. TODO: offer key to disable this.
+                folder will be concatenated and sorted together. Preprocessing
+                will still occur per-run. Runs will always be concatenated in date
+                order. TODO: offer key to disable this.
 
     configs_name : the name of the configuration to use. Note this must be the name
                    of .yaml file (not including the extension) stored in
@@ -52,17 +63,17 @@ def run_full_pipeline(
 
     sorter : name of the sorter to use e.g. "kilosort2_5".
 
-    use_existing_preprocessed_file : if this function has been run previoulsly
-                                     and a saved preproccessed binary already
+    use_existing_preprocessed_file : if this function has been run previously
+                                     and a saved pre-proccessed binary already
                                      exists in the 'preprocessed' folder for this
                                      subject, it will be used. If False and this folder
                                      exists, an error will be raised.
     """
-    if slurm_job:
-        args_ = locals()
-        local_args.update({"slurm_job": False})
-        breakpoint()
-        slurm.run_full_pipeline(**local_args)
+    if slurm_batch:
+        local_args = copy.deepcopy(locals())
+        slurm.run_sorting_slurm(**local_args)
+        return
+    assert slurm_batch is False, "SLURM run has slurm_batch set True"
 
     pp_steps, sorter_options = get_configs(config_name)
 
