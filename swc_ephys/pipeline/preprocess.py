@@ -67,18 +67,21 @@ def check_and_sort_pp_steps(pp_steps: Dict, pp_funcs: Dict) -> Tuple[Dict, List[
     Parameters
     ----------
 
-    pp_steps : a dictionary with keys as numbers indicating the order that
-               preprocessing steps are run (starting at "1"). The values are a
-               (preprocessing name, preprocessing kwargs) tuple containing the
-               spikeinterface preprocessing function name, and kwargs to pass to it.
+    pp_steps : Dict
+        A dictionary with keys as numbers indicating the order that
+        preprocessing steps are run (starting at "1"). The values are a
+        (preprocessing name, preprocessing kwargs) tuple containing the
+        spikeinterface preprocessing function name, and kwargs to pass to it.
 
     Returns
     -------
 
-    sorted_pp_steps : a sorted and checked preprocessing steps dictionary.
+    sorted_pp_steps :Dict
+        A sorted and checked preprocessing steps dictionary.
 
-    pp_step_names : list of preprocessing step names (e.g. "bandpass_filter"] in order
-                    that they are to be run.
+    pp_step_names : List
+        Preprocessing step names (e.g. "bandpass_filter"] in order
+        that they are to be run.
 
     Notes
     -------
@@ -122,7 +125,7 @@ def perform_preprocessing_step(
     step_num: str,
     pp_info: Tuple[str, Dict],
     data: Data,
-    pp_step_names: List,
+    pp_step_names: List[str],
     pp_funcs: Dict,
     verbose: bool = True,
 ):
@@ -136,18 +139,28 @@ def perform_preprocessing_step(
 
     Parameters
     ----------
-    step_num : preprocessing step to run (e.g. "1", corresponds to the
-              key in pp_dict).
+    step_num : str
+        Preprocessing step to run (e.g. "1", corresponds to the key in pp_dict).
 
-    pp_info : (preprocessing name, preprocessing kwargs) tuple (they value from
-              the pp_dict).
+    pp_info : Tuple[str, Dict]
+        Preprocessing name, preprocessing kwargs) tuple (they value from
+        the pp_dict).
 
-    data : swc_ephys Data class (a UserDict in which key-values are
-           the preprocessing chain name : spikeinterface recording objects).
+    data : sData
+        swc_ephys Data class (a UserDict in which key-values are
+        the preprocessing chain name : spikeinterface recording objects).
 
-    pp_step_names : ordered list of preprocessing step names that are being
-                    applied across the entire preprocessing chain.
+    pp_step_names : List[str]
+        Ordered list of preprocessing step names that are being
+        applied across the entire preprocessing chain.
 
+    pp_funcs : Dict
+        The cannonical SpikeInterface preprocessing functions. The key
+        are the function name and value the function object.
+
+    verbose : bool
+        If True, messages will be printed to consolve updating on the
+        progress of preprocessing / sorting.
     """
     pp_name, pp_options = pp_info
 
@@ -170,9 +183,12 @@ def perform_preprocessing_step(
 def get_pp_funcs() -> Dict:
     """
     Get the spikeinterface preprocessing function
-    from its name. TODO: it should be possible to
-    generate this on the fly from SI __init__ rather
-    than hard code like this
+    from its name.
+
+    TODO
+    -----
+    It should be possible to generate this on the fly from
+    SI __init__ rather than hard code like this
     """
     pp_funcs = {
         "phase_shift": spre.phase_shift,

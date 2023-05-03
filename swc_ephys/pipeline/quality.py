@@ -23,16 +23,21 @@ def quality_check(
     verbose: bool = True,
 ):
     """
-    Save quality metrics on sorting output to a qualitric_metrics.csv file.
+    Save quality metrics on sorting output to a quality_metrics.csv file.
 
     Parameters
     ----------
 
-    preprocessed_output_path : the path to the 'preprocessed' folder in the
-                               subject / run folder used for sorting.
+    preprocessed_output_path : Union[Path, str]
+        The path to the 'preprocessed' folder in the subject / run
+        folder used for sorting.
 
-    sorter : the name of the sorter (e.g. "kilosort2_5").
+    sorter : str
+        The name of the sorter (e.g. "kilosort2_5").
 
+    verbose : bool
+        If True, messages will be printed to consolve updating on the
+        progress of preprocessing / sorting.
     """
     data, recording = utils.load_data_and_recording(
         Path(preprocessed_output_path), concatenate=True
@@ -66,7 +71,7 @@ def quality_check(
 
 def load_sorting_output(data: Data, recording: BaseRecording, sorter: str):
     """
-    Load the output of a sorting run
+    Load the output of a sorting run.
     """
     if not data.sorter_run_output_path.is_dir():
         raise FileNotFoundError(
