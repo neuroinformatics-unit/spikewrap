@@ -80,11 +80,11 @@ def handle_bad_channels(data: Data):
     bad_channels = spre.detect_bad_channels(data["0-raw"])
 
     utils.message_user(
-        f"The following channels were detected as dead / noise: {bad_channels[0]}\n"
+        f"\nThe following channels were detected as dead / noise: {bad_channels[0]}\n"
         f"TODO: DO SOMETHING BETTER WITH THIS INFORMATION. SAVE IT SOMEHWERE\n"
         f"You may like to automatically remove bad channels "
         f"by setting [TO IMPLEMENT]] as a preprocessing option\n"
-        f"TODO: check how this is handled in SI"
+        f"TODO: check how this is handled in SI\n"
     )
 
 
