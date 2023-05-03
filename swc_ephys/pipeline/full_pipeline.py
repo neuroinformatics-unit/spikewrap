@@ -3,7 +3,7 @@ from pathlib import Path
 from typing import Union
 
 from ..configs.configs import get_configs
-from ..utils import slurm
+from ..utils import slurm, utils
 from .load_data import load_spikeglx_data
 from .preprocess import preprocess
 from .quality import quality_check
@@ -65,9 +65,15 @@ def run_full_pipeline(
 
     # Load the data from file (lazy)
     data = load_spikeglx_data(base_path, sub_name, run_names)
+    data.set_preprocessing_output_path()
 
-    # This is lazy - no preprocessing done yet
-    data = preprocess(data, pp_steps, verbose)
+    if use_existing_preprocessed_file and data.preprocessed_binary_data_path.is_dir():
+        utils.message_user(
+            f"\nSkipping preprocessing, using file at "
+            f"{data.preprocessed_binary_data_path} for sorting.\n"
+        )
+    else:
+        data = preprocess(data, pp_steps, verbose)
 
     # Run sorting. This will save the final preprocessing step
     # recording to disk prior to sorting.
