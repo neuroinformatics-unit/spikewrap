@@ -53,73 +53,43 @@ def visualise(
     run_number : The run number to visualise (in the case of a concatenated recording.
                  Under the hood, each run maps to a SpikeInterface segment_index.
     """
-    if not isinstance(steps, list):
-        steps = [steps]
-
-    if "all" in steps:
-        assert len(steps) == 1, "if using 'all' only put one step input"
-        steps = utils.get_keys_first_char(data)
-
-    assert len(steps) <= len(data), (
-        "The number of steps must be less or equal to the "
-        "number of steps in the recording"
-    )
-
-    if len(steps) == 1 and as_subplot:
-        as_subplot = False
-
-    if channel_idx_to_show is not None and not isinstance(
-        channel_idx_to_show, np.ndarray
-    ):
-        channel_idx_to_show = np.array(channel_idx_to_show, dtype=np.int32)
+    steps, as_subplot, channel_idx_to_show = validate_input_arguments(data,
+                                                                      steps,
+                                                                      as_subplot,
+                                                                      channel_idx_to_show)
 
     total_used_shanks = data.get_probe_group_num()
 
     for shank_idx in range(total_used_shanks):
+
         if as_subplot:
-            num_cols = 2
-            num_rows = np.ceil(len(steps) / num_cols).astype(int)
-            fig, ax = plt.subplots(num_rows, num_cols)
-            fig.tight_layout(rect=[0, 0.03, 1, 0.95])
+            fix, ax, num_rows, num_cols = generate_subplot(steps)
 
         for idx, step in enumerate(steps):
+
             recording, full_key = utils.get_dict_value_from_step_num(data, str(step))
 
             validate_options_against_recording(recording, data, time_range, run_number)
 
-            # TODO: it is critical this run name is tested extremely
-            # thoroughly. We don't want run IDS swapping!
-            plot_title = (
-                r"$\bf{Run \ name:}$" + f"{data.all_run_names[run_number - 1]}"
-                "\n" + r"$\bf{Preprocessing \ step:}$" + f"{full_key}"
-            )  # TODO: move to utils, same as below
-            # newline must come at start to save space in case not all used
             recordings = recording.split_by(property="group")
-
             recording_to_plot = recordings[shank_idx]
 
-            if total_used_shanks > 1:
-                plot_title += (
-                    "\n" + r"$\bf{Shank \ group:}$" + f"{shank_idx}"
-                    "\n"
-                    + r"$\bf{Num \ channels:}$"
-                    + f"{recording_to_plot.get_num_channels()}"
-                )
+            plot_title = utils.make_preprocessing_plot_title(data,
+                                                             run_number,
+                                                             full_key,
+                                                             shank_idx,
+                                                             recording_to_plot,
+                                                             total_used_shanks)
 
-            if as_subplot:
-                idx_unraveled = np.unravel_index(idx, shape=(num_rows, num_cols))
-                current_ax = ax[idx_unraveled]
-            else:
-                current_ax = None
+            current_ax = None if not as_subplot else get_subplot_ax(
+                idx,
+                ax,
+                num_rows,
+                num_cols
+            )
 
-            if channel_idx_to_show is None:
-                channel_ids_to_show = None
-            else:
-                channel_ids = recording_to_plot.get_channel_ids()
-
-                # channel ids are returned in default order (e.g. 0, 1, 2...)
-                # not ordered by depth.
-                channel_ids_to_show = channel_ids[channel_idx_to_show]
+            channel_ids_to_show = get_channel_ids_to_show(recording_to_plot,
+                                                          channel_idx_to_show)
 
             sw.plot_timeseries(
                 recording_to_plot,
@@ -142,6 +112,28 @@ def visualise(
         if as_subplot:
             plt.show()
 
+
+def get_channel_ids_to_show(recording_to_plot,
+                            channel_idx_to_show):
+    """
+    Channel ids are returned in default order (e.g. 0, 1, 2...)
+    not ordered by depth.
+    """
+    if channel_idx_to_show is None:
+        channel_ids_to_show = None
+    else:
+        channel_ids = recording_to_plot.get_channel_ids()
+        channel_ids_to_show = channel_ids[channel_idx_to_show]
+
+    return channel_ids_to_show
+
+
+def generate_subplot(steps):
+    num_cols = 2
+    num_rows = np.ceil(len(steps) / num_cols).astype(int)
+    fig, ax = plt.subplots(num_rows, num_cols)
+    fig.tight_layout(rect=[0, 0.03, 1, 0.95])
+    return fig, ax, num_rows, num_cols
 
 def visualise_preprocessing_output(preprocessing_path: Union[Path, str], **kwargs):
     """
@@ -180,5 +172,44 @@ def visualise_preprocessing_output(preprocessing_path: Union[Path, str], **kwarg
     visualise(data, **kwargs)
 
 
+def get_subplot_ax(idx, ax, num_rows, num_cols):
+    idx_unraveled = np.unravel_index(idx, shape=(num_rows, num_cols))
+    current_ax = ax[idx_unraveled]
+    return current_ax
+
+
+def validate_input_arguments(data, steps, as_subplot, channel_idx_to_show):
+    """
+    """
+    if not isinstance(steps, list):
+        steps = [steps]
+
+    if "all" in steps:
+        assert len(steps) == 1, "if using 'all' only put one step input"
+        steps = utils.get_keys_first_char(data)
+
+    assert len(steps) <= len(data), (
+        "The number of steps must be less or equal to the "
+        "number of steps in the recording"
+    )
+
+    if len(steps) == 1 and as_subplot:
+        as_subplot = False
+
+    if channel_idx_to_show is not None and not isinstance(
+        channel_idx_to_show, np.ndarray
+    ):
+        channel_idx_to_show = np.array(channel_idx_to_show, dtype=np.int32)
+
+    return steps, as_subplot, channel_idx_to_show
+
 def validate_options_against_recording(recording, data, time_range, run_number):
-    breakpoint()
+    """
+    TODO: can't find a better way to get final timepoint, but must be
+    somewhere, this is wasteful.
+    """
+    num_runs = len(data.all_run_names)
+    assert run_number <= num_runs, "The run_number must be less than or equal to the " \
+                                   "number of runs specified."
+    assert time_range[1] <= recording.get_times(segment_index=run_number - 1)[-1], \
+    "The time range specified is longer than the maximum time of the recording."
