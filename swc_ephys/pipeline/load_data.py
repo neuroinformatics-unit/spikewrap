@@ -1,10 +1,19 @@
+from __future__ import annotations
+
+from typing import TYPE_CHECKING, List, Union
+
+if TYPE_CHECKING:
+    from pathlib import Path
+
 import spikeinterface.extractors as se
 from spikeinterface import append_recordings
 
 from .data_class import Data
 
 
-def load_spikeglx_data(base_path, sub_name, run_names):
+def load_spikeglx_data(
+    base_path: Union[Path, str], sub_name: str, run_names: Union[List[str], str]
+) -> Data:
     """ """
     data = Data(base_path, sub_name, run_names)
 
