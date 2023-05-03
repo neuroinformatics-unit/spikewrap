@@ -152,7 +152,7 @@ def get_data_and_recording(
     else:
         utils.message_user(
             f"\nSaving data class and binary preprocessed data to "
-            f"{data.preprocessed_binary_data_path}\n"
+            f"{data.preprocessed_output_path}\n"
         )
 
         data.save_all_preprocessed_data()

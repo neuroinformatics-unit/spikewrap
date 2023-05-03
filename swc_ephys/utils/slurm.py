@@ -9,12 +9,15 @@ from . import utils
 
 def get_executor(kwargs):
     """ """
-    log_subpath = Path("slurm_logs") / f"{datetime.datetime.now():%Y-%m-%d_%H-%m-%S}"
+    now = datetime.datetime.now()
+    log_subpath = Path("slurm_logs") / f"{now.strftime('%Y-%m-%d_%H-%M-%S')}"  # weird : formats weirdly
     if "base_path" in kwargs:
         log_path = kwargs["base_path"] / log_subpath
     else:
         log_path = kwargs["data"].base_path / log_subpath
-    log_path.mkdir(exist_ok=True)
+    log_path.mkdir(exist_ok=True, parents=True)
+
+    print(log_path)
 
     executor = submitit.AutoExecutor(
         folder=log_path,

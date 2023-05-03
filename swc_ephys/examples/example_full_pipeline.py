@@ -7,9 +7,11 @@ from swc_ephys.pipeline.full_pipeline import run_full_pipeline
 # run_names = "1110925_test_shank1_cut"
 
 base_path = Path(
-    r"/ceph/neuroinformatics/neuroinformatics/scratch/steve_multi_run/1119617/first_attempt"
+    r"/ceph/neuroinformatics/neuroinformatics/scratch/steve_multi_run/1119617"
+    r"/cut_same_name"
+    # r"/ceph/neuroinformatics/neuroinformatics/scratch/steve_multi_run/1119617/first_attempt"
 )  # TODO: ~ syntax not working on linux
-sub_name = "1119617"
+sub_name = "cut_same_name" # "1119617"
 run_names = "all"  # "1119617_posttest1_shank12_cut" #   "all" # ["", ""] # "all"
 
 config_name = "test"  # or custom config file path
