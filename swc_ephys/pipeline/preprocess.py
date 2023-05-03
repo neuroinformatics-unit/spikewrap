@@ -1,6 +1,5 @@
 import json
-from pathlib import Path
-from typing import Dict, List, Optional, Tuple, Union
+from typing import Dict, List, Optional, Tuple
 
 import numpy as np
 import spikeinterface.preprocessing as spre
@@ -8,6 +7,7 @@ import spikeinterface.preprocessing as spre
 from ..configs import configs
 from ..utils import utils
 from .data_class import Data
+
 
 def preprocess(
     data: Data,
@@ -47,14 +47,18 @@ def preprocess(
 
     checked_pp_steps, pp_step_names = check_and_sort_pp_steps(pp_steps, pp_funcs)
 
-    data.pp_steps = pp_steps  # TODO: handle this logic flow properly. Can use a setter but
-                              # probably makes more sense to think about this data class more
-                              # - does it need splitting, - should pp steps be held on it??
+    data.pp_steps = (
+        pp_steps  # TODO: handle this logic flow properly. Can use a setter but
+    )
+    # probably makes more sense to think about this data class more
+    # - does it need splitting, - should pp steps be held on it??
 
     data.set_preprocessing_output_path()
 
     for step_num, pp_info in checked_pp_steps.items():
-        perform_preprocessing_step(step_num, pp_info, data, pp_step_names, pp_funcs, verbose)
+        perform_preprocessing_step(
+            step_num, pp_info, data, pp_step_names, pp_funcs, verbose
+        )
 
     handle_bad_channels(data)
 
@@ -181,7 +185,9 @@ def perform_preprocessing_step(
     """
     pp_name, pp_options = pp_info
 
-    utils.message_user(f"Running preprocessing step: {pp_name} with options {pp_options}", verbose)
+    utils.message_user(
+        f"Running preprocessing step: {pp_name} with options {pp_options}", verbose
+    )
 
     last_pp_step_output, __ = utils.get_dict_value_from_step_num(
         data, step_num=str(int(step_num) - 1)
