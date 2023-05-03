@@ -32,28 +32,46 @@ def run_full_pipeline(
     Parameters
     __________
 
-    base_path : path where the rawdata folder containing subjects.
+    base_path : Union[Path, str]
+        Path where the rawdata folder containing subjects.
 
-    sub_name : subject to preprocess. The subject top level dir should reside in
-               base_path/rawdata/
+    sub_name : str
+        Subject to preprocess. The subject top level dir should reside in
+        base_path/rawdata/ .
 
-    run_names : the spikeglx run name (i.e. not including the gate index). This can
-                also be a list of run names, or "all", in which case all runs in that
-                folder will be concatenated and sorted together. Preprocessing
-                will still occur per-run. Runs will always be concatenated in date
-                order. TODO: offer key to disable this.
+    run_names : Union[List[str], str],
+        The spikeglx run name (i.e. not including the gate index). This can
+        also be a list of run names, or "all", in which case all runs in that
+        folder will be concatenated and sorted together. Preprocessing
+        will still occur per-run. Runs will always be concatenated in date
+        order.
 
-    configs_name : the name of the configuration to use. Note this must be the name
-                   of .yaml file (not including the extension) stored in
-                   swc_ephys/configs.
+    config_name : str
+        The name of the configuration to use. Note this must be the name
+        of .yaml file (not including the extension) stored in
+        swc_ephys/configs.
 
-    sorter : name of the sorter to use e.g. "kilosort2_5".
+    sorter : str
+        name of the sorter to use e.g. "kilosort2_5".
 
-    use_existing_preprocessed_file : if this function has been run previously
-                                     and a saved pre-proccessed binary already
-                                     exists in the 'preprocessed' folder for this
-                                     subject, it will be used. If False and this folder
-                                     exists, an error will be raised.
+    use_existing_preprocessed_file : bool
+        If this function has been run previously
+        and a saved pre-proccessed binary already
+        exists in the 'preprocessed' folder for this
+        subject, it will be used. If False and this folder
+        exists, an error will be raised.
+
+     overwrite_existing_sorter_output : bool
+         If False, an error will be reaised if sorting output already
+         exists. If True, existing sorting output will be overwritten.
+
+    verbose : bool
+        If True, messages will be printed to consolve updating on the
+        progress of preprocessing / sorting.
+
+    slurm_batch : bool
+        If True, the pipeline will be run in a SLURM job. Set False
+        if running on an interactive job, or locally.
     """
     if slurm_batch:
         local_args = copy.deepcopy(locals())
