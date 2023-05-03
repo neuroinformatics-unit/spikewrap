@@ -135,3 +135,20 @@ def assert_list_of_files_are_in_datetime_order(
         f"Files List: {list_of_paths}\n"
         f"Contact Joe as it is not clear what to do in this case."
     )
+
+def make_preprocessing_plot_title(data, run_number, full_key, shank_idx, recording_to_plot, total_used_shanks):
+    """
+    Newline must come at start to save space in case not all used
+    """
+    plot_title = (
+            r"$\bf{Run \ name:}$" + f"{data.all_run_names[run_number - 1]}"
+                                    "\n" + r"$\bf{Preprocessing \ step:}$" + f"{full_key}"
+    )
+    if total_used_shanks > 1:
+        plot_title += (
+                "\n" + r"$\bf{Shank \ group:}$" + f"{shank_idx}"
+                                                  "\n"
+                + r"$\bf{Num \ channels:}$"
+                + f"{recording_to_plot.get_num_channels()}"
+        )
+    return plot_title

@@ -215,7 +215,8 @@ class Data(UserDict):
         Will error if path already exists
         """
         recording, __ = utils.get_dict_value_from_step_num(self, "last")
-        recording.save(folder=self.preprocessed_binary_data_path)
+        recording.save(folder=self.preprocessed_binary_data_path,
+                       chunk_memory="10M")
 
     def load_preprocessed_binary(self) -> BaseExtractor:
         return si.load_extractor(self.preprocessed_binary_data_path)
