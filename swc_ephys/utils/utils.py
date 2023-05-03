@@ -99,13 +99,25 @@ def concatenate_runs(recording) -> BaseRecording:
     return concatenated_recording
 
 
-def get_sorter_path(sorter: str) -> Path:
+def get_local_sorter_path(sorter: str) -> Path:
+    local_path = (
+        Path.home() / ".swc_ephys" / "sorter_images" / get_sorter_image_name(sorter)
+    )
+    local_path.parent.mkdir(exist_ok=True, parents=True)
+    return local_path
+
+
+def get_hpc_sorter_path(sorter: str) -> Path:
     """
     Return the path to the sorter image on the HCP.
     Currently, this is just in NIU scratch.
     """
     base_path = Path("/ceph/neuroinformatics/neuroinformatics/scratch/sorter_images")
-    return base_path / sorter / f"{sorter}-compiled-base.sif"
+    return base_path / sorter / get_sorter_image_name(sorter)
+
+
+def get_sorter_image_name(sorter):
+    return f"{sorter}-compiled-base.sif"
 
 
 def check_singularity_install() -> bool:
