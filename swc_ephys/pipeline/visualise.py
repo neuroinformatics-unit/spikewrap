@@ -1,25 +1,34 @@
+from __future__ import annotations
+
+from typing import TYPE_CHECKING, List, Optional, Tuple, Union
+
+if TYPE_CHECKING:
+    import matplotlib
+    from numpy.typing import NDArray
+    from spikeinterface.core import BaseRecording
+
+    from ..pipeline.data_class import Data
+
 import inspect
 from pathlib import Path
-from typing import List, Optional, Tuple, Union
 
 import matplotlib.pyplot as plt
 import numpy as np
 import spikeinterface.widgets as sw
 
 from ..utils import utils
-from .data_class import Data
 
 
 def visualise(
     data: Data,
-    steps: Union[List, str] = "all",
+    steps: Union[List[str], str] = "all",
     mode: str = "auto",
     as_subplot: bool = False,
-    channel_idx_to_show: Union[List, Tuple, np.ndarray, None] = None,
+    channel_idx_to_show: Union[List, Tuple, NDArray, None] = None,
     time_range: Optional[Tuple] = None,
     show_channel_ids: bool = False,
     run_number: int = 1,
-):
+) -> None:
     """
     Plot the data at various preprocessing steps, useful for quality-checking.
     Takes the pipeline.data_class.Data object (output from pipeline.preprocess).
@@ -53,20 +62,17 @@ def visualise(
     run_number : The run number to visualise (in the case of a concatenated recording.
                  Under the hood, each run maps to a SpikeInterface segment_index.
     """
-    steps, as_subplot, channel_idx_to_show = validate_input_arguments(data,
-                                                                      steps,
-                                                                      as_subplot,
-                                                                      channel_idx_to_show)
+    steps, as_subplot, channel_idx_to_show = validate_input_arguments(
+        data, steps, as_subplot, channel_idx_to_show
+    )
 
     total_used_shanks = data.get_probe_group_num()
 
     for shank_idx in range(total_used_shanks):
-
         if as_subplot:
-            fix, ax, num_rows, num_cols = generate_subplot(steps)
+            fig, ax, num_rows, num_cols = generate_subplot(steps)
 
         for idx, step in enumerate(steps):
-
             recording, full_key = utils.get_dict_value_from_step_num(data, str(step))
 
             validate_options_against_recording(recording, data, time_range, run_number)
@@ -74,22 +80,22 @@ def visualise(
             recordings = recording.split_by(property="group")
             recording_to_plot = recordings[shank_idx]
 
-            plot_title = utils.make_preprocessing_plot_title(data,
-                                                             run_number,
-                                                             full_key,
-                                                             shank_idx,
-                                                             recording_to_plot,
-                                                             total_used_shanks)
-
-            current_ax = None if not as_subplot else get_subplot_ax(
-                idx,
-                ax,
-                num_rows,
-                num_cols
+            plot_title = utils.make_preprocessing_plot_title(
+                data,
+                run_number,
+                full_key,
+                shank_idx,
+                recording_to_plot,
+                total_used_shanks,
             )
 
-            channel_ids_to_show = get_channel_ids_to_show(recording_to_plot,
-                                                          channel_idx_to_show)
+            current_ax = (
+                None if not as_subplot else get_subplot_ax(idx, ax, num_rows, num_cols)
+            )
+
+            channel_ids_to_show = get_channel_ids_to_show(
+                recording_to_plot, channel_idx_to_show
+            )
 
             sw.plot_timeseries(
                 recording_to_plot,
@@ -103,7 +109,7 @@ def visualise(
                 segment_index=run_number - 1,
             )
 
-            if not as_subplot:
+            if current_ax is None:
                 plt.title(plot_title)
                 plt.show()
             else:
@@ -113,8 +119,9 @@ def visualise(
             plt.show()
 
 
-def get_channel_ids_to_show(recording_to_plot,
-                            channel_idx_to_show):
+def get_channel_ids_to_show(
+    recording_to_plot: BaseRecording, channel_idx_to_show: int
+) -> List[str]:
     """
     Channel ids are returned in default order (e.g. 0, 1, 2...)
     not ordered by depth.
@@ -128,14 +135,19 @@ def get_channel_ids_to_show(recording_to_plot,
     return channel_ids_to_show
 
 
-def generate_subplot(steps):
+def generate_subplot(
+    steps: Union[List[str], str]
+) -> Tuple[matplotlib.figure.Figure, NDArray, int, int,]:
     num_cols = 2
     num_rows = np.ceil(len(steps) / num_cols).astype(int)
     fig, ax = plt.subplots(num_rows, num_cols)
     fig.tight_layout(rect=[0, 0.03, 1, 0.95])
     return fig, ax, num_rows, num_cols
 
-def visualise_preprocessing_output(preprocessing_path: Union[Path, str], **kwargs):
+
+def visualise_preprocessing_output(
+    preprocessing_path: Union[Path, str], **kwargs
+) -> None:
     """
     Visualise the saved, preprocessed data that is fed into
     the sorter.
@@ -172,21 +184,25 @@ def visualise_preprocessing_output(preprocessing_path: Union[Path, str], **kwarg
     visualise(data, **kwargs)
 
 
-def get_subplot_ax(idx, ax, num_rows, num_cols):
+def get_subplot_ax(idx, ax, num_rows, num_cols) -> matplotlib.axes._axes.Axes:
     idx_unraveled = np.unravel_index(idx, shape=(num_rows, num_cols))
     current_ax = ax[idx_unraveled]
     return current_ax
 
 
-def validate_input_arguments(data, steps, as_subplot, channel_idx_to_show):
-    """
-    """
-    if not isinstance(steps, list):
+def validate_input_arguments(
+    data: Data,
+    steps: Union[List[str], str],
+    as_subplot: bool,
+    channel_idx_to_show: Union[List, Tuple, NDArray, None],
+) -> Tuple[Union[List[str], str], bool, int]:
+    """ """
+    if not isinstance(steps, List):
         steps = [steps]
 
     if "all" in steps:
         assert len(steps) == 1, "if using 'all' only put one step input"
-        steps = utils.get_keys_first_char(data)
+        steps = utils.get_keys_first_char(data)  # type: ignore
 
     assert len(steps) <= len(data), (
         "The number of steps must be less or equal to the "
@@ -203,13 +219,19 @@ def validate_input_arguments(data, steps, as_subplot, channel_idx_to_show):
 
     return steps, as_subplot, channel_idx_to_show
 
-def validate_options_against_recording(recording, data, time_range, run_number):
+
+def validate_options_against_recording(
+    recording: BaseRecording, data: Data, time_range: Optional[Tuple], run_number: int
+) -> None:
     """
     TODO: can't find a better way to get final timepoint, but must be
     somewhere, this is wasteful.
     """
     num_runs = len(data.all_run_names)
-    assert run_number <= num_runs, "The run_number must be less than or equal to the " \
-                                   "number of runs specified."
-    assert time_range[1] <= recording.get_times(segment_index=run_number - 1)[-1], \
-    "The time range specified is longer than the maximum time of the recording."
+    assert run_number <= num_runs, (
+        "The run_number must be less than or equal to the " "number of runs specified."
+    )
+    if time_range is not None:
+        assert (
+            time_range[1] <= recording.get_times(segment_index=run_number - 1)[-1]
+        ), "The time range specified is longer than the maximum time of the recording."

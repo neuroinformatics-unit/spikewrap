@@ -1,8 +1,10 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Callable, List, Tuple, Union
 
 if TYPE_CHECKING:
+    from spikeinterface.core import BaseRecording
+
     from ..pipeline.data_class import Data
 
 import copy
@@ -10,11 +12,9 @@ import os.path
 import pickle
 import subprocess
 from pathlib import Path
-from typing import Callable, List, Tuple, Union
 
 import numpy as np
 from spikeinterface import concatenate_recordings
-from spikeinterface.core import BaseRecording
 
 
 def get_keys_first_char(
@@ -59,7 +59,7 @@ def get_dict_value_from_step_num(
     return dict_[pp_key], pp_key
 
 
-def message_user(message: str, verbose: bool = True):
+def message_user(message: str, verbose: bool = True) -> None:
     """
     Method to interact with user.
     """
@@ -81,12 +81,22 @@ def load_data_and_recording(
     """
     with open(Path(preprocessed_output_path) / "data_class.pkl", "rb") as file:
         data = pickle.load(file)
+
     recording = data.load_preprocessed_binary()
 
     if concatenate:
-        recording = concatenate_recordings([recording])
+        recording = concatenate_runs(recording)
 
     return data, recording
+
+
+def concatenate_runs(recording) -> BaseRecording:
+    """ """
+    message_user(f"Conatenating {recording.get_num_segments()} into a single segment.")
+
+    concatenated_recording = concatenate_recordings([recording])
+
+    return concatenated_recording
 
 
 def get_sorter_path(sorter: str) -> Path:
@@ -98,7 +108,7 @@ def get_sorter_path(sorter: str) -> Path:
     return base_path / sorter / f"{sorter}-compiled-base.sif"
 
 
-def check_singularity_install():
+def check_singularity_install() -> bool:
     try:
         subprocess.run("singularity --version", shell=True)
         return True
@@ -136,19 +146,25 @@ def assert_list_of_files_are_in_datetime_order(
         f"Contact Joe as it is not clear what to do in this case."
     )
 
-def make_preprocessing_plot_title(data, run_number, full_key, shank_idx, recording_to_plot, total_used_shanks):
+
+def make_preprocessing_plot_title(
+    data: Data,
+    run_number: int,
+    full_key: str,
+    shank_idx: int,
+    recording_to_plot: BaseRecording,
+    total_used_shanks: int,
+) -> str:
     """
     Newline must come at start to save space in case not all used
     """
     plot_title = (
-            r"$\bf{Run \ name:}$" + f"{data.all_run_names[run_number - 1]}"
-                                    "\n" + r"$\bf{Preprocessing \ step:}$" + f"{full_key}"
+        r"$\bf{Run \ name:}$" + f"{data.all_run_names[run_number - 1]}"
+        "\n" + r"$\bf{Preprocessing \ step:}$" + f"{full_key}"
     )
     if total_used_shanks > 1:
         plot_title += (
-                "\n" + r"$\bf{Shank \ group:}$" + f"{shank_idx}"
-                                                  "\n"
-                + r"$\bf{Num \ channels:}$"
-                + f"{recording_to_plot.get_num_channels()}"
+            "\n" + r"$\bf{Shank \ group:}$" + f"{shank_idx}"
+            "\n" + r"$\bf{Num \ channels:}$" + f"{recording_to_plot.get_num_channels()}"
         )
     return plot_title

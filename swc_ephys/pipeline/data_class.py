@@ -18,7 +18,7 @@ class Data(UserDict):
         self,
         base_path: Union[Path, str],
         sub_name: str,
-        run_names: str,
+        run_names: Union[List[str], str],
         pp_steps: Optional[Dict] = None,
     ):
         """
@@ -85,42 +85,7 @@ class Data(UserDict):
         self.waveforms_output_path = Path()
         self.quality_metrics_path = Path()
 
-    def validate_inputs(
-        self, run_names: Union[str, list], base_path: Union[str, Path]
-    ) -> Tuple[Path, List[str], Path]:
-        """
-        Check the rawdata path exists and ensure run_names
-        is a list of strings.
-        """
-        base_path = Path(base_path)
-        rawdata_path = base_path / "rawdata"
-
-        assert rawdata_path.is_dir(), (
-            f"Ensure there is a folder in base path called 'rawdata'.\n"
-            f"No rawdata directory found at {rawdata_path}\n"
-            f"where subject-level folders are placed."
-        )
-        if not isinstance(run_names, list):
-            run_names = [run_names]
-            assert not (
-                "all" in run_names and len(run_names) != 1
-            ), "'all' run name must be used on its own."
-
-        for name in run_names:
-            assert "g0" not in name.split("_"), (
-                f"gate index should not be on the run name. Remove _g0 from\n" f"{name}"
-            )
-
-        for name in run_names:  # TODO: clean_up ...
-            gate_idx_in_name = fnmatch.filter(name.split("_"), "g?")
-            assert len(gate_idx_in_name) == 0, (
-                f"Gate with index larger than 0 is not supported. This is found "
-                f"in run name {name}. "
-            )
-
-        return base_path, run_names, rawdata_path
-
-    # Load and Save --------------------------------------------------------------------
+    # Handle Multiple Runs -------------------------------------------------------------
 
     def create_runs_from_single_or_multiple_run_names(
         self,
@@ -138,7 +103,6 @@ class Data(UserDict):
             f"Make sure to specify run_names without gate / trigger (e.g. no _g0)."
         )
 
-        # Just a sign-off confidence check can remove later
         utils.assert_list_of_files_are_in_datetime_order(all_run_paths)
         run_level_path = self.make_run_path(run_name)
 
@@ -180,16 +144,7 @@ class Data(UserDict):
         return all_run_paths, run_name
 
     def make_run_name_from_multiple_run_names(self, run_names: List[str]) -> str:
-        """
-        TODO
-        ----
-        This is somewhat experimental, need to see
-        a) how this works generally
-        b) how to handle _g0 (does it make sense to have on output?
-
-        In general this won't mess anything up, just may lead to some unintuitive
-        output run names
-        """
+        """ """
         all_names = []
         for idx, name in enumerate(run_names):
             if idx == 0:
@@ -206,23 +161,21 @@ class Data(UserDict):
 
         return run_name
 
-    def save_all_preprocessed_data(self):
+    # Load and Save --------------------------------------------------------------------
+
+    def save_all_preprocessed_data(self) -> None:
         self.save_preprocessed_binary()
         self.save_data_class()
 
-    def save_preprocessed_binary(self):
-        """
-        Will error if path already exists
-        """
+    def save_preprocessed_binary(self) -> None:
+        """ """
         recording, __ = utils.get_dict_value_from_step_num(self, "last")
-        recording.save(folder=self.preprocessed_binary_data_path,
-                       chunk_memory="10M")
+        recording.save(folder=self.preprocessed_binary_data_path, chunk_memory="10M")
 
     def load_preprocessed_binary(self) -> BaseExtractor:
         return si.load_extractor(self.preprocessed_binary_data_path)
 
-    def save_data_class(self):
-        print("CALLED {self.preprocessed_output_path}")
+    def save_data_class(self) -> None:
         if not self.preprocessed_output_path.is_dir():
             os.makedirs(self.preprocessed_output_path)
 
@@ -231,7 +184,7 @@ class Data(UserDict):
 
     # Handle Paths ---------------------------------------------------------------------
 
-    def set_preprocessing_output_path(self):
+    def set_preprocessing_output_path(self) -> None:
         assert (
             self.run_level_path is not None
         ), "must set run_level_path before sorter_output_path"
@@ -249,8 +202,11 @@ class Data(UserDict):
             self.preprocessed_output_path / "si_recording"
         )
 
-    def set_sorter_output_paths(self, sorter: str):
-        """ """
+    def set_sorter_output_paths(self, sorter: str) -> None:
+        """
+        sort_base_output_path : canonical name, is where spikeinterface
+                                automatically saves sorter output
+        """
         assert (
             self.run_level_path is not None
         ), "must set run_level_path before sorter_output_path"
@@ -261,11 +217,14 @@ class Data(UserDict):
             / self.run_level_path.relative_to(self.rawdata_path)
             / f"{sorter}-sorting"
         )
-        # canonical name, is where spikeinterface automatically saves sorter output
+
         self.sorter_run_output_path = self.sorter_base_output_path / "sorter_output"
 
         self.waveforms_output_path = self.sorter_base_output_path / "waveforms"
         self.quality_metrics_path = self.sorter_base_output_path / "quality_metrics.csv"
+
+    def make_run_path(self, run_name: str) -> Path:
+        return self.base_path / "rawdata" / self.sub_name / f"{run_name}"
 
     # UserDict Overrides ---------------------------------------------------------------
 
@@ -278,12 +237,46 @@ class Data(UserDict):
     def values(self) -> ValuesView:
         return self.data.values()
 
-    # ----------------------------------------------------------------------------------
+    # Validate Inputs ------------------------------------------------------------------
 
-    def make_run_path(self, run_name: str) -> Path:
-        return self.base_path / "rawdata" / self.sub_name / f"{run_name}"
+    def validate_inputs(
+        self, run_names: Union[str, list], base_path: Union[str, Path]
+    ) -> Tuple[Path, List[str], Path]:
+        """
+        Check the rawdata path exists and ensure run_names
+        is a list of strings.
+        """
+        base_path = Path(base_path)
+        rawdata_path = base_path / "rawdata"
 
-    def get_probe_group_num(self):
+        assert rawdata_path.is_dir(), (
+            f"Ensure there is a folder in base path called 'rawdata'.\n"
+            f"No rawdata directory found at {rawdata_path}\n"
+            f"where subject-level folders are placed."
+        )
+        if not isinstance(run_names, list):
+            run_names = [run_names]
+            assert not (
+                "all" in run_names and len(run_names) != 1
+            ), "'all' run name must be used on its own."
+
+        for name in run_names:
+            assert "g0" not in name.split("_"), (
+                f"gate index should not be on the run name. Remove _g0 from\n" f"{name}"
+            )
+
+        for name in run_names:
+            gate_idx_in_name = fnmatch.filter(name.split("_"), "g?")
+            assert len(gate_idx_in_name) == 0, (
+                f"Gate with index larger than 0 is not supported. This is found "
+                f"in run name {name}. "
+            )
+
+        return base_path, run_names, rawdata_path
+
+    # Misc. ----------------------------------------------------------------------------
+
+    def get_probe_group_num(self) -> int:
         """
         This is shank num
 

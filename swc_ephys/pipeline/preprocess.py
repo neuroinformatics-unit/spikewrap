@@ -1,6 +1,5 @@
 import json
-from pathlib import Path
-from typing import Dict, List, Optional, Tuple, Union
+from typing import Dict, List, Optional, Tuple
 
 import numpy as np
 import spikeinterface.preprocessing as spre
@@ -8,6 +7,7 @@ import spikeinterface.preprocessing as spre
 from ..configs import configs
 from ..utils import utils
 from .data_class import Data
+
 
 def preprocess(
     data: Data,
@@ -47,45 +47,16 @@ def preprocess(
 
     checked_pp_steps, pp_step_names = check_and_sort_pp_steps(pp_steps, pp_funcs)
 
-    data.pp_steps = pp_steps  # TODO: handle this logic flow properly. Can use a setter but
-                              # probably makes more sense to think about this data class more
-                              # - does it need splitting, - should pp steps be held on it??
+    data.pp_steps = pp_steps
 
     data.set_preprocessing_output_path()
 
     for step_num, pp_info in checked_pp_steps.items():
-        perform_preprocessing_step(step_num, pp_info, data, pp_step_names, pp_funcs, verbose)
-
-    handle_bad_channels(data)
+        perform_preprocessing_step(
+            step_num, pp_info, data, pp_step_names, pp_funcs, verbose
+        )
 
     return data
-
-
-def handle_bad_channels(data: Data):
-    """
-    Placeholder function to begin handling bad channel detection. Even if not
-    requested, it will always be useful to highlight the bad channels.
-
-    However, it is not clear whether to print these / log these / provide simple
-    API argument to remove bad channels.
-
-    TODO
-    ----
-    Need to determine when best to run this detection. Definately after
-    filtering, need to ask on Slack
-    see https://spikeinterface.readthedocs.io/en/latest/api.html
-    https://github.com/int-brain-lab/ibl-neuropixel/blob/d913ede52117bc79d \
-    e77f8dc9cdb407807ab8a8c/src/neurodsp/voltage.py#L445
-    """
-    bad_channels = spre.detect_bad_channels(data["0-raw"])
-
-    utils.message_user(
-        f"\nThe following channels were detected as dead / noise: {bad_channels[0]}\n"
-        f"TODO: DO SOMETHING BETTER WITH THIS INFORMATION. SAVE IT SOMEHWERE\n"
-        f"You may like to automatically remove bad channels "
-        f"by setting [TO IMPLEMENT]] as a preprocessing option\n"
-        f"TODO: check how this is handled in SI\n"
-    )
 
 
 def check_and_sort_pp_steps(pp_steps: Dict, pp_funcs: Dict) -> Tuple[Dict, List[str]]:
@@ -131,7 +102,7 @@ def check_and_sort_pp_steps(pp_steps: Dict, pp_funcs: Dict) -> Tuple[Dict, List[
     assert np.unique(diffs).size == 1, "all dict keys must increase in steps of 1"
     assert diffs[0] == 1, "all dict keys must increase in steps of 1"
 
-    # Check the preprocessing function names are valid
+    # Check the preprocessing function names are valid and print steps used
     canonical_step_names = list(pp_funcs.keys())
 
     for user_passed_name in pp_step_names:
@@ -139,7 +110,6 @@ def check_and_sort_pp_steps(pp_steps: Dict, pp_funcs: Dict) -> Tuple[Dict, List[
             user_passed_name in canonical_step_names
         ), f"{user_passed_name} not in allowed names: ({canonical_step_names}"
 
-    # Print the preprocessing dict used
     utils.message_user(
         f"\nThe preprocessing options dictionary is "
         f"{json.dumps(sorted_pp_steps, indent=4, sort_keys=True)}"
@@ -181,7 +151,9 @@ def perform_preprocessing_step(
     """
     pp_name, pp_options = pp_info
 
-    utils.message_user(f"Running preprocessing step: {pp_name} with options {pp_options}", verbose)
+    utils.message_user(
+        f"Running preprocessing step: {pp_name} with options {pp_options}", verbose
+    )
 
     last_pp_step_output, __ = utils.get_dict_value_from_step_num(
         data, step_num=str(int(step_num) - 1)

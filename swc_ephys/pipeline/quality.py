@@ -1,17 +1,26 @@
 """
 """
+from __future__ import annotations
+
+from typing import TYPE_CHECKING, Union
+
+if TYPE_CHECKING:
+    from ..pipeline.data_class import Data
+
 from pathlib import Path
-from typing import Union
 
 import spikeinterface as si
 from spikeinterface import curation
+from spikeinterface.core import BaseRecording
 from spikeinterface.extractors import KiloSortSortingExtractor
 
 from ..utils import utils
 
 
 def quality_check(
-    preprocessed_output_path: Union[Path, str], sorter: str = "kilosort2_5", verbose: bool = True,
+    preprocessed_output_path: Union[Path, str],
+    sorter: str = "kilosort2_5",
+    verbose: bool = True,
 ):
     """
     Save quality metrics on sorting output to a qualitric_metrics.csv file.
@@ -25,14 +34,16 @@ def quality_check(
     sorter : the name of the sorter (e.g. "kilosort2_5").
 
     """
-    data, recording = utils.load_data_and_recording(Path(preprocessed_output_path),
-                                                    concatenate=True)
+    data, recording = utils.load_data_and_recording(
+        Path(preprocessed_output_path), concatenate=True
+    )
     data.set_sorter_output_paths(sorter)
 
-    utils.message_user(f"Qualitys Checks: sorting path used: {data.sorter_run_output_path}", verbose)
+    utils.message_user(
+        f"Qualitys Checks: sorting path used: {data.sorter_run_output_path}", verbose
+    )
 
     if not data.waveforms_output_path.is_dir():
-
         utils.message_user(f"Saving waveforms to {data.waveforms_output_path}")
 
         sorting_without_excess_spikes = load_sorting_output(data, recording, sorter)
@@ -41,8 +52,9 @@ def quality_check(
             recording, sorting_without_excess_spikes, folder=data.waveforms_output_path
         )
     else:
-
-        utils.message_user("Loading existing waveforms from: {data.waveforms_output_path}", verbose)
+        utils.message_user(
+            "Loading existing waveforms from: {data.waveforms_output_path}", verbose
+        )
 
         waveforms = si.load_waveforms(data.waveforms_output_path)
 
@@ -52,7 +64,7 @@ def quality_check(
     utils.message_user(f"Quality metrics saved to {data.quality_metrics_path}")
 
 
-def load_sorting_output(data, recording, sorter):
+def load_sorting_output(data: Data, recording: BaseRecording, sorter: str):
     """
     Load the output of a sorting run
     """
