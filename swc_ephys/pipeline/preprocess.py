@@ -47,11 +47,7 @@ def preprocess(
 
     checked_pp_steps, pp_step_names = check_and_sort_pp_steps(pp_steps, pp_funcs)
 
-    data.pp_steps = (
-        pp_steps  # TODO: handle this logic flow properly. Can use a setter but
-    )
-    # probably makes more sense to think about this data class more
-    # - does it need splitting, - should pp steps be held on it??
+    data.pp_steps = pp_steps
 
     data.set_preprocessing_output_path()
 
