@@ -22,7 +22,7 @@ classifiers = [
 dependencies = [
     "spikeinterface[full] @git+https://github.com/SpikeInterface/spikeinterface",
     "spython",  # I think missing from SI?
-    "dask-jobqueue "
+    "submitit",
 ]
 
 [project.urls]

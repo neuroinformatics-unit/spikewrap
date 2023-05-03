@@ -13,7 +13,7 @@ from .sort import run_sorting
 # now we concatenate files together at the segment level.
 # STILL NEED TO CONCAT SEGMETNS PRIOR TO SORTING!?
 # make it super clear g0 not included on run name,... in
-# antipatciaton to handle other gate /trigger. Up until then coould accept.
+# anticipation to handle other gate /trigger. Up until then coould accept.
 # TODO: currently only spikeglx supported
 # should the derivatives output have the gate idx? thinking
 # forward in case gates will be supported
@@ -71,7 +71,7 @@ def run_full_pipeline(
     """
     if slurm_batch:
         local_args = copy.deepcopy(locals())
-        slurm.run_sorting_slurm(**local_args)
+        slurm.run_full_pipeline_slurm(**local_args)
         return
     assert slurm_batch is False, "SLURM run has slurm_batch set True"
 
@@ -82,6 +82,10 @@ def run_full_pipeline(
 
     # This is lazy - no preprocessing done yet
     data = preprocess(data, pp_steps, verbose)
+
+    # TODO: need better modularisation, saving preprocess is done in sorting.
+    # This needs to be done as preprocesing is lazy
+    # but is confusing to find here it is saved
 
     # Run sorting. This will save the final preprocessing step
     # recording to disk prior to sorting.
