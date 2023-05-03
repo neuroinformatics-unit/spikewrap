@@ -9,20 +9,6 @@ from .preprocess import preprocess
 from .quality import quality_check
 from .sort import run_sorting
 
-# make note that pp is all per-segment (make an option for this later)
-# now we concatenate files together at the segment level.
-# STILL NEED TO CONCAT SEGMETNS PRIOR TO SORTING!?
-# make it super clear g0 not included on run name,... in
-# anticipation to handle other gate /trigger. Up until then coould accept.
-# TODO: currently only spikeglx supported
-# should the derivatives output have the gate idx? thinking
-# forward in case gates will be supported
-# TODO: print the preprocessing options used if a preprocessing file already exists!
-# TODO: it is weird that preprocessing is logged as if it is happening, if infact
-# it will be skipped because one already exists. Check things exist before.
-# add slurm configs to configs
-# add quality check cutoff configs to configs
-
 
 def run_full_pipeline(
     base_path: Union[Path, str],
@@ -33,8 +19,8 @@ def run_full_pipeline(
     use_existing_preprocessed_file: bool = False,
     overwrite_existing_sorter_output: bool = False,
     verbose: bool = True,
-    slurm_batch=False,
-):
+    slurm_batch: bool = False,
+) -> None:
     """
     Run preprocessing, sorting and quality checks on SpikeGLX data.
     see README.md for detailed information on use.
@@ -82,10 +68,6 @@ def run_full_pipeline(
 
     # This is lazy - no preprocessing done yet
     data = preprocess(data, pp_steps, verbose)
-
-    # TODO: need better modularisation, saving preprocess is done in sorting.
-    # This needs to be done as preprocesing is lazy
-    # but is confusing to find here it is saved
 
     # Run sorting. This will save the final preprocessing step
     # recording to disk prior to sorting.
