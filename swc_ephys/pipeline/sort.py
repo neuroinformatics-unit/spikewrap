@@ -1,5 +1,6 @@
 import copy
 import os
+import shutil
 from pathlib import Path
 from typing import Dict, Literal, Optional, Tuple, Union
 
@@ -80,6 +81,14 @@ def run_sorting(
         **sorter_options_dict,
     )
 
+    if singularity_image is True:  # no existing image was found
+        store_singularity_image(loaded_data.base_path, sorter)
+
+
+def store_singularity_image(base_path, sorter):
+    path_to_image = base_path / utils.get_sorter_image_name(sorter)
+    shutil.move(path_to_image, utils.get_local_sorter_path(sorter).parent)
+
 
 def get_data_and_recording(
     data: Union[Data, Path, str], use_existing_preprocessed_file: bool
@@ -117,7 +126,8 @@ def get_data_and_recording(
             data.preprocessed_binary_data_path.is_dir()
             and use_existing_preprocessed_file is False
         ), (
-            f"Preprocessed binary already exists at {data.preprocessed_binary_data_path}. "
+            f"Preprocessed binary already exists at "
+            f"{data.preprocessed_binary_data_path}. "
             f"To overwrite, set 'use_existing_preprocessed_file' to True"
         )
 
@@ -169,8 +179,11 @@ def get_singularity_image(sorter: str) -> Union[Literal[True], str]:
     """"""
     singularity_image: Union[Literal[True], str]
 
-    if utils.get_sorter_path(sorter).is_file():
-        singularity_image = str(utils.get_sorter_path(sorter))
+    if utils.get_hpc_sorter_path(sorter).is_file():
+        singularity_image = str(utils.get_hpc_sorter_path(sorter))
+
+    elif utils.get_local_sorter_path(sorter).is_file():
+        singularity_image = str(utils.get_local_sorter_path(sorter))
     else:
         singularity_image = True
 
