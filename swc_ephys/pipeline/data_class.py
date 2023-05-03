@@ -115,33 +115,30 @@ class Data(UserDict):
         run_names: List[str],
     ) -> Tuple[List[Path], str]:
         """ """
-        search_run_paths = list(
-            Path(self.base_path / "rawdata" / self.sub_name).glob("*_g0")
-        )
-
         if run_names == ["all"]:
-            search_run_paths = utils.sort_list_of_paths_by_datetime_order(
-                search_run_paths
-            )
-            utils.assert_list_of_files_are_in_datetime_order(
-                search_run_paths, "modification"
-            )
+            search_run_paths = list(self.get_sub_folder_path().glob("*_g0"))
+            all_run_paths = utils.sort_list_of_paths_by_datetime_order(search_run_paths)
         else:
             if run_names != ["all"]:
-                check_run_names = [f"{name}_g0" for name in run_names]
-                search_run_paths = [
-                    name for name in search_run_paths if name.stem in check_run_names
+                all_run_paths = [
+                    self.get_sub_folder_path() / f"{name}_g0" for name in run_names
                 ]
 
-            utils.assert_list_of_files_are_in_datetime_order(
-                search_run_paths, "creation"
-            )
-
-        all_run_paths = search_run_paths
+                self.check_user_defined_run_paths_are_valid(all_run_paths)
 
         run_name = self.make_run_name_from_multiple_run_names(run_names)
 
         return all_run_paths, run_name
+
+    def check_user_defined_run_paths_are_valid(self, all_run_paths: List[Path]) -> None:
+        """ """
+        for path_ in all_run_paths:
+            assert path_.is_dir(), f"No run folder found at {path_}"
+
+        utils.assert_list_of_files_are_in_datetime_order(all_run_paths, "creation")
+
+    def get_sub_folder_path(self):
+        return Path(self.base_path / "rawdata" / self.sub_name)
 
     def make_run_name_from_multiple_run_names(self, run_names: List[str]) -> str:
         """ """
