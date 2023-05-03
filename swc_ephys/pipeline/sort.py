@@ -1,3 +1,4 @@
+import copy
 import os
 from pathlib import Path
 from typing import Dict, Optional, Tuple, Union
@@ -6,7 +7,7 @@ import spikeinterface.sorters as ss
 from spikeinterface import concatenate_recordings
 from spikeinterface.core import BaseRecording
 
-from ..utils import utils
+from ..utils import slurm, utils
 from .data_class import Data
 
 
@@ -17,6 +18,7 @@ def run_sorting(
     use_existing_preprocessed_file: bool = False,
     overwrite_existing_sorter_output: bool = False,
     verbose: bool = True,
+    slurm_batch=False,
 ):
     """
     Run a sorter on pre-processed data. Takes a Data (pipeline.data_class)
@@ -44,6 +46,12 @@ def run_sorting(
                                      passed to the sorter.
 
     """
+    if slurm_batch:
+        local_args = copy.deepcopy(locals())
+        slurm.run_sorting_slurm(**local_args)
+        return
+    assert slurm_batch is False, "SLURM run has slurm_batch set True"
+
     # TODO: input validation function
     supported_sorters = ["kilosort2", "kilosort2_5", "kilosort3"]
     assert sorter in supported_sorters, f"sorter must be: {supported_sorters}"
@@ -76,7 +84,10 @@ def run_sorting(
     else:
         singularity_image = True  # TODO: god dammit this just pulls to random pwd repo.
         # For now just use singularity Clients management
-        # local_singularity_path = Path.home() / ".swc_ephys" / "singularity_images" / "sorters" / f"{sorter}-compiled-base.sif" # TODO Code duplication from get_sorter_path, should be hard coded somewhere. Along with sorter names! and other cannonical things
+        # local_singularity_path = Path.home() / ".swc_ephys" / "singularity_images" /
+        # "sorters" / f"{sorter}-compiled-base.sif" # TODO Code duplication from
+        #  get_sorter_path, should be hard coded somewhere. Along with sorter names!
+        #  and other cannonical things
 
     if recording.get_num_segments() > 1:
         utils.message_user(
