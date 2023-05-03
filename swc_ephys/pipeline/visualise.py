@@ -100,7 +100,7 @@ def visualise(
                 segment_index=run_number - 1,
             )
 
-            if not as_subplot:
+            if current_ax is None:
                 plt.title(plot_title)
                 plt.show()
             else:
