@@ -53,20 +53,17 @@ def visualise(
     run_number : The run number to visualise (in the case of a concatenated recording.
                  Under the hood, each run maps to a SpikeInterface segment_index.
     """
-    steps, as_subplot, channel_idx_to_show = validate_input_arguments(data,
-                                                                      steps,
-                                                                      as_subplot,
-                                                                      channel_idx_to_show)
+    steps, as_subplot, channel_idx_to_show = validate_input_arguments(
+        data, steps, as_subplot, channel_idx_to_show
+    )
 
     total_used_shanks = data.get_probe_group_num()
 
     for shank_idx in range(total_used_shanks):
-
         if as_subplot:
             fix, ax, num_rows, num_cols = generate_subplot(steps)
 
         for idx, step in enumerate(steps):
-
             recording, full_key = utils.get_dict_value_from_step_num(data, str(step))
 
             validate_options_against_recording(recording, data, time_range, run_number)
@@ -74,22 +71,22 @@ def visualise(
             recordings = recording.split_by(property="group")
             recording_to_plot = recordings[shank_idx]
 
-            plot_title = utils.make_preprocessing_plot_title(data,
-                                                             run_number,
-                                                             full_key,
-                                                             shank_idx,
-                                                             recording_to_plot,
-                                                             total_used_shanks)
-
-            current_ax = None if not as_subplot else get_subplot_ax(
-                idx,
-                ax,
-                num_rows,
-                num_cols
+            plot_title = utils.make_preprocessing_plot_title(
+                data,
+                run_number,
+                full_key,
+                shank_idx,
+                recording_to_plot,
+                total_used_shanks,
             )
 
-            channel_ids_to_show = get_channel_ids_to_show(recording_to_plot,
-                                                          channel_idx_to_show)
+            current_ax = (
+                None if not as_subplot else get_subplot_ax(idx, ax, num_rows, num_cols)
+            )
+
+            channel_ids_to_show = get_channel_ids_to_show(
+                recording_to_plot, channel_idx_to_show
+            )
 
             sw.plot_timeseries(
                 recording_to_plot,
@@ -113,8 +110,7 @@ def visualise(
             plt.show()
 
 
-def get_channel_ids_to_show(recording_to_plot,
-                            channel_idx_to_show):
+def get_channel_ids_to_show(recording_to_plot, channel_idx_to_show):
     """
     Channel ids are returned in default order (e.g. 0, 1, 2...)
     not ordered by depth.
@@ -134,6 +130,7 @@ def generate_subplot(steps):
     fig, ax = plt.subplots(num_rows, num_cols)
     fig.tight_layout(rect=[0, 0.03, 1, 0.95])
     return fig, ax, num_rows, num_cols
+
 
 def visualise_preprocessing_output(preprocessing_path: Union[Path, str], **kwargs):
     """
@@ -179,8 +176,7 @@ def get_subplot_ax(idx, ax, num_rows, num_cols):
 
 
 def validate_input_arguments(data, steps, as_subplot, channel_idx_to_show):
-    """
-    """
+    """ """
     if not isinstance(steps, list):
         steps = [steps]
 
@@ -203,13 +199,16 @@ def validate_input_arguments(data, steps, as_subplot, channel_idx_to_show):
 
     return steps, as_subplot, channel_idx_to_show
 
+
 def validate_options_against_recording(recording, data, time_range, run_number):
     """
     TODO: can't find a better way to get final timepoint, but must be
     somewhere, this is wasteful.
     """
     num_runs = len(data.all_run_names)
-    assert run_number <= num_runs, "The run_number must be less than or equal to the " \
-                                   "number of runs specified."
-    assert time_range[1] <= recording.get_times(segment_index=run_number - 1)[-1], \
-    "The time range specified is longer than the maximum time of the recording."
+    assert run_number <= num_runs, (
+        "The run_number must be less than or equal to the " "number of runs specified."
+    )
+    assert (
+        time_range[1] <= recording.get_times(segment_index=run_number - 1)[-1]
+    ), "The time range specified is longer than the maximum time of the recording."

@@ -10,7 +10,9 @@ from . import utils
 def get_executor(kwargs):
     """ """
     now = datetime.datetime.now()
-    log_subpath = Path("slurm_logs") / f"{now.strftime('%Y-%m-%d_%H-%M-%S')}"  # weird : formats weirdly
+    log_subpath = (
+        Path("slurm_logs") / f"{now.strftime('%Y-%m-%d_%H-%M-%S')}"
+    )  # weird : formats weirdly
     if "base_path" in kwargs:
         log_path = kwargs["base_path"] / log_subpath
     else:
