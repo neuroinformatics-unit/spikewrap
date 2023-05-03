@@ -43,26 +43,31 @@ class Data(UserDict):
         Parameters
         ----------
 
-        base_path : path where the rawdata folder containing subjects
+        base_path : Union[Path, str]
+            path where the rawdata folder containing subjects
 
-        sub_name : subject to preprocess. The subject top level dir should reside in
-                   base_path/rawdata/
+        sub_name : str
+            subject to preprocess. The subject top level dir should reside in
+            base_path/rawdata/
 
-        run_names : the spikeglx run name (i.e. not including the gate index) or
-                    list of run names, or keyword "all".
+        run_names : Union[List[str], str]
+            the spikeglx run name (i.e. not including the gate index) or
+            list of run names, or keyword "all".
 
-        pp_steps : preprocessing step dictionary, see swc_ephys/configs
+        pp_steps : Optional[Dict]
+            preprocessing step dictionary, see swc_ephys/configs
         """
         super(Data, self).__init__()
 
         self.base_path, checked_run_names, self.rawdata_path = self.validate_inputs(
-            run_names, base_path
+            run_names,
+            base_path,
+            sub_name,
         )
 
         self.sub_name = sub_name
 
         (
-            self.run_level_path,
             self.all_run_paths,
             self.all_run_names,
             self.run_name,
@@ -90,8 +95,36 @@ class Data(UserDict):
     def create_runs_from_single_or_multiple_run_names(
         self,
         run_names: List[str],
-    ) -> Tuple[Path, List[Path], List[str], str]:
-        """ """
+    ) -> Tuple[List[Path], List[str], str]:
+        """
+        The run_names may be a single run, the keyword "all" or a list of
+        runs to process. Return a list of paths to the runs found on the system.
+        enforces that the runs are in datetime order.
+
+        Parameters
+        ----------
+
+        run_names : Union[List[str], str]
+            The spikeglx run name (i.e. not including the gate index) or
+            list of run names, or keyword "all".
+
+        Returns
+        -------
+
+        all_run_paths : List[Path]
+            List of full filepaths for all runs used in the pipeline.
+
+        all_run_names : List[str]
+            List of run names (folder names within the subject level folder)
+            to be used in the pipeline.
+
+        run_name : str
+            The name of the run used in the derivatives. For a single run,
+            this will be the name of the run. When run_names is "all", this will
+            be "all". When run_names is a list of run names, this will be
+            an amalgamation of all run names
+            (see self.make_run_name_from_multiple_run_names)
+        """
         if run_names == ["all"] or len(run_names) > 1:
             all_run_paths, run_name = self.get_multi_run_names_paths(run_names)
         else:
@@ -104,17 +137,45 @@ class Data(UserDict):
         )
 
         utils.assert_list_of_files_are_in_datetime_order(all_run_paths)
-        run_level_path = self.make_run_path(run_name)
 
         all_run_names = [path_.stem for path_ in all_run_paths]
 
-        return run_level_path, all_run_paths, all_run_names, run_name
+        return all_run_paths, all_run_names, run_name
 
     def get_multi_run_names_paths(
         self,
         run_names: List[str],
     ) -> Tuple[List[Path], str]:
-        """ """
+        """
+        Get the paths to the runs when there is more that one run specified.
+        If this is "all", the subject level directory is searched and all runs
+        found are sorted in creation datetime order and used. If it is a list of
+        run names, they are searched, checked exist and assert in datetime order.
+
+        Parameters
+        ----------
+
+        run_names : Union[List[str], str]
+            The spikeglx run name (i.e. not including the gate index) or
+            list of run names, or keyword "all".
+
+        Returns
+        -------
+
+        all_run_paths : List[Path]
+            List of full filepaths for all runs used in the pipeline.
+
+        all_run_names : List[str]
+            List of run names (folder names within the subject level folder)
+            to be used in the pipeline.
+
+        run_name : str
+            The name of the run used in the derivatives. For a single run,
+            this will be the name of the run. When run_names is "all", this will
+            be "all". When run_names is a list of run names, this will be
+            an amalgamation of all run names
+            (see self.make_run_name_from_multiple_run_names)
+        """
         if run_names == ["all"]:
             search_run_paths = list(self.get_sub_folder_path().glob("*_g0"))
             all_run_paths = utils.sort_list_of_paths_by_datetime_order(search_run_paths)
@@ -131,17 +192,39 @@ class Data(UserDict):
         return all_run_paths, run_name
 
     def check_user_defined_run_paths_are_valid(self, all_run_paths: List[Path]) -> None:
-        """ """
+        """
+        Check that a list of paths to ephys data runs exist and are in
+        creation datetime order.
+
+        Parameters
+        ---------
+
+        all_run_paths : List[Path]
+            List of full filepaths for all runs used in the pipeline.
+        """
         for path_ in all_run_paths:
             assert path_.is_dir(), f"No run folder found at {path_}"
 
         utils.assert_list_of_files_are_in_datetime_order(all_run_paths, "creation")
 
-    def get_sub_folder_path(self):
-        return Path(self.base_path / "rawdata" / self.sub_name)
-
     def make_run_name_from_multiple_run_names(self, run_names: List[str]) -> str:
-        """ """
+        """
+        Make a single run_name given a list of run names. This will use the
+        first part of the first name and then add unique parts of the
+        subsequent names to the string.
+
+        Parameters
+        ----------
+
+        run_names : Union[List[str], str]
+            A list of run names.
+
+        Returns
+        -------
+
+        run_name : str
+            A single run name formed from the list of run names.
+        """
         all_names = []
         for idx, name in enumerate(run_names):
             if idx == 0:
@@ -161,35 +244,51 @@ class Data(UserDict):
     # Load and Save --------------------------------------------------------------------
 
     def save_all_preprocessed_data(self) -> None:
+        """
+        Save the preprocessed output data to binary, as well
+        as this class as a .pkl file. Both are saved in a folder called
+        'preprocessed' in derivatives/<sub_name>/<run_name>
+        """
         self.save_preprocessed_binary()
         self.save_data_class()
 
     def save_preprocessed_binary(self) -> None:
-        """ """
+        """
+        Save the fully preprocessed data (i.e. last step in the preprocessing
+        chain) to binary file. This is required for sorting.
+        """
         recording, __ = utils.get_dict_value_from_step_num(self, "last")
         recording.save(folder=self.preprocessed_binary_data_path, chunk_memory="10M")
 
-    def load_preprocessed_binary(self) -> BaseExtractor:
-        return si.load_extractor(self.preprocessed_binary_data_path)
-
     def save_data_class(self) -> None:
+        """
+        Save this data class as a .pkl file.
+        """
         if not self.preprocessed_output_path.is_dir():
             os.makedirs(self.preprocessed_output_path)
 
         with open(self.preprocessed_data_class_path, "wb") as file:
             pickle.dump(self, file, pickle.HIGHEST_PROTOCOL)
 
+    def load_preprocessed_binary(self) -> BaseExtractor:
+        """
+        Use SpikeInterface to load the binary-data into a
+        recording object.
+        """
+        return si.load_extractor(self.preprocessed_binary_data_path)
+
     # Handle Paths ---------------------------------------------------------------------
 
     def set_preprocessing_output_path(self) -> None:
-        assert (
-            self.run_level_path is not None
-        ), "must set run_level_path before sorter_output_path"
-
+        """
+        Set the canonical folder names for the output data
+        (in derivatives).
+        """
         self.preprocessed_output_path = (
             self.base_path
             / "derivatives"
-            / self.run_level_path.relative_to(self.rawdata_path)
+            / self.sub_name
+            / f"{self.run_name}"
             / "preprocessed"
         )
         self.preprocessed_data_class_path = (
@@ -201,17 +300,18 @@ class Data(UserDict):
 
     def set_sorter_output_paths(self, sorter: str) -> None:
         """
-        sort_base_output_path : canonical name, is where spikeinterface
-                                automatically saves sorter output
-        """
-        assert (
-            self.run_level_path is not None
-        ), "must set run_level_path before sorter_output_path"
+        Set the sorter-specific output paths. The same data may be
+        sorted multiple times by different sorters.
 
+        sort_base_output_path : str
+            canonical name, is where spikeinterface
+            automatically saves sorter output
+        """
         self.sorter_base_output_path = (
             self.base_path
             / "derivatives"
-            / self.run_level_path.relative_to(self.rawdata_path)
+            / self.sub_name
+            / f"{self.run_name}"
             / f"{sorter}-sorting"
         )
 
@@ -221,7 +321,16 @@ class Data(UserDict):
         self.quality_metrics_path = self.sorter_base_output_path / "quality_metrics.csv"
 
     def make_run_path(self, run_name: str) -> Path:
-        return self.base_path / "rawdata" / self.sub_name / f"{run_name}"
+        """
+        Get the path to the rawdata ephys run for the subject,
+        """
+        return self.get_sub_folder_path() / f"{run_name}"
+
+    def get_sub_folder_path(self):
+        """
+        Get the path to the rawdata subject folder.
+        """
+        return Path(self.base_path / "rawdata" / self.sub_name)
 
     # UserDict Overrides ---------------------------------------------------------------
 
@@ -237,7 +346,7 @@ class Data(UserDict):
     # Validate Inputs ------------------------------------------------------------------
 
     def validate_inputs(
-        self, run_names: Union[str, list], base_path: Union[str, Path]
+        self, run_names: Union[str, list], base_path: Union[str, Path], sub_name: str
     ) -> Tuple[Path, List[str], Path]:
         """
         Check the rawdata path exists and ensure run_names
@@ -245,6 +354,11 @@ class Data(UserDict):
         """
         base_path = Path(base_path)
         rawdata_path = base_path / "rawdata"
+
+        assert (rawdata_path / sub_name).is_dir(), (
+            f"Subject directory not found. {sub_name} "
+            f"is not a folder in {base_path}"
+        )
 
         assert rawdata_path.is_dir(), (
             f"Ensure there is a folder in base path called 'rawdata'.\n"

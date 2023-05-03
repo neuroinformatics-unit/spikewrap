@@ -3,17 +3,11 @@ from pathlib import Path
 from swc_ephys.pipeline.full_pipeline import run_full_pipeline
 
 base_path = Path(
-    "/home/joe/data/steve_multi_run"
-    #    r"/ceph/neuroinformatics/neuroinformatics/scratch/jziminski/ephys/test_data/steve_multi_run/1119617"
-    #   r"/time-short_samenaming"
+    r"/ceph/neuroinformatics/neuroinformatics/scratch/jziminski/ephys/test_data/steve_multi_run/1119617"
+    r"/time-short_samenaming"
 )
-sub_name = "1119617"  # "cut_same_name"
-run_names = [
-    "1119617_LSE1_shank12_cut",
-    "1119617_posttest1_shank12_cut",
-    "1119617_pretest1_shank12_cut",
-]
-# "all"
+sub_name = "cut_same_name"  # "cut_same_name"
+run_names = "all"
 
 config_name = "test"
 sorter = "kilosort2_5"

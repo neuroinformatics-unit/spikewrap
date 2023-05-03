@@ -14,7 +14,31 @@ from .data_class import Data
 def load_spikeglx_data(
     base_path: Union[Path, str], sub_name: str, run_names: Union[List[str], str]
 ) -> Data:
-    """ """
+    """
+    Load raw spikeglx data (in rawdata). If multiple runs are selected
+    in run_names, these will be stored as segments on a SpikeInterface
+    recording object.
+
+    Parameters
+    -----------
+
+    base_path : Union[Path, str]
+        Path where the rawdata folder containing subjects.
+
+    sub_name : str
+        Subject to preprocess. The subject top level dir should reside in
+        base_path/rawdata/ .
+
+    run_names : Union[List[str], str],
+        The spikeglx run name (i.e. not including the gate index). This can
+        also be a list of run names, or "all".
+
+    Returns
+    -------
+
+    Data class containing SpikeINterface recording object and information
+    on the data filepaths.
+    """
     data = Data(base_path, sub_name, run_names)
 
     all_recordings = [
