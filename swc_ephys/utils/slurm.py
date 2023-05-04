@@ -8,6 +8,21 @@ import submitit
 from . import utils
 
 
+def run_job(kwargs, command_func, command_name):
+    """ """
+    slurm_opts = kwargs.pop("slurm_batch")
+    executor = get_executor(kwargs)
+
+    job = executor.submit(
+        wrap_function_with_env_setup, command_func, slurm_opts, **kwargs
+    )
+
+    if isinstance(slurm_opts, dict) and "wait" in slurm_opts and slurm_opts["wait"]:
+        job.wait()
+
+    send_user_start_message(command_name, job, kwargs)
+
+
 def run_full_pipeline_slurm(**kwargs) -> None:
     """
     Run the entire preprocessing pipeline in a SLURM job.
@@ -24,12 +39,7 @@ def run_full_pipeline_slurm(**kwargs) -> None:
     """
     from ..pipeline.full_pipeline import run_full_pipeline
 
-    slurm_opts = kwargs.pop("slurm_batch")
-    executor = get_executor(kwargs)
-    job = executor.submit(
-        wrap_function_with_env_setup, run_full_pipeline, slurm_opts, **kwargs
-    )
-    send_user_start_message("Full pipeline", job, kwargs)
+    run_job(kwargs, run_full_pipeline, "Full pipeline")
 
 
 def run_sorting_slurm(**kwargs) -> None:
@@ -41,12 +51,7 @@ def run_sorting_slurm(**kwargs) -> None:
     """
     from ..pipeline.sort import run_sorting
 
-    slurm_opts = kwargs.pop("slurm_batch")
-    executor = get_executor(kwargs)
-    job = executor.submit(
-        wrap_function_with_env_setup, run_sorting, slurm_opts, **kwargs
-    )
-    send_user_start_message("Sorting", job, kwargs)
+    run_job(kwargs, run_sorting, "Sorting")
 
 
 # Utils --------------------------------------------------------------------------------
@@ -113,7 +118,7 @@ def wrap_function_with_env_setup(
         keyword arguments passed to the main running function
         (e.g. run_full_pipeline, run_sorting)
     """
-    if isinstance(slurm_opts, dict):
+    if isinstance(slurm_opts, dict) and "env_name" in slurm_opts:
         env_name = slurm_opts["env_name"]
     else:
         env_name = "swc_ephys"
