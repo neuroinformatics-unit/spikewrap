@@ -1,6 +1,7 @@
 import fnmatch
 import os
 import pickle  # TODO: explore cPickle
+import warnings
 from collections import UserDict
 from collections.abc import ItemsView, KeysView, ValuesView
 from pathlib import Path
@@ -52,7 +53,7 @@ class Data(UserDict):
 
         run_names : Union[List[str], str]
             the spikeglx run name (i.e. not including the gate index) or
-            list of run names, or keyword "all".
+            list of run names.
 
         pp_steps : Optional[Dict]
             preprocessing step dictionary, see swc_ephys/configs
@@ -97,7 +98,7 @@ class Data(UserDict):
         run_names: List[str],
     ) -> Tuple[List[Path], List[str], str]:
         """
-        The run_names may be a single run, the keyword "all" or a list of
+        The run_names may be a single run, or a list of
         runs to process. Return a list of paths to the runs found on the system.
         enforces that the runs are in datetime order.
 
@@ -106,7 +107,7 @@ class Data(UserDict):
 
         run_names : Union[List[str], str]
             The spikeglx run name (i.e. not including the gate index) or
-            list of run names, or keyword "all".
+            list of run names.
 
         Returns
         -------
@@ -120,12 +121,11 @@ class Data(UserDict):
 
         run_name : str
             The name of the run used in the derivatives. For a single run,
-            this will be the name of the run. When run_names is "all", this will
-            be "all". When run_names is a list of run names, this will be
-            an amalgamation of all run names
+            this will be the name of the run. When run_names is a list of run names,
+            this will be an amalgamation of all run names
             (see self.make_run_name_from_multiple_run_names)
         """
-        if run_names == ["all"] or len(run_names) > 1:
+        if len(run_names) > 1:
             all_run_paths, run_name = self.get_multi_run_names_paths(run_names)
         else:
             all_run_paths = [self.make_run_path(f"{run_names[0]}_g0")]
@@ -135,8 +135,6 @@ class Data(UserDict):
             f"No runs found for {run_names}. "
             f"Make sure to specify run_names without gate / trigger (e.g. no _g0)."
         )
-
-        utils.assert_list_of_files_are_in_datetime_order(all_run_paths)
 
         all_run_names = [path_.stem for path_ in all_run_paths]
 
@@ -148,16 +146,15 @@ class Data(UserDict):
     ) -> Tuple[List[Path], str]:
         """
         Get the paths to the runs when there is more that one run specified.
-        If this is "all", the subject level directory is searched and all runs
-        found are sorted in creation datetime order and used. If it is a list of
-        run names, they are searched, checked exist and assert in datetime order.
+        If it is a list of run names, they are searched, checked exist and
+        assert in datetime order.
 
         Parameters
         ----------
 
         run_names : Union[List[str], str]
             The spikeglx run name (i.e. not including the gate index) or
-            list of run names, or keyword "all".
+            list of run names.
 
         Returns
         -------
@@ -171,41 +168,26 @@ class Data(UserDict):
 
         run_name : str
             The name of the run used in the derivatives. For a single run,
-            this will be the name of the run. When run_names is "all", this will
-            be "all". When run_names is a list of run names, this will be
-            an amalgamation of all run names
+            this will be the name of the run. When run_names is a list of run names,
+            this will be an amalgamation of all run names
             (see self.make_run_name_from_multiple_run_names)
         """
-        if run_names == ["all"]:
-            search_run_paths = list(self.get_sub_folder_path().glob("*_g0"))
-            all_run_paths = utils.sort_list_of_paths_by_datetime_order(search_run_paths)
-        else:
-            if run_names != ["all"]:
-                all_run_paths = [
-                    self.get_sub_folder_path() / f"{name}_g0" for name in run_names
-                ]
+        all_run_paths = [
+            self.get_sub_folder_path() / f"{name}_g0" for name in run_names
+        ]
 
-                self.check_user_defined_run_paths_are_valid(all_run_paths)
+        for path_ in all_run_paths:
+            assert path_.is_dir(), f"No run folder found at {path_}"
+
+        if not utils.list_of_files_are_in_datetime_order(all_run_paths, "creation"):
+            warnings.warn(
+                "The runs provided are not in creation datetime order.\n"
+                "They will be concatenated in the order provided."
+            )
 
         run_name = self.make_run_name_from_multiple_run_names(run_names)
 
         return all_run_paths, run_name
-
-    def check_user_defined_run_paths_are_valid(self, all_run_paths: List[Path]) -> None:
-        """
-        Check that a list of paths to ephys data runs exist and are in
-        creation datetime order.
-
-        Parameters
-        ---------
-
-        all_run_paths : List[Path]
-            List of full filepaths for all runs used in the pipeline.
-        """
-        for path_ in all_run_paths:
-            assert path_.is_dir(), f"No run folder found at {path_}"
-
-        utils.assert_list_of_files_are_in_datetime_order(all_run_paths, "creation")
 
     def make_run_name_from_multiple_run_names(self, run_names: List[str]) -> str:
         """
@@ -367,9 +349,6 @@ class Data(UserDict):
         )
         if not isinstance(run_names, list):
             run_names = [run_names]
-            assert not (
-                "all" in run_names and len(run_names) != 1
-            ), "'all' run name must be used on its own."
 
         for name in run_names:
             assert "g0" not in name.split("_"), (
