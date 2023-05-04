@@ -41,8 +41,7 @@ def run_full_pipeline(
 
     run_names : Union[List[str], str],
         The spikeglx run name (i.e. not including the gate index). This can
-        also be a list of run names, or "all", in which case all runs in that
-        folder will be concatenated and sorted together. Preprocessing
+        also be a list of run names. Preprocessing
         will still occur per-run. Runs will always be concatenated in date
         order.
 

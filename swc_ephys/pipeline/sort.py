@@ -203,7 +203,7 @@ def validate_inputs(
 
 def get_singularity_image(sorter: str) -> Union[Literal[True], str]:
     """
-    Get the path to a pre-installed system sginuarlity image. If none
+    Get the path to a pre-installed system singularity image. If none
     can be found, set to True. In this case SpikeInterface will
     pull the imagine to the current working directory, and
     this will be moved after sorting

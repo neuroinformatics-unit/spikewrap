@@ -226,9 +226,9 @@ def sort_list_of_paths_by_datetime_order(list_of_paths: List[Path]) -> List[Path
     return list_of_paths_by_creation_time
 
 
-def assert_list_of_files_are_in_datetime_order(
+def list_of_files_are_in_datetime_order(
     list_of_paths: List[Path], creation_or_modification: str = "creation"
-) -> None:
+) -> bool:
     """
     Assert whether a list of paths are in order. By default, check they are
     in order by creation date. Can also check if they are ordered by
@@ -254,14 +254,10 @@ def assert_list_of_files_are_in_datetime_order(
         os.path.getmtime if creation_or_modification == "creation" else os.path.getctime
     )
 
-    list_of_paths_by_mod_time = copy.deepcopy(list_of_paths)
-    list_of_paths_by_mod_time.sort(key=filter)
+    list_of_paths_by_time = copy.deepcopy(list_of_paths)
+    list_of_paths_by_time.sort(key=filter)
 
-    assert list_of_paths == list_of_paths_by_mod_time, (
-        f"Run list of files are not in {creation_or_modification} datetime order. "
-        f"Files List: {list_of_paths}\n"
-        f"Please get in contact if you wish to analyse out of datetime order."
-    )
+    return list_of_paths == list_of_paths_by_time
 
 
 def make_preprocessing_plot_title(
