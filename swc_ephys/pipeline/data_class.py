@@ -60,7 +60,9 @@ class Data(UserDict):
         super(Data, self).__init__()
 
         self.base_path, checked_run_names, self.rawdata_path = self.validate_inputs(
-            run_names, base_path
+            run_names,
+            base_path,
+            sub_name,
         )
 
         self.sub_name = sub_name
@@ -344,7 +346,7 @@ class Data(UserDict):
     # Validate Inputs ------------------------------------------------------------------
 
     def validate_inputs(
-        self, run_names: Union[str, list], base_path: Union[str, Path]
+        self, run_names: Union[str, list], base_path: Union[str, Path], sub_name: str
     ) -> Tuple[Path, List[str], Path]:
         """
         Check the rawdata path exists and ensure run_names
@@ -352,6 +354,11 @@ class Data(UserDict):
         """
         base_path = Path(base_path)
         rawdata_path = base_path / "rawdata"
+
+        assert (rawdata_path / sub_name).is_dir(), (
+            f"Subject directory not found. {sub_name} "
+            f"is not a folder in {base_path}"
+        )
 
         assert rawdata_path.is_dir(), (
             f"Ensure there is a folder in base path called 'rawdata'.\n"
