@@ -31,7 +31,7 @@ def load_spikeglx_data(
 
     run_names : Union[List[str], str],
         The spikeglx run name (i.e. not including the gate index). This can
-        also be a list of run names, or "all".
+        also be a list of run names.
 
     Returns
     -------
