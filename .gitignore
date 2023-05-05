@@ -1,6 +1,7 @@
 # Custom
 .obsidian
 slurm_logs/
+derivatives/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
