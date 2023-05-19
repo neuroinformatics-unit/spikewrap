@@ -125,25 +125,6 @@ if __name__ == "__main__":
 
 Note `run_full_pipline` must be run in the `if __name__ == "__main__"` block as it uses the `multiprocessing` module.
 
-## Command Line Interface
-
-`swc_ephys` can be run using the command line. 
-
-Required positional arguments `base_path`, `sub_name` and `run_name` 
-
-and optional arguments `--config_name` (default `test`), `--sorter` (default `kilosort2_5`) and flag `--use-existing-preprocessed-file`. If set, this last flag will use an existing `preprocessed` recording file for the subject if it is found.
-
-For example, to run the script above using the command line:
-
-```
-swc_ephys \
-/ceph/neuroinformatics/neuroinformatics/scratch/ece_ephys_learning \
-1110925 \
-1110925_test_shank1 \
---config-name test \
---sorter kilosort2_5
-```
-
 ## Output
 
 Output of spike sorting will be in a `derivatives` folder at the same level as the `rawdata`. The subfolder organisation of `derivatives` will match `rawdata`. 
@@ -193,7 +174,27 @@ Currently supported are multiplexing correction or tshift (termed  `phase shift`
 
 Preprocessing options are set in `yaml` configuration files stored in `sbi_ephys/sbi_ephys/configs/`.  A default pipeline is stored in `test.yaml`.
 
-Custom preprocessing configuration files may be passed to the `config_name` argument, by passing the full path to the `.yaml` configuration file. 
+Custom preprocessing configuration files may be passed to the `config_name` argument, by passing the full path to the `.yaml` configuration file. For example:
+
+```
+'preprocessing':
+  '1':
+  - phase_shift
+  - {}
+  '2':
+  - bandpass_filter
+  - freq_min: 300
+    freq_max: 6000
+  '3':
+  - common_reference
+  - operator: median
+    reference: global
+
+'sorting':
+  'kilosort3':
+    'car': False
+    'freq_min': 300
+```
 
 Configuration files are structured as a dictionary where keys indicate the order to run preprocessing The values hold a list in which the first element is the name of the preprocessing step to run, and the second element a dictionary containing kwargs passed to the spikeinterface function.
 
