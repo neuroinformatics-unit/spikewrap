@@ -193,7 +193,27 @@ Currently supported are multiplexing correction or tshift (termed  `phase shift`
 
 Preprocessing options are set in `yaml` configuration files stored in `sbi_ephys/sbi_ephys/configs/`.  A default pipeline is stored in `test.yaml`.
 
-Custom preprocessing configuration files may be passed to the `config_name` argument, by passing the full path to the `.yaml` configuration file. 
+Custom preprocessing configuration files may be passed to the `config_name` argument, by passing the full path to the `.yaml` configuration file. For example:
+
+```
+'preprocessing':
+  '1':
+  - phase_shift
+  - {}
+  '2':
+  - bandpass_filter
+  - freq_min: 300
+    freq_max: 6000
+  '3':
+  - common_reference
+  - operator: median
+    reference: global
+
+'sorting':
+  'kilosort3':
+    'car': False
+    'freq_min': 300
+```
 
 Configuration files are structured as a dictionary where keys indicate the order to run preprocessing The values hold a list in which the first element is the name of the preprocessing step to run, and the second element a dictionary containing kwargs passed to the spikeinterface function.
 
