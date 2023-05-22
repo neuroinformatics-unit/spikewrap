@@ -127,7 +127,7 @@ Note `run_full_pipline` must be run in the `if __name__ == "__main__"` block as 
 
 ## Command Line Interface
 
-`swc_ephys` can be run using the command line. 
+> **Warning** Command Line Interface is experimental. Some options may not be currently available through the command line interface.
 
 Required positional arguments `base_path`, `sub_name` and `run_name` 
 
