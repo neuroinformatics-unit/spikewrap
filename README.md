@@ -125,25 +125,6 @@ if __name__ == "__main__":
 
 Note `run_full_pipline` must be run in the `if __name__ == "__main__"` block as it uses the `multiprocessing` module.
 
-## Command Line Interface
-
-> **Warning** Command Line Interface is experimental. Some options may not be currently available through the command line interface.
-
-Required positional arguments `base_path`, `sub_name` and `run_name` 
-
-and optional arguments `--config_name` (default `test`), `--sorter` (default `kilosort2_5`) and flag `--use-existing-preprocessed-file`. If set, this last flag will use an existing `preprocessed` recording file for the subject if it is found.
-
-For example, to run the script above using the command line:
-
-```
-swc_ephys \
-/ceph/neuroinformatics/neuroinformatics/scratch/ece_ephys_learning \
-1110925 \
-1110925_test_shank1 \
---config-name test \
---sorter kilosort2_5
-```
-
 ## Output
 
 Output of spike sorting will be in a `derivatives` folder at the same level as the `rawdata`. The subfolder organisation of `derivatives` will match `rawdata`. 
