@@ -21,7 +21,7 @@ if __name__ == "__main__":
         run_names,
         config_name,
         sorter,
-        use_existing_preprocessed_file=True,
-        overwrite_existing_sorter_output=False,
+        use_existing_preprocessed_file="overwrite",
+        overwrite_existing_sorter_output=True,
         slurm_batch=False,
     )

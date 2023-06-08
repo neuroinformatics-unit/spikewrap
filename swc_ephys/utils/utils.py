@@ -7,6 +7,7 @@ if TYPE_CHECKING:
 
     from ..pipeline.data_class import PreprocessData
 
+from ..pipeline.data_class import SortingData
 import copy
 import os.path
 import pickle
@@ -96,9 +97,18 @@ def message_user(message: str, verbose: bool = True) -> None:
         print(message)
 
 
-def load_data_and_recording(
+# TODO: this is a little bit confusing because preprocessing
+# class is always lazy. sorter class loads real data (still lazy though)
+# it needs to be super explicitly that preprocessing is not undertakne
+# until the binary object is written. For example, ti does not make
+# sense to load the preprocessing data in the Preprocess data setting
+# to check it. It is not crystallised until loaded into the SortingData
+# class (this can be checked separately in visualise data).
+# This needs to be super clear because it is a powerful but confusing
+# aspect of spikeinterface.
+
+def load_data_for_sorting(
     preprocessed_output_path: Path,
-    concatenate: bool = True,
 ) -> Tuple[PreprocessData, BaseRecording]:
     """
     Returns the previously preprocessed PreprocessData and
@@ -112,7 +122,7 @@ def load_data_and_recording(
     ----------
 
     preprocessed_output_path : Path
-        Path to the preprocessed folder, contaning the binary si_recording
+        Path to the preprocessed folder, containing the binary si_recording
         of the preprocessed data and the data_class.pkl containing all filepath
         information.
 
@@ -124,12 +134,13 @@ def load_data_and_recording(
     with open(Path(preprocessed_output_path) / "data_class.pkl", "rb") as file:
         data = pickle.load(file)
 
-    recording = data.load_preprocessed_binary()
+    # TODO: figure a way to pass the run name generated in preprocess
+    # data. It will be in the .yaml preprocess data writes! dur..
+    sorting_data = SortingData(data.base_path, data.sub_name, data.run_name)
 
-    if concatenate:
-        recording = concatenate_runs(recording)
+    sorting_data.load_preprocessed_binary()  # TODO: expose concatenate
 
-    return data, recording
+    return sorting_data
 
 
 def concatenate_runs(recording) -> BaseRecording:

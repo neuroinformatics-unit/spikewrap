@@ -159,7 +159,7 @@ def visualise_preprocessing_output(
 
         e.g. r"/base_path/derivatives/1110925/1110925_test_shank1_cut/preprocessed"
     """
-    data, recording = utils.load_data_and_recording(Path(preprocessing_path))
+    sorting_data = utils.load_data_for_sorting(Path(preprocessing_path))
 
     # Argument validation
     visualise_args = inspect.getfullargspec(visualise).args
@@ -176,12 +176,13 @@ def visualise_preprocessing_output(
     )
 
     # Must be 0 step in preprocessed data
+    # TODO: fix this!
     kwargs.update({"steps": "0"})
 
-    data.clear()
-    data.update({"0_preprocessed": recording})
+  #  data.clear()
+   # data.update({"0_preprocessed": recording})
 
-    visualise(data, **kwargs)
+    visualise(sorting_data, **kwargs)
 
 
 def get_subplot_ax(idx, ax, num_rows, num_cols) -> matplotlib.axes._axes.Axes:
