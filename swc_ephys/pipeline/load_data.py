@@ -8,12 +8,12 @@ if TYPE_CHECKING:
 import spikeinterface.extractors as se
 from spikeinterface import append_recordings
 
-from .data_class import Data
+from .data_class import PreprocessData
 
 
 def load_spikeglx_data(
     base_path: Union[Path, str], sub_name: str, run_names: Union[List[str], str]
-) -> Data:
+) -> PreprocessData:
     """
     Load raw spikeglx data (in rawdata). If multiple runs are selected
     in run_names, these will be stored as segments on a SpikeInterface
@@ -36,19 +36,19 @@ def load_spikeglx_data(
     Returns
     -------
 
-    Data class containing SpikeINterface recording object and information
+    PreprocessData class containing SpikeINterface recording object and information
     on the data filepaths.
     """
-    data = Data(base_path, sub_name, run_names)
+    preprocess_data = PreprocessData(base_path, sub_name, run_names)
 
     all_recordings = [
         se.read_spikeglx(
             folder_path=run_path, stream_id="imec0.ap",
             all_annotations=True, load_sync_channel=True,
         )
-        for run_path in data.all_run_paths
+        for run_path in preprocess_data.all_run_paths
     ]
 
-    data["0-raw"] = append_recordings(all_recordings)
+    preprocess_data["0-raw"] = append_recordings(all_recordings)
 
-    return data
+    return preprocess_data

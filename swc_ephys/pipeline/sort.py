@@ -8,11 +8,11 @@ import spikeinterface.sorters as ss
 from spikeinterface.core import BaseRecording
 
 from ..utils import slurm, utils
-from .data_class import Data
+from .data_class import PreprocessData
 
 
 def run_sorting(
-    data: Union[Data, Path, str],
+    data: Union[PreprocessData, Path, str],
     sorter: str = "kilosort2_5",
     sorter_options: Optional[Dict] = None,
     use_existing_preprocessed_file: bool = False,
@@ -21,7 +21,7 @@ def run_sorting(
     slurm_batch=False,
 ):
     """
-    Run a sorter on pre-processed data. Takes a Data (pipeline.data_class)
+    Run a sorter on pre-processed data. Takes a PreprocessData (pipeline.data_class)
     object that contains spikeinterface recording objects for the preprocessing
     pipeline (or path to existing 'preprocessed' output folder.
 
@@ -33,8 +33,8 @@ def run_sorting(
     Parameters
     ----------
 
-    data : Data
-        swc_ephys Data object or path to previously saved 'preprocessed' directory.
+    data : PreprocessData
+        swc_ephys PreprocessData object or path to previously saved 'preprocessed' directory.
 
     sorter : str
         Name of the sorter to use (e.g. "kilosort2_5").
@@ -71,7 +71,7 @@ def run_sorting(
 
     # Write the data to file prior to sorting, or
     # load existing preprocessing from file required
-    loaded_data, recording = get_data_and_recording(
+    loaded_data, recording = get_data_and_recording(  # INTRODUCE SORTINGDATA...
         data, use_existing_preprocessed_file
     )
 
@@ -112,23 +112,23 @@ def store_singularity_image(base_path, sorter):
 
 
 def get_data_and_recording(
-    data: Union[Data, Path, str], use_existing_preprocessed_file: bool
-) -> Tuple[Data, BaseRecording]:
+    data: Union[PreprocessData, Path, str], use_existing_preprocessed_file: bool
+) -> Tuple[PreprocessData, BaseRecording]:
     """
 
     Parameters
     ----------
-    data: Data
+    data: PreprocessData
         Can contain a path to previously saved 'preprocessed' directory.
         This will load a spikeinterface recording that will be fed directory
-        to the sorter. If a Data object is passed, the last recording in the
+        to the sorter. If a PreprocessData object is passed, the last recording in the
         preprocessing chain will be saved to binary form as required for
         sorting and the recording object returned.
 
     use_existing_preprocessed_file : bool
         By default, an error will be thrown if the
         'preprocessed' directory already exists for the
-        subject stored in the Data class.
+        subject stored in the PreprocessData class.
         If use_existing_preprocessed_file is True, the
         'preprocessed' directory will be loaded
         and used for sorting and no error thrown.
@@ -136,14 +136,14 @@ def get_data_and_recording(
     Returns
     -------
 
-    data : Data
-        The Data object (if a Data object is passed, this will be the same as passed)
+    data : PreprocessData
+        The PreprocessData object (if a PreprocessData object is passed, this will be the same as passed)
 
     recording : BaseRecording
         Recording object (the last in the preprocessing chain) to be passed
         to the sorter.
     """
-    if isinstance(data, Data):
+    if isinstance(data, PreprocessData):
         assert not (
             data.preprocessed_binary_data_path.is_dir()
             and use_existing_preprocessed_file is False

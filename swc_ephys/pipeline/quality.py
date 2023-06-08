@@ -39,7 +39,7 @@ def quality_check(
         If True, messages will be printed to consolve updating on the
         progress of preprocessing / sorting.
     """
-    data, recording = utils.load_data_and_recording(
+    data, recording = utils.load_data_and_recording(  # SHOULD BE SORTED DATA
         Path(preprocessed_output_path), concatenate=True
     )
     data.set_sorter_output_paths(sorter)
@@ -69,7 +69,7 @@ def quality_check(
     utils.message_user(f"Quality metrics saved to {data.quality_metrics_path}")
 
 
-def load_sorting_output(data: Data, recording: BaseRecording, sorter: str):
+def load_sorting_output(data: PreprocessData, recording: BaseRecording, sorter: str):
     """
     Load the output of a sorting run.
     """

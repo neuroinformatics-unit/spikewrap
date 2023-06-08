@@ -81,21 +81,21 @@ def run_full_pipeline(
     pp_steps, sorter_options = get_configs(config_name)
 
     # Load the data from file (lazy)
-    data = load_spikeglx_data(base_path, sub_name, run_names)
-    data.set_preprocessing_output_path()
+    preprocess_data = load_spikeglx_data(base_path, sub_name, run_names)
+    preprocess_data.set_preprocessing_output_path()
 
-    if use_existing_preprocessed_file and data.preprocessed_binary_data_path.is_dir():
+    if use_existing_preprocessed_file and preprocess_data.preprocessed_binary_data_path.is_dir():
         utils.message_user(
             f"\nSkipping preprocessing, using file at "
-            f"{data.preprocessed_binary_data_path} for sorting.\n"
+            f"{preprocess_data.preprocessed_binary_data_path} for sorting.\n"
         )
     else:
-        data = preprocess(data, pp_steps, verbose)
+        preprocess_data = preprocess(preprocess_data, pp_steps, verbose)
 
     # Run sorting. This will save the final preprocessing step
     # recording to disk prior to sorting.
-    run_sorting(
-        data,
+    sorted_data = run_sorting(
+        preprocess_data,
         sorter,
         sorter_options,
         use_existing_preprocessed_file,
@@ -106,4 +106,4 @@ def run_full_pipeline(
     # Save spikeinterface 'waveforms' output (TODO: currently, this is large)
     # to the sorter output dir. Quality checks are run and .csv of checks
     # output in the sorter folder as quality_metrics.csv
-    quality_check(data.preprocessed_output_path, sorter, verbose)
+    quality_check(sorted_data.preprocessed_output_path, sorter, verbose)  # TODO: bit dumb because preprocess_data has this attribute also. Allow it to take path or sorted_data object.
