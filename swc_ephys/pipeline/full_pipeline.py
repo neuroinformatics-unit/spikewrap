@@ -92,6 +92,8 @@ def run_full_pipeline(
     else:
         preprocess_data = preprocess(preprocess_data, pp_steps, verbose)
 
+    # TODO: it will be move explicit to call the save preprocess data here..
+
     # Run sorting. This will save the final preprocessing step
     # recording to disk prior to sorting.
     sorted_data = run_sorting(
