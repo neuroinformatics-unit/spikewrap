@@ -101,6 +101,7 @@ def run_sorting(
     if singularity_image is True:  # no existing image was found
         store_singularity_image(sorting_data.base_path, sorter)
 
+    return sorting_data
 
 def store_singularity_image(base_path, sorter):
     """

@@ -40,7 +40,7 @@ def quality_check(
         progress of preprocessing / sorting.
     """
     data = utils.load_data_for_sorting(  # SHOULD BE SORTED DATA
-        Path(preprocessed_output_path), concatenate=True
+        Path(preprocessed_output_path),
     )
     data.set_sorter_output_paths(sorter)
 
