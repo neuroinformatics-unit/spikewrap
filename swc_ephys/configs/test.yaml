@@ -1,12 +1,12 @@
 'preprocessing':
+#  '1':
+#  - phase_shift
+#  - {}
   '1':
-  - phase_shift
-  - {}
-  '2':
   - bandpass_filter
   - freq_min: 300
     freq_max: 6000
-  '3':
+  '2':
   - common_reference
   - operator: median
     reference: global
