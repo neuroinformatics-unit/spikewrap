@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING, Callable, List, Tuple, Union
 if TYPE_CHECKING:
     from spikeinterface.core import BaseRecording
 
-    from ..pipeline.data_class import Data
+    from ..pipeline.data_class import PreprocessData
 
 import copy
 import os.path
@@ -18,7 +18,7 @@ from spikeinterface import concatenate_recordings
 
 
 def get_keys_first_char(
-    data: Data, as_int: bool = False
+    data: PreprocessData, as_int: bool = False
 ) -> Union[List[str], List[int]]:
     """
     Get the first character of all keys in a dictionary. Expected
@@ -27,8 +27,8 @@ def get_keys_first_char(
     Parameters
     ----------
 
-    data : Data
-        swc_ephys Data class holding filepath information.
+    data : PreprocessData
+        swc_ephys PreprocessData class holding filepath information.
 
     as_int : bool
         If True, the first character of the keys are cast to
@@ -38,12 +38,12 @@ def get_keys_first_char(
 
 
 def get_dict_value_from_step_num(
-    data: Data, step_num: str
+    data: PreprocessData, step_num: str
 ) -> Tuple[BaseRecording, str]:
     """
-    Get the value of the Data dict from the preprocessing step number.
+    Get the value of the PreprocessData dict from the preprocessing step number.
 
-    Data contain keys indicating the preprocessing steps,
+    PreprocessData contain keys indicating the preprocessing steps,
     starting with the preprocessing step number.
     e.g. 0-raw, 1-raw-bandpass_filter, 2-raw_bandpass_filter-common_average
 
@@ -53,8 +53,8 @@ def get_dict_value_from_step_num(
     Parameters
     ----------
 
-    data : Data
-        swc_ephys Data class holding filepath information.
+    data : PreprocessData
+        swc_ephys PreprocessData class holding filepath information.
 
     step_num : str
         The preprocessing step number to get the value (i.e. recording object)
@@ -99,14 +99,14 @@ def message_user(message: str, verbose: bool = True) -> None:
 def load_data_and_recording(
     preprocessed_output_path: Path,
     concatenate: bool = True,
-) -> Tuple[Data, BaseRecording]:
+) -> Tuple[PreprocessData, BaseRecording]:
     """
-    Returns the previously preprocessed Data and
+    Returns the previously preprocessed PreprocessData and
     recording object loaded from the preprocess path.
 
     During sorting, preprocessed data is saved to
     derivatives/<sub level dirs>/preprocessed. The spikeinterface
-    recording (si_recording) and Data (data_class.pkl) are saved.
+    recording (si_recording) and PreprocessData (data_class.pkl) are saved.
 
     Parameters
     ----------
@@ -261,7 +261,7 @@ def list_of_files_are_in_datetime_order(
 
 
 def make_preprocessing_plot_title(
-    data: Data,
+    data: PreprocessData,
     run_number: int,
     full_key: str,
     shank_idx: int,
@@ -276,8 +276,8 @@ def make_preprocessing_plot_title(
     Parameters
     ----------
 
-    data : Data
-        swc_ephys Data class holding filepath information.
+    data : PreprocessData
+        swc_ephys PreprocessData class holding filepath information.
 
     run_number : int
         The ephys run number that is being displayed.

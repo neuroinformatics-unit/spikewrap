@@ -7,7 +7,7 @@ if TYPE_CHECKING:
     from numpy.typing import NDArray
     from spikeinterface.core import BaseRecording
 
-    from ..pipeline.data_class import Data
+    from ..pipeline.data_class import PreprocessData
 
 import inspect
 from pathlib import Path
@@ -20,7 +20,7 @@ from ..utils import utils
 
 
 def visualise(
-    data: Data,
+    data: PreprocessData,
     steps: Union[List[str], str] = "all",
     mode: str = "auto",
     as_subplot: bool = False,
@@ -31,14 +31,14 @@ def visualise(
 ) -> None:
     """
     Plot the data at various preprocessing steps, useful for quality-checking.
-    Takes the pipeline.data_class.Data object (output from pipeline.preprocess).
+    Takes the pipeline.data_class.PreprocessData object (output from pipeline.preprocess).
     Channels are displayed ordered by depth. Note preprocessing is lazy, and only the
     section if data displayed will be preprocessed.
 
     If multiple preprocessing steps are shown, they will be placed in subplots
     on a single plot if as_subplots is True, otherwise in separate plots.
 
-    data : swc_ephys Data class containing the preprocessing output (a dict
+    data : swc_ephys PreprocessData class containing the preprocessing output (a dict
            of keys indicating the preprocessing step and values are spikeinterface
            recording objects.
 
@@ -191,7 +191,7 @@ def get_subplot_ax(idx, ax, num_rows, num_cols) -> matplotlib.axes._axes.Axes:
 
 
 def validate_input_arguments(
-    data: Data,
+    data: PreprocessData,
     steps: Union[List[str], str],
     as_subplot: bool,
     channel_idx_to_show: Union[List, Tuple, NDArray, None],
@@ -221,7 +221,7 @@ def validate_input_arguments(
 
 
 def validate_options_against_recording(
-    recording: BaseRecording, data: Data, time_range: Optional[Tuple], run_number: int
+    recording: BaseRecording, data: PreprocessData, time_range: Optional[Tuple], run_number: int
 ) -> None:
     """
     TODO: can't find a better way to get final timepoint, but must be
