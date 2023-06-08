@@ -44,7 +44,7 @@ def load_spikeglx_data(
     all_recordings = [
         se.read_spikeglx(
             folder_path=run_path, stream_id="imec0.ap",
-            all_annotations=True, load_sync_channel=True,
+            all_annotations=True, load_sync_channel=False,
         )
         for run_path in preprocess_data.all_run_paths
     ]
