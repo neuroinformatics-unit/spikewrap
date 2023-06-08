@@ -16,7 +16,7 @@ def run_full_pipeline(
     run_names: Union[List[str], str],
     config_name: str = "test",
     sorter: str = "kilosort2_5",
-    use_existing_preprocessed_file: bool = False,
+    use_existing_preprocessed_file: bool = False,  # TODO: this is not a bool anymore, this this horrible typing - True, False, "overwrite"
     overwrite_existing_sorter_output: bool = False,
     verbose: bool = True,
     slurm_batch: bool = False,
@@ -81,21 +81,23 @@ def run_full_pipeline(
     pp_steps, sorter_options = get_configs(config_name)
 
     # Load the data from file (lazy)
-    data = load_spikeglx_data(base_path, sub_name, run_names)
-    data.set_preprocessing_output_path()
+    preprocess_data = load_spikeglx_data(base_path, sub_name, run_names)
+    preprocess_data.set_preprocessing_output_path()
 
-    if use_existing_preprocessed_file and data.preprocessed_binary_data_path.is_dir():
+    if use_existing_preprocessed_file is True and preprocess_data.preprocessed_binary_data_path.is_dir():
         utils.message_user(
             f"\nSkipping preprocessing, using file at "
-            f"{data.preprocessed_binary_data_path} for sorting.\n"
+            f"{preprocess_data.preprocessed_binary_data_path} for sorting.\n"
         )
     else:
-        data = preprocess(data, pp_steps, verbose)
+        preprocess_data = preprocess(preprocess_data, pp_steps, verbose)
+
+    # TODO: it will be move explicit to call the save preprocess data here..
 
     # Run sorting. This will save the final preprocessing step
     # recording to disk prior to sorting.
-    run_sorting(
-        data,
+    sorting_data = run_sorting(
+        preprocess_data,
         sorter,
         sorter_options,
         use_existing_preprocessed_file,
@@ -106,4 +108,4 @@ def run_full_pipeline(
     # Save spikeinterface 'waveforms' output (TODO: currently, this is large)
     # to the sorter output dir. Quality checks are run and .csv of checks
     # output in the sorter folder as quality_metrics.csv
-    quality_check(data.preprocessed_output_path, sorter, verbose)
+    quality_check(sorting_data.preprocessed_output_path, sorter, verbose)  # TODO: bit dumb because preprocess_data has this attribute also. Allow it to take path or sorted_data object.

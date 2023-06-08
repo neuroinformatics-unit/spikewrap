@@ -1,7 +1,7 @@
 from swc_ephys.pipeline.visualise import visualise_preprocessing_output
 
 preprocessing_path = (
-    "/home/joe/data/steve_multi_run/derivatives/1119617/all/preprocessed"
+    r"X:\neuroinformatics\scratch\jziminski\ephys\test_data\steve_multi_run\1119617\time-mid\derivatives\1119617\all\preprocessed"
 )
 
 visualise_preprocessing_output(

@@ -8,11 +8,11 @@ import spikeinterface.sorters as ss
 from spikeinterface.core import BaseRecording
 
 from ..utils import slurm, utils
-from .data_class import Data
+from .data_class import PreprocessData
 
 
 def run_sorting(
-    data: Union[Data, Path, str],
+    preprocess_data_or_path: Union[PreprocessData, Path, str],
     sorter: str = "kilosort2_5",
     sorter_options: Optional[Dict] = None,
     use_existing_preprocessed_file: bool = False,
@@ -21,7 +21,7 @@ def run_sorting(
     slurm_batch=False,
 ):
     """
-    Run a sorter on pre-processed data. Takes a Data (pipeline.data_class)
+    Run a sorter on pre-processed data. Takes a PreprocessData (pipeline.data_class)
     object that contains spikeinterface recording objects for the preprocessing
     pipeline (or path to existing 'preprocessed' output folder.
 
@@ -33,8 +33,8 @@ def run_sorting(
     Parameters
     ----------
 
-    data : Data
-        swc_ephys Data object or path to previously saved 'preprocessed' directory.
+    preprocess_data_or_path : PreprocessData
+        swc_ephys PreprocessData object or path to previously saved 'preprocessed' directory.
 
     sorter : str
         Name of the sorter to use (e.g. "kilosort2_5").
@@ -71,35 +71,37 @@ def run_sorting(
 
     # Write the data to file prior to sorting, or
     # load existing preprocessing from file required
-    loaded_data, recording = get_data_and_recording(
-        data, use_existing_preprocessed_file
-    )
 
-    loaded_data.set_sorter_output_paths(sorter)
+    # TODO: the recording object should be on the data class!!!
+    sorting_data = get_sorting_data(
+        preprocess_data_or_path, use_existing_preprocessed_file
+    )
+    sorting_data.set_sorter_output_paths(sorter)
 
     # this must be run from the folder that has both
     # sorter output AND rawdata
-    os.chdir(loaded_data.base_path)
+    os.chdir(sorting_data.base_path)
 
     singularity_image = get_singularity_image(sorter)
 
-    if recording.get_num_segments() > 1:
-        recording = utils.concatenate_runs(recording)
+    #if recording.get_num_segments() > 1:  this was never used. TODO: need to expose non-concantenation option.
+     #   recording = utils.concatenate_runs(recording)
 
     utils.message_user(f"Starting {sorter} sorting...")
 
     ss.run_sorter(
         sorter,
-        recording,
-        output_folder=loaded_data.sorter_base_output_path,
+        sorting_data.data["0_preprocessed"],
+        output_folder=sorting_data.sorter_base_output_path,
         singularity_image=singularity_image,
         remove_existing_folder=overwrite_existing_sorter_output,
         **sorter_options_dict,
     )
 
     if singularity_image is True:  # no existing image was found
-        store_singularity_image(loaded_data.base_path, sorter)
+        store_singularity_image(sorting_data.base_path, sorter)
 
+    return sorting_data
 
 def store_singularity_image(base_path, sorter):
     """
@@ -110,25 +112,28 @@ def store_singularity_image(base_path, sorter):
     path_to_image = base_path / utils.get_sorter_image_name(sorter)
     shutil.move(path_to_image, utils.get_local_sorter_path(sorter).parent)
 
-
-def get_data_and_recording(
-    data: Union[Data, Path, str], use_existing_preprocessed_file: bool
-) -> Tuple[Data, BaseRecording]:
+# TODO: not all paths through this conditional are tested!
+# TODO :these conditionals are still super confusing...
+# TODO: in generaal this seems like a weird function that should
+# not be here...
+def get_sorting_data(
+    preprocess_data_or_path: Union[PreprocessData, Path, str], use_existing_preprocessed_file: bool
+) -> Tuple[PreprocessData, BaseRecording]:
     """
 
     Parameters
     ----------
-    data: Data
+    data: PreprocessData
         Can contain a path to previously saved 'preprocessed' directory.
         This will load a spikeinterface recording that will be fed directory
-        to the sorter. If a Data object is passed, the last recording in the
+        to the sorter. If a PreprocessData object is passed, the last recording in the
         preprocessing chain will be saved to binary form as required for
         sorting and the recording object returned.
 
     use_existing_preprocessed_file : bool
         By default, an error will be thrown if the
         'preprocessed' directory already exists for the
-        subject stored in the Data class.
+        subject stored in the PreprocessData class.
         If use_existing_preprocessed_file is True, the
         'preprocessed' directory will be loaded
         and used for sorting and no error thrown.
@@ -136,44 +141,54 @@ def get_data_and_recording(
     Returns
     -------
 
-    data : Data
-        The Data object (if a Data object is passed, this will be the same as passed)
+    data : PreprocessData
+        The PreprocessData object (if a PreprocessData object is passed, this will be the same as passed)
 
     recording : BaseRecording
         Recording object (the last in the preprocessing chain) to be passed
         to the sorter.
     """
-    if isinstance(data, Data):
+    if isinstance(preprocess_data_or_path, PreprocessData):
+        preprocess_data = preprocess_data_or_path
         assert not (
-            data.preprocessed_binary_data_path.is_dir()
+            preprocess_data.preprocessed_binary_data_path.is_dir()
             and use_existing_preprocessed_file is False
         ), (
             f"Preprocessed binary already exists at "
-            f"{data.preprocessed_binary_data_path}. "
-            f"To overwrite, set 'use_existing_preprocessed_file' to True"
+            f"{preprocess_data.preprocessed_binary_data_path}. "
+            f"To overwrite, set 'use_existing_preprocessed_file' to 'overwrite'"
         )
 
-    if isinstance(data, str) or isinstance(data, Path):
-        utils.message_user(f"\nLoading binary preprocessed data from {data}\n")
-        data, recording = utils.load_data_and_recording(Path(data))
+        if use_existing_preprocessed_file is True and preprocess_data.preprocessed_binary_data_path.is_dir():
+            utils.message_user(
+                f"\n"
+                f"use_existing_preprocessed_file=True. "
+                f"Loading binary preprocessed data from {preprocess_data.preprocessed_output_path}\n"
+            )
+            sorting_data = utils.load_data_for_sorting(preprocess_data.preprocessed_output_path)
 
-    elif use_existing_preprocessed_file and data.preprocessed_binary_data_path.is_dir():
-        utils.message_user(
-            f"\n"
-            f"use_existing_preprocessed_file=True. "
-            f"Loading binary preprocessed data from {data.preprocessed_output_path}\n"
-        )
-        data, recording = utils.load_data_and_recording(data.preprocessed_output_path)
+        elif use_existing_preprocessed_file == "overwrite":
+            if preprocess_data.preprocessed_binary_data_path.is_dir():
+                shutil.rmtree(preprocess_data.preprocessed_binary_data_path)
+            preprocess_data.save_all_preprocessed_data()  # TODO: DRY FROM BELOW
+            sorting_data = utils.load_data_for_sorting(Path(preprocess_data.preprocessed_output_path))
+
+        else:
+            utils.message_user(
+                f"\nSaving data class and binary preprocessed data to "
+                f"{preprocess_data.preprocessed_output_path}\n"
+            )
+
+            preprocess_data.save_all_preprocessed_data()
+            sorting_data = utils.load_data_for_sorting(Path(preprocess_data.preprocessed_output_path))
+
     else:
-        utils.message_user(
-            f"\nSaving data class and binary preprocessed data to "
-            f"{data.preprocessed_output_path}\n"
-        )
+        assert (isinstance(preprocess_data_or_path, str) or isinstance(preprocess_data_or_path, Path)), "unexpected path taken."
+        preproces_path = preprocess_data_or_path
+        utils.message_user(f"\nLoading binary preprocessed data from {preproces_path}\n")
+        sorting_data = utils.load_data_for_sorting(Path(preproces_path))
 
-        data.save_all_preprocessed_data()
-        recording, __ = utils.get_dict_value_from_step_num(data, "last")
-
-    return data, recording
+    return sorting_data
 
 
 def validate_inputs(

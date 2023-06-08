@@ -6,14 +6,14 @@ import spikeinterface.preprocessing as spre
 
 from ..configs import configs
 from ..utils import utils
-from .data_class import Data
+from .data_class import PreprocessData
 
 
 def preprocess(
-    data: Data,
+    preprocess_data: PreprocessData,
     pp_steps: Optional[Dict] = None,
     verbose: bool = True,
-) -> Data:
+) -> PreprocessData:
     """
     Returns a dictionary of spikeinterface recording objects setup in
     the order and with the options specified in pp_steps. Spikeinterface
@@ -36,7 +36,7 @@ def preprocess(
     Returns
     -------
 
-    data : swc_ephys Data UserDict containing preprocessing spikeinterface
+    preprocess_data : swc_ephys PreprocessData UserDict containing preprocessing spikeinterface
            recording objects. see pipeline.data_class
 
     """
@@ -47,16 +47,16 @@ def preprocess(
 
     checked_pp_steps, pp_step_names = check_and_sort_pp_steps(pp_steps, pp_funcs)
 
-    data.pp_steps = pp_steps
+    preprocess_data.pp_steps = pp_steps
 
-    data.set_preprocessing_output_path()
+    preprocess_data.set_preprocessing_output_path()
 
     for step_num, pp_info in checked_pp_steps.items():
         perform_preprocessing_step(
-            step_num, pp_info, data, pp_step_names, pp_funcs, verbose
+            step_num, pp_info, preprocess_data, pp_step_names, pp_funcs, verbose
         )
 
-    return data
+    return preprocess_data
 
 
 def check_and_sort_pp_steps(pp_steps: Dict, pp_funcs: Dict) -> Tuple[Dict, List[str]]:
@@ -124,17 +124,17 @@ def check_and_sort_pp_steps(pp_steps: Dict, pp_funcs: Dict) -> Tuple[Dict, List[
 def perform_preprocessing_step(
     step_num: str,
     pp_info: Tuple[str, Dict],
-    data: Data,
+    preprocess_data: PreprocessData,
     pp_step_names: List[str],
     pp_funcs: Dict,
     verbose: bool = True,
 ):
     """
-    Given the preprocessing step and data UserDict containing
+    Given the preprocessing step and preprocess_data UserDict containing
     spikeinterface BaseRecordings, apply a preprocessing step to the
-    last preprocessed recording and save the recording object to Data.
+    last preprocessed recording and save the recording object to PreprocessData.
     For example, if step_num = "3", get the recording of the second
-    preprocessing step from data and apply the 3rd preprocessing step
+    preprocessing step from preprocess_data and apply the 3rd preprocessing step
     as specified in pp_info.
 
     Parameters
@@ -146,8 +146,8 @@ def perform_preprocessing_step(
         Preprocessing name, preprocessing kwargs) tuple (they value from
         the pp_dict).
 
-    data : sData
-        swc_ephys Data class (a UserDict in which key-values are
+    preprocess_data : PreprocessData
+        swc_ephys PreprocessData class (a UserDict in which key-values are
         the preprocessing chain name : spikeinterface recording objects).
 
     pp_step_names : List[str]
@@ -169,15 +169,16 @@ def perform_preprocessing_step(
     )
 
     last_pp_step_output, __ = utils.get_dict_value_from_step_num(
-        data, step_num=str(int(step_num) - 1)
+        preprocess_data, step_num=str(int(step_num) - 1)
     )
 
     new_name = f"{step_num}-" + "-".join(["raw"] + pp_step_names[: int(step_num)])
 
+    # TODO: SI changed their API need to adjust this...
     assert pp_funcs[pp_name].__name__ == pp_name, "something is wrong in func dict"
 
-    data[new_name] = pp_funcs[pp_name](last_pp_step_output, **pp_options)
-    data.opts[new_name] = pp_options
+    preprocess_data[new_name] = pp_funcs[pp_name](last_pp_step_output, **pp_options)
+    preprocess_data.opts[new_name] = pp_options
 
 
 def get_pp_funcs() -> Dict:

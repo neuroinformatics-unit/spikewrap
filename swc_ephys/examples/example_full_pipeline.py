@@ -7,7 +7,9 @@ base_path = Path(
     r"/time-short_samenaming"
 )
 sub_name = "cut_same_name"  # "cut_same_name"
-run_names = "all"
+run_names = ["1119617_test_units_explore_shank1_cut",
+             "1119617_test_units_explore_shank2_cut",
+             "1119617_test_units_explore_shank3_cut"]
 
 config_name = "test"
 sorter = "kilosort2_5"
@@ -19,7 +21,7 @@ if __name__ == "__main__":
         run_names,
         config_name,
         sorter,
-        use_existing_preprocessed_file=True,
+        use_existing_preprocessed_file="overwrite",
         overwrite_existing_sorter_output=True,
         slurm_batch=False,
     )

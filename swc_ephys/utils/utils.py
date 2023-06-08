@@ -5,8 +5,9 @@ from typing import TYPE_CHECKING, Callable, List, Tuple, Union
 if TYPE_CHECKING:
     from spikeinterface.core import BaseRecording
 
-    from ..pipeline.data_class import Data
+    from ..pipeline.data_class import PreprocessData
 
+from ..pipeline.data_class import SortingData
 import copy
 import os.path
 import pickle
@@ -18,7 +19,7 @@ from spikeinterface import concatenate_recordings
 
 
 def get_keys_first_char(
-    data: Data, as_int: bool = False
+    data: PreprocessData, as_int: bool = False
 ) -> Union[List[str], List[int]]:
     """
     Get the first character of all keys in a dictionary. Expected
@@ -27,8 +28,8 @@ def get_keys_first_char(
     Parameters
     ----------
 
-    data : Data
-        swc_ephys Data class holding filepath information.
+    data : PreprocessData
+        swc_ephys PreprocessData class holding filepath information.
 
     as_int : bool
         If True, the first character of the keys are cast to
@@ -38,12 +39,12 @@ def get_keys_first_char(
 
 
 def get_dict_value_from_step_num(
-    data: Data, step_num: str
+    data: PreprocessData, step_num: str
 ) -> Tuple[BaseRecording, str]:
     """
-    Get the value of the Data dict from the preprocessing step number.
+    Get the value of the PreprocessData dict from the preprocessing step number.
 
-    Data contain keys indicating the preprocessing steps,
+    PreprocessData contain keys indicating the preprocessing steps,
     starting with the preprocessing step number.
     e.g. 0-raw, 1-raw-bandpass_filter, 2-raw_bandpass_filter-common_average
 
@@ -53,8 +54,8 @@ def get_dict_value_from_step_num(
     Parameters
     ----------
 
-    data : Data
-        swc_ephys Data class holding filepath information.
+    data : PreprocessData
+        swc_ephys PreprocessData class holding filepath information.
 
     step_num : str
         The preprocessing step number to get the value (i.e. recording object)
@@ -96,23 +97,32 @@ def message_user(message: str, verbose: bool = True) -> None:
         print(message)
 
 
-def load_data_and_recording(
+# TODO: this is a little bit confusing because preprocessing
+# class is always lazy. sorter class loads real data (still lazy though)
+# it needs to be super explicitly that preprocessing is not undertakne
+# until the binary object is written. For example, ti does not make
+# sense to load the preprocessing data in the Preprocess data setting
+# to check it. It is not crystallised until loaded into the SortingData
+# class (this can be checked separately in visualise data).
+# This needs to be super clear because it is a powerful but confusing
+# aspect of spikeinterface.
+
+def load_data_for_sorting(
     preprocessed_output_path: Path,
-    concatenate: bool = True,
-) -> Tuple[Data, BaseRecording]:
+) -> Tuple[PreprocessData, BaseRecording]:
     """
-    Returns the previously preprocessed Data and
+    Returns the previously preprocessed PreprocessData and
     recording object loaded from the preprocess path.
 
     During sorting, preprocessed data is saved to
     derivatives/<sub level dirs>/preprocessed. The spikeinterface
-    recording (si_recording) and Data (data_class.pkl) are saved.
+    recording (si_recording) and PreprocessData (data_class.pkl) are saved.
 
     Parameters
     ----------
 
     preprocessed_output_path : Path
-        Path to the preprocessed folder, contaning the binary si_recording
+        Path to the preprocessed folder, containing the binary si_recording
         of the preprocessed data and the data_class.pkl containing all filepath
         information.
 
@@ -124,12 +134,13 @@ def load_data_and_recording(
     with open(Path(preprocessed_output_path) / "data_class.pkl", "rb") as file:
         data = pickle.load(file)
 
-    recording = data.load_preprocessed_binary()
+    # TODO: figure a way to pass the run name generated in preprocess
+    # data. It will be in the .yaml preprocess data writes! dur..
+    sorting_data = SortingData(data.base_path, data.sub_name, data.run_name)
 
-    if concatenate:
-        recording = concatenate_runs(recording)
+    sorting_data.load_preprocessed_binary()  # TODO: expose concatenate
 
-    return data, recording
+    return sorting_data
 
 
 def concatenate_runs(recording) -> BaseRecording:
@@ -261,7 +272,7 @@ def list_of_files_are_in_datetime_order(
 
 
 def make_preprocessing_plot_title(
-    data: Data,
+    data: PreprocessData,
     run_number: int,
     full_key: str,
     shank_idx: int,
@@ -276,8 +287,8 @@ def make_preprocessing_plot_title(
     Parameters
     ----------
 
-    data : Data
-        swc_ephys Data class holding filepath information.
+    data : PreprocessData
+        swc_ephys PreprocessData class holding filepath information.
 
     run_number : int
         The ephys run number that is being displayed.
