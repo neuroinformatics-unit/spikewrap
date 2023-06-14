@@ -13,6 +13,8 @@ from .data_class import PreprocessData
 # loops
 # https://docs.sylabs.io/guides/3.5/admin-guide/configfiles.html
 #  KeyError: 'snsMnMaXaDw' is error when ...'exported' is in the name!
+# reconfigure tests so they can be run in parallel (pytest-parallel or pytest-xdist)
+# issue with laoding sync channel breaks probe
 
 
 def run_sorting(
@@ -87,9 +89,6 @@ def run_sorting(
     os.chdir(sorting_data.base_path)
 
     singularity_image = get_singularity_image(sorter)
-
-    # if recording.get_num_segments() > 1:  this was never used. TODO: need to expose non-concantenation option.
-    #   recording = utils.concatenate_runs(recording)
 
     utils.message_user(f"Starting {sorter} sorting...")
 
