@@ -10,7 +10,7 @@ import pytest
 
 from swc_ephys.pipeline import full_pipeline
 
-ON_HPC = True
+ON_HPC = False
 
 
 class TestFirstEphys:
@@ -22,9 +22,9 @@ class TestFirstEphys:
         test_path = data_path / "data" / "steve_multi_run"
         sub_name = "1119617"
         run_names = [
-            "1119617_LSE1_shank12_cut",
-            "1119617_posttest1_shank12_cut",
-            "1119617_pretest1_shank12_cut",
+            "1119617_LSE1_shank12",
+            "1119617_posttest1_shank12",
+            "1119617_pretest1_shank12",
         ]
 
         output_path = test_path / "derivatives"

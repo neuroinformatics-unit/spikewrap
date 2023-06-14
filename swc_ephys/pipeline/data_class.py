@@ -1,6 +1,5 @@
 import fnmatch
 import os
-import pickle  # TODO: explore cPickle
 import warnings
 from collections import UserDict
 from collections.abc import ItemsView, KeysView, ValuesView
@@ -9,10 +8,10 @@ from typing import Dict, List, Optional, Tuple, Union
 
 import numpy as np
 import spikeinterface as si
+import yaml
 from spikeinterface.core.base import BaseExtractor
 
 from ..utils import utils
-import yaml
 
 # PreprocessData
 # TODO: these classes will be extremely similar, inherit from common
@@ -269,7 +268,9 @@ class PreprocessData(UserDict):
         if not self.preprocessed_output_path.is_dir():
             os.makedirs(self.preprocessed_output_path)
 
-        with open(self.preprocessed_output_path / "preprocess_data_attributes.yaml", "w") as attributes:  # TODO: save filename in config somewhere
+        with open(
+            self.preprocessed_output_path / "preprocess_data_attributes.yaml", "w"
+        ) as attributes:  # TODO: save filename in config somewhere
             yaml.dump(attributes_to_save, attributes, sort_keys=False)
 
     # Handle Paths ---------------------------------------------------------------------
@@ -292,7 +293,6 @@ class PreprocessData(UserDict):
         self.preprocessed_binary_data_path = (
             self.preprocessed_output_path / "si_recording"
         )
-
 
     def make_run_path(self, run_name: str) -> Path:
         """
@@ -374,15 +374,9 @@ class PreprocessData(UserDict):
 
 class SortingData(PreprocessData):
     # super UserDict only,
-    def __init__(
-        self,
-        base_path: Union[Path, str],
-        sub_name: str,
-        pp_run_name: str
-    ):
-        """
-        """
-        super(SortingData, self) # no init, see how well this works.
+    def __init__(self, base_path: Union[Path, str], sub_name: str, pp_run_name: str):
+        """ """
+        super(SortingData, self)  # no init, see how well this works.
 
         # TODO: I think will be cool to have rawdata as an optional attribute here
         # for provenance on generation. Will be able to get original
@@ -394,7 +388,9 @@ class SortingData(PreprocessData):
         self.sub_name = sub_name
         self.pp_run_name = pp_run_name
 
-        self.all_run_names = [self.pp_run_name]  # TODO: hacky wor-around for visualise.py
+        self.all_run_names = [
+            self.pp_run_name
+        ]  # TODO: hacky wor-around for visualise.py
 
         self.preprocessed_output_path = Path()
         self.preprocessed_data_class_path = Path()
@@ -417,8 +413,10 @@ class SortingData(PreprocessData):
         recording object.
         """
         if not self.preprocessed_binary_data_path.is_dir():
-            raise FileNotFoundError(f"No preprocessed SI binary-containing folder "
-                                    f"found at {self.preprocessed_binary_data_path}.") # TODO: add on passing custom base_path
+            raise FileNotFoundError(
+                f"No preprocessed SI binary-containing folder "
+                f"found at {self.preprocessed_binary_data_path}."
+            )  # TODO: add on passing custom base_path
         recording = si.load_extractor(self.preprocessed_binary_data_path)
 
         if concatenate:
@@ -444,6 +442,5 @@ class SortingData(PreprocessData):
         )
 
         self.sorter_run_output_path = self.sorter_base_output_path / "sorter_output"
-
         self.waveforms_output_path = self.sorter_base_output_path / "waveforms"
         self.quality_metrics_path = self.sorter_base_output_path / "quality_metrics.csv"
