@@ -47,7 +47,7 @@ def preprocess(
 
     checked_pp_steps, pp_step_names = check_and_sort_pp_steps(pp_steps, pp_funcs)
 
-    preprocess_data.pp_steps = pp_steps
+    preprocess_data.pp_steps = pp_steps  # TODO: use setter
 
     for step_num, pp_info in checked_pp_steps.items():
         perform_preprocessing_step(
@@ -172,7 +172,6 @@ def perform_preprocessing_step(
 
     new_name = f"{step_num}-" + "-".join(["raw"] + pp_step_names[: int(step_num)])
 
-    # TODO: SI changed their API need to adjust this...
     assert pp_funcs[pp_name].__name__ == pp_name, "something is wrong in func dict"
 
     preprocess_data[new_name] = pp_funcs[pp_name](last_pp_step_output, **pp_options)
