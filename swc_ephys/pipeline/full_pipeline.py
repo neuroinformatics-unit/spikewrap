@@ -1,6 +1,6 @@
 import copy
 from pathlib import Path
-from typing import List, Union
+from typing import List, Literal, Union
 
 from ..configs.configs import get_configs
 from ..utils import slurm, utils
@@ -16,7 +16,9 @@ def run_full_pipeline(
     run_names: Union[List[str], str],
     config_name: str = "test",
     sorter: str = "kilosort2_5",
-    use_existing_preprocessed_file: bool = False,  # TODO: this is not a bool anymore, this this horrible typing - True, False, "overwrite"
+    existing_preprocessed_data: Literal[
+        "overwrite", "load_if_exists", "fail_if_exists"
+    ] = "fail_if_exists",
     overwrite_existing_sorter_output: bool = False,
     verbose: bool = True,
     slurm_batch: bool = False,
@@ -53,7 +55,7 @@ def run_full_pipeline(
     sorter : str
         name of the sorter to use e.g. "kilosort2_5".
 
-    use_existing_preprocessed_file : bool
+    existing_preprocessed_data : Literal["", "", ""] ###################################################
         If this function has been run previously
         and a saved pre-proccessed binary already
         exists in the 'preprocessed' folder for this
@@ -80,27 +82,16 @@ def run_full_pipeline(
 
     pp_steps, sorter_options = get_configs(config_name)
 
-    # Load the data from file (lazy)
     preprocess_data = load_spikeglx_data(base_path, sub_name, run_names)
-    preprocess_data.set_preprocessing_output_path()
 
-    if use_existing_preprocessed_file is True and preprocess_data.preprocessed_binary_data_path.is_dir():
-        utils.message_user(
-            f"\nSkipping preprocessing, using file at "
-            f"{preprocess_data.preprocessed_binary_data_path} for sorting.\n"
-        )
-    else:
-        preprocess_data = preprocess(preprocess_data, pp_steps, verbose)
+    preprocess_data = preprocess(preprocess_data, pp_steps, verbose)
 
-    # TODO: it will be move explicit to call the save preprocess data here..
+    save_preprocessed_data_if_required(preprocess_data, existing_preprocessed_data)
 
-    # Run sorting. This will save the final preprocessing step
-    # recording to disk prior to sorting.
     sorting_data = run_sorting(
-        preprocess_data,
+        preprocess_data.preprocessed_output_path,
         sorter,
         sorter_options,
-        use_existing_preprocessed_file,
         overwrite_existing_sorter_output,
         verbose,
     )
@@ -108,4 +99,46 @@ def run_full_pipeline(
     # Save spikeinterface 'waveforms' output (TODO: currently, this is large)
     # to the sorter output dir. Quality checks are run and .csv of checks
     # output in the sorter folder as quality_metrics.csv
-    quality_check(sorting_data.preprocessed_output_path, sorter, verbose)  # TODO: bit dumb because preprocess_data has this attribute also. Allow it to take path or sorted_data object.
+    quality_check(
+        sorting_data.preprocessed_output_path, sorter, verbose
+    )
+
+
+def save_preprocessed_data_if_required(preprocess_data, existing_preprocessed_data):
+    """ """
+    preprocess_path = preprocess_data.preprocessed_output_path
+
+    if existing_preprocessed_data == "overwrite":
+        if preprocess_path.is_dir():
+            utils.message_user(f"Removing existing file at {preprocess_path}\n")
+
+        utils.message_user(f"Saving preprocessed data to {preprocess_path}")
+
+        preprocess_data.save_all_preprocessed_data(overwrite=True)
+
+    elif existing_preprocessed_data == "load_if_exists":
+        if preprocess_path.is_dir():
+            utils.message_user(
+                f"\nSkipping preprocessing, using file at "
+                f"{preprocess_path} for sorting.\n"
+            )
+        else:
+            utils.message_user(
+                f"No data found at {preprocess_path}, saving" f"preprocessed data."
+            )
+            preprocess_data.save_all_preprocessed_data(overwrite=False)
+
+    elif existing_preprocessed_data == "fail_if_exists":
+        if preprocess_path.is_dir():
+            raise FileExistsError(
+                f"Preprocessed binary already exists at "
+                f"{preprocess_path}. "
+                f"To overwrite, set 'existing_preprocessed_data' to 'overwrite'"
+            )
+        preprocess_data.save_all_preprocessed_data(overwrite=False)
+
+    else:
+        raise ValueError(
+            "`existing_preproessed_data` argument not recognised."
+            "Must be: 'load_if_exists', 'fail_if_exists' or 'overwrite'."
+        )
