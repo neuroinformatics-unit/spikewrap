@@ -10,6 +10,12 @@ from spikeinterface.core import BaseRecording
 from ..utils import slurm, utils
 from .data_class import PreprocessData
 
+# loops
+# https://docs.sylabs.io/guides/3.5/admin-guide/configfiles.html
+#  KeyError: 'snsMnMaXaDw' is error when ...'exported' is in the name!
+# reconfigure tests so they can be run in parallel (pytest-parallel or pytest-xdist)
+# issue with laoding sync channel breaks probe
+
 
 def run_sorting(
     preprocess_data_or_path: Union[PreprocessData, Path, str],
@@ -84,9 +90,6 @@ def run_sorting(
 
     singularity_image = get_singularity_image(sorter)
 
-    #if recording.get_num_segments() > 1:  this was never used. TODO: need to expose non-concantenation option.
-     #   recording = utils.concatenate_runs(recording)
-
     utils.message_user(f"Starting {sorter} sorting...")
 
     ss.run_sorter(
@@ -103,6 +106,7 @@ def run_sorting(
 
     return sorting_data
 
+
 def store_singularity_image(base_path, sorter):
     """
     When running locally, SPikeInterface will pull the docker image
@@ -112,12 +116,14 @@ def store_singularity_image(base_path, sorter):
     path_to_image = base_path / utils.get_sorter_image_name(sorter)
     shutil.move(path_to_image, utils.get_local_sorter_path(sorter).parent)
 
+
 # TODO: not all paths through this conditional are tested!
 # TODO :these conditionals are still super confusing...
 # TODO: in generaal this seems like a weird function that should
 # not be here...
 def get_sorting_data(
-    preprocess_data_or_path: Union[PreprocessData, Path, str], use_existing_preprocessed_file: bool
+    preprocess_data_or_path: Union[PreprocessData, Path, str],
+    use_existing_preprocessed_file: bool,
 ) -> Tuple[PreprocessData, BaseRecording]:
     """
 
@@ -159,19 +165,26 @@ def get_sorting_data(
             f"To overwrite, set 'use_existing_preprocessed_file' to 'overwrite'"
         )
 
-        if use_existing_preprocessed_file is True and preprocess_data.preprocessed_binary_data_path.is_dir():
+        if (
+            use_existing_preprocessed_file is True
+            and preprocess_data.preprocessed_binary_data_path.is_dir()
+        ):
             utils.message_user(
                 f"\n"
                 f"use_existing_preprocessed_file=True. "
-                f"Loading binary preprocessed data from {preprocess_data.preprocessed_output_path}\n"
+                f"Loading binary preprocessed data from {preprocess_data.preprocessed_binary_data_path}\n"
             )
-            sorting_data = utils.load_data_for_sorting(preprocess_data.preprocessed_output_path)
+            sorting_data = utils.load_data_for_sorting(
+                preprocess_data.preprocessed_output_path
+            )
 
         elif use_existing_preprocessed_file == "overwrite":
-            if preprocess_data.preprocessed_binary_data_path.is_dir():
-                shutil.rmtree(preprocess_data.preprocessed_binary_data_path)
+            if preprocess_data.preprocessed_output_path.is_dir():
+                shutil.rmtree(preprocess_data.preprocessed_output_path)
             preprocess_data.save_all_preprocessed_data()  # TODO: DRY FROM BELOW
-            sorting_data = utils.load_data_for_sorting(Path(preprocess_data.preprocessed_output_path))
+            sorting_data = utils.load_data_for_sorting(
+                Path(preprocess_data.preprocessed_output_path)
+            )
 
         else:
             utils.message_user(
@@ -180,12 +193,18 @@ def get_sorting_data(
             )
 
             preprocess_data.save_all_preprocessed_data()
-            sorting_data = utils.load_data_for_sorting(Path(preprocess_data.preprocessed_output_path))
+            sorting_data = utils.load_data_for_sorting(
+                Path(preprocess_data.preprocessed_output_path)
+            )
 
     else:
-        assert (isinstance(preprocess_data_or_path, str) or isinstance(preprocess_data_or_path, Path)), "unexpected path taken."
+        assert isinstance(preprocess_data_or_path, str) or isinstance(
+            preprocess_data_or_path, Path
+        ), "unexpected path taken."
         preproces_path = preprocess_data_or_path
-        utils.message_user(f"\nLoading binary preprocessed data from {preproces_path}\n")
+        utils.message_user(
+            f"\nLoading binary preprocessed data from {preproces_path}\n"
+        )
         sorting_data = utils.load_data_for_sorting(Path(preproces_path))
 
     return sorting_data

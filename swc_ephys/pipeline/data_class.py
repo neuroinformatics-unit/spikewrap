@@ -1,6 +1,5 @@
 import fnmatch
 import os
-import pickle  # TODO: explore cPickle
 import warnings
 from collections import UserDict
 from collections.abc import ItemsView, KeysView, ValuesView
@@ -9,6 +8,7 @@ from typing import Dict, List, Optional, Tuple, Union
 
 import numpy as np
 import spikeinterface as si
+import yaml
 from spikeinterface.core.base import BaseExtractor
 
 from ..utils import utils
@@ -65,6 +65,7 @@ class PreprocessData(UserDict):
         super(PreprocessData, self).__init__()
 
         self.top_level_folder = "rawdata"
+        self.init_data_key = "0_raw"
 
         self.base_path, checked_run_names, self.rawdata_path = self.validate_inputs(
             run_names,
@@ -77,7 +78,7 @@ class PreprocessData(UserDict):
         (
             self.all_run_paths,
             self.all_run_names,
-            self.run_name,
+            self.pp_run_name,
         ) = self.create_runs_from_single_or_multiple_run_names(checked_run_names)
 
         utils.message_user(f"The order of the loaded runs is:" f"{self.all_run_names}")
@@ -192,9 +193,9 @@ class PreprocessData(UserDict):
                 "They will be concatenated in the order provided."
             )
 
-        run_name = self.make_run_name_from_multiple_run_names(run_names)
+        pp_run_name = self.make_run_name_from_multiple_run_names(run_names)
 
-        return all_run_paths, run_name
+        return all_run_paths, pp_run_name
 
     def make_run_name_from_multiple_run_names(self, run_names: List[str]) -> str:
         """
@@ -211,7 +212,7 @@ class PreprocessData(UserDict):
         Returns
         -------
 
-        run_name : str
+        pp_run_name : str
             A single run name formed from the list of run names.
         """
         all_names = []
@@ -226,9 +227,9 @@ class PreprocessData(UserDict):
         if "g0" in all_names:
             all_names.remove("g0")
 
-        run_name = "_".join(all_names)
+        pp_run_name = "_".join(all_names)
 
-        return run_name
+        return pp_run_name
 
     # Load and Save --------------------------------------------------------------------
 
@@ -236,7 +237,7 @@ class PreprocessData(UserDict):
         """
         Save the preprocessed output data to binary, as well
         as this class as a .pkl file. Both are saved in a folder called
-        'preprocessed' in derivatives/<sub_name>/<run_name>
+        'preprocessed' in derivatives/<sub_name>/<pp_run_name>
         """
         self.save_data_class()
         self.save_preprocessed_binary()
@@ -253,11 +254,24 @@ class PreprocessData(UserDict):
         """
         Save this data class as a .pkl file.
         """
+        utils.cast_pp_steps_values(self.pp_steps, "list")
+
+        attributes_to_save = {
+            "base_path": self.base_path.as_posix(),
+            "sub_name": self.sub_name,
+            "pp_run_name": self.pp_run_name,
+            "pp_steps": self.pp_steps,
+            "all_run_paths": [path_.as_posix() for path_ in self.all_run_paths],
+            "all_run_names": [name for name in self.all_run_names],
+            "preprocessed_output_path": self.preprocessed_output_path.as_posix(),
+        }
         if not self.preprocessed_output_path.is_dir():
             os.makedirs(self.preprocessed_output_path)
 
-        with open(self.preprocessed_data_class_path, "wb") as file:
-            pickle.dump(self, file, pickle.HIGHEST_PROTOCOL)
+        with open(
+            self.preprocessed_output_path / "preprocess_data_attributes.yaml", "w"
+        ) as attributes:  # TODO: save filename in config somewhere
+            yaml.dump(attributes_to_save, attributes, sort_keys=False)
 
     # Handle Paths ---------------------------------------------------------------------
 
@@ -270,7 +284,7 @@ class PreprocessData(UserDict):
             self.base_path
             / "derivatives"
             / self.sub_name
-            / f"{self.run_name}"
+            / f"{self.pp_run_name}"
             / "preprocessed"
         )
         self.preprocessed_data_class_path = (
@@ -279,7 +293,6 @@ class PreprocessData(UserDict):
         self.preprocessed_binary_data_path = (
             self.preprocessed_output_path / "si_recording"
         )
-
 
     def make_run_path(self, run_name: str) -> Path:
         """
@@ -355,29 +368,29 @@ class PreprocessData(UserDict):
         file-path related. Understand how shank index on the probe property
         maps to real-world shank
         """
-        num_groups = np.unique(self["0-raw"].get_property("group")).size
+        num_groups = np.unique(self[self.init_data_key].get_property("group")).size
         return num_groups
 
 
 class SortingData(PreprocessData):
     # super UserDict only,
-    def __init__(
-        self,
-        base_path: Union[Path, str],
-        sub_name: str,
-        run_name: str
-    ):
-        """
-        """
-        super(SortingData, self) # no init, see how well this works.
+    def __init__(self, base_path: Union[Path, str], sub_name: str, pp_run_name: str):
+        """ """
+        super(SortingData, self)  # no init, see how well this works.
 
         # TODO: I think will be cool to have rawdata as an optional attribute here
         # for provenance on generation. Will be able to get original
         # rawdata paths at least.
         self.top_level_folder = "derivatives"
+        self.init_data_key = "0_preprocessed"  # TODO: this is not nice
+
         self.base_path = base_path
         self.sub_name = sub_name
-        self.run_name = run_name
+        self.pp_run_name = pp_run_name
+
+        self.all_run_names = [
+            self.pp_run_name
+        ]  # TODO: hacky wor-around for visualise.py
 
         self.preprocessed_output_path = Path()
         self.preprocessed_data_class_path = Path()
@@ -399,6 +412,11 @@ class SortingData(PreprocessData):
         Use SpikeInterface to load the binary-data into a
         recording object.
         """
+        if not self.preprocessed_binary_data_path.is_dir():
+            raise FileNotFoundError(
+                f"No preprocessed SI binary-containing folder "
+                f"found at {self.preprocessed_binary_data_path}."
+            )  # TODO: add on passing custom base_path
         recording = si.load_extractor(self.preprocessed_binary_data_path)
 
         if concatenate:
@@ -419,11 +437,10 @@ class SortingData(PreprocessData):
             self.base_path
             / "derivatives"
             / self.sub_name
-            / f"{self.run_name}"
+            / f"{self.pp_run_name}"
             / f"{sorter}-sorting"
         )
 
         self.sorter_run_output_path = self.sorter_base_output_path / "sorter_output"
-
         self.waveforms_output_path = self.sorter_base_output_path / "waveforms"
         self.quality_metrics_path = self.sorter_base_output_path / "quality_metrics.csv"

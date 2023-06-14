@@ -13,6 +13,7 @@ import os.path
 import pickle
 import subprocess
 from pathlib import Path
+import yaml
 
 import numpy as np
 from spikeinterface import concatenate_recordings
@@ -109,6 +110,7 @@ def message_user(message: str, verbose: bool = True) -> None:
 
 def load_data_for_sorting(
     preprocessed_output_path: Path,
+    base_path: Optional[Union[str, Path]] = None,
 ) -> Tuple[PreprocessData, BaseRecording]:
     """
     Returns the previously preprocessed PreprocessData and
@@ -131,12 +133,17 @@ def load_data_for_sorting(
         together. This is used prior to sorting. Segments should be
         experimental runs.
     """
-    with open(Path(preprocessed_output_path) / "data_class.pkl", "rb") as file:
-        data = pickle.load(file)
+    with open(Path(preprocessed_output_path) / "preprocess_data_attributes.yaml") as file:  # TODO: add to configs
+        data_info = yaml.full_load(file)
 
     # TODO: figure a way to pass the run name generated in preprocess
     # data. It will be in the .yaml preprocess data writes! dur..
-    sorting_data = SortingData(data.base_path, data.sub_name, data.run_name)
+    if base_path is None:
+        base_path = Path(data_info["base_path"])
+    else:
+        base_path = Path(base_path)
+    sorting_data = SortingData(base_path, data_info["sub_name"], data_info["pp_run_name"])
+
 
     sorting_data.load_preprocessed_binary()  # TODO: expose concatenate
 
@@ -316,3 +323,11 @@ def make_preprocessing_plot_title(
             "\n" + r"$\bf{Num \ channels:}$" + f"{recording_to_plot.get_num_channels()}"
         )
     return plot_title
+
+def cast_pp_steps_values(pp_steps, list_or_tuple):
+    """"""
+    assert list_or_tuple in ["list", "tuple"], "Must cast to `list` or `tuple`."
+    func = tuple if list_or_tuple == "tuple" else list
+
+    for key in pp_steps.keys():
+        pp_steps[key] = func(pp_steps[key])
