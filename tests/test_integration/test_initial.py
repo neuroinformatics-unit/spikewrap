@@ -43,7 +43,7 @@ class TestFirstEphys:
         base_path,
         sub_name,
         run_names,
-        use_existing_preprocessed_file=True,
+        existing_preprocessed_data="fail_if_exists",
         overwrite_existing_sorter_output=True,
         slurm_batch=False,
     ):
@@ -53,7 +53,7 @@ class TestFirstEphys:
             run_names,
             config_name="test",
             sorter="kilosort2_5",
-            use_existing_preprocessed_file=use_existing_preprocessed_file,
+            existing_preprocessed_data=existing_preprocessed_data,
             overwrite_existing_sorter_output=overwrite_existing_sorter_output,
             slurm_batch=slurm_batch,
         )
@@ -64,6 +64,23 @@ class TestFirstEphys:
         test_info[2] = test_info[2][0]
 
         self.run_full_pipeline(*test_info)
+
+    def test_single_run_local_overwrite(self, test_info):
+        test_info.pop(3)
+        test_info[2] = test_info[2][0]
+
+        self.run_full_pipeline(*test_info)
+
+        self.run_full_pipeline(*test_info, existing_preprocessed_data="overwrite")
+
+        with pytest.raises(BaseException) as e:
+            self.run_full_pipeline(
+                *test_info, existing_preprocessed_data="fail_if_exists"
+            )
+
+        assert "To overwrite, set 'existing_preprocessed_data' to 'overwrite'" in str(
+            e.value
+        )
 
     def test_multi_run_local(self, test_info):
         test_info.pop(3)

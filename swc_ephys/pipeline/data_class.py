@@ -1,5 +1,6 @@
 import fnmatch
 import os
+import shutil
 import warnings
 from collections import UserDict
 from collections.abc import ItemsView, KeysView, ValuesView
@@ -16,6 +17,8 @@ from ..utils import utils
 # PreprocessData
 # TODO: these classes will be extremely similar, inherit from common
 # base abstract class.
+# TODO: actually, completely separate the responsibilities
+# of these classes and have PreprocessData an attribute of SortingData.
 
 
 class PreprocessData(UserDict):
@@ -232,16 +235,19 @@ class PreprocessData(UserDict):
 
     # Load and Save --------------------------------------------------------------------
 
-    def save_all_preprocessed_data(self) -> None:
+    def save_all_preprocessed_data(self, overwrite: bool = False) -> None:
         """
         Save the preprocessed output data to binary, as well
         as this class as a .pkl file. Both are saved in a folder called
         'preprocessed' in derivatives/<sub_name>/<pp_run_name>
         """
-        self.save_data_class()
-        self.save_preprocessed_binary()
+        if overwrite:
+            if self.preprocessed_output_path.is_dir():
+                shutil.rmtree(self.preprocessed_output_path)
+        self._save_data_class()
+        self._save_preprocessed_binary()
 
-    def save_preprocessed_binary(self) -> None:
+    def _save_preprocessed_binary(self) -> None:
         """
         Save the fully preprocessed data (i.e. last step in the preprocessing
         chain) to binary file. This is required for sorting.
@@ -249,7 +255,7 @@ class PreprocessData(UserDict):
         recording, __ = utils.get_dict_value_from_step_num(self, "last")
         recording.save(folder=self.preprocessed_binary_data_path, chunk_memory="10M")
 
-    def save_data_class(self) -> None:
+    def _save_data_class(self) -> None:
         """
         Save this data class as a .pkl file.
         """

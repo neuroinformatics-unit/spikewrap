@@ -7,16 +7,16 @@ if TYPE_CHECKING:
 
     from ..pipeline.data_class import PreprocessData
 
-from ..pipeline.data_class import SortingData
 import copy
 import os.path
-import pickle
 import subprocess
 from pathlib import Path
-import yaml
 
 import numpy as np
+import yaml
 from spikeinterface import concatenate_recordings
+
+from ..pipeline.data_class import SortingData
 
 
 def get_keys_first_char(
@@ -108,6 +108,7 @@ def message_user(message: str, verbose: bool = True) -> None:
 # This needs to be super clear because it is a powerful but confusing
 # aspect of spikeinterface.
 
+
 def load_data_for_sorting(
     preprocessed_output_path: Path,
     base_path: Optional[Union[str, Path]] = None,
@@ -133,21 +134,27 @@ def load_data_for_sorting(
         together. This is used prior to sorting. Segments should be
         experimental runs.
     """
-    with open(Path(preprocessed_output_path) / "preprocess_data_attributes.yaml") as file:  # TODO: add to configs
-        data_info = yaml.full_load(file)
+    data_info = load_preprocess_data_attributes(preprocessed_output_path)
 
-    # TODO: figure a way to pass the run name generated in preprocess
-    # data. It will be in the .yaml preprocess data writes! dur..
     if base_path is None:
         base_path = Path(data_info["base_path"])
     else:
         base_path = Path(base_path)
-    sorting_data = SortingData(base_path, data_info["sub_name"], data_info["pp_run_name"])
-
+    sorting_data = SortingData(
+        base_path, data_info["sub_name"], data_info["pp_run_name"]
+    )
 
     sorting_data.load_preprocessed_binary()  # TODO: expose concatenate
 
     return sorting_data
+
+
+def load_preprocess_data_attributes(preprocessed_output_path: Path):
+    with open(
+        Path(preprocessed_output_path) / "preprocess_data_attributes.yaml"
+    ) as file:  # TODO: add to configs
+        data_info = yaml.full_load(file)
+    return data_info
 
 
 def concatenate_runs(recording) -> BaseRecording:
@@ -323,6 +330,7 @@ def make_preprocessing_plot_title(
             "\n" + r"$\bf{Num \ channels:}$" + f"{recording_to_plot.get_num_channels()}"
         )
     return plot_title
+
 
 def cast_pp_steps_values(pp_steps, list_or_tuple):
     """"""
