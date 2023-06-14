@@ -14,6 +14,10 @@ run_names = ["1119617_test_units_explore_shank1_cut",
 config_name = "test"
 sorter = "kilosort2_5"
 
+"""
+TODO: save as YAML!!! NOT PIKCLE!!! 
+"""
+
 if __name__ == "__main__":
     run_full_pipeline(
         base_path,

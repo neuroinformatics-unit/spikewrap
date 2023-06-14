@@ -145,46 +145,6 @@ def generate_subplot(
     return fig, ax, num_rows, num_cols
 
 
-def visualise_preprocessing_output(
-    preprocessing_path: Union[Path, str], **kwargs
-) -> None:
-    """
-    Visualise the saved, preprocessed data that is fed into
-    the sorter.
-
-    preprocessing_path :
-        the path to the 'preprocessed' output folder in 'derivatives'
-        that is generated from a previous preprocessing round
-        (see preprocess.py);
-
-        e.g. r"/base_path/derivatives/1110925/1110925_test_shank1_cut/preprocessed"
-    """
-    sorting_data = utils.load_data_for_sorting(Path(preprocessing_path))
-
-    # Argument validation
-    visualise_args = inspect.getfullargspec(visualise).args
-
-    for key in kwargs.keys():
-        assert key in visualise_args, (
-            f"The key {key} is not a valid argument to visualise(). "
-            f"Must be one of {visualise_args}"
-        )
-
-    assert "steps" not in kwargs, (
-        "Cannot specify 'steps' when visualising preprocessed data. "
-        "Only the final output exists."
-    )
-
-    # Must be 0 step in preprocessed data
-    # TODO: fix this!
-    kwargs.update({"steps": "0"})
-
-  #  data.clear()
-   # data.update({"0_preprocessed": recording})
-
-    visualise(sorting_data, **kwargs)
-
-
 def get_subplot_ax(idx, ax, num_rows, num_cols) -> matplotlib.axes._axes.Axes:
     idx_unraveled = np.unravel_index(idx, shape=(num_rows, num_cols))
     current_ax = ax[idx_unraveled]

@@ -163,13 +163,13 @@ def get_sorting_data(
             utils.message_user(
                 f"\n"
                 f"use_existing_preprocessed_file=True. "
-                f"Loading binary preprocessed data from {preprocess_data.preprocessed_output_path}\n"
+                f"Loading binary preprocessed data from {preprocess_data.preprocessed_binary_data_path}\n"
             )
             sorting_data = utils.load_data_for_sorting(preprocess_data.preprocessed_output_path)
 
         elif use_existing_preprocessed_file == "overwrite":
-            if preprocess_data.preprocessed_binary_data_path.is_dir():
-                shutil.rmtree(preprocess_data.preprocessed_binary_data_path)
+            if preprocess_data.preprocessed_output_path.is_dir():
+                shutil.rmtree(preprocess_data.preprocessed_output_path)
             preprocess_data.save_all_preprocessed_data()  # TODO: DRY FROM BELOW
             sorting_data = utils.load_data_for_sorting(Path(preprocess_data.preprocessed_output_path))
 

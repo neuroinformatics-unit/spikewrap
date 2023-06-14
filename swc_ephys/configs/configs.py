@@ -2,7 +2,7 @@ import glob
 import os
 from pathlib import Path
 from typing import Dict, Tuple
-
+from ..utils import utils
 import yaml
 
 
@@ -62,7 +62,6 @@ def get_configs(name: str) -> Tuple[Dict, Dict]:
     pp_steps = config["preprocessing"]
     sorter_options = config["sorting"]
 
-    for key in pp_steps.keys():
-        pp_steps[key] = tuple(pp_steps[key])
+    utils.cast_pp_steps_values(pp_steps, "tuple")
 
     return pp_steps, sorter_options
