@@ -82,9 +82,11 @@ def run_full_pipeline(
 
     # Load the data from file (lazy)
     preprocess_data = load_spikeglx_data(base_path, sub_name, run_names)
-    preprocess_data.set_preprocessing_output_path()
 
-    if use_existing_preprocessed_file is True and preprocess_data.preprocessed_binary_data_path.is_dir():
+    if (
+        use_existing_preprocessed_file is True
+        and preprocess_data.preprocessed_binary_data_path.is_dir()
+    ):
         utils.message_user(
             f"\nSkipping preprocessing, using file at "
             f"{preprocess_data.preprocessed_binary_data_path} for sorting.\n"
@@ -108,4 +110,6 @@ def run_full_pipeline(
     # Save spikeinterface 'waveforms' output (TODO: currently, this is large)
     # to the sorter output dir. Quality checks are run and .csv of checks
     # output in the sorter folder as quality_metrics.csv
-    quality_check(sorting_data.preprocessed_output_path, sorter, verbose)  # TODO: bit dumb because preprocess_data has this attribute also. Allow it to take path or sorted_data object.
+    quality_check(
+        sorting_data.preprocessed_output_path, sorter, verbose
+    )  # TODO: bit dumb because preprocess_data has this attribute also. Allow it to take path or sorted_data object.

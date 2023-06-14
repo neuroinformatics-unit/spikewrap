@@ -87,11 +87,10 @@ class PreprocessData(UserDict):
         self.data: Dict = {"0-raw": None}
         self.opts: Dict = {"0-raw": None}  # TODO rename
 
-        # These are dynamically set by the sorter
-        # chosen at runtime.
         self.preprocessed_output_path = Path()
         self.preprocessed_data_class_path = Path()
         self.preprocessed_binary_data_path = Path()
+        self.set_preprocessing_output_path()
 
     # Handle Multiple Runs -------------------------------------------------------------
     def load_preprocessed_binary(self) -> BaseExtractor:

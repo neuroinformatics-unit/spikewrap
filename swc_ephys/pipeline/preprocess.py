@@ -49,8 +49,6 @@ def preprocess(
 
     preprocess_data.pp_steps = pp_steps
 
-    preprocess_data.set_preprocessing_output_path()
-
     for step_num, pp_info in checked_pp_steps.items():
         perform_preprocessing_step(
             step_num, pp_info, preprocess_data, pp_step_names, pp_funcs, verbose
