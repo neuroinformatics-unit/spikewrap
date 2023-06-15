@@ -6,7 +6,7 @@ import spikeinterface.preprocessing as spre
 
 from ..configs import configs
 from ..utils import utils
-from .data_class import PreprocessingData
+from ..data_classes.preprocessing import PreprocessingData
 
 
 def preprocess(

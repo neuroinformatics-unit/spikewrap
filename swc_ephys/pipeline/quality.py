@@ -4,9 +4,6 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Union
 
-if TYPE_CHECKING:
-    from ..pipeline.data_class import SortingData
-
 from pathlib import Path
 
 import spikeinterface as si
@@ -15,7 +12,7 @@ from spikeinterface.core import BaseRecording
 from spikeinterface.extractors import KiloSortSortingExtractor
 
 from ..utils import utils
-from ..pipeline.data_class import SortingData
+from ..data_classes.sorting import SortingData
 from ..pipeline.load_data import load_data_for_sorting
 
 def quality_check(

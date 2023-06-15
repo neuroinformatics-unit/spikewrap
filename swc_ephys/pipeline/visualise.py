@@ -7,7 +7,8 @@ if TYPE_CHECKING:
     from numpy.typing import NDArray
     from spikeinterface.core import BaseRecording
 
-from ..pipeline.data_class import PreprocessingData, SortingData
+from ..data_classes.preprocessing import PreprocessingData
+from ..data_classes.sorting import SortingData
 
 import inspect
 from pathlib import Path

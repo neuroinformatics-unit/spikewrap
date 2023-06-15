@@ -1,34 +1,16 @@
 import fnmatch
-import os
-import shutil
-import warnings
-from collections import UserDict
-from collections.abc import ItemsView, KeysView, ValuesView
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple, Union
 
-import numpy as np
 import spikeinterface as si
 import yaml
 from spikeinterface.core.base import BaseExtractor
-
+import shutil
+import os
+import warnings
 from ..utils import utils
+from .base import BaseUserDict
 
-
-class BaseUserDict(UserDict):
-    def __init__(self):
-        super(BaseUserDict, self).__init__()
-
-    def keys(self) -> KeysView:
-        return self.data.keys()
-
-    def items(self) -> ItemsView:
-        return self.data.items()
-
-    def values(self) -> ValuesView:
-        return self.data.values()
-
-# TODO: remove 'preprocessed' and sorter from name prefixes, clear fro mthe class!
 
 class PreprocessingData(BaseUserDict):
     def __init__(
@@ -103,10 +85,11 @@ class PreprocessingData(BaseUserDict):
         self.preprocessed_binary_data_path = Path()
         self.set_preprocessing_output_path()
 
-    def set_pp_steps(self, pp_steps: Dict):
+    def set_pp_steps(self, pp_steps: Dict) -> None:
         self.pp_steps = pp_steps
 
     # Handle Multiple Runs -------------------------------------------------------------
+
     def load_preprocessed_binary(self) -> BaseExtractor:
         """
         Use SpikeInterface to load the binary-data into a
@@ -319,7 +302,7 @@ class PreprocessingData(BaseUserDict):
         """
         return self.get_sub_folder_path() / f"{run_name}"
 
-    def get_sub_folder_path(self):
+    def get_sub_folder_path(self) -> Path:
         """
         Get the path to the rawdata subject folder.
         """
@@ -327,7 +310,7 @@ class PreprocessingData(BaseUserDict):
 
     # Validate Inputs ------------------------------------------------------------------
 
-    def validate_inputs(  # TODO: extend this to derivatives...
+    def validate_inputs(
         self, run_names: Union[str, list], base_path: Union[str, Path], sub_name: str
     ) -> Tuple[Path, List[str], Path]:
         """
@@ -362,88 +345,3 @@ class PreprocessingData(BaseUserDict):
                 f"in run name {name}. "
             )
         return base_path, run_names, rawdata_path
-
-
-class SortingData(BaseUserDict):
-
-    def __init__(self, preprocessed_output_path: Union[str, Path]) -> None:
-        """
-        """
-        super(SortingData, self).__init__()
-
-        self.preprocessed_output_path = Path(preprocessed_output_path)
-        self.check_preprocessed_output_path_exists()
-
-        self.top_level_folder = "derivatives"
-        self.init_data_key = "0-preprocessed"  # TODO: this is not nice
-        self.pp_info = self.load_preprocess_data_attributes()
-
-        # Note the base-path can diverge if accessed from different
-        # location than where the pp was saved. TODO explain properly.
-        self.base_path = Path(self.pp_info["base_path"])
-        self.sub_name = self.pp_info["sub_name"]
-        self.pp_run_name = self.pp_info["pp_run_name"]
-
-        # These paths are set when the sorter
-        # is known, set_sorter_output_paths()
-        self.sorter_base_output_path = Path()
-        self.sorter_run_output_path = Path()
-        self.waveforms_output_path = Path()
-        self.quality_metrics_path = Path()
-
-        # This is set later, depending on
-        # concatenated or not.
-        self.data: Dict = {"0-preprocessed": None}
-
-    def check_preprocessed_output_path_exists(self):
-        if not self.preprocessed_output_path.is_dir():
-            raise FileNotFoundError(f"No preprocessed data found at "
-                                    f"{self.preprocessed_output_path}")
-
-    def load_preprocess_data_attributes(self):
-        with open(
-                Path(self.preprocessed_output_path) / utils.canonical_names(
-                    "preprocessed_yaml")
-        ) as file:
-            pp_info = yaml.full_load(file)
-        return pp_info
-
-    def load_preprocessed_binary(self, concatenate: bool = True) -> BaseExtractor:
-        """
-        Use SpikeInterface to load the binary-data into a
-        recording object.
-        """
-        binary_path = self.preprocessed_output_path / "si_recording"  # TODO: configs
-      
-        if not binary_path.is_dir():
-            raise FileNotFoundError(
-                f"No preprocessed SI binary-containing folder "
-                f"found at {binary_path}."
-            )
-        recording = si.load_extractor(binary_path)
-
-        if concatenate:
-            recording = utils.concatenate_runs(recording)
-
-        self.data["0-preprocessed"] = recording
-
-    def set_sorter_output_paths(self, sorter: str) -> None:
-        """
-        Set the sorter-specific output paths. The same data may be
-        sorted multiple times by different sorters.
-
-        sort_base_output_path : str
-            canonical name, is where spikeinterface
-            automatically saves sorter output
-        """
-        self.sorter_base_output_path = (
-            self.base_path
-            / "derivatives"
-            / self.sub_name
-            / f"{self.pp_run_name}"
-            / f"{sorter}-sorting"
-        )
-
-        self.sorter_run_output_path = self.sorter_base_output_path / "sorter_output"
-        self.waveforms_output_path = self.sorter_base_output_path / "waveforms"
-        self.quality_metrics_path = self.sorter_base_output_path / "quality_metrics.csv"
