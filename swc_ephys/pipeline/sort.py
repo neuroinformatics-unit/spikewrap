@@ -34,7 +34,7 @@ def run_sorting(
     overwrite_existing_sorter_output: bool = False,
     verbose: bool = True,
     slurm_batch: bool = False,
-) -> SortingData:
+) -> Optional[SortingData]:
     """
     Run a sorter on pre-processed data. Takes a PreprocessingData (pipeline.data_class)
     object that contains spikeinterface recording objects for the preprocessing
@@ -75,7 +75,7 @@ def run_sorting(
     if slurm_batch:
         local_args = copy.deepcopy(locals())
         slurm.run_sorting_slurm(**local_args)
-        return
+        return None
 
     sorter_options_dict = validate_inputs(slurm_batch, sorter, sorter_options, verbose)
 

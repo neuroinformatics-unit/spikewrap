@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Callable, Dict, List, Tuple, Union
+from typing import TYPE_CHECKING, Callable, Dict, List, Literal, Tuple, Union
 
 if TYPE_CHECKING:
     from spikeinterface.core import BaseRecording
@@ -25,7 +25,7 @@ def canonical_names(name: str) -> str:
 
 
 def get_keys_first_char(
-    data: PreprocessingData, as_int: bool = False
+    data: Union[PreprocessingData, SortingData], as_int: bool = False
 ) -> Union[List[str], List[int]]:
     """
     Get the first character of all keys in a dictionary. Expected
@@ -45,7 +45,7 @@ def get_keys_first_char(
 
 
 def get_dict_value_from_step_num(
-    data: PreprocessingData, step_num: str
+    data: Union[PreprocessingData, SortingData], step_num: str
 ) -> Tuple[BaseRecording, str]:
     """
     Get the value of the PreprocessingData dict from the preprocessing step number.
@@ -292,7 +292,9 @@ def make_preprocessing_plot_title(
     return plot_title
 
 
-def cast_pp_steps_values(pp_steps: Dict, list_or_tuple: Union[List, Tuple]) -> None:
+def cast_pp_steps_values(
+    pp_steps: Dict, list_or_tuple: Literal["list", "tuple"]
+) -> None:
     """"""
     assert list_or_tuple in ["list", "tuple"], "Must cast to `list` or `tuple`."
     func = tuple if list_or_tuple == "tuple" else list

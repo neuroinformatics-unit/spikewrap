@@ -144,10 +144,10 @@ class PreprocessingData(BaseUserDict):
         all_run_names = [path_.stem for path_ in all_run_paths]
 
         for run_path in all_run_paths:
-            assert (
-                run_path.is_dir()
-            ), f"The run folder {run_path.stem} cannot be found at " \
-               f"file path {run_path.parent}"
+            assert run_path.is_dir(), (
+                f"The run folder {run_path.stem} cannot be found at "
+                f"file path {run_path.parent}"
+            )
 
         return all_run_paths, all_run_names, run_name
 
@@ -257,6 +257,8 @@ class PreprocessingData(BaseUserDict):
         """
         Save this data class as a .pkl file.
         """
+        assert self.pp_steps is not None, "type narrow `pp_steps`."
+
         utils.cast_pp_steps_values(self.pp_steps, "list")
 
         attributes_to_save = {
@@ -293,12 +295,8 @@ class PreprocessingData(BaseUserDict):
             / f"{self.pp_run_name}"
             / "preprocessed"
         )
-        self._pp_data_class_path = (
-            self.preprocessed_data_path / "data_class.pkl"
-        )
-        self._pp_binary_data_path = (
-            self.preprocessed_data_path / "si_recording"
-        )
+        self._pp_data_class_path = self.preprocessed_data_path / "data_class.pkl"
+        self._pp_binary_data_path = self.preprocessed_data_path / "si_recording"
 
     def make_run_path(self, run_name: str) -> Path:
         """
