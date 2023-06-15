@@ -47,7 +47,7 @@ def preprocess(
 
     checked_pp_steps, pp_step_names = check_and_sort_pp_steps(pp_steps, pp_funcs)
 
-    preprocess_data.pp_steps = pp_steps  # TODO: use setter
+    preprocess_data.set_pp_steps(pp_steps)
 
     for step_num, pp_info in checked_pp_steps.items():
         perform_preprocessing_step(
@@ -175,8 +175,6 @@ def perform_preprocessing_step(
     assert pp_funcs[pp_name].__name__ == pp_name, "something is wrong in func dict"
 
     preprocess_data[new_name] = pp_funcs[pp_name](last_pp_step_output, **pp_options)
-    preprocess_data.opts[new_name] = pp_options
-
 
 def get_pp_funcs() -> Dict:
     """

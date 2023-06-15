@@ -11,6 +11,10 @@ from ..utils import slurm, utils
 # loops
 # https://docs.sylabs.io/guides/3.5/admin-guide/configfiles.html
 #  KeyError: 'snsMnMaXaDw' is error when ...'exported' is in the name!
+# stream_name in [] error is whever the path does not exist
+
+# having trouble getting mountainsort to work...
+# spykingcircus2 has extra requirements.
 # reconfigure tests so they can be run in parallel (pytest-parallel or pytest-xdist)
 # issue with laoding sync channel breaks probe
 # TODO: SI changed their API need to adjust this...
@@ -120,7 +124,7 @@ def validate_inputs(
     """
     assert slurm_batch is False, "SLURM run has slurm_batch set True"
 
-    supported_sorters = ["kilosort2", "kilosort2_5", "kilosort3"]
+    supported_sorters = ["spykingcircus", "kilosort2", "kilosort2_5", "kilosort3"]
     assert sorter in supported_sorters, f"sorter must be: {supported_sorters}"
 
     assert (
@@ -128,7 +132,7 @@ def validate_inputs(
     ), "Singularity must be installed to run sorting."
 
     sorter_options_dict = {}
-    if sorter_options is not None:
+    if sorter_options is not None and sorter in sorter_options:
         sorter_options_dict = sorter_options[sorter]
 
     sorter_options_dict.update({"verbose": verbose})
@@ -140,7 +144,7 @@ def get_singularity_image(sorter: str) -> Union[Literal[True], str]:
     """
     Get the path to a pre-installed system singularity image. If none
     can be found, set to True. In this case SpikeInterface will
-    pull the imagine to the current working directory, and
+    pull the image to the current working directory, and
     this will be moved after sorting
     (see store_singularity_image).
     """

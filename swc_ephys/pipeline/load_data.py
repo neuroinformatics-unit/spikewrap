@@ -15,7 +15,7 @@ def load_spikeglx_data(
     base_path: Union[Path, str], sub_name: str, run_names: Union[List[str], str]
 ) -> PreprocessData:
     """
-    Load raw spikeglx data (in rawdata). If multiple runs are selected
+    Load raw SpikeGLX data (in rawdata). If multiple runs are selected
     in run_names, these will be stored as segments on a SpikeInterface
     recording object.
 
@@ -30,13 +30,13 @@ def load_spikeglx_data(
         base_path/rawdata/ .
 
     run_names : Union[List[str], str],
-        The spikeglx run name (i.e. not including the gate index). This can
+        The SpikeGLX run name (i.e. not including the gate index). This can
         also be a list of run names.
 
     Returns
     -------
 
-    PreprocessData class containing SpikeINterface recording object and information
+    PreprocessData class containing SpikeInterface recording object and information
     on the data filepaths.
     """
     preprocess_data = PreprocessData(base_path, sub_name, run_names)
