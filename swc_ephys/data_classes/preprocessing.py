@@ -1,13 +1,14 @@
 import fnmatch
+import os
+import shutil
+import warnings
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple, Union
 
 import spikeinterface as si
 import yaml
 from spikeinterface.core.base import BaseExtractor
-import shutil
-import os
-import warnings
+
 from ..utils import utils
 from .base import BaseUserDict
 
@@ -80,10 +81,10 @@ class PreprocessingData(BaseUserDict):
         self.pp_steps = pp_steps
         self.data: Dict = {"0-raw": None}
 
-        self.preprocessed_output_path = Path()
-        self.preprocessed_data_class_path = Path()
-        self.preprocessed_binary_data_path = Path()
-        self.set_preprocessing_output_path()
+        self.preprocessed_data_path = Path()
+        self._pp_data_class_path = Path()
+        self._pp_binary_data_path = Path()
+        self._set_preprocessing_output_path()
 
     def set_pp_steps(self, pp_steps: Dict) -> None:
         self.pp_steps = pp_steps
@@ -95,7 +96,7 @@ class PreprocessingData(BaseUserDict):
         Use SpikeInterface to load the binary-data into a
         recording object.
         """
-        return si.load_extractor(self.preprocessed_binary_data_path)
+        return si.load_extractor(self._pp_binary_data_path)
 
     def create_runs_from_single_or_multiple_run_names(
         self,
@@ -143,8 +144,10 @@ class PreprocessingData(BaseUserDict):
         all_run_names = [path_.stem for path_ in all_run_paths]
 
         for run_path in all_run_paths:
-            assert run_path.is_dir(), \
-            f"The run folder {run_path.stem} cannot be found at file path {run_path.parent}"
+            assert (
+                run_path.is_dir()
+            ), f"The run folder {run_path.stem} cannot be found at " \
+               f"file path {run_path.parent}"
 
         return all_run_paths, all_run_names, run_name
 
@@ -237,8 +240,8 @@ class PreprocessingData(BaseUserDict):
         'preprocessed' in derivatives/<sub_name>/<pp_run_name>
         """
         if overwrite:
-            if self.preprocessed_output_path.is_dir():
-                shutil.rmtree(self.preprocessed_output_path)
+            if self.preprocessed_data_path.is_dir():
+                shutil.rmtree(self.preprocessed_data_path)
         self._save_data_class()
         self._save_preprocessed_binary()
 
@@ -248,7 +251,7 @@ class PreprocessingData(BaseUserDict):
         chain) to binary file. This is required for sorting.
         """
         recording, __ = utils.get_dict_value_from_step_num(self, "last")
-        recording.save(folder=self.preprocessed_binary_data_path, chunk_memory="10M")
+        recording.save(folder=self._pp_binary_data_path, chunk_memory="10M")
 
     def _save_data_class(self) -> None:
         """
@@ -263,37 +266,38 @@ class PreprocessingData(BaseUserDict):
             "pp_steps": self.pp_steps,
             "all_run_paths": [path_.as_posix() for path_ in self.all_run_paths],
             "all_run_names": [name for name in self.all_run_names],
-            "preprocessed_output_path": self.preprocessed_output_path.as_posix(),
-            "preprocessed_binary_data_path": self.preprocessed_binary_data_path.as_posix(),
-            "preprocessed_data_class_path": self.preprocessed_data_class_path.as_posix(),
+            "preprocessed_data_path": self.preprocessed_data_path.as_posix(),
+            "_pp_binary_data_path": self._pp_binary_data_path.as_posix(),
+            "_pp_data_class_path": self._pp_data_class_path.as_posix(),
         }
-        if not self.preprocessed_output_path.is_dir():
-            os.makedirs(self.preprocessed_output_path)
+        if not self.preprocessed_data_path.is_dir():
+            os.makedirs(self.preprocessed_data_path)
 
         with open(
-            self.preprocessed_output_path / utils.canonical_names("preprocessed_yaml"), "w"
+            self.preprocessed_data_path / utils.canonical_names("preprocessed_yaml"),
+            "w",
         ) as attributes:
             yaml.dump(attributes_to_save, attributes, sort_keys=False)
 
     # Handle Paths ---------------------------------------------------------------------
 
-    def set_preprocessing_output_path(self) -> None:
+    def _set_preprocessing_output_path(self) -> None:
         """
         Set the canonical folder names for the output data
         (in derivatives).
         """
-        self.preprocessed_output_path = (
+        self.preprocessed_data_path = (
             self.base_path
             / "derivatives"
             / self.sub_name
             / f"{self.pp_run_name}"
             / "preprocessed"
         )
-        self.preprocessed_data_class_path = (
-            self.preprocessed_output_path / "data_class.pkl"
+        self._pp_data_class_path = (
+            self.preprocessed_data_path / "data_class.pkl"
         )
-        self.preprocessed_binary_data_path = (
-            self.preprocessed_output_path / "si_recording"
+        self._pp_binary_data_path = (
+            self.preprocessed_data_path / "si_recording"
         )
 
     def make_run_path(self, run_name: str) -> Path:

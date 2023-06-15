@@ -55,7 +55,7 @@ def load_spikeglx_data(
 
 
 def load_data_for_sorting(
-    preprocessed_output_path: Path,
+    preprocessed_data_path: Path,
     concatenate: bool = True,
 ) -> Tuple[PreprocessingData, BaseRecording]:
     """
@@ -69,7 +69,7 @@ def load_data_for_sorting(
     Parameters
     ----------
 
-    preprocessed_output_path : Path
+    preprocessed_data_path : Path
         Path to the preprocessed folder, containing the binary si_recording
         of the preprocessed data and the data_class.pkl containing all filepath
         information.
@@ -80,7 +80,7 @@ def load_data_for_sorting(
         experimental runs.
     """
     sorting_data = SortingData(
-        preprocessed_output_path,
+        preprocessed_data_path,
     )
 
     sorting_data.load_preprocessed_binary(concatenate)

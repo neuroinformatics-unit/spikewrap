@@ -1,9 +1,13 @@
+"""
+TODO: this is currently out of date. Do not use.
+"""
 import argparse
 
 from .pipeline.full_pipeline import run_full_pipeline
 
-# TODO: ADD ALL NEW ARGS!
-# figure out how to give nice asserts on SI asserts that are less informative e.g. overwriting sorter output.
+# figure out how to give nice asserts on SI asserts that
+# are less informative e.g. overwriting sorter output.
+
 parser = argparse.ArgumentParser()
 
 parser.add_argument(

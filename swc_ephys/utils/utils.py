@@ -1,9 +1,10 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Callable, List, Tuple, Union
+from typing import TYPE_CHECKING, Callable, Dict, List, Tuple, Union
 
 if TYPE_CHECKING:
     from spikeinterface.core import BaseRecording
+
     from ..data_classes.preprocessing import PreprocessingData
     from ..data_classes.sorting import SortingData
 
@@ -13,10 +14,10 @@ import subprocess
 from pathlib import Path
 
 import numpy as np
-import yaml
 from spikeinterface import concatenate_recordings
 
-def canonical_names(name: str):
+
+def canonical_names(name: str) -> str:
     filenames = {
         "preprocessed_yaml": "preprocess_data_attributes.yaml",
     }
@@ -112,7 +113,8 @@ def message_user(message: str, verbose: bool = True) -> None:
 # This needs to be super clear because it is a powerful but confusing
 # aspect of spikeinterface.
 
-def concatenate_runs(recording) -> BaseRecording:
+
+def concatenate_runs(recording: BaseRecording) -> BaseRecording:
     """
     Convenience function to concatenate the segments
     of a recording object.
@@ -162,7 +164,7 @@ def get_hpc_sorter_path(sorter: str) -> Path:
     return base_path / sorter / get_sorter_image_name(sorter)
 
 
-def get_sorter_image_name(sorter):  # TODO: sort this out
+def get_sorter_image_name(sorter: str) -> str:
     """
     Get the sorter image name, as defined by how
     SpikeInterface names the images it provides.
@@ -281,13 +283,16 @@ def make_preprocessing_plot_title(
     )
     if total_used_shanks > 1:
         plot_title += (
-            "\n" + r"$\bf{Shank \ group:}$" + f"{shank_idx}, " +
-            r"$\bf{Num \ channels:}$" + f"{recording_to_plot.get_num_channels()}"
+            "\n"
+            + r"$\bf{Shank \ group:}$"
+            + f"{shank_idx}, "
+            + r"$\bf{Num \ channels:}$"
+            + f"{recording_to_plot.get_num_channels()}"
         )
     return plot_title
 
 
-def cast_pp_steps_values(pp_steps, list_or_tuple):
+def cast_pp_steps_values(pp_steps: Dict, list_or_tuple: Union[List, Tuple]) -> None:
     """"""
     assert list_or_tuple in ["list", "tuple"], "Must cast to `list` or `tuple`."
     func = tuple if list_or_tuple == "tuple" else list
@@ -297,6 +302,7 @@ def cast_pp_steps_values(pp_steps, list_or_tuple):
 
 
 # Misc. ----------------------------------------------------------------------------
+
 
 def get_probe_group_num(data: Union[PreprocessingData, SortingData]) -> int:
     """

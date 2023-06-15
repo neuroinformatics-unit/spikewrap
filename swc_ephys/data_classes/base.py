@@ -7,6 +7,7 @@ class BaseUserDict(UserDict):
     Base UserDict that implements the
     keys(), values() and items() convenience functions.
     """
+
     def __init__(self):
         super(BaseUserDict, self).__init__()
 

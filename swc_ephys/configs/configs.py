@@ -2,8 +2,10 @@ import glob
 import os
 from pathlib import Path
 from typing import Dict, Tuple
-from ..utils import utils
+
 import yaml
+
+from ..utils import utils
 
 
 def get_configs(name: str) -> Tuple[Dict, Dict]:

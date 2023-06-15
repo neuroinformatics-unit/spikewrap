@@ -2,12 +2,15 @@ import copy
 import os
 import shutil
 from pathlib import Path
-from typing import Dict, Literal, Optional, Union
+from typing import TYPE_CHECKING, Dict, Literal, Optional, Union
+
+if TYPE_CHECKING:
+    from ..data_classes.sorting import SortingData
 
 import spikeinterface.sorters as ss
 
-from ..utils import slurm, utils
 from ..pipeline.load_data import load_data_for_sorting
+from ..utils import slurm, utils
 
 # loops
 # https://docs.sylabs.io/guides/3.5/admin-guide/configfiles.html
@@ -23,14 +26,15 @@ from ..pipeline.load_data import load_data_for_sorting
 # sort out public vs. private
 # split errors and messaging from code.
 
+
 def run_sorting(
     preprocessed_data_path: Union[Path, str],
     sorter: str = "kilosort2_5",
     sorter_options: Optional[Dict] = None,
     overwrite_existing_sorter_output: bool = False,
     verbose: bool = True,
-    slurm_batch=False,
-):
+    slurm_batch: bool = False,
+) -> SortingData:
     """
     Run a sorter on pre-processed data. Takes a PreprocessingData (pipeline.data_class)
     object that contains spikeinterface recording objects for the preprocessing
@@ -100,13 +104,15 @@ def run_sorting(
         **sorter_options_dict,
     )
 
-    if singularity_image is True:  # no existing image was found # TODO: need to use this only on local!
+    if (
+        singularity_image is True
+    ):  # no existing image was found # TODO: need to use this only on local!
         store_singularity_image(sorting_data.base_path, sorter)
 
     return sorting_data
 
 
-def store_singularity_image(base_path, sorter):
+def store_singularity_image(base_path: Path, sorter: str) -> None:
     """
     When running locally, SPikeInterface will pull the docker image
     to the current working directly. Move this to home/.swc_ephys

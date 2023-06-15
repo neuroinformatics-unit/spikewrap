@@ -5,8 +5,8 @@ import numpy as np
 import spikeinterface.preprocessing as spre
 
 from ..configs import configs
-from ..utils import utils
 from ..data_classes.preprocessing import PreprocessingData
+from ..utils import utils
 
 
 def preprocess(
@@ -126,7 +126,7 @@ def perform_preprocessing_step(
     pp_step_names: List[str],
     pp_funcs: Dict,
     verbose: bool = True,
-):
+) -> None:
     """
     Given the preprocessing step and preprocess_data UserDict containing
     spikeinterface BaseRecordings, apply a preprocessing step to the
@@ -175,6 +175,7 @@ def perform_preprocessing_step(
     assert pp_funcs[pp_name].__name__ == pp_name, "something is wrong in func dict"
 
     preprocess_data[new_name] = pp_funcs[pp_name](last_pp_step_output, **pp_options)
+
 
 def get_pp_funcs() -> Dict:
     """
