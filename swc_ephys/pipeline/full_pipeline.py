@@ -101,7 +101,7 @@ def run_full_pipeline(
     # output in the sorter folder as quality_metrics.csv
     quality_check(
         sorting_data.preprocessed_output_path, sorter, verbose
-    )  # TODO: bit dumb because preprocess_data has this attribute also. Allow it to take path or sorted_data object.
+    )
 
 
 def save_preprocessed_data_if_required(preprocess_data, existing_preprocessed_data):

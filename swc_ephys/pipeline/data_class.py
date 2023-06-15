@@ -88,12 +88,14 @@ class PreprocessData(UserDict):
 
         self.pp_steps = pp_steps
         self.data: Dict = {"0-raw": None}
-        self.opts: Dict = {"0-raw": None}  # TODO rename
 
         self.preprocessed_output_path = Path()
         self.preprocessed_data_class_path = Path()
         self.preprocessed_binary_data_path = Path()
         self.set_preprocessing_output_path()
+
+    def set_pp_steps(self, pp_steps: Dict):
+        self.pp_steps = pp_steps
 
     # Handle Multiple Runs -------------------------------------------------------------
     def load_preprocessed_binary(self) -> BaseExtractor:
@@ -148,6 +150,10 @@ class PreprocessData(UserDict):
 
         all_run_names = [path_.stem for path_ in all_run_paths]
 
+        for run_path in all_run_paths:
+            assert run_path.is_dir(), \
+            f"The run folder {run_path.stem} cannot be found at file path {run_path.parent}"
+
         return all_run_paths, all_run_names, run_name
 
     def get_multi_run_names_paths(
@@ -185,9 +191,6 @@ class PreprocessData(UserDict):
         all_run_paths = [
             self.get_sub_folder_path() / f"{name}_g0" for name in run_names
         ]
-
-        for path_ in all_run_paths:
-            assert path_.is_dir(), f"No run folder found at {path_}"
 
         if not utils.list_of_files_are_in_datetime_order(all_run_paths, "creation"):
             warnings.warn(
@@ -274,7 +277,7 @@ class PreprocessData(UserDict):
             os.makedirs(self.preprocessed_output_path)
 
         with open(
-            self.preprocessed_output_path / "preprocess_data_attributes.yaml", "w"
+            self.preprocessed_output_path / utils.canonical_names("preprocessed_yaml"), "w"
         ) as attributes:  # TODO: save filename in config somewhere
             yaml.dump(attributes_to_save, attributes, sort_keys=False)
 
@@ -358,7 +361,6 @@ class PreprocessData(UserDict):
                 f"Gate with index larger than 0 is not supported. This is found "
                 f"in run name {name}. "
             )
-
         return base_path, run_names, rawdata_path
 
     # Misc. ----------------------------------------------------------------------------
@@ -378,10 +380,10 @@ class PreprocessData(UserDict):
 
 
 class SortingData(PreprocessData):
-    # super UserDict only,
+
     def __init__(self, base_path: Union[Path, str], sub_name: str, pp_run_name: str):
         """ """
-        super(SortingData, self)  # no init, see how well this works.
+        super(SortingData, self)
 
         # TODO: I think will be cool to have rawdata as an optional attribute here
         # for provenance on generation. Will be able to get original
@@ -410,7 +412,6 @@ class SortingData(PreprocessData):
         # TODO: check this naming, only for consistency with
         #  visualise_preprocessing_output
         self.data = {"0_preprocessed": None}
-        # self.set_sorter_output_paths(sorter)  TODO: do this outside of class, think this is intutiive...
 
     def load_preprocessed_binary(self, concatenate: bool = True) -> BaseExtractor:
         """
@@ -421,7 +422,7 @@ class SortingData(PreprocessData):
             raise FileNotFoundError(
                 f"No preprocessed SI binary-containing folder "
                 f"found at {self.preprocessed_binary_data_path}."
-            )  # TODO: add on passing custom base_path
+            )
         recording = si.load_extractor(self.preprocessed_binary_data_path)
 
         if concatenate:

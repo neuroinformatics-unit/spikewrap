@@ -19,6 +19,13 @@ from spikeinterface import concatenate_recordings
 from ..pipeline.data_class import SortingData
 
 
+def canonical_names(name: str):
+    filenames = {
+        "preprocessed_yaml": "preprocess_data_attributes.yaml",
+    }
+    return filenames[name]
+
+
 def get_keys_first_char(
     data: PreprocessData, as_int: bool = False
 ) -> Union[List[str], List[int]]:
@@ -111,7 +118,7 @@ def message_user(message: str, verbose: bool = True) -> None:
 
 def load_data_for_sorting(
     preprocessed_output_path: Path,
-    base_path: Optional[Union[str, Path]] = None,
+    concatenate: bool = True,
 ) -> Tuple[PreprocessData, BaseRecording]:
     """
     Returns the previously preprocessed PreprocessData and
@@ -134,25 +141,27 @@ def load_data_for_sorting(
         together. This is used prior to sorting. Segments should be
         experimental runs.
     """
+    if not preprocessed_output_path.is_dir():
+        raise FileNotFoundError(f"No preprocessed data found at "
+                                f"{preprocessed_output_path}")
+
     data_info = load_preprocess_data_attributes(preprocessed_output_path)
 
-    if base_path is None:
-        base_path = Path(data_info["base_path"])
-    else:
-        base_path = Path(base_path)
+    base_path = Path(data_info["base_path"])
+
     sorting_data = SortingData(
         base_path, data_info["sub_name"], data_info["pp_run_name"]
     )
 
-    sorting_data.load_preprocessed_binary()  # TODO: expose concatenate
+    sorting_data.load_preprocessed_binary(concatenate)
 
     return sorting_data
 
 
 def load_preprocess_data_attributes(preprocessed_output_path: Path):
     with open(
-        Path(preprocessed_output_path) / "preprocess_data_attributes.yaml"
-    ) as file:  # TODO: add to configs
+        Path(preprocessed_output_path) / canonical_names("preprocessed_yaml")
+    ) as file:
         data_info = yaml.full_load(file)
     return data_info
 
@@ -218,7 +227,11 @@ def get_sorter_image_name(sorter):
     sorter : str
         The name of the sorter to get the path to (e.g. kilosort2_5)
     """
-    return f"{sorter}-compiled-base.sif"
+    if "kilosort" in sorter:
+        sorter_name = f"{sorter}-compiled-base.sif"
+    else:
+        sorter_name = f"{sorter}-base.sif"
+    return sorter_name
 
 
 def check_singularity_install() -> bool:
