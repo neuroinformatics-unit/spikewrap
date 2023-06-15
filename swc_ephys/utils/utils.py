@@ -4,8 +4,7 @@ from typing import TYPE_CHECKING, Callable, List, Tuple, Union
 
 if TYPE_CHECKING:
     from spikeinterface.core import BaseRecording
-
-    from ..pipeline.data_class import PreprocessData
+    from ..pipeline.data_class import PreprocessingData, SortingData
 
 import copy
 import os.path
@@ -16,9 +15,6 @@ import numpy as np
 import yaml
 from spikeinterface import concatenate_recordings
 
-from ..pipeline.data_class import SortingData
-
-
 def canonical_names(name: str):
     filenames = {
         "preprocessed_yaml": "preprocess_data_attributes.yaml",
@@ -27,7 +23,7 @@ def canonical_names(name: str):
 
 
 def get_keys_first_char(
-    data: PreprocessData, as_int: bool = False
+    data: PreprocessingData, as_int: bool = False
 ) -> Union[List[str], List[int]]:
     """
     Get the first character of all keys in a dictionary. Expected
@@ -36,8 +32,8 @@ def get_keys_first_char(
     Parameters
     ----------
 
-    data : PreprocessData
-        swc_ephys PreprocessData class holding filepath information.
+    data : PreprocessingData
+        swc_ephys PreprocessingData class holding filepath information.
 
     as_int : bool
         If True, the first character of the keys are cast to
@@ -47,12 +43,12 @@ def get_keys_first_char(
 
 
 def get_dict_value_from_step_num(
-    data: PreprocessData, step_num: str
+    data: PreprocessingData, step_num: str
 ) -> Tuple[BaseRecording, str]:
     """
-    Get the value of the PreprocessData dict from the preprocessing step number.
+    Get the value of the PreprocessingData dict from the preprocessing step number.
 
-    PreprocessData contain keys indicating the preprocessing steps,
+    PreprocessingData contain keys indicating the preprocessing steps,
     starting with the preprocessing step number.
     e.g. 0-raw, 1-raw-bandpass_filter, 2-raw_bandpass_filter-common_average
 
@@ -62,8 +58,8 @@ def get_dict_value_from_step_num(
     Parameters
     ----------
 
-    data : PreprocessData
-        swc_ephys PreprocessData class holding filepath information.
+    data : PreprocessingData
+        swc_ephys PreprocessingData class holding filepath information.
 
     step_num : str
         The preprocessing step number to get the value (i.e. recording object)
@@ -115,57 +111,6 @@ def message_user(message: str, verbose: bool = True) -> None:
 # This needs to be super clear because it is a powerful but confusing
 # aspect of spikeinterface.
 
-
-def load_data_for_sorting(
-    preprocessed_output_path: Path,
-    concatenate: bool = True,
-) -> Tuple[PreprocessData, BaseRecording]:
-    """
-    Returns the previously preprocessed PreprocessData and
-    recording object loaded from the preprocess path.
-
-    During sorting, preprocessed data is saved to
-    derivatives/<sub level dirs>/preprocessed. The spikeinterface
-    recording (si_recording) and PreprocessData (data_class.pkl) are saved.
-
-    Parameters
-    ----------
-
-    preprocessed_output_path : Path
-        Path to the preprocessed folder, containing the binary si_recording
-        of the preprocessed data and the data_class.pkl containing all filepath
-        information.
-
-    concatenate : bool
-        If True, the multi-segment recording object will be concatenated
-        together. This is used prior to sorting. Segments should be
-        experimental runs.
-    """
-    if not preprocessed_output_path.is_dir():
-        raise FileNotFoundError(f"No preprocessed data found at "
-                                f"{preprocessed_output_path}")
-
-    data_info = load_preprocess_data_attributes(preprocessed_output_path)
-
-    base_path = Path(data_info["base_path"])
-
-    sorting_data = SortingData(
-        base_path, data_info["sub_name"], data_info["pp_run_name"]
-    )
-
-    sorting_data.load_preprocessed_binary(concatenate)
-
-    return sorting_data
-
-
-def load_preprocess_data_attributes(preprocessed_output_path: Path):
-    with open(
-        Path(preprocessed_output_path) / canonical_names("preprocessed_yaml")
-    ) as file:
-        data_info = yaml.full_load(file)
-    return data_info
-
-
 def concatenate_runs(recording) -> BaseRecording:
     """
     Convenience function to concatenate the segments
@@ -216,7 +161,7 @@ def get_hpc_sorter_path(sorter: str) -> Path:
     return base_path / sorter / get_sorter_image_name(sorter)
 
 
-def get_sorter_image_name(sorter):
+def get_sorter_image_name(sorter):  # TODO: sort this out
     """
     Get the sorter image name, as defined by how
     SpikeInterface names the images it provides.
@@ -230,6 +175,8 @@ def get_sorter_image_name(sorter):
     if "kilosort" in sorter:
         sorter_name = f"{sorter}-compiled-base.sif"
     else:
+        if sorter == "spykingcircus":
+            sorter = "spyking-circus"
         sorter_name = f"{sorter}-base.sif"
     return sorter_name
 
@@ -299,8 +246,7 @@ def list_of_files_are_in_datetime_order(
 
 
 def make_preprocessing_plot_title(
-    data: PreprocessData,
-    run_number: int,
+    run_name: str,
     full_key: str,
     shank_idx: int,
     recording_to_plot: BaseRecording,
@@ -313,12 +259,7 @@ def make_preprocessing_plot_title(
 
     Parameters
     ----------
-
-    data : PreprocessData
-        swc_ephys PreprocessData class holding filepath information.
-
-    run_number : int
-        The ephys run number that is being displayed.
+    run_name : TODO xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 
     full_key : str
         The full preprocessing key (as defined in preprocess.py)
@@ -334,13 +275,13 @@ def make_preprocessing_plot_title(
         this could be between 1 - 4 if not all shanks are mapped.
     """
     plot_title = (
-        r"$\bf{Run \ name:}$" + f"{data.all_run_names[run_number - 1]}"
+        r"$\bf{Run \ name:}$" + f"{run_name}"
         "\n" + r"$\bf{Preprocessing \ step:}$" + f"{full_key}"
     )
     if total_used_shanks > 1:
         plot_title += (
-            "\n" + r"$\bf{Shank \ group:}$" + f"{shank_idx}"
-            "\n" + r"$\bf{Num \ channels:}$" + f"{recording_to_plot.get_num_channels()}"
+            "\n" + r"$\bf{Shank \ group:}$" + f"{shank_idx}, " +
+            r"$\bf{Num \ channels:}$" + f"{recording_to_plot.get_num_channels()}"
         )
     return plot_title
 
@@ -352,3 +293,19 @@ def cast_pp_steps_values(pp_steps, list_or_tuple):
 
     for key in pp_steps.keys():
         pp_steps[key] = func(pp_steps[key])
+
+
+# Misc. ----------------------------------------------------------------------------
+
+def get_probe_group_num(data: Union[PreprocessingData, SortingData]) -> int:
+    """
+    This is shank num
+
+    TODO
+    ---
+    This is getting out of scope for this class, which should really be
+    file-path related. Understand how shank index on the probe property
+    maps to real-world shank
+    """
+    num_groups = np.unique(data[data.init_data_key].get_property("group")).size
+    return num_groups

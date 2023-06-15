@@ -7,6 +7,7 @@ from typing import Dict, Literal, Optional, Union
 import spikeinterface.sorters as ss
 
 from ..utils import slurm, utils
+from ..pipeline.load_data import load_data_for_sorting
 
 # loops
 # https://docs.sylabs.io/guides/3.5/admin-guide/configfiles.html
@@ -20,7 +21,7 @@ from ..utils import slurm, utils
 # TODO: SI changed their API need to adjust this...
 # assert pp_funcs[pp_name].__name__ == pp_name, "something is wrong in func dict"
 # sort out public vs. private
-
+# split errors and messaging from code.
 
 def run_sorting(
     preprocessed_data_path: Union[Path, str],
@@ -31,7 +32,7 @@ def run_sorting(
     slurm_batch=False,
 ):
     """
-    Run a sorter on pre-processed data. Takes a PreprocessData (pipeline.data_class)
+    Run a sorter on pre-processed data. Takes a PreprocessingData (pipeline.data_class)
     object that contains spikeinterface recording objects for the preprocessing
     pipeline (or path to existing 'preprocessed' output folder.
 
@@ -43,8 +44,8 @@ def run_sorting(
     Parameters
     ----------
 
-    preprocess_data_or_path : PreprocessData
-        swc_ephys PreprocessData object or path to previously saved 'preprocessed' directory.
+    preprocess_data_or_path : PreprocessingData
+        swc_ephys PreprocessingData object or path to previously saved 'preprocessed' directory.
 
     sorter : str
         Name of the sorter to use (e.g. "kilosort2_5").
@@ -78,7 +79,7 @@ def run_sorting(
     utils.message_user(
         f"\nLoading binary preprocessed data from {preprocessed_data_path.as_posix()}\n"
     )
-    sorting_data = utils.load_data_for_sorting(preprocessed_data_path)
+    sorting_data = load_data_for_sorting(preprocessed_data_path)
 
     sorting_data.set_sorter_output_paths(sorter)
 
@@ -92,14 +93,14 @@ def run_sorting(
 
     ss.run_sorter(
         sorter,
-        sorting_data.data["0_preprocessed"],
+        sorting_data.data["0-preprocessed"],
         output_folder=sorting_data.sorter_base_output_path,
         singularity_image=singularity_image,
         remove_existing_folder=overwrite_existing_sorter_output,
         **sorter_options_dict,
     )
 
-    if singularity_image is True:  # no existing image was found
+    if singularity_image is True:  # no existing image was found # TODO: need to use this only on local!
         store_singularity_image(sorting_data.base_path, sorter)
 
     return sorting_data
