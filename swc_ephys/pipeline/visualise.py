@@ -153,7 +153,7 @@ def get_subplot_ax(
 
 
 def process_input_arguments(
-    data: PreprocessingData,
+    data: Union[PreprocessingData, SortingData],
     steps: Union[List[str], str],
     as_subplot: bool,
     channel_idx_to_show: Union[List, Tuple, NDArray, None],
@@ -184,7 +184,7 @@ def process_input_arguments(
 
 def validate_options_against_recording(
     recording: BaseRecording,
-    data: PreprocessingData,
+    data: Union[PreprocessingData, SortingData],
     time_range: Optional[Tuple],
     run_number: int,
 ) -> None:

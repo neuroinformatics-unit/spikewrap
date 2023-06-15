@@ -1,6 +1,9 @@
 import copy
 from pathlib import Path
-from typing import List, Literal, Union
+from typing import TYPE_CHECKING, List, Literal, Union
+
+if TYPE_CHECKING:
+    from ..data_classes.preprocessing import PreprocessingData
 
 from ..configs.configs import get_configs
 from ..utils import slurm, utils
@@ -88,7 +91,7 @@ def run_full_pipeline(
 
     save_preprocessed_data_if_required(preprocess_data, existing_preprocessed_data)
 
-    sorting_data = run_sorting(
+    run_sorting(
         preprocess_data.preprocessed_data_path,
         sorter,
         sorter_options,
@@ -99,12 +102,15 @@ def run_full_pipeline(
     # Save spikeinterface 'waveforms' output (TODO: currently, this is large)
     # to the sorter output dir. Quality checks are run and .csv of checks
     # output in the sorter folder as quality_metrics.csv
-    quality_check(
-        sorting_data.preprocessed_data_path, sorter, verbose
-    )
+    quality_check(preprocess_data.preprocessed_data_path, sorter, verbose)
 
 
-def save_preprocessed_data_if_required(preprocess_data: PreprocessingData, existing_preprocessed_data: Literal["overwrite", "load_if_exists", "fail_if_exists"]) -> None:
+def save_preprocessed_data_if_required(
+    preprocess_data: PreprocessingData,
+    existing_preprocessed_data: Literal[
+        "overwrite", "load_if_exists", "fail_if_exists"
+    ],
+) -> None:
     """ """
     preprocess_path = preprocess_data.preprocessed_data_path
 
