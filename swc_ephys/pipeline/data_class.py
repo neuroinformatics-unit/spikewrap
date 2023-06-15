@@ -14,14 +14,23 @@ from spikeinterface.core.base import BaseExtractor
 
 from ..utils import utils
 
-# PreprocessData
-# TODO: these classes will be extremely similar, inherit from common
-# base abstract class.
-# TODO: actually, completely separate the responsibilities
-# of these classes and have PreprocessData an attribute of SortingData.
 
+class BaseUserDict(UserDict):
+    def __init__(self):
+        super(BaseUserDict, self).__init__()
 
-class PreprocessData(UserDict):
+    def keys(self) -> KeysView:
+        return self.data.keys()
+
+    def items(self) -> ItemsView:
+        return self.data.items()
+
+    def values(self) -> ValuesView:
+        return self.data.values()
+
+# TODO: remove 'preprocessed' and sorter from name prefixes, clear fro mthe class!
+
+class PreprocessingData(BaseUserDict):
     def __init__(
         self,
         base_path: Union[Path, str],
@@ -65,10 +74,10 @@ class PreprocessData(UserDict):
         pp_steps : Optional[Dict]
             preprocessing step dictionary, see swc_ephys/configs
         """
-        super(PreprocessData, self).__init__()
+        super(PreprocessingData, self).__init__()
 
         self.top_level_folder = "rawdata"
-        self.init_data_key = "0_raw"
+        self.init_data_key = "0-raw"
 
         self.base_path, checked_run_names, self.rawdata_path = self.validate_inputs(
             run_names,
@@ -272,13 +281,15 @@ class PreprocessData(UserDict):
             "all_run_paths": [path_.as_posix() for path_ in self.all_run_paths],
             "all_run_names": [name for name in self.all_run_names],
             "preprocessed_output_path": self.preprocessed_output_path.as_posix(),
+            "preprocessed_binary_data_path": self.preprocessed_binary_data_path.as_posix(),
+            "preprocessed_data_class_path": self.preprocessed_data_class_path.as_posix(),
         }
         if not self.preprocessed_output_path.is_dir():
             os.makedirs(self.preprocessed_output_path)
 
         with open(
             self.preprocessed_output_path / utils.canonical_names("preprocessed_yaml"), "w"
-        ) as attributes:  # TODO: save filename in config somewhere
+        ) as attributes:
             yaml.dump(attributes_to_save, attributes, sort_keys=False)
 
     # Handle Paths ---------------------------------------------------------------------
@@ -313,17 +324,6 @@ class PreprocessData(UserDict):
         Get the path to the rawdata subject folder.
         """
         return Path(self.base_path / self.top_level_folder / self.sub_name)
-
-    # UserDict Overrides ---------------------------------------------------------------
-
-    def keys(self) -> KeysView:
-        return self.data.keys()
-
-    def items(self) -> ItemsView:
-        return self.data.items()
-
-    def values(self) -> ValuesView:
-        return self.data.values()
 
     # Validate Inputs ------------------------------------------------------------------
 
@@ -363,72 +363,69 @@ class PreprocessData(UserDict):
             )
         return base_path, run_names, rawdata_path
 
-    # Misc. ----------------------------------------------------------------------------
 
-    def get_probe_group_num(self) -> int:
+class SortingData(BaseUserDict):
+
+    def __init__(self, preprocessed_output_path: Union[str, Path]) -> None:
         """
-        This is shank num
-
-        TODO
-        ---
-        This is getting out of scope for this class, which should really be
-        file-path related. Understand how shank index on the probe property
-        maps to real-world shank
         """
-        num_groups = np.unique(self[self.init_data_key].get_property("group")).size
-        return num_groups
+        super(SortingData, self).__init__()
 
+        self.preprocessed_output_path = Path(preprocessed_output_path)
+        self.check_preprocessed_output_path_exists()
 
-class SortingData(PreprocessData):
-
-    def __init__(self, base_path: Union[Path, str], sub_name: str, pp_run_name: str):
-        """ """
-        super(SortingData, self)
-
-        # TODO: I think will be cool to have rawdata as an optional attribute here
-        # for provenance on generation. Will be able to get original
-        # rawdata paths at least.
         self.top_level_folder = "derivatives"
-        self.init_data_key = "0_preprocessed"  # TODO: this is not nice
+        self.init_data_key = "0-preprocessed"  # TODO: this is not nice
+        self.pp_info = self.load_preprocess_data_attributes()
 
-        self.base_path = base_path
-        self.sub_name = sub_name
-        self.pp_run_name = pp_run_name
+        # Note the base-path can diverge if accessed from different
+        # location than where the pp was saved. TODO explain properly.
+        self.base_path = Path(self.pp_info["base_path"])
+        self.sub_name = self.pp_info["sub_name"]
+        self.pp_run_name = self.pp_info["pp_run_name"]
 
-        self.all_run_names = [
-            self.pp_run_name
-        ]  # TODO: hacky wor-around for visualise.py
-
-        self.preprocessed_output_path = Path()
-        self.preprocessed_data_class_path = Path()
-        self.preprocessed_binary_data_path = Path()
-        self.set_preprocessing_output_path()
-
+        # These paths are set when the sorter
+        # is known, set_sorter_output_paths()
         self.sorter_base_output_path = Path()
         self.sorter_run_output_path = Path()
         self.waveforms_output_path = Path()
         self.quality_metrics_path = Path()
 
-        # TODO: check this naming, only for consistency with
-        #  visualise_preprocessing_output
-        self.data = {"0_preprocessed": None}
+        # This is set later, depending on
+        # concatenated or not.
+        self.data: Dict = {"0-preprocessed": None}
+
+    def check_preprocessed_output_path_exists(self):
+        if not self.preprocessed_output_path.is_dir():
+            raise FileNotFoundError(f"No preprocessed data found at "
+                                    f"{self.preprocessed_output_path}")
+
+    def load_preprocess_data_attributes(self):
+        with open(
+                Path(self.preprocessed_output_path) / utils.canonical_names(
+                    "preprocessed_yaml")
+        ) as file:
+            pp_info = yaml.full_load(file)
+        return pp_info
 
     def load_preprocessed_binary(self, concatenate: bool = True) -> BaseExtractor:
         """
         Use SpikeInterface to load the binary-data into a
         recording object.
         """
-        if not self.preprocessed_binary_data_path.is_dir():
+        binary_path = self.preprocessed_output_path / "si_recording"  # TODO: configs
+      
+        if not binary_path.is_dir():
             raise FileNotFoundError(
                 f"No preprocessed SI binary-containing folder "
-                f"found at {self.preprocessed_binary_data_path}."
+                f"found at {binary_path}."
             )
-        recording = si.load_extractor(self.preprocessed_binary_data_path)
+        recording = si.load_extractor(binary_path)
 
         if concatenate:
             recording = utils.concatenate_runs(recording)
 
-        self.data["0_preprocessed"] = recording
+        self.data["0-preprocessed"] = recording
 
     def set_sorter_output_paths(self, sorter: str) -> None:
         """

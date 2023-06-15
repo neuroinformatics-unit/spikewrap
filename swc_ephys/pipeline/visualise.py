@@ -7,7 +7,7 @@ if TYPE_CHECKING:
     from numpy.typing import NDArray
     from spikeinterface.core import BaseRecording
 
-    from ..pipeline.data_class import PreprocessData
+from ..pipeline.data_class import PreprocessingData, SortingData
 
 import inspect
 from pathlib import Path
@@ -20,7 +20,7 @@ from ..utils import utils
 
 
 def visualise(
-    data: PreprocessData,
+    data: Union[PreprocessingData, SortingData],
     steps: Union[List[str], str] = "all",
     mode: str = "auto",
     as_subplot: bool = False,
@@ -31,14 +31,14 @@ def visualise(
 ) -> None:
     """
     Plot the data at various preprocessing steps, useful for quality-checking.
-    Takes the pipeline.data_class.PreprocessData object (output from pipeline.preprocess).
+    Takes the pipeline.data_class.PreprocessingData object (output from pipeline.preprocess).
     Channels are displayed ordered by depth. Note preprocessing is lazy, and only the
     section if data displayed will be preprocessed.
 
     If multiple preprocessing steps are shown, they will be placed in subplots
     on a single plot if as_subplots is True, otherwise in separate plots.
 
-    data : swc_ephys PreprocessData class containing the preprocessing output (a dict
+    data : swc_ephys PreprocessingData class containing the preprocessing output (a dict
            of keys indicating the preprocessing step and values are spikeinterface
            recording objects.
 
@@ -62,11 +62,11 @@ def visualise(
     run_number : The run number to visualise (in the case of a concatenated recording.
                  Under the hood, each run maps to a SpikeInterface segment_index.
     """
-    steps, as_subplot, channel_idx_to_show = validate_input_arguments(
+    steps, as_subplot, channel_idx_to_show = process_input_arguments(
         data, steps, as_subplot, channel_idx_to_show
     )
 
-    total_used_shanks = data.get_probe_group_num()
+    total_used_shanks = utils.get_probe_group_num(data)
 
     for shank_idx in range(total_used_shanks):
         if as_subplot:
@@ -80,9 +80,10 @@ def visualise(
             recordings = recording.split_by(property="group")
             recording_to_plot = recordings[shank_idx]
 
+            run_name = get_run_name(data, run_number)
+
             plot_title = utils.make_preprocessing_plot_title(
-                data,
-                run_number,
+                run_name,
                 full_key,
                 shank_idx,
                 recording_to_plot,
@@ -100,7 +101,7 @@ def visualise(
             sw.plot_timeseries(
                 recording_to_plot,
                 channel_ids=channel_ids_to_show,
-                order_channel_by_depth=True,
+                order_channel_by_depth=False,
                 time_range=time_range,
                 return_scaled=True,
                 show_channel_ids=show_channel_ids,
@@ -151,8 +152,8 @@ def get_subplot_ax(idx, ax, num_rows, num_cols) -> matplotlib.axes._axes.Axes:
     return current_ax
 
 
-def validate_input_arguments(
-    data: PreprocessData,
+def process_input_arguments(
+    data: PreprocessingData,
     steps: Union[List[str], str],
     as_subplot: bool,
     channel_idx_to_show: Union[List, Tuple, NDArray, None],
@@ -182,17 +183,26 @@ def validate_input_arguments(
 
 
 def validate_options_against_recording(
-    recording: BaseRecording, data: PreprocessData, time_range: Optional[Tuple], run_number: int
+    recording: BaseRecording, data: PreprocessingData, time_range: Optional[Tuple], run_number: int
 ) -> None:
     """
     TODO: can't find a better way to get final timepoint, but must be
     somewhere, this is wasteful.
     """
-    num_runs = len(data.all_run_names)
-    assert run_number <= num_runs, (
-        "The run_number must be less than or equal to the " "number of runs specified."
-    )
+    if isinstance(data, PreprocessingData):
+        num_runs = len(data.all_run_names)
+        assert run_number <= num_runs, (
+            "The run_number must be less than or equal to the " "number of runs specified."
+        )
     if time_range is not None:
         assert (
             time_range[1] <= recording.get_times(segment_index=run_number - 1)[-1]
         ), "The time range specified is longer than the maximum time of the recording."
+
+
+def get_run_name(data, run_number):
+    if isinstance(data, PreprocessingData):
+        run_name = data.all_run_names[run_number - 1]
+    elif isinstance(data, SortingData):
+        run_name = data.pp_run_name
+    return run_name

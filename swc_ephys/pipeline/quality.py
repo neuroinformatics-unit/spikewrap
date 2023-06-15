@@ -5,7 +5,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Union
 
 if TYPE_CHECKING:
-    from ..pipeline.data_class import SortedData
+    from ..pipeline.data_class import SortingData
 
 from pathlib import Path
 
@@ -15,9 +15,11 @@ from spikeinterface.core import BaseRecording
 from spikeinterface.extractors import KiloSortSortingExtractor
 
 from ..utils import utils
+from ..pipeline.data_class import SortingData
+from ..pipeline.load_data import load_data_for_sorting
 
 def quality_check(
-    sorting_data: Union[Path, str, SortedData],
+    sorting_data: Union[Path, str, SortingData],
     sorter: str = "kilosort2_5",
     verbose: bool = True,
 ):
@@ -38,8 +40,8 @@ def quality_check(
         If True, messages will be printed to consolve updating on the
         progress of preprocessing / sorting.
     """
-    if not isinstance(sorting_data, SortedData):
-        sorting_data = utils.load_data_for_sorting(
+    if not isinstance(sorting_data, SortingData):
+        sorting_data = load_data_for_sorting(
             Path(preprocessed_output_path),
         )
     sorting_data.set_sorter_output_paths(sorter)
@@ -51,10 +53,10 @@ def quality_check(
     if not sorting_data.waveforms_output_path.is_dir():
         utils.message_user(f"Saving waveforms to {sorting_data.waveforms_output_path}")
 
-        sorting_without_excess_spikes = load_sorting_output(sorting_data, sorting_data.data["0_preprocessed"], sorter)  # TODO: fix double pass
+        sorting_without_excess_spikes = load_sorting_output(sorting_data, sorting_data.data["0-preprocessed"], sorter)  # TODO: fix double pass
 
         waveforms = si.extract_waveforms(
-            sorting_data.data["0_preprocessed"], sorting_without_excess_spikes, folder=sorting_data.waveforms_output_path
+            sorting_data.data["0-preprocessed"], sorting_without_excess_spikes, folder=sorting_data.waveforms_output_path
         )
     else:
         utils.message_user(
@@ -69,7 +71,7 @@ def quality_check(
     utils.message_user(f"Quality metrics saved to {sorting_data.quality_metrics_path}")
 
 
-def load_sorting_output(sorting_data: PreprocessData, recording: BaseRecording, sorter: str):
+def load_sorting_output(sorting_data: PreprocessingData, recording: BaseRecording, sorter: str):
     """
     Load the output of a sorting run.
     """
