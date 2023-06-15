@@ -8,8 +8,8 @@ if TYPE_CHECKING:
 import spikeinterface.extractors as se
 from spikeinterface import append_recordings
 
-from .data_class import PreprocessingData, SortingData
-
+from ..data_classes.preprocessing import PreprocessingData
+from ..data_classes.sorting import SortingData
 
 def load_spikeglx_data(
     base_path: Union[Path, str], sub_name: str, run_names: Union[List[str], str]

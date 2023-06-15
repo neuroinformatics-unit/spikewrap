@@ -4,7 +4,8 @@ from typing import TYPE_CHECKING, Callable, List, Tuple, Union
 
 if TYPE_CHECKING:
     from spikeinterface.core import BaseRecording
-    from ..pipeline.data_class import PreprocessingData, SortingData
+    from ..data_classes.preprocessing import PreprocessingData
+    from ..data_classes.sorting import SortingData
 
 import copy
 import os.path
