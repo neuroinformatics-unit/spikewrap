@@ -7,16 +7,13 @@ if TYPE_CHECKING:
     from numpy.typing import NDArray
     from spikeinterface.core import BaseRecording
 
-from ..data_classes.preprocessing import PreprocessingData
-from ..data_classes.sorting import SortingData
-
-import inspect
-from pathlib import Path
 
 import matplotlib.pyplot as plt
 import numpy as np
 import spikeinterface.widgets as sw
 
+from ..data_classes.preprocessing import PreprocessingData
+from ..data_classes.sorting import SortingData
 from ..utils import utils
 
 
@@ -147,7 +144,9 @@ def generate_subplot(
     return fig, ax, num_rows, num_cols
 
 
-def get_subplot_ax(idx, ax, num_rows, num_cols) -> matplotlib.axes._axes.Axes:
+def get_subplot_ax(
+    idx: int, ax: NDArray, num_rows: int, num_cols: int
+) -> matplotlib.axes._axes.Axes:
     idx_unraveled = np.unravel_index(idx, shape=(num_rows, num_cols))
     current_ax = ax[idx_unraveled]
     return current_ax
@@ -184,7 +183,10 @@ def process_input_arguments(
 
 
 def validate_options_against_recording(
-    recording: BaseRecording, data: PreprocessingData, time_range: Optional[Tuple], run_number: int
+    recording: BaseRecording,
+    data: PreprocessingData,
+    time_range: Optional[Tuple],
+    run_number: int,
 ) -> None:
     """
     TODO: can't find a better way to get final timepoint, but must be
@@ -193,7 +195,8 @@ def validate_options_against_recording(
     if isinstance(data, PreprocessingData):
         num_runs = len(data.all_run_names)
         assert run_number <= num_runs, (
-            "The run_number must be less than or equal to the " "number of runs specified."
+            "The run_number must be less than or equal to the "
+            "number of runs specified."
         )
     if time_range is not None:
         assert (
@@ -201,7 +204,7 @@ def validate_options_against_recording(
         ), "The time range specified is longer than the maximum time of the recording."
 
 
-def get_run_name(data, run_number):
+def get_run_name(data: Union[PreprocessingData, SortingData], run_number: int) -> str:
     if isinstance(data, PreprocessingData):
         run_name = data.all_run_names[run_number - 1]
     elif isinstance(data, SortingData):

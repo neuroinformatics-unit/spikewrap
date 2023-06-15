@@ -10,15 +10,14 @@ from .base import BaseUserDict
 
 
 class SortingData(BaseUserDict):
-    """
-    """
-    def __init__(self, preprocessed_output_path: Union[str, Path]):
-        """
-        """
+    """ """
+
+    def __init__(self, preprocessed_data_path: Union[str, Path]):
+        """ """
         super(SortingData, self).__init__()
 
-        self.preprocessed_output_path = Path(preprocessed_output_path)
-        self.check_preprocessed_output_path_exists()
+        self.preprocessed_data_path = Path(preprocessed_data_path)
+        self.check_preprocessed_data_path_exists()
 
         self.top_level_folder = "derivatives"
         self.init_data_key = "0-preprocessed"  # TODO: this is not nice
@@ -41,15 +40,16 @@ class SortingData(BaseUserDict):
         # concatenated or not.
         self.data: Dict = {"0-preprocessed": None}
 
-    def check_preprocessed_output_path_exists(self) -> None:
-        if not self.preprocessed_output_path.is_dir():
-            raise FileNotFoundError(f"No preprocessed data found at "
-                                    f"{self.preprocessed_output_path}")
+    def check_preprocessed_data_path_exists(self) -> None:
+        if not self.preprocessed_data_path.is_dir():
+            raise FileNotFoundError(
+                f"No preprocessed data found at " f"{self.preprocessed_data_path}"
+            )
 
     def load_preprocess_data_attributes(self) -> Dict:
         with open(
-                Path(self.preprocessed_output_path) / utils.canonical_names(
-                    "preprocessed_yaml")
+            Path(self.preprocessed_data_path)
+            / utils.canonical_names("preprocessed_yaml")
         ) as file:
             pp_info = yaml.full_load(file)
         return pp_info
@@ -59,8 +59,8 @@ class SortingData(BaseUserDict):
         Use SpikeInterface to load the binary-data into a
         recording object.
         """
-        binary_path = self.preprocessed_output_path / "si_recording"  # TODO: configs
-      
+        binary_path = self.preprocessed_data_path / "si_recording"  # TODO: configs
+
         if not binary_path.is_dir():
             raise FileNotFoundError(
                 f"No preprocessed SI binary-containing folder "

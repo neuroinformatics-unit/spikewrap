@@ -89,7 +89,7 @@ def run_full_pipeline(
     save_preprocessed_data_if_required(preprocess_data, existing_preprocessed_data)
 
     sorting_data = run_sorting(
-        preprocess_data.preprocessed_output_path,
+        preprocess_data.preprocessed_data_path,
         sorter,
         sorter_options,
         overwrite_existing_sorter_output,
@@ -100,13 +100,13 @@ def run_full_pipeline(
     # to the sorter output dir. Quality checks are run and .csv of checks
     # output in the sorter folder as quality_metrics.csv
     quality_check(
-        sorting_data.preprocessed_output_path, sorter, verbose
+        sorting_data.preprocessed_data_path, sorter, verbose
     )
 
 
-def save_preprocessed_data_if_required(preprocess_data, existing_preprocessed_data):
+def save_preprocessed_data_if_required(preprocess_data: PreprocessingData, existing_preprocessed_data: Literal["overwrite", "load_if_exists", "fail_if_exists"]) -> None:
     """ """
-    preprocess_path = preprocess_data.preprocessed_output_path
+    preprocess_path = preprocess_data.preprocessed_data_path
 
     if existing_preprocessed_data == "overwrite":
         if preprocess_path.is_dir():

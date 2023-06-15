@@ -8,7 +8,7 @@ import submitit
 from . import utils
 
 
-def run_job(kwargs, command_func, command_name):
+def run_job(kwargs, command_func: Callable, command_name: str) -> None:
     """ """
     slurm_opts = kwargs.pop("slurm_batch")
     executor = get_executor(kwargs)

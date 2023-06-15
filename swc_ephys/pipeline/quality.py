@@ -4,6 +4,9 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Union
 
+if TYPE_CHECKING:
+    from spikeinterface.core import BaseSorting
+
 from pathlib import Path
 
 import spikeinterface as si
@@ -19,7 +22,7 @@ def quality_check(
     sorting_data: Union[Path, str, SortingData],
     sorter: str = "kilosort2_5",
     verbose: bool = True,
-):
+) -> None:
     """
     Save quality metrics on sorting output to a quality_metrics.csv file.
 
@@ -39,7 +42,7 @@ def quality_check(
     """
     if not isinstance(sorting_data, SortingData):
         sorting_data = load_data_for_sorting(
-            Path(preprocessed_output_path),
+            Path(preprocessed_data_path),
         )
     sorting_data.set_sorter_output_paths(sorter)
 
@@ -68,7 +71,7 @@ def quality_check(
     utils.message_user(f"Quality metrics saved to {sorting_data.quality_metrics_path}")
 
 
-def load_sorting_output(sorting_data: PreprocessingData, recording: BaseRecording, sorter: str):
+def load_sorting_output(sorting_data: PreprocessingData, recording: BaseRecording, sorter: str) -> BaseSorting:
     """
     Load the output of a sorting run.
     """
