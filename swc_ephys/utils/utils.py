@@ -1,9 +1,10 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Callable, List, Tuple, Union
+from typing import TYPE_CHECKING, Callable, Dict, List, Literal, Tuple, Union
 
 if TYPE_CHECKING:
     from spikeinterface.core import BaseRecording
+
     from ..data_classes.preprocessing import PreprocessingData
     from ..data_classes.sorting import SortingData
 
@@ -13,10 +14,27 @@ import subprocess
 from pathlib import Path
 
 import numpy as np
-import yaml
 from spikeinterface import concatenate_recordings
 
-def canonical_names(name: str):
+
+def canonical_names(name: str) -> str:
+    """
+    Store the canonical names e.g. filenames, tags
+    that are used throughout the project. This setup
+    means filenames can be edited without requiring
+    extensive code changes.
+
+    Parameters
+    ----------
+    name : str
+        short-hand name of the full name of interest.
+
+    Returns
+    -------
+    filenames[name] : str
+        The full name of interest e.g. filename.
+
+    """
     filenames = {
         "preprocessed_yaml": "preprocess_data_attributes.yaml",
     }
@@ -24,7 +42,7 @@ def canonical_names(name: str):
 
 
 def get_keys_first_char(
-    data: PreprocessingData, as_int: bool = False
+    data: Union[PreprocessingData, SortingData], as_int: bool = False
 ) -> Union[List[str], List[int]]:
     """
     Get the first character of all keys in a dictionary. Expected
@@ -32,19 +50,26 @@ def get_keys_first_char(
 
     Parameters
     ----------
-
-    data : PreprocessingData
+    data : Union[PreprocessingData, SortingData]
         swc_ephys PreprocessingData class holding filepath information.
 
     as_int : bool
         If True, the first character of the keys are cast to
         integer type.
+
+    Returns
+    -------
+    list_of_numbers : Union[List[str], List[int]]
+        A list of numbers of string or integer type, that are
+        the first numbers of the Preprocessing / Sorting Data
+        .data dictionary keys.
     """
-    return [int(key[0]) if as_int else key[0] for key in data.keys()]
+    list_of_numbers = [int(key[0]) if as_int else key[0] for key in data.keys()]
+    return list_of_numbers
 
 
 def get_dict_value_from_step_num(
-    data: PreprocessingData, step_num: str
+    data: Union[PreprocessingData, SortingData], step_num: str
 ) -> Tuple[BaseRecording, str]:
     """
     Get the value of the PreprocessingData dict from the preprocessing step number.
@@ -54,22 +79,31 @@ def get_dict_value_from_step_num(
     e.g. 0-raw, 1-raw-bandpass_filter, 2-raw_bandpass_filter-common_average
 
     Return the value of the dict (spikeinterface recording object)
-    from the dict using only the step number
+    from the dict using only the step number.
 
     Parameters
     ----------
-
-    data : PreprocessingData
+    data : Union[PreprocessingData, SortingData]
         swc_ephys PreprocessingData class holding filepath information.
 
     step_num : str
         The preprocessing step number to get the value (i.e. recording object)
         from.
+
+    Returns
+    -------
+    dict_value : BaseRecording
+        The SpikeInterface recording stored in the dict at the
+        given preprocessing step number.
+
+    pp_key : str
+        The key of the preprocessing dict at the given
+        step number.
     """
     if step_num == "last":
         pp_key_nums = get_keys_first_char(data, as_int=True)
 
-        # complete overkill but this is critical
+        # Complete overkill as a check but this is critical.
         step_num = str(int(np.max(pp_key_nums)))
         assert (
             int(step_num) == len(data.keys()) - 1
@@ -80,8 +114,9 @@ def get_dict_value_from_step_num(
     assert len(select_step_pp_key) == 1, "pp_key must always have unique first char"
 
     pp_key: str = select_step_pp_key[0]
+    dict_value = data[pp_key]
 
-    return data[pp_key], pp_key
+    return dict_value, pp_key
 
 
 def message_user(message: str, verbose: bool = True) -> None:
@@ -90,7 +125,6 @@ def message_user(message: str, verbose: bool = True) -> None:
 
     Parameters
     ----------
-
     message : str
         Message to print.
 
@@ -102,28 +136,23 @@ def message_user(message: str, verbose: bool = True) -> None:
         print(message)
 
 
-# TODO: this is a little bit confusing because preprocessing
-# class is always lazy. sorter class loads real data (still lazy though)
-# it needs to be super explicitly that preprocessing is not undertakne
-# until the binary object is written. For example, ti does not make
-# sense to load the preprocessing data in the Preprocess data setting
-# to check it. It is not crystallised until loaded into the SortingData
-# class (this can be checked separately in visualise data).
-# This needs to be super clear because it is a powerful but confusing
-# aspect of spikeinterface.
-
-def concatenate_runs(recording) -> BaseRecording:
+def concatenate_runs(recording: BaseRecording) -> BaseRecording:
     """
     Convenience function to concatenate the segments
     of a recording object.
 
     Parameters
     ----------
-
     recording : BaseRecording
         A spikeinterface recording object.
+
+    Returns
+    -------
+    concatenated_recording : BaseRecording
+        The SpikeInterface recording object with all
+        segments concatenated into a single segments.
     """
-    message_user(f"Conatenating {recording.get_num_segments()} into a single segment.")
+    message_user(f"Concatenating {recording.get_num_segments()} into a single segment.")
 
     concatenated_recording = concatenate_recordings([recording])
 
@@ -137,9 +166,13 @@ def get_local_sorter_path(sorter: str) -> Path:
 
     Parameters
     ----------
-
     sorter : str
-        The name of the sorter to get the path to (e.g. kilosort2_5)
+        The name of the sorter to get the path to (e.g. kilosort2_5).
+
+    Returns
+    ---------
+    local_path : Path
+        The path to the sorter image on the local machine.
     """
     local_path = (
         Path.home() / ".swc_ephys" / "sorter_images" / get_sorter_image_name(sorter)
@@ -150,28 +183,37 @@ def get_local_sorter_path(sorter: str) -> Path:
 
 def get_hpc_sorter_path(sorter: str) -> Path:
     """
-    Return the path to the sorter image on the HCP.
+    Return the path to the sorter image on the SWC HCP (ceph).
 
     Parameters
     ----------
-
     sorter : str
-        The name of the sorter to get the path to (e.g. kilosort2_5)
+        The name of the sorter to get the path to (e.g. kilosort2_5).
+
+    Returns
+    -------
+    sorter_path : Path
+        The base to the sorter image on SWC HCP (ceph).
     """
     base_path = Path("/ceph/neuroinformatics/neuroinformatics/scratch/sorter_images")
-    return base_path / sorter / get_sorter_image_name(sorter)
+    sorter_path = base_path / sorter / get_sorter_image_name(sorter)
+    return sorter_path
 
 
-def get_sorter_image_name(sorter):  # TODO: sort this out
+def get_sorter_image_name(sorter: str) -> str:
     """
     Get the sorter image name, as defined by how
-    SpikeInterface names the images it provides.
+    SpikeInterface names the docker images it provides.
 
     Parameters
     ----------
-
     sorter : str
-        The name of the sorter to get the path to (e.g. kilosort2_5)
+        The name of the sorter to get the path to (e.g. kilosort2_5).
+
+    Returns
+    -------
+    sorter_name : str
+        The SpikeInterface filename of the docker image for that sorter.
     """
     if "kilosort" in sorter:
         sorter_name = f"{sorter}-compiled-base.sif"
@@ -185,13 +227,19 @@ def get_sorter_image_name(sorter):  # TODO: sort this out
 def check_singularity_install() -> bool:
     """
     Check the system install of singularity.
-    Return bool indicating if singularity is installed.
+
+    Returns
+    -------
+    is_installed : bool
+        Indicates whether Singularity is installed on the machine.
     """
     try:
         subprocess.run("singularity --version", shell=True)
-        return True
+        is_installed = True
     except FileNotFoundError:
-        return False
+        is_installed = False
+
+    return is_installed
 
 
 def sort_list_of_paths_by_datetime_order(list_of_paths: List[Path]) -> List[Path]:
@@ -202,9 +250,15 @@ def sort_list_of_paths_by_datetime_order(list_of_paths: List[Path]) -> List[Path
 
     Parameters
     ----------
-
     list_of_paths : List[Path]
-        A list of paths to sort into datetime order
+        A list of paths to sort into datetime order.
+
+
+    Returns
+    -------
+    list_of_paths_by_creation_time : List[Path]
+        A list containing `list_of_paths` ordered by the
+        folder creation timestamp.
     """
     list_of_paths_by_creation_time = copy.deepcopy(list_of_paths)
     list_of_paths_by_creation_time.sort(key=os.path.getctime)
@@ -222,13 +276,18 @@ def list_of_files_are_in_datetime_order(
 
     Parameters
     ----------
-
     list_of_paths : List[Path]
         A list of paths to sort into datetime order.
 
     creation_or_modification : str
         If "creation", check the list of paths are ordered by creation datetime.
         Otherwise if "modification", check they are sorterd by modification datetime.
+
+    Returns
+    -------
+    is_in_time_order : bool
+        Indicates whether `list_of_paths` was in creation or modification time order.
+        depending on the value of `creation_or_modification`.
     """
     assert creation_or_modification in [
         "creation",
@@ -237,13 +296,15 @@ def list_of_files_are_in_datetime_order(
 
     filter: Callable
     filter = (
-        os.path.getmtime if creation_or_modification == "creation" else os.path.getctime
+        os.path.getctime if creation_or_modification == "creation" else os.path.getmtime
     )
 
     list_of_paths_by_time = copy.deepcopy(list_of_paths)
     list_of_paths_by_time.sort(key=filter)
 
-    return list_of_paths == list_of_paths_by_time
+    is_in_time_order = list_of_paths == list_of_paths_by_time
+
+    return is_in_time_order
 
 
 def make_preprocessing_plot_title(
@@ -260,10 +321,11 @@ def make_preprocessing_plot_title(
 
     Parameters
     ----------
-    run_name : TODO xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+    run_name : str
+        The name of the preprocessing run (e.g. "1-phase_shift").
 
     full_key : str
-        The full preprocessing key (as defined in preprocess.py)
+        The full preprocessing key (as defined in preprocess.py).
 
     shank_idx : int
         The SpikeInterface group number representing the shank number.
@@ -274,6 +336,11 @@ def make_preprocessing_plot_title(
     total_used_shanks : int
         The total number of shanks used in the recording. For a 4-shank probe,
         this could be between 1 - 4 if not all shanks are mapped.
+
+    Returns
+    -------
+    plot_title : str
+        The formatted plot title.
     """
     plot_title = (
         r"$\bf{Run \ name:}$" + f"{run_name}"
@@ -281,14 +348,37 @@ def make_preprocessing_plot_title(
     )
     if total_used_shanks > 1:
         plot_title += (
-            "\n" + r"$\bf{Shank \ group:}$" + f"{shank_idx}, " +
-            r"$\bf{Num \ channels:}$" + f"{recording_to_plot.get_num_channels()}"
+            "\n"
+            + r"$\bf{Shank \ group:}$"
+            + f"{shank_idx}, "
+            + r"$\bf{Num \ channels:}$"
+            + f"{recording_to_plot.get_num_channels()}"
         )
     return plot_title
 
 
-def cast_pp_steps_values(pp_steps, list_or_tuple):
-    """"""
+def cast_pp_steps_values(
+    pp_steps: Dict, list_or_tuple: Literal["list", "tuple"]
+) -> None:
+    """
+    The settings in the pp_steps dictionary that defines the options
+    for preprocessing should be stored in Tuple as they are not to
+    be edited. However, when dumping Tuple to .yaml, there are tags
+    displayed on the .yaml file which are very ugly.
+
+    These are not shown when storing list, so this function serves
+    to convert Tuple and List values in the preprocessing dict when
+    loading / saving the preprocessing dict to .yaml files. This
+    function converts `pp_steps` in place.
+
+    Parameters
+    ----------
+    pp_steps : Dict
+        The dictionary indicating the preprocessing steps to perform.
+
+    list_or_tuple : Literal["list", "tuple"]
+        The direction to convert (i.e. if "tuple", will convert to Tuple).
+    """
     assert list_or_tuple in ["list", "tuple"], "Must cast to `list` or `tuple`."
     func = tuple if list_or_tuple == "tuple" else list
 
@@ -296,17 +386,27 @@ def cast_pp_steps_values(pp_steps, list_or_tuple):
         pp_steps[key] = func(pp_steps[key])
 
 
-# Misc. ----------------------------------------------------------------------------
+# Misc. --------------------------------------------------------------------------------
 
-def get_probe_group_num(data: Union[PreprocessingData, SortingData]) -> int:
+
+def get_probe_num_groups(data: Union[PreprocessingData, SortingData]) -> int:
     """
-    This is shank num
+    Get the number of probe groups on a recording-objects `probe` attribute.
+    This is typically the number of shanks on the probe, which are treated
+    separately by SI.
 
-    TODO
-    ---
-    This is getting out of scope for this class, which should really be
-    file-path related. Understand how shank index on the probe property
-    maps to real-world shank
+    By default, uses the first step on the recording, as probe metadata will not
+    change throughout preprocessing.
+
+    Parameters
+    ----------
+    data : Union[PreprocessingData, SortingData]
+        The data object on which the recordings are stored.
+
+    Returns
+    -------
+    num_groups : int
+        The number of groups on the probe associated with the data recordings.
     """
     num_groups = np.unique(data[data.init_data_key].get_property("group")).size
     return num_groups

@@ -5,11 +5,13 @@ from typing import TYPE_CHECKING, List, Union
 if TYPE_CHECKING:
     from pathlib import Path
 
+
 import spikeinterface.extractors as se
 from spikeinterface import append_recordings
 
 from ..data_classes.preprocessing import PreprocessingData
 from ..data_classes.sorting import SortingData
+
 
 def load_spikeglx_data(
     base_path: Union[Path, str], sub_name: str, run_names: Union[List[str], str]
@@ -43,8 +45,10 @@ def load_spikeglx_data(
 
     all_recordings = [
         se.read_spikeglx(
-            folder_path=run_path, stream_id="imec0.ap",
-            all_annotations=True, load_sync_channel=False,
+            folder_path=run_path,
+            stream_id="imec0.ap",
+            all_annotations=True,
+            load_sync_channel=False,
         )
         for run_path in preprocess_data.all_run_paths
     ]
@@ -55,9 +59,9 @@ def load_spikeglx_data(
 
 
 def load_data_for_sorting(
-    preprocessed_output_path: Path,
+    preprocessed_data_path: Path,
     concatenate: bool = True,
-) -> Tuple[PreprocessingData, BaseRecording]:
+) -> SortingData:
     """
     Returns the previously preprocessed PreprocessingData and
     recording object loaded from the preprocess path.
@@ -68,8 +72,7 @@ def load_data_for_sorting(
 
     Parameters
     ----------
-
-    preprocessed_output_path : Path
+    preprocessed_data_path : Path
         Path to the preprocessed folder, containing the binary si_recording
         of the preprocessed data and the data_class.pkl containing all filepath
         information.
@@ -78,9 +81,15 @@ def load_data_for_sorting(
         If True, the multi-segment recording object will be concatenated
         together. This is used prior to sorting. Segments should be
         experimental runs.
+
+    Returns
+    -------
+    sorting_data : SortingData
+        The sorting_data dict with the loaded spikeinterface
+        recording attached to the '0-preprocessed' field.
     """
     sorting_data = SortingData(
-        preprocessed_output_path,
+        preprocessed_data_path,
     )
 
     sorting_data.load_preprocessed_binary(concatenate)

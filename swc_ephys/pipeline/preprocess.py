@@ -5,8 +5,8 @@ import numpy as np
 import spikeinterface.preprocessing as spre
 
 from ..configs import configs
-from ..utils import utils
 from ..data_classes.preprocessing import PreprocessingData
+from ..utils import utils
 
 
 def preprocess(
@@ -15,32 +15,35 @@ def preprocess(
     verbose: bool = True,
 ) -> PreprocessingData:
     """
-    Returns a dictionary of spikeinterface recording objects setup in
-    the order and with the options specified in pp_steps. Spikeinterface
-    preprocessing is lazy - no preprocessing is done until the data is written
-    to file or the get_traces() method on the recording object is called.
+    Returns an updated PreprocessingData dictionary of SpikeInterface
+    recording objects setup in the order and with the options specified
+    in pp_steps.
+
+    Spikeinterface preprocessing is lazy - no preprocessing is done
+    until the data is written to file or the get_traces() method on
+    the recording object is called.
 
     Parameters
     ----------
-
-    base_path: path containing the "rawdata" folder, that contains
-               subject-level folders.
-
-    sub_name: subject name (i.e. name of the folder in rawdata) to run
-
-    run_name: spikeglx run name (not including the gate index). Currently only
-              single gate / trigger recordings are supported (e.g. g0 and t0 only).
+    preprocess_data : PreprocessingData
+        A preprocessing data object that has as attributes the
+        paths to rawdata. The pp_steps attribute is set on
+        this class during execution of this function.
 
     pp_steps: pp_steps dictionary, see configs/configs.py for details.
 
     Returns
     -------
-
-    preprocess_data : swc_ephys PreprocessingData UserDict containing preprocessing spikeinterface
-           recording objects. see pipeline.data_class
+    preprocess_data : PreprocessingData
+        Preprocessing data class with pp_steps updated and
+        dictionary field filled with key-value pairs indicating
+        the name and order of preprocessing keys, and value containing
+        associated SpikeInterface recording objects.
 
     """
     if not pp_steps:
+        # TODO: should this ever be done? Might be
+        # very confusing if user forgets to pass pp_steps
         pp_steps, __ = configs.get_configs("test")
 
     pp_funcs = get_pp_funcs()
@@ -64,26 +67,27 @@ def check_and_sort_pp_steps(pp_steps: Dict, pp_funcs: Dict) -> Tuple[Dict, List[
 
     Parameters
     ----------
-
     pp_steps : Dict
         A dictionary with keys as numbers indicating the order that
         preprocessing steps are run (starting at "1"). The values are a
         (preprocessing name, preprocessing kwargs) tuple containing the
         spikeinterface preprocessing function name, and kwargs to pass to it.
 
+    pp_funcs : Dict
+        A dictionary linking preprocessing step names to the underlying
+        SpikeInterface function objects that conduct the preprocessing.
+
     Returns
     -------
-
     sorted_pp_steps :Dict
         A sorted and checked preprocessing steps dictionary.
 
     pp_step_names : List
-        Preprocessing step names (e.g. "bandpass_filter"] in order
+        Preprocessing step names (e.g. "bandpass_filter") in order
         that they are to be run.
 
     Notes
     -------
-
     This will soon be deprecated and replaced by validation
     of the config file itself on load.
     """
@@ -126,7 +130,7 @@ def perform_preprocessing_step(
     pp_step_names: List[str],
     pp_funcs: Dict,
     verbose: bool = True,
-):
+) -> None:
     """
     Given the preprocessing step and preprocess_data UserDict containing
     spikeinterface BaseRecordings, apply a preprocessing step to the
@@ -175,6 +179,7 @@ def perform_preprocessing_step(
     assert pp_funcs[pp_name].__name__ == pp_name, "something is wrong in func dict"
 
     preprocess_data[new_name] = pp_funcs[pp_name](last_pp_step_output, **pp_options)
+
 
 def get_pp_funcs() -> Dict:
     """
