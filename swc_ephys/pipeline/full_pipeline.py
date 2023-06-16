@@ -1,6 +1,11 @@
+from __future__ import annotations
+
 import copy
 from pathlib import Path
-from typing import List, Union
+from typing import TYPE_CHECKING, List, Literal, Union
+
+if TYPE_CHECKING:
+    from ..data_classes.preprocessing import PreprocessingData
 
 from ..configs.configs import get_configs
 from ..utils import slurm, utils
@@ -16,7 +21,9 @@ def run_full_pipeline(
     run_names: Union[List[str], str],
     config_name: str = "test",
     sorter: str = "kilosort2_5",
-    use_existing_preprocessed_file: bool = False,
+    existing_preprocessed_data: Literal[
+        "overwrite", "load_if_exists", "fail_if_exists"
+    ] = "fail_if_exists",
     overwrite_existing_sorter_output: bool = False,
     verbose: bool = True,
     slurm_batch: bool = False,
@@ -30,42 +37,44 @@ def run_full_pipeline(
         run_full_pipeline(args...)
 
     Parameters
-    __________
-
+    ----------
     base_path : Union[Path, str]
-        Path where the rawdata folder containing subjects.
+        Path to the rawdata folder containing subjects folders.
 
     sub_name : str
         Subject to preprocess. The subject top level dir should reside in
         base_path/rawdata/ .
 
     run_names : Union[List[str], str],
-        The spikeglx run name (i.e. not including the gate index). This can
-        also be a list of run names. Preprocessing
-        will still occur per-run. Runs will always be concatenated in date
-        order.
+        The SpikeGLX run name (i.e. not including the gate index). This can
+        also be a list of run names. Preprocessing will still occur per-run.
+        Runs are concatenated in the order passed prior to sorting.
 
     config_name : str
         The name of the configuration to use. Note this must be the name
-        of .yaml file (not including the extension) stored in
+        of a .yaml file (not including the extension) stored in
         swc_ephys/configs.
 
     sorter : str
         name of the sorter to use e.g. "kilosort2_5".
 
-    use_existing_preprocessed_file : bool
-        If this function has been run previously
-        and a saved pre-proccessed binary already
-        exists in the 'preprocessed' folder for this
-        subject, it will be used. If False and this folder
-        exists, an error will be raised.
+    existing_preprocessed_data : Literal[
+                                 "overwrite", "load_if_exists", "fail_if_exists"]
+        Determines how existing preprocessed data (e.g. from a prior pipeline run)
+        is treated.
+            "overwrite" : will overwrite any existing preprocessed data output.
+            "load_if_exists" : will search for existing data and load if it exists.
+                               Otherwise, will use the preprocessing from the
+                               current run.
+            "fail_if_exists" : If existing preprocessed data is found, an error
+                               will be raised.
 
      overwrite_existing_sorter_output : bool
-         If False, an error will be reaised if sorting output already
+         If `False` an error will be raised if sorting output already
          exists. If True, existing sorting output will be overwritten.
 
     verbose : bool
-        If True, messages will be printed to consolve updating on the
+        If True, messages will be printed to console updating on the
         progress of preprocessing / sorting.
 
     slurm_batch : bool
@@ -80,25 +89,16 @@ def run_full_pipeline(
 
     pp_steps, sorter_options = get_configs(config_name)
 
-    # Load the data from file (lazy)
-    data = load_spikeglx_data(base_path, sub_name, run_names)
-    data.set_preprocessing_output_path()
+    preprocess_data = load_spikeglx_data(base_path, sub_name, run_names)
 
-    if use_existing_preprocessed_file and data.preprocessed_binary_data_path.is_dir():
-        utils.message_user(
-            f"\nSkipping preprocessing, using file at "
-            f"{data.preprocessed_binary_data_path} for sorting.\n"
-        )
-    else:
-        data = preprocess(data, pp_steps, verbose)
+    preprocess_data = preprocess(preprocess_data, pp_steps, verbose)
 
-    # Run sorting. This will save the final preprocessing step
-    # recording to disk prior to sorting.
-    run_sorting(
-        data,
+    save_preprocessed_data_if_required(preprocess_data, existing_preprocessed_data)
+
+    sorting_data = run_sorting(
+        preprocess_data.preprocessed_data_path,
         sorter,
         sorter_options,
-        use_existing_preprocessed_file,
         overwrite_existing_sorter_output,
         verbose,
     )
@@ -106,4 +106,52 @@ def run_full_pipeline(
     # Save spikeinterface 'waveforms' output (TODO: currently, this is large)
     # to the sorter output dir. Quality checks are run and .csv of checks
     # output in the sorter folder as quality_metrics.csv
-    quality_check(data.preprocessed_output_path, sorter, verbose)
+    quality_check(sorting_data.preprocessed_data_path, sorter, verbose)
+
+
+def save_preprocessed_data_if_required(
+    preprocess_data: PreprocessingData,
+    existing_preprocessed_data: Literal[
+        "overwrite", "load_if_exists", "fail_if_exists"
+    ],
+) -> None:
+    """
+    Handle the loading of existing preprocessed data.
+    See `run_full_pipeline()` for details.
+    """
+    preprocess_path = preprocess_data.preprocessed_data_path
+
+    if existing_preprocessed_data == "overwrite":
+        if preprocess_path.is_dir():
+            utils.message_user(f"Removing existing file at {preprocess_path}\n")
+
+        utils.message_user(f"Saving preprocessed data to {preprocess_path}")
+
+        preprocess_data.save_all_preprocessed_data(overwrite=True)
+
+    elif existing_preprocessed_data == "load_if_exists":
+        if preprocess_path.is_dir():
+            utils.message_user(
+                f"\nSkipping preprocessing, using file at "
+                f"{preprocess_path} for sorting.\n"
+            )
+        else:
+            utils.message_user(
+                f"No data found at {preprocess_path}, saving" f"preprocessed data."
+            )
+            preprocess_data.save_all_preprocessed_data(overwrite=False)
+
+    elif existing_preprocessed_data == "fail_if_exists":
+        if preprocess_path.is_dir():
+            raise FileExistsError(
+                f"Preprocessed binary already exists at "
+                f"{preprocess_path}. "
+                f"To overwrite, set 'existing_preprocessed_data' to 'overwrite'"
+            )
+        preprocess_data.save_all_preprocessed_data(overwrite=False)
+
+    else:
+        raise ValueError(
+            "`existing_preproessed_data` argument not recognised."
+            "Must be: 'load_if_exists', 'fail_if_exists' or 'overwrite'."
+        )

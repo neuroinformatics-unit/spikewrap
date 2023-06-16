@@ -1,27 +1,30 @@
+from __future__ import annotations
+
 import copy
 import os
 import shutil
 from pathlib import Path
-from typing import Dict, Literal, Optional, Tuple, Union
+from typing import TYPE_CHECKING, Dict, Literal, Optional, Union
+
+if TYPE_CHECKING:
+    from ..data_classes.sorting import SortingData
 
 import spikeinterface.sorters as ss
-from spikeinterface.core import BaseRecording
 
+from ..pipeline.load_data import load_data_for_sorting
 from ..utils import slurm, utils
-from .data_class import Data
 
 
 def run_sorting(
-    data: Union[Data, Path, str],
+    preprocessed_data_path: Union[Path, str],
     sorter: str = "kilosort2_5",
     sorter_options: Optional[Dict] = None,
-    use_existing_preprocessed_file: bool = False,
     overwrite_existing_sorter_output: bool = False,
     verbose: bool = True,
-    slurm_batch=False,
-):
+    slurm_batch: bool = False,
+) -> SortingData:
     """
-    Run a sorter on pre-processed data. Takes a Data (pipeline.data_class)
+    Run a sorter on pre-processed data. Takes a PreprocessingData (pipeline.data_class)
     object that contains spikeinterface recording objects for the preprocessing
     pipeline (or path to existing 'preprocessed' output folder.
 
@@ -32,9 +35,8 @@ def run_sorting(
 
     Parameters
     ----------
-
-    data : Data
-        swc_ephys Data object or path to previously saved 'preprocessed' directory.
+    preprocessed_data_path : Union[Path, str]
+        Path to previously saved 'preprocessed' directory.
 
     sorter : str
         Name of the sorter to use (e.g. "kilosort2_5").
@@ -42,15 +44,8 @@ def run_sorting(
     sorter_options : Dict
         Kwargs to pass to spikeinterface sorter class.
 
-    use_existing_preprocessed_file : bool
-        If this function has been run previously
-        and a saved pre-proccessed binary already
-        exists in the 'preprocessed' folder for this
-        subject, it will be used. If False and this folder
-        exists, an error will be raised.
-
-     overwrite_existing_sorter_output : bool
-         If False, an error will be reaised if sorting output already
+    overwrite_existing_sorter_output : bool
+         If False, an error will be raised if sorting output already
          exists. If True, existing sorting output will be overwritten.
 
     verbose : bool
@@ -62,118 +57,64 @@ def run_sorting(
         if running on an interactive job, or locally.
 
     """
+    preprocessed_data_path = Path(preprocessed_data_path)
+
+    sorting_data = load_data_for_sorting(preprocessed_data_path)
+    sorting_data.set_sorter_output_paths(sorter)
+
     if slurm_batch:
         local_args = copy.deepcopy(locals())
         slurm.run_sorting_slurm(**local_args)
-        return
+        return sorting_data
 
     sorter_options_dict = validate_inputs(slurm_batch, sorter, sorter_options, verbose)
 
-    # Write the data to file prior to sorting, or
-    # load existing preprocessing from file required
-    loaded_data, recording = get_data_and_recording(
-        data, use_existing_preprocessed_file
+    # Load preprocessed data from saved preprocess output path.
+    utils.message_user(
+        f"\nLoading binary preprocessed data from {preprocessed_data_path.as_posix()}\n"
     )
 
-    loaded_data.set_sorter_output_paths(sorter)
-
-    # this must be run from the folder that has both
-    # sorter output AND rawdata
-    os.chdir(loaded_data.base_path)
+    # This must be run from the folder that has both sorter output AND rawdata
+    os.chdir(sorting_data.base_path)
 
     singularity_image = get_singularity_image(sorter)
-
-    if recording.get_num_segments() > 1:
-        recording = utils.concatenate_runs(recording)
 
     utils.message_user(f"Starting {sorter} sorting...")
 
     ss.run_sorter(
         sorter,
-        recording,
-        output_folder=loaded_data.sorter_base_output_path,
+        sorting_data.data["0-preprocessed"],
+        output_folder=sorting_data.sorter_base_output_path,
         singularity_image=singularity_image,
         remove_existing_folder=overwrite_existing_sorter_output,
         **sorter_options_dict,
     )
 
-    if singularity_image is True:  # no existing image was found
-        store_singularity_image(loaded_data.base_path, sorter)
+    if (
+        singularity_image is True
+    ):  # no existing image was found # TODO: need to use this only on local!
+        store_singularity_image(sorting_data.base_path, sorter)
+
+    return sorting_data
 
 
-def store_singularity_image(base_path, sorter):
+def store_singularity_image(base_path: Path, sorter: str) -> None:
     """
-    When running locally, SPikeInterface will pull the docker image
+    When running locally, SpikeInterface will pull the docker image
     to the current working directly. Move this to home/.swc_ephys
     so they can be used again in future and are centralised.
-    """
-    path_to_image = base_path / utils.get_sorter_image_name(sorter)
-    shutil.move(path_to_image, utils.get_local_sorter_path(sorter).parent)
-
-
-def get_data_and_recording(
-    data: Union[Data, Path, str], use_existing_preprocessed_file: bool
-) -> Tuple[Data, BaseRecording]:
-    """
 
     Parameters
     ----------
-    data: Data
-        Can contain a path to previously saved 'preprocessed' directory.
-        This will load a spikeinterface recording that will be fed directory
-        to the sorter. If a Data object is passed, the last recording in the
-        preprocessing chain will be saved to binary form as required for
-        sorting and the recording object returned.
+    base_path : Path
+        Base-path on the SortingData object, the path that holds
+        `rawdata` and `derivatives` folders.
 
-    use_existing_preprocessed_file : bool
-        By default, an error will be thrown if the
-        'preprocessed' directory already exists for the
-        subject stored in the Data class.
-        If use_existing_preprocessed_file is True, the
-        'preprocessed' directory will be loaded
-        and used for sorting and no error thrown.
-
-    Returns
-    -------
-
-    data : Data
-        The Data object (if a Data object is passed, this will be the same as passed)
-
-    recording : BaseRecording
-        Recording object (the last in the preprocessing chain) to be passed
-        to the sorter.
+    sorter : str
+        Name of the sorter for which to store the image.
     """
-    if isinstance(data, Data):
-        assert not (
-            data.preprocessed_binary_data_path.is_dir()
-            and use_existing_preprocessed_file is False
-        ), (
-            f"Preprocessed binary already exists at "
-            f"{data.preprocessed_binary_data_path}. "
-            f"To overwrite, set 'use_existing_preprocessed_file' to True"
-        )
-
-    if isinstance(data, str) or isinstance(data, Path):
-        utils.message_user(f"\nLoading binary preprocessed data from {data}\n")
-        data, recording = utils.load_data_and_recording(Path(data))
-
-    elif use_existing_preprocessed_file and data.preprocessed_binary_data_path.is_dir():
-        utils.message_user(
-            f"\n"
-            f"use_existing_preprocessed_file=True. "
-            f"Loading binary preprocessed data from {data.preprocessed_output_path}\n"
-        )
-        data, recording = utils.load_data_and_recording(data.preprocessed_output_path)
-    else:
-        utils.message_user(
-            f"\nSaving data class and binary preprocessed data to "
-            f"{data.preprocessed_output_path}\n"
-        )
-
-        data.save_all_preprocessed_data()
-        recording, __ = utils.get_dict_value_from_step_num(data, "last")
-
-    return data, recording
+    path_to_image = base_path / utils.get_sorter_image_name(sorter)
+    shutil.move(path_to_image, utils.get_local_sorter_path(sorter).parent)
 
 
 def validate_inputs(
@@ -182,10 +123,33 @@ def validate_inputs(
     """
     Check that the sorter is valid, singularity is installed and format
     the dictionary of options to pass to the sorter.
+
+    Parameters
+    ----------
+    slurm_batch : bool
+        Whether the run is a SLURM batch. This must be False, otherwise
+        indicates some recursion has occurred when SLURM run itself
+        calls this function.
+
+    sorter : str
+        Name of the sorter.
+
+    sorter_options : Optional[Dict]
+        Options to pass to the SpikeInterface sorter. If None, no options
+        are passed.
+
+    verbose : bool
+        Whether SpikeInterface sorting is run in 'verbose' mode.
+
+    Returns
+    -------
+    sorter_options_dict : Dict
+        A dictionary of configurations to run the sorter with, these
+        are passed to SpikeInterface sorter.
     """
     assert slurm_batch is False, "SLURM run has slurm_batch set True"
 
-    supported_sorters = ["kilosort2", "kilosort2_5", "kilosort3"]
+    supported_sorters = ["spykingcircus", "kilosort2", "kilosort2_5", "kilosort3"]
     assert sorter in supported_sorters, f"sorter must be: {supported_sorters}"
 
     assert (
@@ -193,7 +157,7 @@ def validate_inputs(
     ), "Singularity must be installed to run sorting."
 
     sorter_options_dict = {}
-    if sorter_options is not None:
+    if sorter_options is not None and sorter in sorter_options:
         sorter_options_dict = sorter_options[sorter]
 
     sorter_options_dict.update({"verbose": verbose})
@@ -205,9 +169,20 @@ def get_singularity_image(sorter: str) -> Union[Literal[True], str]:
     """
     Get the path to a pre-installed system singularity image. If none
     can be found, set to True. In this case SpikeInterface will
-    pull the imagine to the current working directory, and
+    pull the image to the current working directory, and
     this will be moved after sorting
     (see store_singularity_image).
+
+    Parameters
+    ----------
+    sorter : str
+        Name of the sorter to get the image for.
+
+    Returns
+    -------
+    singularity_image [ Union[Literal[True], str]
+        If `str`, the path to the singularity image. Otherwise if `True`,
+        this tells SpikeInterface to pull the image.
     """
     singularity_image: Union[Literal[True], str]
 

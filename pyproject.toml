@@ -83,7 +83,8 @@ ignore = [
 ]
 
 [tool.ruff]
-line-length = 88
+ignore = ["E501"]  # E501: line length violation (let Black handle, ignore strings).
+
 exclude = ["__init__.py","build",".eggs"]
 select = ["I", "E", "F"]
 fix = true
