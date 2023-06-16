@@ -22,7 +22,6 @@ def visualise(
     steps: Union[List[str], str] = "all",
     mode: str = "auto",
     as_subplot: bool = False,
-    channel_idx_to_show: Union[List, Tuple, NDArray, None] = None,
     time_range: Optional[Tuple] = None,
     show_channel_ids: bool = False,
     run_number: int = 1,
@@ -51,9 +50,6 @@ def visualise(
     as_subplot : if True, multiple preprocessing steps will be displayed as subplots
                  on the same plot. Otherwise, they will be plot as separate plots.
 
-    channel_idx_to_show : index of channels to show (e.g. [0, 1, 2, 3...]). Note
-                          that this is the channel index (not ordered by depth)
-
     time_range : time range of data to display in seconds e.g. (1, 5) will display the
                  range 1- 5 s.
 
@@ -62,9 +58,7 @@ def visualise(
     run_number : The run number to visualise (in the case of a concatenated recording.
                  Under the hood, each run maps to a SpikeInterface segment_index.
     """
-    steps, as_subplot, channel_idx_to_show = process_input_arguments(
-        data, steps, as_subplot, channel_idx_to_show
-    )
+    steps, as_subplot = process_input_arguments(data, steps, as_subplot)
 
     total_used_shanks = utils.get_probe_num_groups(data)
 
@@ -94,13 +88,8 @@ def visualise(
                 None if not as_subplot else get_subplot_ax(idx, ax, num_rows, num_cols)
             )
 
-            channel_ids_to_show = get_channel_ids_to_show(
-                recording_to_plot, channel_idx_to_show
-            )
-
             sw.plot_timeseries(
                 recording_to_plot,
-                channel_ids=channel_ids_to_show,
                 order_channel_by_depth=False,
                 time_range=time_range,
                 return_scaled=True,
@@ -118,27 +107,6 @@ def visualise(
 
         if as_subplot:
             plt.show()
-
-
-def get_channel_ids_to_show(
-    recording_to_plot: BaseRecording, channel_idx_to_show: int
-) -> List[str]:
-    """
-    Channel ids are returned in default order (e.g. 0, 1, 2...)
-    not ordered by depth.
-
-    Parameters
-    ----------
-    recording_to_plot : BaseRecording
-        SpikeInterface recording object that will be shown on the plot.
-    """
-    if channel_idx_to_show is None:
-        channel_ids_to_show = None
-    else:
-        channel_ids = recording_to_plot.get_channel_ids()
-        channel_ids_to_show = channel_ids[channel_idx_to_show]
-
-    return channel_ids_to_show
 
 
 def generate_subplot(
@@ -211,8 +179,7 @@ def process_input_arguments(
     data: Union[PreprocessingData, SortingData],
     steps: Union[List[str], str],
     as_subplot: bool,
-    channel_idx_to_show: Union[List, Tuple, NDArray, None],
-) -> Tuple[Union[List[str], str], bool, int]:
+) -> Tuple[Union[List[str], str], bool]:
     """
     Check the passed configurations are valid.
     See `visualise()` for arguments.
@@ -241,12 +208,7 @@ def process_input_arguments(
     if len(steps) == 1 and as_subplot:
         as_subplot = False
 
-    if channel_idx_to_show is not None and not isinstance(
-        channel_idx_to_show, np.ndarray
-    ):
-        channel_idx_to_show = np.array(channel_idx_to_show, dtype=np.int32)
-
-    return steps, as_subplot, channel_idx_to_show
+    return steps, as_subplot
 
 
 def validate_options_against_recording(
