@@ -5,9 +5,7 @@ import warnings
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple, Union
 
-import spikeinterface as si
 import yaml
-from spikeinterface.core.base import BaseExtractor
 
 from ..utils import utils
 from .base import BaseUserDict
@@ -65,7 +63,7 @@ class PreprocessingData(BaseUserDict):
             self.pp_run_name,
         ) = self.create_runs_from_single_or_multiple_run_names(checked_run_names)
 
-        self.pp_steps = None
+        self.pp_steps: Optional[Dict] = None
         self.data: Dict = {"0-raw": None}
 
         self.preprocessed_data_path = Path()
@@ -294,7 +292,9 @@ class PreprocessingData(BaseUserDict):
             / f"{self.pp_run_name}"
             / "preprocessed"
         )
-        self._pp_data_attributes_path = self.preprocessed_data_path / utils.canonical_names("preprocessed_yaml")
+        self._pp_data_attributes_path = (
+            self.preprocessed_data_path / utils.canonical_names("preprocessed_yaml")
+        )
         self._pp_binary_data_path = self.preprocessed_data_path / "si_recording"
 
     def get_sub_folder_path(self) -> Path:

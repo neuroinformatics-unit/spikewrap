@@ -1,13 +1,13 @@
+import warnings
 from pathlib import Path
 from typing import Dict, Union
 
 import spikeinterface as si
 import yaml
-from spikeinterface.core.base import BaseExtractor
 
 from ..utils import utils
 from .base import BaseUserDict
-import warnings
+
 
 class SortingData(BaseUserDict):
     """
@@ -70,14 +70,20 @@ class SortingData(BaseUserDict):
         as stored in the PreprocessData attribute. This can be broken
         however, in the case of accessing the same folder as a mounted drive.
         """
-        pp_base_path = [path for path in self.preprocessed_data_path.parents if path.stem == "derivatives"][0]
+        pp_base_path = [
+            path
+            for path in self.preprocessed_data_path.parents
+            if path.stem == "derivatives"
+        ][0]
         if pp_base_path != self.base_path:
-            warnings.warn(f"The base path of the `preprocessed_data_path` does not match the "
-                          f"`base_path` contained used to run the preprocessing. This is expected "
-                          f"if running the same folder from a different location (e.g. mounted drive). "
-                          f"Otherwise, check the base paths are correct.\n"
-                          f"passed base path: {self.preprocessed_data_path}\n"
-                          f"original base path: {self.base_path}")
+            warnings.warn(
+                f"The base path of the `preprocessed_data_path` does not match the "
+                f"`base_path` contained used to run the preprocessing. This is expected "
+                f"if running the same folder from a different location (e.g. mounted drive). "
+                f"Otherwise, check the base paths are correct.\n"
+                f"passed base path: {self.preprocessed_data_path}\n"
+                f"original base path: {self.base_path}"
+            )
 
     def check_preprocessed_data_path_exists(self) -> None:
         """

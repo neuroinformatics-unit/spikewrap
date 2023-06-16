@@ -12,7 +12,6 @@ from pathlib import Path
 
 import spikeinterface as si
 from spikeinterface import curation
-from spikeinterface.core import BaseRecording
 from spikeinterface.extractors import KiloSortSortingExtractor
 
 from ..data_classes.sorting import SortingData
@@ -60,9 +59,7 @@ def quality_check(
     if not sorting_data.waveforms_output_path.is_dir():
         utils.message_user(f"Saving waveforms to {sorting_data.waveforms_output_path}")
 
-        sorting_without_excess_spikes = load_sorting_output(
-            sorting_data, sorter
-        )
+        sorting_without_excess_spikes = load_sorting_output(sorting_data, sorter)
 
         waveforms = si.extract_waveforms(
             sorting_data.data["0-preprocessed"],
@@ -83,9 +80,7 @@ def quality_check(
     utils.message_user(f"Quality metrics saved to {sorting_data.quality_metrics_path}")
 
 
-def load_sorting_output(
-    sorting_data: SortingData, sorter: str
-) -> BaseSorting:
+def load_sorting_output(sorting_data: SortingData, sorter: str) -> BaseSorting:
     """
     Load the output of a sorting run.
 
@@ -98,8 +93,9 @@ def load_sorting_output(
             f"Quality metrics were not generated."
         )
 
-    assert len(sorting_data) == 1, "unexpected number of entries in " \
-                                   "`sorting_data` dict."
+    assert len(sorting_data) == 1, (
+        "unexpected number of entries in " "`sorting_data` dict."
+    )
 
     recording = sorting_data[sorting_data.init_data_key]
 

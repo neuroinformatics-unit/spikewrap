@@ -241,6 +241,7 @@ def check_singularity_install() -> bool:
 
     return is_installed
 
+
 def sort_list_of_paths_by_datetime_order(list_of_paths: List[Path]) -> List[Path]:
     """
     Given a list of paths to folders, sort the paths by the creation
@@ -386,6 +387,7 @@ def cast_pp_steps_values(
 
 
 # Misc. --------------------------------------------------------------------------------
+
 
 def get_probe_num_groups(data: Union[PreprocessingData, SortingData]) -> int:
     """
