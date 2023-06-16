@@ -19,13 +19,14 @@ from ..pipeline.load_data import load_data_for_sorting
 from ..utils import utils
 
 
-def quality_check(
+def run_postprocess(
     sorting_data: Union[Path, str, SortingData],
     sorter: str = "kilosort2_5",
     verbose: bool = True,
 ) -> None:
     """
-    Save quality metrics on sorting output to a quality_metrics.csv file.
+    Run post-processing, including ave quality metrics on sorting
+    output to a quality_metrics.csv file.
 
     Parameters
     ----------

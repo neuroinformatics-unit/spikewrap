@@ -11,7 +11,7 @@ from ..configs.configs import get_configs
 from ..utils import slurm, utils
 from .load_data import load_spikeglx_data
 from .preprocess import preprocess
-from .quality import quality_check
+from .postprocess import run_postprocess
 from .sort import run_sorting
 
 
@@ -29,7 +29,7 @@ def run_full_pipeline(
     slurm_batch: bool = False,
 ) -> None:
     """
-    Run preprocessing, sorting and quality checks on SpikeGLX data.
+    Run preprocessing, sorting and post-processing on SpikeGLX data.
     see README.md for detailed information on use.
 
     This function must be run in main as uses multiprocessing e.g.
@@ -102,11 +102,11 @@ def run_full_pipeline(
         overwrite_existing_sorter_output,
         verbose,
     )
-
+    # TODO: update this doc.
     # Save spikeinterface 'waveforms' output (TODO: currently, this is large)
     # to the sorter output dir. Quality checks are run and .csv of checks
     # output in the sorter folder as quality_metrics.csv
-    quality_check(sorting_data.preprocessed_data_path, sorter, verbose)
+    run_postprocess(sorting_data.preprocessed_data_path, sorter, verbose)
 
 
 def save_preprocessed_data_if_required(
