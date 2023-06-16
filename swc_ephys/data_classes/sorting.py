@@ -7,10 +7,33 @@ from spikeinterface.core.base import BaseExtractor
 
 from ..utils import utils
 from .base import BaseUserDict
-
+import warnings
 
 class SortingData(BaseUserDict):
-    """ """
+    """
+    Class to organise the sorting of preprocessed data. Handles the
+    paths to preprocessed data, sorted output and all post-processing
+    steps.
+
+    This class should be agnostic to any rawdata and the PreprocessingData
+    class, and concerned only with preprocessed data onwards.
+
+    Parameters
+    ----------
+    preprocessed_data_path : Union[str, Path]
+        Path to the preprocessed data output path, that contains
+        the dumped si_recording and .yaml file of PreprocessingData
+        attributes.
+
+    Notes
+    -----
+    This class matches the data-access signature of PreprocessData
+    for compatibility with `visualise()` methods. This pattern
+    does not really make sense for this class as it most likely will
+    only ever contain a single data attribute.This includes
+    some jiggery-pokery with the `self.init_data_key`. This is not a nice
+    pattern and can be improved on refactoring of `visualise.py`.
+    """
 
     def __init__(self, preprocessed_data_path: Union[str, Path]):
         """ """
@@ -20,12 +43,12 @@ class SortingData(BaseUserDict):
         self.check_preprocessed_data_path_exists()
 
         self.top_level_folder = "derivatives"
-        self.init_data_key = "0-preprocessed"  # TODO: this is not nice
+        self.init_data_key = "0-preprocessed"
         self.pp_info = self.load_preprocess_data_attributes()
 
-        # Note the base-path can diverge if accessed from different
-        # location than where the pp was saved. TODO explain properly.
         self.base_path = Path(self.pp_info["base_path"])
+        self.show_warning_if_base_path_diverged()
+
         self.sub_name = self.pp_info["sub_name"]
         self.pp_run_name = self.pp_info["pp_run_name"]
 
@@ -40,13 +63,40 @@ class SortingData(BaseUserDict):
         # concatenated or not.
         self.data: Dict = {"0-preprocessed": None}
 
+    def show_warning_if_base_path_diverged(self):
+        """
+        It is expected that the passed preprocessed data output path
+        is in the same location as the data was saved during preprocessed,
+        as stored in the PreprocessData attribute. This can be broken
+        however, in the case of accessing the same folder as a mounted drive.
+        """
+        pp_base_path = [path for path in self.preprocessed_data_path.parents if path.stem == "derivatives"][0]
+        if pp_base_path != self.base_path:
+            warnings.warn(f"The base path of the `preprocessed_data_path` does not match the "
+                          f"`base_path` contained used to run the preprocessing. This is expected "
+                          f"if running the same folder from a different location (e.g. mounted drive). "
+                          f"Otherwise, check the base paths are correct.\n"
+                          f"passed base path: {self.preprocessed_data_path}\n"
+                          f"original base path: {self.base_path}")
+
     def check_preprocessed_data_path_exists(self) -> None:
+        """
+        Ensure the preprocessed data path exists, otherwise
+        it cannot be loaded and sorting will fail.
+        """
         if not self.preprocessed_data_path.is_dir():
             raise FileNotFoundError(
                 f"No preprocessed data found at " f"{self.preprocessed_data_path}"
             )
 
     def load_preprocess_data_attributes(self) -> Dict:
+        """
+        Load the PreprocessingData attributes that were
+        saved when writing the preprocessed data to file.
+
+        These fields are used to set the sorting and other
+        output paths, and for provenance.
+        """
         with open(
             Path(self.preprocessed_data_path)
             / utils.canonical_names("preprocessed_yaml")
@@ -54,10 +104,16 @@ class SortingData(BaseUserDict):
             pp_info = yaml.full_load(file)
         return pp_info
 
-    def load_preprocessed_binary(self, concatenate: bool = True) -> BaseExtractor:
+    def load_preprocessed_binary(self, concatenate: bool = True):
         """
-        Use SpikeInterface to load the binary-data into a
-        recording object.
+        Use SpikeInterface to load the binary-data into a recording object.
+
+        Parameters
+        ----------
+        concatenate : bool
+            If `True`, all segments in the loaded SpikeInterface
+            recording object will be concatenated into a single
+            segment.
         """
         binary_path = self.preprocessed_data_path / "si_recording"  # TODO: configs
 

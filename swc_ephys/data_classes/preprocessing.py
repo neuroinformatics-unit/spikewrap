@@ -19,43 +19,32 @@ class PreprocessingData(BaseUserDict):
         base_path: Union[Path, str],
         sub_name: str,
         run_names: Union[List[str], str],
-        pp_steps: Optional[Dict] = None,
     ):
         """
-        Dictionary to store spikeinterface preprocessing objects. These are
-        lazy and preprocessing only run when the recording.get_traces() is
-        called, or the data is saved to binary.
+        Dictionary to store SpikeInterface preprocessing recordings.
+        These are lazy and preprocessing only run when the recording.get_traces()
+        is called, or the data is saved to binary.
 
         Details on the preprocessing steps are held in the dictionary keys e.g.
         e.g. 0-raw, 1-raw-bandpass_filter, 2-raw_bandpass_filter-common_average
+        and recording objects are held in the value.
 
-        recording objects are held in the value.
-
-        The class also contains information on the path. The paths to the
-        raw_data file are stored based on the variables set when the class
-        was initialised. The derivatives paths are generated on the fly
-        (e.g. set_sorter_output_paths) so that different sorters can be used
-        dynamically.
-
-        The class also contains methods for writing the class itself and
-        spikeinterface recordings to disk, as required for sorting.
+        The class manages paths to raw data and preprocessing output,
+        as defines methods to dump key information and the SpikeInterface
+        binary to disk.
 
         Parameters
         ----------
-
         base_path : Union[Path, str]
-            path where the rawdata folder containing subjects
+            Path where the rawdata folder containing subjects.
 
         sub_name : str
-            subject to preprocess. The subject top level dir should reside in
-            base_path/rawdata/
+            'subject' to preprocess. The subject top level dir should
+            reside in base_path/rawdata/.
 
         run_names : Union[List[str], str]
-            the spikeglx run name (i.e. not including the gate index) or
-            list of run names.
-
-        pp_steps : Optional[Dict]
-            preprocessing step dictionary, see swc_ephys/configs
+            The SpikeGLX run name (i.e. not including the gate index)
+            or list of run names.
         """
         super(PreprocessingData, self).__init__()
 
@@ -63,9 +52,9 @@ class PreprocessingData(BaseUserDict):
         self.init_data_key = "0-raw"
 
         self.base_path, checked_run_names, self.rawdata_path = self.validate_inputs(
-            run_names,
             base_path,
             sub_name,
+            run_names,
         )
 
         self.sub_name = sub_name
@@ -76,47 +65,33 @@ class PreprocessingData(BaseUserDict):
             self.pp_run_name,
         ) = self.create_runs_from_single_or_multiple_run_names(checked_run_names)
 
-        utils.message_user(f"The order of the loaded runs is:" f"{self.all_run_names}")
-
-        self.pp_steps = pp_steps
+        self.pp_steps = None
         self.data: Dict = {"0-raw": None}
 
         self.preprocessed_data_path = Path()
-        self._pp_data_class_path = Path()
+        self._pp_data_attributes_path = Path()
         self._pp_binary_data_path = Path()
         self._set_preprocessing_output_path()
 
-    def set_pp_steps(self, pp_steps: Dict) -> None:
-        self.pp_steps = pp_steps
-
     # Handle Multiple Runs -------------------------------------------------------------
-
-    def load_preprocessed_binary(self) -> BaseExtractor:
-        """
-        Use SpikeInterface to load the binary-data into a
-        recording object.
-        """
-        return si.load_extractor(self._pp_binary_data_path)
 
     def create_runs_from_single_or_multiple_run_names(
         self,
         run_names: List[str],
     ) -> Tuple[List[Path], List[str], str]:
         """
-        The run_names may be a single run, or a list of
-        runs to process. Return a list of paths to the runs found on the system.
-        enforces that the runs are in datetime order.
+        The run_names may be a single run, or a list of runs to process.
+        Return a list of paths to the runs found on the system. enforces
+        that the runs are in datetime order.
 
         Parameters
         ----------
-
         run_names : Union[List[str], str]
-            The spikeglx run name (i.e. not including the gate index) or
+            The SpikeGLX run name (i.e. not including the gate index) or
             list of run names.
 
         Returns
         -------
-
         all_run_paths : List[Path]
             List of full filepaths for all runs used in the pipeline.
 
@@ -126,15 +101,15 @@ class PreprocessingData(BaseUserDict):
 
         run_name : str
             The name of the run used in the derivatives. For a single run,
-            this will be the name of the run. When run_names is a list of run names,
-            this will be an amalgamation of all run names
+            this will be the name of the run. When run_names is a list of run
+            names, this will be an amalgamation of all run names
             (see self.make_run_name_from_multiple_run_names)
         """
         if len(run_names) > 1:
             all_run_paths, run_name = self.get_multi_run_names_paths(run_names)
         else:
-            all_run_paths = [self.make_run_path(f"{run_names[0]}_g0")]
             run_name = run_names[0]
+            all_run_paths = [self.get_sub_folder_path() / f"{run_name}_g0"]
 
         assert len(run_names) > 0, (
             f"No runs found for {run_names}. "
@@ -149,6 +124,8 @@ class PreprocessingData(BaseUserDict):
                 f"file path {run_path.parent}"
             )
 
+        utils.message_user(f"The order of the loaded runs is:" f"{all_run_names}")
+
         return all_run_paths, all_run_names, run_name
 
     def get_multi_run_names_paths(
@@ -156,20 +133,18 @@ class PreprocessingData(BaseUserDict):
         run_names: List[str],
     ) -> Tuple[List[Path], str]:
         """
-        Get the paths to the runs when there is more that one run specified.
+        Get the paths to the runs when there is more than one run specified.
         If it is a list of run names, they are searched, checked exist and
         assert in datetime order.
 
         Parameters
         ----------
-
         run_names : Union[List[str], str]
             The spikeglx run name (i.e. not including the gate index) or
             list of run names.
 
         Returns
         -------
-
         all_run_paths : List[Path]
             List of full filepaths for all runs used in the pipeline.
 
@@ -205,13 +180,11 @@ class PreprocessingData(BaseUserDict):
 
         Parameters
         ----------
-
         run_names : Union[List[str], str]
             A list of run names.
 
         Returns
         -------
-
         pp_run_name : str
             A single run name formed from the list of run names.
         """
@@ -233,11 +206,35 @@ class PreprocessingData(BaseUserDict):
 
     # Load and Save --------------------------------------------------------------------
 
+    def set_pp_steps(self, pp_steps: Dict) -> None:
+        """
+        Set the preprocessing steps (`pp_steps`) attribute
+        that defines the preprocessing steps and options.
+
+        Parameters
+        ----------
+        pp_steps : Dict
+            Preprocessing steps to setp as class attribute. These are used
+            when `pipeline.preprocess.preprocess()` function is called.
+        """
+        self.pp_steps = pp_steps
+
     def save_all_preprocessed_data(self, overwrite: bool = False) -> None:
         """
         Save the preprocessed output data to binary, as well
-        as this class as a .pkl file. Both are saved in a folder called
-        'preprocessed' in derivatives/<sub_name>/<pp_run_name>
+        as important class attributes to a .yaml file.
+
+        Both are saved in a folder called 'preprocessed'
+        in derivatives/<sub_name>/<pp_run_name>
+
+        Parameters
+        ----------
+        overwrite : bool
+            If `True`, existing preprocessed output will be overwritten.
+            By default, SpikeInterface will error if a binary recording file
+            (`si_recording`) already exists where it is trying to write one.
+            In this case, an error  should be raised before this function
+            is called.
         """
         if overwrite:
             if self.preprocessed_data_path.is_dir():
@@ -247,15 +244,15 @@ class PreprocessingData(BaseUserDict):
 
     def _save_preprocessed_binary(self) -> None:
         """
-        Save the fully preprocessed data (i.e. last step in the preprocessing
-        chain) to binary file. This is required for sorting.
+        Save the fully preprocessed data (i.e. last step in the
+        preprocessing chain) to binary file. This is required for sorting.
         """
         recording, __ = utils.get_dict_value_from_step_num(self, "last")
         recording.save(folder=self._pp_binary_data_path, chunk_memory="10M")
 
     def _save_data_class(self) -> None:
         """
-        Save this data class as a .pkl file.
+        Save the key attributes of this class to a .yaml file.
         """
         assert self.pp_steps is not None, "type narrow `pp_steps`."
 
@@ -270,13 +267,13 @@ class PreprocessingData(BaseUserDict):
             "all_run_names": [name for name in self.all_run_names],
             "preprocessed_data_path": self.preprocessed_data_path.as_posix(),
             "_pp_binary_data_path": self._pp_binary_data_path.as_posix(),
-            "_pp_data_class_path": self._pp_data_class_path.as_posix(),
+            "_pp_data_attributes_path": self._pp_data_attributes_path.as_posix(),
         }
         if not self.preprocessed_data_path.is_dir():
             os.makedirs(self.preprocessed_data_path)
 
         with open(
-            self.preprocessed_data_path / utils.canonical_names("preprocessed_yaml"),
+            self._pp_data_attributes_path,
             "w",
         ) as attributes:
             yaml.dump(attributes_to_save, attributes, sort_keys=False)
@@ -285,8 +282,10 @@ class PreprocessingData(BaseUserDict):
 
     def _set_preprocessing_output_path(self) -> None:
         """
-        Set the canonical folder names for the output data
-        (in derivatives).
+        Set the folder tree where preprocessing output will be
+        saved. This is canonical and should not change.
+
+        TODO: move this to a canonical_filepaths module.
         """
         self.preprocessed_data_path = (
             self.base_path
@@ -295,29 +294,54 @@ class PreprocessingData(BaseUserDict):
             / f"{self.pp_run_name}"
             / "preprocessed"
         )
-        self._pp_data_class_path = self.preprocessed_data_path / "data_class.pkl"
+        self._pp_data_attributes_path = self.preprocessed_data_path / utils.canonical_names("preprocessed_yaml")
         self._pp_binary_data_path = self.preprocessed_data_path / "si_recording"
-
-    def make_run_path(self, run_name: str) -> Path:
-        """
-        Get the path to the rawdata ephys run for the subject,
-        """
-        return self.get_sub_folder_path() / f"{run_name}"
 
     def get_sub_folder_path(self) -> Path:
         """
         Get the path to the rawdata subject folder.
+
+        Returns
+        -------
+        sub_folder_path : Path
+            Path to the self.sub_name folder in the `rawdata` path folder.
         """
-        return Path(self.base_path / self.top_level_folder / self.sub_name)
+        sub_folder_path = Path(self.base_path / self.top_level_folder / self.sub_name)
+        return sub_folder_path
 
     # Validate Inputs ------------------------------------------------------------------
 
     def validate_inputs(
-        self, run_names: Union[str, list], base_path: Union[str, Path], sub_name: str
+        self, base_path: Union[str, Path], sub_name: str, run_names: Union[str, list]
     ) -> Tuple[Path, List[str], Path]:
         """
-        Check the rawdata path exists and ensure run_names
-        is a list of strings.
+        Check the rawdata path, subject path exists and ensure run_names
+        is a list of strings without SpikeGLX gate number of the run names.
+
+        Parameters
+        ----------
+        base_path : Union[str, Path]
+            Path to the base folder in which `rawdata` folder containing
+            all rawdata (i.e. list of subject names) are held.
+
+        sub_name : str
+            'subject' name to preprocess data for.
+
+        run_names : List[str]
+            List of run names to process, in order they should be
+            processed / concatenated.
+
+        Returns
+        -------
+        base_path : Path
+            `base_path` definitely as a Path object.
+
+        run_names : List[str]
+            Validated `run_names` as a List.
+
+        rawdata_path : Path
+            Path to the canonical `rawdata` path required for
+            future processing.
         """
         base_path = Path(base_path)
         rawdata_path = base_path / self.top_level_folder

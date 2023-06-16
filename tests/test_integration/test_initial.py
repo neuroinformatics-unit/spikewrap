@@ -52,7 +52,7 @@ class TestFirstEphys:
             sub_name,
             run_names,
             config_name="test",
-            sorter="spykingcircus",  # "kilosort2_5",
+            sorter="kilosort2_5",  # "spykingcircus",
             existing_preprocessed_data=existing_preprocessed_data,
             overwrite_existing_sorter_output=overwrite_existing_sorter_output,
             slurm_batch=slurm_batch,

@@ -29,7 +29,9 @@ def visualise(
 ) -> None:
     """
     Plot the data at various preprocessing steps, useful for quality-checking.
-    Takes the pipeline.data_class.PreprocessingData object (output from pipeline.preprocess).
+    Takes the pipeline.data_class.PreprocessingData object
+    (output from pipeline.preprocess).
+
     Channels are displayed ordered by depth. Note preprocessing is lazy, and only the
     section if data displayed will be preprocessed.
 
@@ -64,7 +66,7 @@ def visualise(
         data, steps, as_subplot, channel_idx_to_show
     )
 
-    total_used_shanks = utils.get_probe_group_num(data)
+    total_used_shanks = utils.get_probe_num_groups(data)
 
     for shank_idx in range(total_used_shanks):
         if as_subplot:
@@ -124,6 +126,11 @@ def get_channel_ids_to_show(
     """
     Channel ids are returned in default order (e.g. 0, 1, 2...)
     not ordered by depth.
+
+    Parameters
+    ----------
+    recording_to_plot : BaseRecording
+        SpikeInterface recording object that will be shown on the plot.
     """
     if channel_idx_to_show is None:
         channel_ids_to_show = None
@@ -136,17 +143,65 @@ def get_channel_ids_to_show(
 
 def generate_subplot(
     steps: Union[List[str], str]
-) -> Tuple[matplotlib.figure.Figure, NDArray, int, int,]:
+) -> Tuple[matplotlib.figure.Figure, NDArray[matplotlib.axes._axes.Axes], int, int]:
+    """
+    Generate the Matplotlib subplots figure, with hte number of
+    columns fixed at two and the number of rows depending on the
+    number of steps.
+
+    Parameters
+    ----------
+    steps : Union[List[str], str]
+        the preprocessing steps that will be plot.
+
+    Returns
+    -------
+    fig : matplotlib.figure.Figure
+        Matplotlib figure displaying the preprocessed data.
+
+    ax :  NDArray[matplotlib.axes._axes.Axes]
+        An array holding the axes objects in a plot / subplot.
+
+    num_rows : int
+    num_cols : int
+        Number of rows and columns in the subplot, as determined
+        by the number of processing steps to display.
+    """
     num_cols = 2
     num_rows = np.ceil(len(steps) / num_cols).astype(int)
     fig, ax = plt.subplots(num_rows, num_cols)
     fig.tight_layout(rect=[0, 0.03, 1, 0.95])
+
     return fig, ax, num_rows, num_cols
 
 
 def get_subplot_ax(
-    idx: int, ax: NDArray, num_rows: int, num_cols: int
+    idx: int, ax: NDArray[matplotlib.axes._axes.Axes], num_rows: int, num_cols: int
 ) -> matplotlib.axes._axes.Axes:
+    """
+    Get the Axes object of the current axis to plot. As preprocessing
+    steps are cycled through, axis are plot separately based on the
+    current row / column needs to plot. We need to convert
+    from subscript to linear indices to get the appropriate axis object.
+
+    Parameters
+    ----------
+    idx : int
+        Idx of the currently displayed preprocessing step.
+
+    ax : NDArray[matplotlib.axes._axes.Axes]
+        An array of axis objects on the plot / subplot.
+
+    num_rows : int
+    num_cols : int
+        The number of rows and columns in the subplot (as determined by the
+        number of preprocessing steps).
+
+    Returns
+    -------
+    current_ax : matplotlib.axes._axes.Axes
+        Axis to plot the current preprocessing step data on.
+    """
     idx_unraveled = np.unravel_index(idx, shape=(num_rows, num_cols))
     current_ax = ax[idx_unraveled]
     return current_ax
@@ -158,7 +213,19 @@ def process_input_arguments(
     as_subplot: bool,
     channel_idx_to_show: Union[List, Tuple, NDArray, None],
 ) -> Tuple[Union[List[str], str], bool, int]:
-    """ """
+    """
+    Check the passed configurations are valid.
+    See `visualise()` for arguments.
+
+    Returns
+    -------
+    steps : Dict
+        `steps` as a List, checked for validity.
+
+    as_subplot: bool
+        `as_subplot`, possibly forced to False if the number
+        of steps is only 1 (in which case subplot is redundant).
+    """
     if not isinstance(steps, List):
         steps = [steps]
 
@@ -189,8 +256,13 @@ def validate_options_against_recording(
     run_number: int,
 ) -> None:
     """
-    TODO: can't find a better way to get final timepoint, but must be
-    somewhere, this is wasteful.
+    Check the passed configurations are valid.
+    See `visualise()` for arguments.
+
+    TODO
+    ----
+    can't find a better way to get final timepoint,
+    but must be somewhere, this is wasteful.
     """
     if isinstance(data, PreprocessingData):
         num_runs = len(data.all_run_names)
@@ -205,8 +277,33 @@ def validate_options_against_recording(
 
 
 def get_run_name(data: Union[PreprocessingData, SortingData], run_number: int) -> str:
+    """
+    Get the name of the run of which the data is being displayed.
+    If the object is PreprocessingData, the data is not concatenated
+    and it is one of the rawdata runs for the subject.
+
+    Otherwise it is a SortingData object, of which there is only one, concatenated
+    output run.
+
+    Parameters
+    ----------
+    data : Union[PreprocessingData, SortingData]
+        Preprocessing or sorting data dictionary.
+
+    run_number : int
+        Run of the run to plot.
+
+    Returns
+    -------
+    run_name : str
+        Name of the run. For PreprocessingData, this will be the raw
+        data run name. For SortingData, if multiple runs are
+        concatenated it will be an amalgamation of the rawdata
+        runs used to generated it.
+    """
     if isinstance(data, PreprocessingData):
         run_name = data.all_run_names[run_number - 1]
     elif isinstance(data, SortingData):
         run_name = data.pp_run_name
+
     return run_name

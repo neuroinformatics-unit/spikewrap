@@ -14,7 +14,7 @@ run_names = [
 ]
 
 config_name = "test"
-sorter = "spykingcircus"
+sorter = "kilosort2_5"  # "spykingcircus"
 
 if __name__ == "__main__":
     run_full_pipeline(
