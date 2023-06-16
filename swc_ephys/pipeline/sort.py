@@ -12,19 +12,7 @@ import spikeinterface.sorters as ss
 from ..pipeline.load_data import load_data_for_sorting
 from ..utils import slurm, utils
 
-# loops
-# https://docs.sylabs.io/guides/3.5/admin-guide/configfiles.html
-#  KeyError: 'snsMnMaXaDw' is error when ...'exported' is in the name!
-# stream_name in [] error is whever the path does not exist
-
-# having trouble getting mountainsort to work...
-# spykingcircus2 has extra requirements.
-# reconfigure tests so they can be run in parallel (pytest-parallel or pytest-xdist)
 # issue with laoding sync channel breaks probe
-# TODO: SI changed their API need to adjust this...
-# assert pp_funcs[pp_name].__name__ == pp_name, "something is wrong in func dict"
-# sort out public vs. private
-# split errors and messaging from code.
 
 
 def run_sorting(
