@@ -31,20 +31,22 @@ def quality_check(
     Parameters
     ----------
 
-    sorting_data : Union[Path, str]
+    sorting_data : Union[Path, str, SortingData]
         The path to the 'preprocessed' folder in the subject / run
-        folder used for sorting or a SortingData object.
+        folder used for sorting or a SortingData object. If a
+        SortingData object, the path will be read from the
+        `preprocessed_data_path` attribute.
 
     sorter : str
         The name of the sorter (e.g. "kilosort2_5").
 
     verbose : bool
-        If True, messages will be printed to consolve updating on the
+        If True, messages will be printed to console updating on the
         progress of preprocessing / sorting.
     """
     if not isinstance(sorting_data, SortingData):
         sorting_data = load_data_for_sorting(
-            Path(sorting_data),  # TODO: potentially confusing duck-typing
+            Path(sorting_data),
         )
     assert isinstance(sorting_data, SortingData), "type narrow `sorting_data`."
 
@@ -59,8 +61,8 @@ def quality_check(
         utils.message_user(f"Saving waveforms to {sorting_data.waveforms_output_path}")
 
         sorting_without_excess_spikes = load_sorting_output(
-            sorting_data, sorting_data.data["0-preprocessed"], sorter
-        )  # TODO: fix double pass
+            sorting_data, sorter
+        )
 
         waveforms = si.extract_waveforms(
             sorting_data.data["0-preprocessed"],
@@ -82,10 +84,12 @@ def quality_check(
 
 
 def load_sorting_output(
-    sorting_data: SortingData, recording: BaseRecording, sorter: str
+    sorting_data: SortingData, sorter: str
 ) -> BaseSorting:
     """
     Load the output of a sorting run.
+
+    TODO: understand remove_excess_spikes.
     """
     if not sorting_data.sorter_run_output_path.is_dir():
         raise FileNotFoundError(
@@ -93,6 +97,11 @@ def load_sorting_output(
             f"{sorting_data.sorter_run_output_path}.\n"
             f"Quality metrics were not generated."
         )
+
+    assert len(sorting_data) == 1, "unexpected number of entries in " \
+                                   "`sorting_data` dict."
+
+    recording = sorting_data[sorting_data.init_data_key]
 
     sorting = KiloSortSortingExtractor(
         folder_path=sorting_data.sorter_run_output_path, keep_good_only=False

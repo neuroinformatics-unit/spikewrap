@@ -72,7 +72,6 @@ def load_data_for_sorting(
 
     Parameters
     ----------
-
     preprocessed_data_path : Path
         Path to the preprocessed folder, containing the binary si_recording
         of the preprocessed data and the data_class.pkl containing all filepath
@@ -82,6 +81,12 @@ def load_data_for_sorting(
         If True, the multi-segment recording object will be concatenated
         together. This is used prior to sorting. Segments should be
         experimental runs.
+
+    Returns
+    -------
+    sorting_data : SortingData
+        The sorting_data dict with the loaded spikeinterface
+        recording attached to the '0-preprocessed' field.
     """
     sorting_data = SortingData(
         preprocessed_data_path,
