@@ -9,6 +9,7 @@ if TYPE_CHECKING:
 
 
 from pathlib import Path
+import pandas as pd
 
 import spikeinterface as si
 from spikeinterface import curation
@@ -75,10 +76,16 @@ def run_postprocess(
 
         waveforms = si.load_waveforms(sorting_data.waveforms_output_path)
 
-    metrics = si.qualitymetrics.compute_quality_metrics(waveforms)
-    metrics.to_csv(sorting_data.quality_metrics_path)
+    quality_metrics = si.qualitymetrics.compute_quality_metrics(waveforms)
+    quality_metrics.to_csv(sorting_data.quality_metrics_path)
+
+    # TODO: expose unit locations method (defalt centre of mass)
+    unit_locations = si.postprocessing.compute_unit_locations(waveforms, outputs="by_unit")
+    unit_locations_pandas = pd.DataFrame.from_dict(unit_locations, orient="index", columns=["x", "y"])
+    unit_locations_pandas.to_csv(sorting_data.unit_locations_path)
 
     utils.message_user(f"Quality metrics saved to {sorting_data.quality_metrics_path}")
+    utils.message_user(f"Unit locations saved to {sorting_data.unit_locations_path}")
 
 
 def load_sorting_output(sorting_data: SortingData, sorter: str) -> BaseSorting:
