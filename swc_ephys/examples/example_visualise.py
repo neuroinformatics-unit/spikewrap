@@ -1,5 +1,3 @@
-import numpy as np
-
 from swc_ephys.pipeline.load_data import load_spikeglx_data
 from swc_ephys.pipeline.preprocess import preprocess
 from swc_ephys.pipeline.visualise import visualise
@@ -17,7 +15,6 @@ visualise(
     steps=["all"],
     mode="map",
     as_subplot=True,
-    channel_idx_to_show=np.arange(10, 50),
     show_channel_ids=True,
     time_range=(0, 1),
     run_number=1,
