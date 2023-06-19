@@ -79,7 +79,6 @@ def run_postprocess(
     quality_metrics = si.qualitymetrics.compute_quality_metrics(waveforms)
     quality_metrics.to_csv(sorting_data.quality_metrics_path)
 
-    # TODO: expose unit locations method (defalt centre of mass)
     unit_locations = si.postprocessing.compute_unit_locations(waveforms, outputs="by_unit")
     unit_locations_pandas = pd.DataFrame.from_dict(unit_locations, orient="index", columns=["x", "y"])
     unit_locations_pandas.to_csv(sorting_data.unit_locations_path)
