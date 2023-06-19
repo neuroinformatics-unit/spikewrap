@@ -10,8 +10,8 @@ if TYPE_CHECKING:
 from ..configs.configs import get_configs
 from ..utils import slurm, utils
 from .load_data import load_spikeglx_data
-from .preprocess import preprocess
 from .postprocess import run_postprocess
+from .preprocess import preprocess
 from .sort import run_sorting
 
 
