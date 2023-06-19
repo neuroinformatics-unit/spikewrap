@@ -9,6 +9,7 @@ if TYPE_CHECKING:
 
 
 from pathlib import Path
+import pandas as pd
 
 import spikeinterface as si
 from spikeinterface import curation
@@ -19,13 +20,14 @@ from ..pipeline.load_data import load_data_for_sorting
 from ..utils import utils
 
 
-def quality_check(
+def run_postprocess(
     sorting_data: Union[Path, str, SortingData],
     sorter: str = "kilosort2_5",
     verbose: bool = True,
 ) -> None:
     """
-    Save quality metrics on sorting output to a quality_metrics.csv file.
+    Run post-processing, including ave quality metrics on sorting
+    output to a quality_metrics.csv file.
 
     Parameters
     ----------
@@ -74,10 +76,15 @@ def quality_check(
 
         waveforms = si.load_waveforms(sorting_data.waveforms_output_path)
 
-    metrics = si.qualitymetrics.compute_quality_metrics(waveforms)
-    metrics.to_csv(sorting_data.quality_metrics_path)
+    quality_metrics = si.qualitymetrics.compute_quality_metrics(waveforms)
+    quality_metrics.to_csv(sorting_data.quality_metrics_path)
+
+    unit_locations = si.postprocessing.compute_unit_locations(waveforms, outputs="by_unit")
+    unit_locations_pandas = pd.DataFrame.from_dict(unit_locations, orient="index", columns=["x", "y"])
+    unit_locations_pandas.to_csv(sorting_data.unit_locations_path)
 
     utils.message_user(f"Quality metrics saved to {sorting_data.quality_metrics_path}")
+    utils.message_user(f"Unit locations saved to {sorting_data.unit_locations_path}")
 
 
 def load_sorting_output(sorting_data: SortingData, sorter: str) -> BaseSorting:

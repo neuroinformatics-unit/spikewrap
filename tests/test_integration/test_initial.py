@@ -9,7 +9,7 @@ import pytest
 
 from swc_ephys.pipeline import full_pipeline
 
-ON_HPC = False
+ON_HPC = True
 
 
 class TestFirstEphys:
@@ -108,7 +108,7 @@ class TestFirstEphys:
 
         with open(slurm_run, "r") as log:
             log_output = log.readlines()
-
+        breakpoint()
         assert "Stopping container" in log_output
         assert "Saving waveforms to" in log_output
         assert "Quality metrics saved to" in log_output

@@ -58,6 +58,7 @@ class SortingData(BaseUserDict):
         self.sorter_run_output_path = Path()
         self.waveforms_output_path = Path()
         self.quality_metrics_path = Path()
+        self.unit_locations_path = Path()
 
         # This is set later, depending on
         # concatenated or not.
@@ -155,3 +156,4 @@ class SortingData(BaseUserDict):
         self.sorter_run_output_path = self.sorter_base_output_path / "sorter_output"
         self.waveforms_output_path = self.sorter_base_output_path / "waveforms"
         self.quality_metrics_path = self.sorter_base_output_path / "quality_metrics.csv"
+        self.unit_locations_path = self.sorter_base_output_path / "unit_locations.csv"
