@@ -15,6 +15,7 @@ import spikeinterface as si
 from spikeinterface import curation
 from spikeinterface.extractors import KiloSortSortingExtractor
 
+from ..configs.configs import get_configs
 from ..data_classes.sorting import SortingData
 from ..pipeline.load_data import load_data_for_sorting
 from ..utils import utils
@@ -24,6 +25,7 @@ def run_postprocess(
     sorting_data: Union[Path, str, SortingData],
     sorter: str = "kilosort2_5",
     verbose: bool = True,
+    waveform_options: Optional[Dict] = None,
 ) -> None:
     """
     Run post-processing, including ave quality metrics on sorting
@@ -51,6 +53,11 @@ def run_postprocess(
         )
     assert isinstance(sorting_data, SortingData), "type narrow `sorting_data`."
 
+    if waveform_options is None:
+        _, _, waveform_options = get_configs(
+            "test"
+        )  # TODO: make defaults clear and canonical
+
     sorting_data.set_sorter_output_paths(sorter)
 
     utils.message_user(
@@ -67,6 +74,7 @@ def run_postprocess(
             sorting_data.data["0-preprocessed"],
             sorting_without_excess_spikes,
             folder=sorting_data.waveforms_output_path,
+            **waveform_options,
         )
     else:
         utils.message_user(
