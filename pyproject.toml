@@ -21,7 +21,8 @@ classifiers = [
 
 dependencies = [
     "spikeinterface==0.97.1",
-    # "spikeinterface[full] @git+https://github.com/SpikeInterface/spikeinterface",
+    "jax",
+    "jaxlib",
     "spython",  # I think missing from SI?
     "submitit",
 ]

@@ -12,7 +12,6 @@ from spikeinterface.core import compute_sparsity
 if TYPE_CHECKING:
     from spikeinterface.core import BaseSorting
 
-
 from pathlib import Path
 
 import pandas as pd
@@ -24,6 +23,30 @@ from ..configs.configs import get_configs
 from ..data_classes.sorting import SortingData
 from ..pipeline.load_data import load_data_for_sorting
 from ..utils import utils
+from .waveform_compare import get_waveform_similarity
+
+# TODO: for waveforms, consider!!: get_template_extremum_channel()
+# TODO: need to do some validation if waveforms already exists.... 3500 might be
+#  too big a default.
+
+# fill sim with flip
+# TODO: save quality_metrics.csv and unit_locations to waveform?
+# TODO
+# 1) read quality metrics
+# 2) profile with larger clusters
+# 3) use Jax for fun
+# 4) think - what exactly do we want from waveform comparison in the current use-case? (noise, low sampling rate)
+# 5) Package up
+# 6) Talk to steve, submit to SI?
+
+
+# Then can plot these next to spike times. Can also smooth other these
+# thing of other ML or probabilistic ways to capture this information.
+# array([  7876, 158707, 176768, 176987, 181303, 210568])
+# waveforms.sorting.get_unit_spike_train
+
+# gonna have to handle 'channel' and 'shank'
+# can get sorter when loading waveform?!?!  need it for spike times. DOn't necessarily need this.s
 
 # TODO: for waveforms, consider!!: get_template_extremum_channel()
 # TODO: need to do some validation if waveforms already exists.... 3500 might be
@@ -107,6 +130,8 @@ def run_postprocess(
     )
     unit_locations_pandas.to_csv(sorting_data.unit_locations_path)
 
+    save_waveform_similarities(sorting_data.waveforms_output_path, waveforms)
+
     utils.message_user(f"Quality metrics saved to {sorting_data.quality_metrics_path}")
     utils.message_user(f"Unit locations saved to {sorting_data.unit_locations_path}")
 
@@ -164,10 +189,29 @@ def load_sorting_output(sorting_data: SortingData, sorter: str) -> BaseSorting:
     sorting = KiloSortSortingExtractor(
         folder_path=sorting_data.sorter_run_output_path,
         keep_good_only=False,
-        remove_empty_units=False,
     )
 
-    sorting.remove_empty_units()  # TODO: use upcoming SI option, see https://github.com/SpikeInterface/spikeinterface/issues/1760
+    sorting = (
+        sorting.remove_empty_units()
+    )  # TODO: use upcoming SI option, see https://github.com/SpikeInterface/spikeinterface/issues/1760
+
     sorting_without_excess_spikes = curation.remove_excess_spikes(sorting, recording)
 
     return sorting_without_excess_spikes
+
+
+def save_waveform_similarities(waveforms_output_path, waveforms):
+    out_path = waveforms_output_path / "similarity_matricies"
+    out_path.mkdir(exist_ok=True)
+
+    time.perf_counter()
+    for unit_id in waveforms.sorting.get_unit_ids():
+        sim_matrix, spike_times = get_waveform_similarity(waveforms, unit_id, "jax")
+
+        print(spike_times[-1])
+
+        sim_matrix_pd = pd.DataFrame(sim_matrix, columns=spike_times, index=spike_times)
+        sim_matrix_pd.to_csv(out_path / f"waveform_similarity_unit_{unit_id}.csv")
+
+    # TODO: use message utils
+    print(f"Saving wavefor similarities took: {time.perf_counter()} - t")
