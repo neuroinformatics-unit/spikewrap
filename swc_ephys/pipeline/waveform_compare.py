@@ -6,7 +6,6 @@ import jax.numpy as jnp
 import numpy as np
 from jax import jit, vmap
 from jax.lax import scan
-from spikeinterface.core import compute_sparsity
 
 from ..utils import utils
 
@@ -48,15 +47,10 @@ def get_waveform_similarity(
         utils.message_user("Skipping {unit_id} as one waveform detected for this unit.")
         return np.nan, selected_waveform_peak_times
 
-    sparsity = compute_sparsity(
-        waveforms, peak_sign="neg", method="radius", radius_um=75
-    )
-    unit_chan_idxs = sparsity.unit_id_to_channel_indices[unit_id]
-
     if backend == "numpy":
-        similarity_matrix = calculate_similarity_numpy(waveforms_data, unit_chan_idxs)
+        similarity_matrix = calculate_similarity_numpy(waveforms_data)
     elif backend == "jax":
-        similarity_matrix = calculate_similarity_jax(waveforms_data, unit_chan_idxs)
+        similarity_matrix = calculate_similarity_jax(waveforms_data)
     else:
         raise ValueError("`backend` must be: 'jax' or 'numpy'")
 
@@ -92,7 +86,7 @@ def get_times_of_waveform_spikes(waveforms, unit_id):
 
 
 @jit
-def calculate_similarity_jax(waveforms_data, unit_chan_idxs):
+def calculate_similarity_jax(waveforms_data):
     """
     Speed up calculation of similarity matrix using Jax. First, average
     the waveforms across the best channels (where the waveform signal
@@ -111,17 +105,13 @@ def calculate_similarity_jax(waveforms_data, unit_chan_idxs):
         A num_waveforms x num_samples x num_channels array containing
         data of all waveforms.
 
-    unit_chan_idxs : Jax.Array
-        Array of channel indices where the unit signal is strongest,
-        extracted with SpikeInterface `get_sampled_indices()`.
-
     Returns
     -------
     similarity_matrix : Jax.Array
         num_waveform x num_waveform matrix of cosine similarities
         for the unit.
     """
-    averaged_waveforms = jnp.mean(waveforms_data[:, :, unit_chan_idxs], axis=2)
+    averaged_waveforms = jnp.mean(waveforms_data, axis=2)
 
     def func(carry, i):
         y = averaged_waveforms[i, :]
@@ -140,7 +130,7 @@ def calculate_similarity_jax(waveforms_data, unit_chan_idxs):
     return similarity_matrix
 
 
-def calculate_similarity_numpy(waveforms_data: NDArray, unit_chan_idxs: NDArray):
+def calculate_similarity_numpy(waveforms_data: NDArray):
     """
     The similarity matrix is calculated by filling the
     upper triangular only then copying to the lower triangular.
@@ -152,10 +142,6 @@ def calculate_similarity_numpy(waveforms_data: NDArray, unit_chan_idxs: NDArray)
     A num_waveforms x num_samples x num_channels array containing
     data of all waveforms.
 
-    unit_chan_idxs : NDArray
-        Array of channel indices where the unit signal is strongest,
-        extracted with SpikeInterface `get_sampled_indices()`.
-
     Returns
     -------
 
@@ -164,7 +150,7 @@ def calculate_similarity_numpy(waveforms_data: NDArray, unit_chan_idxs: NDArray)
     for the unit.
     """
     num_spikes = waveforms_data.shape[0]
-    averaged_waveforms = np.mean(waveforms_data[:, :, unit_chan_idxs], axis=2)
+    averaged_waveforms = np.mean(waveforms_data, axis=2)
 
     similarity_matrix = np.zeros((num_spikes, num_spikes))
     for j in range(num_spikes):

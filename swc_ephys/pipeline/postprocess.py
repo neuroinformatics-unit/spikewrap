@@ -11,7 +11,6 @@ import numpy as np
 import pandas as pd
 import spikeinterface as si
 from spikeinterface import curation
-from spikeinterface.core import compute_sparsity
 from spikeinterface.extractors import KiloSortSortingExtractor
 
 from ..configs.configs import get_configs
@@ -100,6 +99,7 @@ def run_postprocess(
             use_relative_path=True,
             **waveform_options,
         )
+
     else:
         utils.message_user(
             f"Loading existing waveforms from: {sorting_data.waveforms_output_path}",
@@ -253,10 +253,11 @@ def save_plots_of_templates(waveforms_output_path: Path, waveforms: WaveformExtr
     """
     Save a plot of all templates in 'waveforms/images' folder. The plot
     displays the template waveform are calculated in two ways
-        1) as the mean over the `unit_chan_idxs`, which are the channels
-           in which the template waveform signals are strongest.
+        1) as the mean over channels (the channels here are defined by the
+           sparsity settings during waveform extraction).
         2) as the channel in which the waveform signal is strongest (as
-           determined by the minimum value)
+           determined by the channel minimum value).
+           TODO: this is  mostly experimental for testing (for visualisation only).
 
     The purpose of these plots is to provide a quick overview of the
     extract templates. Proper investigations on unit quality should
@@ -272,13 +273,6 @@ def save_plots_of_templates(waveforms_output_path: Path, waveforms: WaveformExtr
     waveforms : WaveformExtractor
         Spikeinterface WaveformExtractor object.
 
-    TODO
-    ----
-    This assumes the waveform are negative (argmin here, use of peak_sign="neg"
-    in compute_sparsity). Investigate and handle positive waveforms...
-
-    TODO: how to determine "neg", "pos", "both", how to decide the
-    peak_sign / radius when computing sparisty. Own function.
     """
     t = time.perf_counter()
     utils.message_user("Saving template images...\n")
@@ -287,22 +281,16 @@ def save_plots_of_templates(waveforms_output_path: Path, waveforms: WaveformExtr
     n_samples = waveforms.nsamples
     time_ = np.arange(n_samples) / fs * 1000
 
-    sparsity = compute_sparsity(
-        waveforms, peak_sign="neg", method="radius", radius_um=75
-    )
-
     y_label = "Voltage (uV)" if waveforms.return_scaled else "Voltage (unscaled)"
 
     for idx, unit_id in enumerate(waveforms.sorting.get_unit_ids()):
         unit_template = waveforms.get_template(unit_id)
-        unit_chan_idxs = sparsity.unit_id_to_channel_indices[unit_id]
+        plt.plot(time_, np.mean(unit_template, axis=1))
 
-        plt.plot(time_, np.mean(unit_template[:, unit_chan_idxs], axis=1))
+        peak_chan_idx = np.argmin(np.min(unit_template, axis=0))
+        plt.plot(time_, unit_template[:, peak_chan_idx])
 
-        peak_chan_idx = np.argmin(np.mean(unit_template[:, unit_chan_idxs], axis=0))
-        plt.plot(time_, unit_template[:, unit_chan_idxs[peak_chan_idx]])
-
-        plt.legend(["max signal channel", "mean across best channels"])
+        plt.legend(["mean across channels", "max signal channel"])
         plt.xlabel("Time (ms)")
         plt.ylabel(y_label)
         plt.title(f"Unit {unit_id} Template")
