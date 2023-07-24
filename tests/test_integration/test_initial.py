@@ -53,17 +53,15 @@ class TestFirstEphys:
             sub_name,
             run_names,
             config_name="test",
-            sorter="kilosort2_5",  # "spykingcircus",
+            sorter="kilosort2_5",
             existing_preprocessed_data=existing_preprocessed_data,
             overwrite_existing_sorter_output=overwrite_existing_sorter_output,
             slurm_batch=slurm_batch,
         )
 
-    def test_single_run_local(self, test_info):
+    def test_single_run_local__(self, test_info):
         test_info.pop(3)
-
         test_info[2] = test_info[2][0]
-
         self.run_full_pipeline(*test_info)
 
     def test_single_run_local_overwrite(self, test_info):
@@ -108,7 +106,9 @@ class TestFirstEphys:
 
         with open(slurm_run, "r") as log:
             log_output = log.readlines()
-        breakpoint()
+
+        log_output = " ".join(log_output)
+
         assert "Stopping container" in log_output
         assert "Saving waveforms to" in log_output
         assert "Quality metrics saved to" in log_output
@@ -120,7 +120,7 @@ class TestFirstEphys:
 
         self.clear_slurm_logs(output_data_path)
 
-        self.run_full_pipeline(*test_info, slurm_batch=True)
+        self.run_full_pipeline(*test_info, slurm_batch={"wait": True})
 
         self.check_slurm_log(output_data_path)
 
