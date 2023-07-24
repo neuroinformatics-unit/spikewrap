@@ -107,6 +107,8 @@ class TestFirstEphys:
         with open(slurm_run, "r") as log:
             log_output = log.readlines()
 
+        log_output = " ".join(log_output)
+
         assert "Stopping container" in log_output
         assert "Saving waveforms to" in log_output
         assert "Quality metrics saved to" in log_output
@@ -118,7 +120,7 @@ class TestFirstEphys:
 
         self.clear_slurm_logs(output_data_path)
 
-        self.run_full_pipeline(*test_info, slurm_batch=True)
+        self.run_full_pipeline(*test_info, slurm_batch={"wait": True})
 
         self.check_slurm_log(output_data_path)
 
