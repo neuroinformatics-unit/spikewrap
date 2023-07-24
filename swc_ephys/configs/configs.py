@@ -14,7 +14,7 @@ def get_configs(name: str) -> Tuple[Dict, Dict, Dict]:
     (swc_ephys/configs) containing preprocessing (pp)
     and sorter options.
 
-    Once loaded, the list containing preprocessor name
+    Once loaded, the list containing preprocesser name
     and kwargs is cast to tuple. This keeps the type
     checker happy while not requiring a tuple
     in the .yaml which require ugly tags.

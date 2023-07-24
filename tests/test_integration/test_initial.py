@@ -59,7 +59,7 @@ class TestFirstEphys:
             slurm_batch=slurm_batch,
         )
 
-    def test_single_run_local(self, test_info):
+    def test_single_run_local__(self, test_info):
         test_info.pop(3)
         test_info[2] = test_info[2][0]
         self.run_full_pipeline(*test_info)
