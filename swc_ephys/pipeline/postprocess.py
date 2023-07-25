@@ -107,17 +107,50 @@ def run_postprocess(
         )
         waveforms = si.load_waveforms(sorting_data.waveforms_output_path)
 
-    save_plots_of_templates(sorting_data.waveforms_output_path, waveforms)
-
     # Perform postprocessing
-    save_quality_matrics(waveforms, sorting_data)
-    save_unit_locations(waveforms, sorting_data)
-    save_waveform_similarities(
-        sorting_data.waveforms_output_path, waveforms, MATRIX_BACKEND
-    )
+    postprocessing_to_run = "all"
+    run_settings = handle_postprocessing_to_run(postprocessing_to_run)
+
+    if run_settings["quality_metrics"]:
+        save_quality_matrics(waveforms, sorting_data)
+
+    if run_settings["unit_locations"]:
+        save_unit_locations(waveforms, sorting_data)
+
+    if run_settings["template_plots"]:
+        save_plots_of_templates(sorting_data.waveforms_output_path, waveforms)
+
+    if run_settings["waveform_similarity"]:
+        save_waveform_similarities(
+            sorting_data.waveforms_output_path, waveforms, MATRIX_BACKEND
+        )
 
 
 # Sorting Loader -----------------------------------------------------------------------
+
+
+def handle_postprocessing_to_run(postprocessing_to_run):
+    run_settings = {
+        "quality_metrics": True,
+        "unit_locations": True,
+        "template_plots": True,
+        "waveform_similarity": True,
+    }
+    if postprocessing_to_run == "all":
+        return run_settings
+    else:
+        assert all(
+            [key in run_settings.keys() for key in postprocessing_to_run.keys()]
+        ), (
+            f"At least one option in `postprocessing_to_run` is invalid. Must be"
+            f"one of {run_settings.keys()}"
+        )
+        assert all(
+            [isinstance(value, bool) for value in postprocessing_to_run.values()]
+        ), "`postprocessing_to_run` values must be `True` or `False`."
+
+        run_settings.update(postprocessing_to_run)
+        return run_settings
 
 
 def load_sorting_output(sorting_data: SortingData, sorter: str) -> BaseSorting:

@@ -145,12 +145,8 @@ class SortingData(BaseUserDict):
             canonical name, is where spikeinterface
             automatically saves sorter output
         """
-        self.sorter_base_output_path = (
-            self.base_path
-            / "derivatives"
-            / self.sub_name
-            / f"{self.pp_run_name}"
-            / f"{sorter}-sorting"
+        self.sorter_base_output_path = utils.make_sorter_base_output_path(
+            self.base_path, self.sub_name, self.pp_run_name, sorter
         )
 
         self.sorter_run_output_path = self.sorter_base_output_path / "sorter_output"

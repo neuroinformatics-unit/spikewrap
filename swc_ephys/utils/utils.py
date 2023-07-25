@@ -307,6 +307,16 @@ def list_of_files_are_in_datetime_order(
     return is_in_time_order
 
 
+def make_sorter_base_output_path(base_path, sub_name, pp_run_name, sorter):
+    """
+    Make the canonical sorter output path.
+    """
+    sorter_base_output_path = (
+        base_path / "derivatives" / sub_name / f"{pp_run_name}" / f"{sorter}-sorting"
+    )
+    return sorter_base_output_path
+
+
 def make_preprocessing_plot_title(
     run_name: str,
     full_key: str,

@@ -3,9 +3,7 @@ from pathlib import Path
 from swc_ephys.pipeline.postprocess import run_postprocess
 
 base_path = Path(
-    Path(
-        r"/ceph/neuroinformatics/neuroinformatics/scratch/jziminski/ephys/test_data/steve_multi_run/1119617/time-mid"
-    )
+    r"/ceph/neuroinformatics/neuroinformatics/scratch/jziminski/ephys/test_data/steve_multi_run/1119617/time-mid"
 )
 # TODO: why is this taking the preprocessed path? isn't sorting more intuitive? or top level? think...
 sub_name = "1119617"

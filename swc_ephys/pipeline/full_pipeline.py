@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import copy
 from pathlib import Path
-from typing import TYPE_CHECKING, List, Literal, Union
+from typing import TYPE_CHECKING, Dict, List, Literal, Union
 
 if TYPE_CHECKING:
     from ..data_classes.preprocessing import PreprocessingData
@@ -14,6 +14,8 @@ from .postprocess import run_postprocess
 from .preprocess import preprocess
 from .sort import run_sorting
 
+HandleExisting = Literal["overwrite", "load_if_exists", "fail_if_exists"]
+
 
 def run_full_pipeline(
     base_path: Union[Path, str],
@@ -21,10 +23,10 @@ def run_full_pipeline(
     run_names: Union[List[str], str],
     config_name: str = "test",
     sorter: str = "kilosort2_5",
-    existing_preprocessed_data: Literal[
-        "overwrite", "load_if_exists", "fail_if_exists"
-    ] = "fail_if_exists",
-    overwrite_existing_sorter_output: bool = False,
+    existing_preprocessed_data: HandleExisting = "overwrite",
+    existing_sorting_output: HandleExisting = "overwrite",
+    existing_waveform_data: HandleExisting = "overwrite",
+    postprocessing_to_run: Union[Literal["all"], Dict] = "all",
     verbose: bool = True,
     slurm_batch: bool = False,
 ) -> None:
@@ -69,7 +71,7 @@ def run_full_pipeline(
             "fail_if_exists" : If existing preprocessed data is found, an error
                                will be raised.
 
-     overwrite_existing_sorter_output : bool
+     existing_sorting_output : bool
          If `False` an error will be raised if sorting output already
          exists. If True, existing sorting output will be overwritten.
 
@@ -95,23 +97,41 @@ def run_full_pipeline(
 
     save_preprocessed_data_if_required(preprocess_data, existing_preprocessed_data)
 
-    sorting_data = run_sorting(
-        preprocess_data.preprocessed_data_path,
-        sorter,
-        sorter_options,
-        overwrite_existing_sorter_output,
-        verbose,
-    )
-    # TODO: update this doc.
-    # Save spikeinterface 'waveforms' output (TODO: currently, this is large)
-    # to the sorter output dir. Quality checks are run and .csv of checks
-    # output in the sorter folder as quality_metrics.csv
+    sorting_data = run_or_get_sorting(preprocess_data, existing_sorting_output, sorter)
+
     run_postprocess(
-        sorting_data.preprocessed_data_path,
+        sorting_data,
         sorter,
         verbose,
         waveform_options=waveform_options,
     )
+
+
+def run_or_get_sorting(preprocess_data, existing_sorting_output, sorter):
+    """ """
+    sorting_path = preprocess_data.get_expected_sorter_path(sorter)
+
+    if existing_sorting_output == "load_if_exists" and sorting_path.is_dir():
+        utils.message_user(f"Loaded pre-existing sorting output from {sorting_path}")
+
+        sorting_data = load_data_for_sorting(
+            sorting_data,
+        )
+    else:
+        utils.message_user("Running sorting...")
+
+        overwrite_existing_sorter_output = (
+            True if existing_sorting_output == "overwrite" else False
+        )
+        sorting_data = run_sorting(
+            preprocess_data.preprocessed_data_path,
+            sorter,
+            sorter_options,
+            overwrite_existing_sorter_output,
+            verbose,
+        )
+
+    return sorting_data
 
 
 def save_preprocessed_data_if_required(
