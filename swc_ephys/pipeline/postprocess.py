@@ -36,6 +36,7 @@ except ImportError:
     )
     MATRIX_BACKEND = "numpy"
 
+# TODO: delete all quality checks before re-analysis.
 
 # --------------------------------------------------------------------------------------
 # Run Postprocessing
@@ -46,6 +47,7 @@ def run_postprocess(
     sorting_data: Union[Path, str, SortingData],
     sorter: str,
     existing_waveform_data: HandleExisting = "load_if_exists",
+    postprocessing_to_run: Union[Literal["all"], Dict] = "all",
     verbose: bool = True,
     waveform_options: Optional[Dict] = None,
 ) -> None:
@@ -96,25 +98,28 @@ def run_postprocess(
     )
 
     # Perform postprocessing
-    postprocessing_to_run = "all"
     run_settings = handle_postprocessing_to_run(postprocessing_to_run)
 
-    if run_settings["quality_metrics"]:
+    if run_option(run_settings, "quality_metrics"):
         save_quality_matrics(waveforms, sorting_data)
 
-    if run_settings["unit_locations"]:
+    if run_option(run_settings, "unit_locations"):
         save_unit_locations(waveforms, sorting_data)
 
-    if run_settings["template_plots"]:
+    if run_option(run_settings, "template_plots"):
         save_plots_of_templates(sorting_data.waveforms_output_path, waveforms)
 
-    if run_settings["waveform_similarity"]:
+    if run_option(run_settings, "waveform_similarity"):
         save_waveform_similarities(
             sorting_data.waveforms_output_path, waveforms, MATRIX_BACKEND
         )
 
 
 # Sorting Loader -----------------------------------------------------------------------
+
+
+def run_option(run_settings, option):
+    return option in run_settings and run_settings[option]
 
 
 def run_or_get_waveforms(
@@ -174,7 +179,8 @@ def handle_postprocessing_to_run(postprocessing_to_run):
             [isinstance(value, bool) for value in postprocessing_to_run.values()]
         ), "`postprocessing_to_run` values must be `True` or `False`."
 
-        run_settings.update(postprocessing_to_run)
+        run_settings = postprocessing_to_run
+
         return run_settings
 
 
@@ -353,9 +359,9 @@ def save_plots_of_templates(waveforms_output_path: Path, waveforms: WaveformExtr
         plt.ylabel(y_label)
         plt.title(f"Unit {unit_id} Template")
 
-        output_folder = waveforms_output_path / "images"
+        output_folder = waveforms_output_path / "template_plots"
         output_folder.mkdir(exist_ok=True)
-        plt.savefig(waveforms_output_path / "images" / f"unit_{unit_id}.png")
+        plt.savefig(waveforms_output_path / "template_plots" / f"unit_{unit_id}.png")
         plt.clf()
 
     utils.message_user(f"Saving plots of templates took: {time.perf_counter() - t}")

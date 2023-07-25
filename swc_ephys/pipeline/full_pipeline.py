@@ -122,6 +122,7 @@ def run_full_pipeline(
         sorter,
         verbose,
         waveform_options=waveform_options,
+        postprocessing_to_run=postprocessing_to_run,
     )
 
 
