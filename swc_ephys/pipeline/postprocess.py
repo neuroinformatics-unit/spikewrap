@@ -23,6 +23,9 @@ if TYPE_CHECKING:
     from spikeinterface import WaveformExtractor
     from spikeinterface.core import BaseSorting
 
+# TODO REMOVE DUPLICATION!!
+HandleExisting = Literal["overwrite", "load_if_exists", "fail_if_exists"]
+
 MATRIX_BACKEND: Literal["numpy", "jax"]
 try:
     MATRIX_BACKEND = "jax"
@@ -41,7 +44,8 @@ except ImportError:
 
 def run_postprocess(
     sorting_data: Union[Path, str, SortingData],
-    sorter: str = "kilosort2_5",
+    sorter: str,
+    existing_waveform_data: HandleExisting = "load_if_exists",
     verbose: bool = True,
     waveform_options: Optional[Dict] = None,
 ) -> None:
@@ -87,25 +91,9 @@ def run_postprocess(
         verbose,
     )
 
-    if not sorting_data.waveforms_output_path.is_dir():
-        utils.message_user(f"Saving waveforms to {sorting_data.waveforms_output_path}")
-
-        sorting_without_excess_spikes = load_sorting_output(sorting_data, sorter)
-
-        waveforms = si.extract_waveforms(
-            sorting_data.data["0-preprocessed"],
-            sorting_without_excess_spikes,
-            folder=sorting_data.waveforms_output_path,
-            use_relative_path=True,
-            **waveform_options,
-        )
-
-    else:
-        utils.message_user(
-            f"Loading existing waveforms from: {sorting_data.waveforms_output_path}",
-            verbose,
-        )
-        waveforms = si.load_waveforms(sorting_data.waveforms_output_path)
+    waveforms = run_or_get_waveforms(
+        sorting_data, existing_waveform_data, waveform_options, sorter, verbose
+    )
 
     # Perform postprocessing
     postprocessing_to_run = "all"
@@ -127,6 +115,43 @@ def run_postprocess(
 
 
 # Sorting Loader -----------------------------------------------------------------------
+
+
+def run_or_get_waveforms(
+    sorting_data, existing_waveform_data, waveform_options, sorter, verbose
+):
+    if (
+        sorting_data.waveforms_output_path.is_dir()
+        and existing_waveform_data == "load_if_exists"
+    ):
+        utils.message_user(
+            f"Loading existing waveforms from: {sorting_data.waveforms_output_path}",
+            verbose,
+        )
+        waveforms = si.load_waveforms(sorting_data.waveforms_output_path)
+
+    elif (
+        sorting_data.waveforms_output_path.is_dir()
+        and existing_waveform_data == "fail_if_exists"
+    ):
+        raise RuntimeError(
+            f"Waveforms exist at {sorting_data.waveforms_output_path} but `existing_waveform_data` is 'fail_if_exists'."
+        )
+    else:
+        utils.message_user(f"Saving waveforms to {sorting_data.waveforms_output_path}")
+
+        sorting_without_excess_spikes = load_sorting_output(sorting_data, sorter)
+
+        waveforms = si.extract_waveforms(
+            sorting_data.data["0-preprocessed"],
+            sorting_without_excess_spikes,
+            folder=sorting_data.waveforms_output_path,
+            use_relative_path=True,
+            overwrite=True,
+            **waveform_options,
+        )
+
+    return waveforms
 
 
 def handle_postprocessing_to_run(postprocessing_to_run):

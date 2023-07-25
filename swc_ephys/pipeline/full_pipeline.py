@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import copy
+import shutil
 from pathlib import Path
 from typing import TYPE_CHECKING, Dict, List, Literal, Union
 
@@ -8,6 +9,7 @@ if TYPE_CHECKING:
     from ..data_classes.preprocessing import PreprocessingData
 
 from ..configs.configs import get_configs
+from ..pipeline.load_data import load_data_for_sorting
 from ..utils import slurm, utils
 from .load_data import load_spikeglx_data
 from .postprocess import run_postprocess
@@ -23,16 +25,18 @@ def run_full_pipeline(
     run_names: Union[List[str], str],
     config_name: str = "test",
     sorter: str = "kilosort2_5",
-    existing_preprocessed_data: HandleExisting = "overwrite",
-    existing_sorting_output: HandleExisting = "overwrite",
-    existing_waveform_data: HandleExisting = "overwrite",
+    existing_preprocessed_data: HandleExisting = "load_if_exists",
+    existing_sorting_output: HandleExisting = "load_if_exists",
+    overwrite_postprocessing: bool = False,
     postprocessing_to_run: Union[Literal["all"], Dict] = "all",
     verbose: bool = True,
     slurm_batch: bool = False,
 ) -> None:
     """
     Run preprocessing, sorting and post-processing on SpikeGLX data.
-    see README.md for detailed information on use.
+    see README.md for detailed information on use. If waveforms and
+    postprocessing exist for the subjects / runs, it will be
+    overwritten.
 
     This function must be run in main as uses multiprocessing e.g.
     if __name__ == "__main__":
@@ -60,20 +64,29 @@ def run_full_pipeline(
     sorter : str
         name of the sorter to use e.g. "kilosort2_5".
 
-    existing_preprocessed_data : Literal[
-                                 "overwrite", "load_if_exists", "fail_if_exists"]
+    existing_preprocessed_data : Literal["overwrite", "load_if_exists", "fail_if_exists"]
         Determines how existing preprocessed data (e.g. from a prior pipeline run)
         is treated.
-            "overwrite" : will overwrite any existing preprocessed data output.
+            "overwrite" : will overwrite any existing preprocessed data output. This will
+                          delete the 'preprocessed' folder. Therefore, never save
+                          derivative work there.
             "load_if_exists" : will search for existing data and load if it exists.
                                Otherwise, will use the preprocessing from the
                                current run.
             "fail_if_exists" : If existing preprocessed data is found, an error
                                will be raised.
 
-     existing_sorting_output : bool
-         If `False` an error will be raised if sorting output already
-         exists. If True, existing sorting output will be overwritten.
+    existing_sorting_output : bool
+        Determines how existing sorted data is treated. The same behaviour
+        as `existing_preprocessed_data` but for sorting output. If overwrite,
+        the 'sorting' folder will be deleted. Therefore, never save
+        derivative work there.
+
+    overwrite_postprocessing : bool
+        If `False`, an error will be raised if postprocessing output already
+        exists. Otherwise, 'postprocessing' folder will be overwritten. Note,
+        that the entire 'postprocessing' folder (including all contents) will be
+        deleted. Therefore, never save derivative work there.
 
     verbose : bool
         If True, messages will be printed to console updating on the
@@ -97,7 +110,12 @@ def run_full_pipeline(
 
     save_preprocessed_data_if_required(preprocess_data, existing_preprocessed_data)
 
-    sorting_data = run_or_get_sorting(preprocess_data, existing_sorting_output, sorter)
+    sorting_data = run_or_get_sorting(
+        preprocess_data, existing_sorting_output, sorter, sorter_options, verbose
+    )
+
+    sorting_data.set_sorter_output_paths(sorter)
+    delete_waveform_output_if_it_exists(sorting_data, overwrite_postprocessing)
 
     run_postprocess(
         sorting_data,
@@ -107,22 +125,47 @@ def run_full_pipeline(
     )
 
 
-def run_or_get_sorting(preprocess_data, existing_sorting_output, sorter):
-    """ """
-    sorting_path = preprocess_data.get_expected_sorter_path(sorter)
+def delete_waveform_output_if_it_exists(sorting_data, overwrite_postprocessing):
+    if sorting_data.waveforms_output_path.is_dir():
+        if overwrite_postprocessing:
+            utils.message_user(
+                f"Deleting existing postprocessing "
+                f"output at {sorting_data.waveforms_output_path}"
+            )
+            shutil.rmtree(sorting_data.waveforms_output_path)
+        else:
+            raise RuntimeError(
+                f"Postprocessing output already exists at {sorting_data.waveforms_output_path} "
+                f"but `overwrite_postprocessing` is `False`. Setting `overwrite_postprocessing` will "
+                f"delete the postprocessing folder and all it's contents."
+            )
 
-    if existing_sorting_output == "load_if_exists" and sorting_path.is_dir():
+
+def run_or_get_sorting(
+    preprocess_data, existing_sorting_output, sorter, sorter_options, verbose
+):
+    """ """
+    # TODO: "sorting" to configs.
+    sorting_path = preprocess_data.get_expected_sorter_path(sorter) / "sorting"
+
+    if sorting_path.is_dir() and existing_sorting_output == "load_if_exists":
         utils.message_user(f"Loaded pre-existing sorting output from {sorting_path}")
 
         sorting_data = load_data_for_sorting(
-            sorting_data,
+            preprocess_data.preprocessed_data_path,
         )
+
+    elif sorting_path.is_dir() and existing_sorting_output == "fail_if_exists":
+        raise RuntimeError(
+            f"Sorting output already exists at {sorting_path} and"
+            f"`existing_sorting_output` is set to 'fail_if_exists'."
+        )
+
     else:
         utils.message_user("Running sorting...")
 
-        overwrite_existing_sorter_output = (
-            True if existing_sorting_output == "overwrite" else False
-        )
+        overwrite_existing_sorter_output = True
+
         sorting_data = run_sorting(
             preprocess_data.preprocessed_data_path,
             sorter,

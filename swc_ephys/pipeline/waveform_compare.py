@@ -44,7 +44,9 @@ def get_waveform_similarity(
     ), "Number of waveform peak times does not match number of extracted waveforms."
 
     if waveforms_data.shape[0] == 1:
-        utils.message_user("Skipping {unit_id} as one waveform detected for this unit.")
+        utils.message_user(
+            f"Skipping {unit_id} as one waveform detected for this unit."
+        )
         return np.nan, selected_waveform_peak_times
 
     if backend == "numpy":

@@ -149,7 +149,8 @@ class SortingData(BaseUserDict):
             self.base_path, self.sub_name, self.pp_run_name, sorter
         )
 
-        self.sorter_run_output_path = self.sorter_base_output_path / "sorter_output"
-        self.waveforms_output_path = self.sorter_base_output_path / "waveforms"
-        self.quality_metrics_path = self.sorter_base_output_path / "quality_metrics.csv"
-        self.unit_locations_path = self.sorter_base_output_path / "unit_locations.csv"
+        self.sorting_output_path = self.sorter_base_output_path / "sorting"
+        self.sorter_run_output_path = self.sorting_output_path / "sorter_output"
+        self.waveforms_output_path = self.sorter_base_output_path / "postprocessing"
+        self.quality_metrics_path = self.waveforms_output_path / "quality_metrics.csv"
+        self.unit_locations_path = self.waveforms_output_path / "unit_locations.csv"
