@@ -16,11 +16,6 @@ preprocessing_path = (
 run_postprocess(
     preprocessing_path,
     sorter="kilosort2_5",
-    existing_waveform_data="load_if_exists",
-    postprocessing_to_run={
-        "quality_metrics": False,
-        "waveform_similarity": False,
-        "unit_locations": True,
-        "template_plots": True,
-    },
+    existing_waveform_data="overwrite",
+    postprocessing_to_run="all",
 )

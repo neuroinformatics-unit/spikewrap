@@ -24,7 +24,7 @@ if __name__ == "__main__":
         config_name,
         sorter,
         existing_preprocessed_data="load_if_exists",
-        existing_sorting_output="load_if_exists",
+        existing_sorting_output="overwrite",
         overwrite_postprocessing=True,
         slurm_batch=False,
     )
