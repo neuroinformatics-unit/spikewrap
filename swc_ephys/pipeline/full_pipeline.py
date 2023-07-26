@@ -28,7 +28,6 @@ def run_full_pipeline(
     existing_preprocessed_data: HandleExisting = "load_if_exists",
     existing_sorting_output: HandleExisting = "load_if_exists",
     overwrite_postprocessing: bool = False,
-    postprocessing_to_run: Union[Literal["all"], Dict] = "all",
     verbose: bool = True,
     slurm_batch: bool = False,
 ) -> None:
@@ -88,11 +87,6 @@ def run_full_pipeline(
         that the entire 'postprocessing' folder (including all contents) will be
         deleted. Therefore, never save derivative work there.
 
-    postprocessing_to_run : Union[Literal["all"], Dict]
-        Specify the postprocessing to run. By default, "all" will run
-        all available postprocessing. Otherwise, provide a dict of
-        including postprocessing to run e.g. {"quality_metrics: True"}.
-
     verbose : bool
         If True, messages will be printed to console updating on the
         progress of preprocessing / sorting.
@@ -126,7 +120,6 @@ def run_full_pipeline(
         sorting_data,
         sorter,
         existing_waveform_data="fail_if_exists",
-        postprocessing_to_run=postprocessing_to_run,
         verbose=verbose,
         waveform_options=waveform_options,
     )

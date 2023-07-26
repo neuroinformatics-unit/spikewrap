@@ -17,5 +17,4 @@ run_postprocess(
     preprocessing_path,
     sorter="kilosort2_5",
     existing_waveform_data="overwrite",
-    postprocessing_to_run="all",
 )
