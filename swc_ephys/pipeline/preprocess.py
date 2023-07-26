@@ -176,9 +176,16 @@ def perform_preprocessing_step(
 
     new_name = f"{step_num}-" + "-".join(["raw"] + pp_step_names[: int(step_num)])
 
-    assert pp_funcs[pp_name].__name__ == pp_name, "something is wrong in func dict"
+    confidence_check_pp_func_name(pp_name, pp_funcs)
 
     preprocess_data[new_name] = pp_funcs[pp_name](last_pp_step_output, **pp_options)
+
+
+def confidence_check_pp_func_name(pp_name, pp_funcs):
+    func_name_to_class_name = "".join([word.title() for word in pp_name.split("_")])
+    assert (
+        func_name_to_class_name in pp_funcs[pp_name].__name__
+    ), "something is wrong in func dict"
 
 
 def get_pp_funcs() -> Dict:
