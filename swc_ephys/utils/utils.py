@@ -16,6 +16,7 @@ from pathlib import Path
 import numpy as np
 from spikeinterface import concatenate_recordings
 
+# TODO: how does splitting by group work for sorting?
 
 def canonical_names(name: str) -> str:
     """
@@ -64,7 +65,7 @@ def get_keys_first_char(
         the first numbers of the Preprocessing / Sorting Data
         .data dictionary keys.
     """
-    list_of_numbers = [int(key[0]) if as_int else key[0] for key in data.keys()]
+    list_of_numbers = [int(key.split("-")[0]) if as_int else key.split("-")[0] for key in data.keys()]
     return list_of_numbers
 
 
@@ -109,7 +110,7 @@ def get_dict_value_from_step_num(
             int(step_num) == len(data.keys()) - 1
         ), "the last key has been taken incorrectly"
 
-    select_step_pp_key = [key for key in data.keys() if key[0] == step_num]
+    select_step_pp_key = [key for key in data.keys() if key.split("-")[0] == step_num]
 
     assert len(select_step_pp_key) == 1, "pp_key must always have unique first char"
 

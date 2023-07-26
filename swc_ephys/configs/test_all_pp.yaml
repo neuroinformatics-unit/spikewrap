@@ -1,0 +1,104 @@
+'preprocessing':
+  '1':
+  - phase_shift
+  - {}
+  '2':
+  - bandpass_filter
+  - freq_min: 300
+    freq_max: 6000
+  '3':
+  - common_reference
+  - operator: median
+    reference: global
+  '4':
+  - blank_saturation  # quite long
+  - quantile_threshold: 0.01
+    fill_value: 1
+  '5':
+  - center
+  - mode: mean
+    chunk_size: 0
+  '6':
+  - clip
+  - a_min: -100
+    a_max: 100
+  '7':
+  - correct_lsb
+  - seed: 10
+    chunk_size: 0
+#  '8':
+#  - correct_motion
+#  - chunk_size: 1
+#    preset: kilosort_like
+#    detect_kwargs:
+#      chunk_size: 1
+#    select_kwargs:
+#      chunk_size: 1
+#    localize_peaks_kwargs:
+#      chunk_size: 1
+#    estimate_motion_kwargs:
+#      chunk_size: 1
+#    interpolate_motion_kwargs:
+#      chunk_size: 1
+  '8':
+  - filter
+  - band: 5000
+    btype: highpass
+  '9':
+  - gaussian_bandpass_filter
+  - freq_max: 4500
+  '10':
+  - highpass_filter
+  - margin_ms: 6.0
+  '11':
+    - interpolate_bad_channels
+    - p: 1.5
+      bad_channel_ids:
+        - 'imec0.ap#AP1'
+#  '12':
+#    - depth_order
+#    - channel_ids:
+#        - 'imec0.ap#AP0'
+#        - 'imec0.ap#AP1'
+#        - 'imec0.ap#AP2'
+  '12':
+    - split_by_group
+    - {}
+  '13':
+  - highpass_spatial_filter
+  - apply_agc: False
+  '14':
+  - normalize_by_quantile
+  - chunk_size: 2
+  '15':
+  - notch_filter
+  - freq: 2000
+  '16':
+  - remove_artifacts
+  - list_triggers:
+    - - 1
+    - - 2
+    - - 3
+  '17':
+  - resample
+  - resample_rate: 2
+    margin_ms: 50
+  '18':
+  - scale
+  - gain: 2
+#  '19':
+#  - silence_periods
+#  - list_periods:
+#    - - - 1
+#        - 5
+#    - - - 10
+#        - 12
+#    - - - 15
+#        - 18
+#  '19':
+#  - whiten
+#  - chunk_size:
+#      1
+#  '19':
+#  - zscore
+#  - chunk_size: 1

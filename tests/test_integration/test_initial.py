@@ -7,8 +7,9 @@ from pathlib import Path
 
 import pytest
 
-from swc_ephys.pipeline import full_pipeline
-
+from swc_ephys.pipeline import full_pipeline, preprocess
+from swc_ephys.pipeline.full_pipeline import get_configs
+from swc_ephys.pipeline.load_data import load_spikeglx_data
 ON_HPC = True
 
 
@@ -21,8 +22,15 @@ class TestFirstEphys:
         return output_data_path
 
     @pytest.fixture(scope="function")
-    def test_info(self, output_data_path):
+    def test_info(self, output_data_path, request):
         """ """
+        if not hasattr(request, "param"):
+            mode = "time-short"
+        else:
+            mode = request.param
+
+        output_data_path = output_data_path / mode
+
         sub_name = "1119617"
         run_names = [
             "1119617_LSE1_shank12",
@@ -58,6 +66,16 @@ class TestFirstEphys:
             overwrite_existing_sorter_output=overwrite_existing_sorter_output,
             slurm_batch=slurm_batch,
         )
+
+    @pytest.mark.parametrize("test_info", ["time-tiny"], indirect=True)
+    def test_all_preprocessing_options(self, test_info):
+        """"""
+        pp_steps, __, __ = get_configs("test_all_pp")
+
+        preprocess_data = load_spikeglx_data(*test_info[:3])
+
+        preprocess_data = preprocess.preprocess(preprocess_data, pp_steps, verbose=True)
+        preprocess_data.save_all_preprocessed_data(overwrite=True)
 
     def test_single_run_local__(self, test_info):
         test_info.pop(3)

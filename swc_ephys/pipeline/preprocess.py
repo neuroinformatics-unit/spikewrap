@@ -53,6 +53,7 @@ def preprocess(
     preprocess_data.set_pp_steps(pp_steps)
 
     for step_num, pp_info in checked_pp_steps.items():
+        # breakpoint()
         perform_preprocessing_step(
             step_num, pp_info, preprocess_data, pp_step_names, pp_funcs, verbose
         )
@@ -79,8 +80,8 @@ def check_and_sort_pp_steps(pp_steps: Dict, pp_funcs: Dict) -> Tuple[Dict, List[
 
     Returns
     -------
-    sorted_pp_steps :Dict
-        A sorted and checked preprocessing steps dictionary.
+    pp_steps :Dict
+        The checked preprocessing steps dictionary.
 
     pp_step_names : List
         Preprocessing step names (e.g. "bandpass_filter") in order
@@ -91,21 +92,8 @@ def check_and_sort_pp_steps(pp_steps: Dict, pp_funcs: Dict) -> Tuple[Dict, List[
     This will soon be deprecated and replaced by validation
     of the config file itself on load.
     """
-    sorted_pp_steps = {k: pp_steps[k] for k in sorted(pp_steps.keys())}
-    pp_step_names = [item[0] for item in sorted_pp_steps.values()]
-
-    # Check keys are numbers starting at 1 increasing by 1
-    assert all(
-        key.isdigit() for key in sorted_pp_steps.keys()
-    ), "pp_steps keys must be integers"
-
-    key_nums = [int(key) for key in sorted_pp_steps.keys()]
-
-    assert np.min(key_nums) == 1, "dict keys must start at 1"
-
-    diffs = np.diff(key_nums)
-    assert np.unique(diffs).size == 1, "all dict keys must increase in steps of 1"
-    assert diffs[0] == 1, "all dict keys must increase in steps of 1"
+    validate_pp_steps(pp_steps)
+    pp_step_names = [item[0] for item in pp_steps.values()]
 
     # Check the preprocessing function names are valid and print steps used
     canonical_step_names = list(pp_funcs.keys())
@@ -117,10 +105,25 @@ def check_and_sort_pp_steps(pp_steps: Dict, pp_funcs: Dict) -> Tuple[Dict, List[
 
     utils.message_user(
         f"\nThe preprocessing options dictionary is "
-        f"{json.dumps(sorted_pp_steps, indent=4, sort_keys=True)}"
+        f"{json.dumps(pp_steps, indent=4, sort_keys=True)}"
     )
 
-    return sorted_pp_steps, pp_step_names
+    return pp_steps, pp_step_names
+
+
+def validate_pp_steps(pp_steps):
+    # Check keys are numbers starting at 1 increasing by 1
+    assert all(
+        key.isdigit() for key in pp_steps.keys()
+    ), "pp_steps keys must be integers"
+
+    key_nums = [int(key) for key in pp_steps.keys()]
+
+    assert np.min(key_nums) == 1, "dict keys must start at 1"
+
+    diffs = np.diff(key_nums)
+    assert np.unique(diffs).size == 1, "all dict keys must increase in steps of 1"
+    assert diffs[0] == 1, "all dict keys must increase in steps of 1"
 
 
 def perform_preprocessing_step(
@@ -145,7 +148,7 @@ def perform_preprocessing_step(
         Preprocessing step to run (e.g. "1", corresponds to the key in pp_dict).
 
     pp_info : Tuple[str, Dict]
-        Preprocessing name, preprocessing kwargs) tuple (they value from
+        Preprocessing name, preprocessing kwargs) tuple (the value from
         the pp_dict).
 
     preprocess_data : PreprocessingData
@@ -178,14 +181,35 @@ def perform_preprocessing_step(
 
     confidence_check_pp_func_name(pp_name, pp_funcs)
 
-    preprocess_data[new_name] = pp_funcs[pp_name](last_pp_step_output, **pp_options)
+    if isinstance(last_pp_step_output, Dict):
+        preprocess_data[new_name] = {k: pp_funcs[pp_name](v, **pp_options) for k, v in last_pp_step_output.items()}
+    else:
+        preprocess_data[new_name] = pp_funcs[pp_name](last_pp_step_output, **pp_options)
+
+
+def split_by_group(recording, **kwargs):
+    # Only takes **kwargs to match signature of SI functions
+    # TODO: need to be very careful the first pp steps are included in this...
+    return recording.split_by(property="group")
 
 
 def confidence_check_pp_func_name(pp_name, pp_funcs):
-    func_name_to_class_name = "".join([word.title() for word in pp_name.split("_")])
-    assert (
-        func_name_to_class_name in pp_funcs[pp_name].__name__
-    ), "something is wrong in func dict"
+    func_name_to_class_name = "".join([word.lower() for word in pp_name.split("_")])
+
+    if pp_name == "silence_periods":
+        try:
+            assert pp_funcs[pp_name].__name__ == "SilencedPeriodsRecording"  # TODO: open PR
+        except:
+            breakpoint()
+    elif isinstance(pp_funcs[pp_name], type):
+        try:
+            assert (
+                func_name_to_class_name in pp_funcs[pp_name].__name__.lower()
+            ), "something is wrong in func dict"
+        except:
+            breakpoint()
+    else:
+        assert pp_funcs[pp_name].__name__ == pp_name
 
 
 def get_pp_funcs() -> Dict:
@@ -202,6 +226,30 @@ def get_pp_funcs() -> Dict:
         "phase_shift": spre.phase_shift,
         "bandpass_filter": spre.bandpass_filter,
         "common_reference": spre.common_reference,
+        "blank_saturation": spre.blank_staturation,
+        "center": spre.center,
+        "clip": spre.clip,
+        "correct_lsb": spre.correct_lsb,
+        "correct_motion": spre.correct_motion,
+        "depth_order": spre.depth_order,
+        "filter": spre.filter,
+        "gaussian_bandpass_filter": spre.gaussian_bandpass_filter,
+        "highpass_filter": spre.highpass_filter,
+        "highpass_spatial_filter": spre.highpass_spatial_filter,
+        "interpolate_bad_channels": spre.interpolate_bad_channels,
+        "normalize_by_quantile": spre.normalize_by_quantile,
+        "notch_filter": spre.notch_filter,
+        "remove_artifacts": spre.remove_artifacts,
+        "resample": spre.resample,
+        "scale": spre.scale,
+        "silence_periods": spre.silence_periods,
+        "whiten": spre.whiten,
+        "zscore": spre.zscore,
+        "split_by_group": split_by_group,
     }
+
+
+    # detect_bad_channels
+    # remove_bad_channels
 
     return pp_funcs
