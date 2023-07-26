@@ -182,7 +182,10 @@ def perform_preprocessing_step(
     confidence_check_pp_func_name(pp_name, pp_funcs)
 
     if isinstance(last_pp_step_output, Dict):
-        preprocess_data[new_name] = {k: pp_funcs[pp_name](v, **pp_options) for k, v in last_pp_step_output.items()}
+        preprocess_data[new_name] = {
+            k: pp_funcs[pp_name](v, **pp_options)
+            for k, v in last_pp_step_output.items()
+        }
     else:
         preprocess_data[new_name] = pp_funcs[pp_name](last_pp_step_output, **pp_options)
 
@@ -198,7 +201,9 @@ def confidence_check_pp_func_name(pp_name, pp_funcs):
 
     if pp_name == "silence_periods":
         try:
-            assert pp_funcs[pp_name].__name__ == "SilencedPeriodsRecording"  # TODO: open PR
+            assert (
+                pp_funcs[pp_name].__name__ == "SilencedPeriodsRecording"
+            )  # TODO: open PR
         except:
             breakpoint()
     elif isinstance(pp_funcs[pp_name], type):
@@ -247,7 +252,6 @@ def get_pp_funcs() -> Dict:
         "zscore": spre.zscore,
         "split_by_group": split_by_group,
     }
-
 
     # detect_bad_channels
     # remove_bad_channels
