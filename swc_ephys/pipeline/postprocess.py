@@ -17,6 +17,7 @@ from ..configs.configs import get_configs
 from ..data_classes.sorting import SortingData
 from ..pipeline.load_data import load_data_for_sorting
 from ..utils import utils
+from ..utils.custom_types import HandleExisting
 from .waveform_compare import get_waveform_similarity
 
 if TYPE_CHECKING:
@@ -33,6 +34,7 @@ except ImportError:
     )
     MATRIX_BACKEND = "numpy"
 
+# TODO: delete all quality checks before re-analysis.
 
 # --------------------------------------------------------------------------------------
 # Run Postprocessing
@@ -41,7 +43,8 @@ except ImportError:
 
 def run_postprocess(
     sorting_data: Union[Path, str, SortingData],
-    sorter: str = "kilosort2_5",
+    sorter: str,
+    existing_waveform_data: HandleExisting = "load_if_exists",
     verbose: bool = True,
     waveform_options: Optional[Dict] = None,
 ) -> None:
@@ -61,6 +64,18 @@ def run_postprocess(
 
     sorter : str
         The name of the sorter (e.g. "kilosort2_5").
+
+    existing_waveform_data : Literal["overwrite", "load_if_exists", "fail_if_exists"]
+        Determines how existing preprocessed data (e.g. from a prior pipeline run)
+        is treated.
+            "overwrite" : will overwrite any existing preprocessed data output. This will
+                          delete the 'preprocessed' folder. Therefore, never save
+                          derivative work there.
+            "load_if_exists" : will search for existing data and load if it exists.
+                               Otherwise, will use the preprocessing from the
+                               current run.
+            "fail_if_exists" : If existing preprocessed data is found, an error
+                               will be raised.
 
     verbose : bool
         If True, messages will be printed to console updating on the
@@ -87,37 +102,68 @@ def run_postprocess(
         verbose,
     )
 
-    if not sorting_data.waveforms_output_path.is_dir():
-        utils.message_user(f"Saving waveforms to {sorting_data.waveforms_output_path}")
+    waveforms = run_or_get_waveforms(
+        sorting_data, existing_waveform_data, waveform_options, sorter, verbose
+    )
+
+    save_quality_matrics(waveforms, sorting_data)
+    save_unit_locations(waveforms, sorting_data)
+    save_plots_of_templates(sorting_data.postprocessing_output_path, waveforms)
+    save_waveform_similarities(
+        sorting_data.postprocessing_output_path, waveforms, MATRIX_BACKEND
+    )
+
+
+# Sorting Loader -----------------------------------------------------------------------
+
+
+def run_or_get_waveforms(
+    sorting_data: SortingData,
+    existing_waveform_data: HandleExisting,
+    waveform_options: Dict,
+    sorter: str,
+    verbose: bool,
+):
+    """
+    How to handle existing waveform output, either load, fail if exists or
+    overwrite.
+    """
+    if (
+        sorting_data.postprocessing_output_path.is_dir()
+        and existing_waveform_data == "load_if_exists"
+    ):
+        utils.message_user(
+            f"Loading existing waveforms from: "
+            f"{sorting_data.postprocessing_output_path}",
+            verbose,
+        )
+        waveforms = si.load_waveforms(sorting_data.postprocessing_output_path)
+
+    elif (
+        sorting_data.postprocessing_output_path.is_dir()
+        and existing_waveform_data == "fail_if_exists"
+    ):
+        raise RuntimeError(
+            f"Waveforms exist at {sorting_data.postprocessing_output_path} but "
+            f"`existing_waveform_data` is 'fail_if_exists'."
+        )
+    else:
+        utils.message_user(
+            f"Saving waveforms to {sorting_data.postprocessing_output_path}"
+        )
 
         sorting_without_excess_spikes = load_sorting_output(sorting_data, sorter)
 
         waveforms = si.extract_waveforms(
             sorting_data.data["0-preprocessed"],
             sorting_without_excess_spikes,
-            folder=sorting_data.waveforms_output_path,
+            folder=sorting_data.postprocessing_output_path,
             use_relative_path=True,
+            overwrite=True,
             **waveform_options,
         )
 
-    else:
-        utils.message_user(
-            f"Loading existing waveforms from: {sorting_data.waveforms_output_path}",
-            verbose,
-        )
-        waveforms = si.load_waveforms(sorting_data.waveforms_output_path)
-
-    save_plots_of_templates(sorting_data.waveforms_output_path, waveforms)
-
-    # Perform postprocessing
-    save_quality_matrics(waveforms, sorting_data)
-    save_unit_locations(waveforms, sorting_data)
-    save_waveform_similarities(
-        sorting_data.waveforms_output_path, waveforms, MATRIX_BACKEND
-    )
-
-
-# Sorting Loader -----------------------------------------------------------------------
+    return waveforms
 
 
 def load_sorting_output(sorting_data: SortingData, sorter: str) -> BaseSorting:
@@ -199,7 +245,7 @@ def save_unit_locations(waveforms: WaveformExtractor, sorting_data: SortingData)
 
 
 def save_waveform_similarities(
-    waveforms_output_path: Path,
+    postprocessing_output_path: Path,
     waveforms: WaveformExtractor,
     backend: Literal["jax", "numpy"],
 ):
@@ -214,7 +260,7 @@ def save_waveform_similarities(
     Parameters
     ---------
 
-    waveforms_output_path : Path
+    postprocessing_output_path : Path
         Pathlib object holding the output path where waveforms are saved
         and /images will be written.
 
@@ -227,7 +273,7 @@ def save_waveform_similarities(
     """
     utils.message_user("Saving waveform similarity matrices...\n")
 
-    matrices_out_path = waveforms_output_path / "similarity_matrices"
+    matrices_out_path = postprocessing_output_path / "similarity_matrices"
     matrices_out_path.mkdir(exist_ok=True)
 
     t = time.perf_counter()
@@ -249,7 +295,9 @@ def save_waveform_similarities(
 # --------------------------------------------------------------------------------------
 
 
-def save_plots_of_templates(waveforms_output_path: Path, waveforms: WaveformExtractor):
+def save_plots_of_templates(
+    postprocessing_output_path: Path, waveforms: WaveformExtractor
+):
     """
     Save a plot of all templates in 'waveforms/images' folder. The plot
     displays the template waveform are calculated in two ways
@@ -266,7 +314,7 @@ def save_plots_of_templates(waveforms_output_path: Path, waveforms: WaveformExtr
     Parameters
     ------
 
-    waveforms_output_path : Path
+    postprocessing_output_path : Path
         Pathlib object holding the output path where waveforms are saved
         and /images will be written.
 
@@ -295,9 +343,11 @@ def save_plots_of_templates(waveforms_output_path: Path, waveforms: WaveformExtr
         plt.ylabel(y_label)
         plt.title(f"Unit {unit_id} Template")
 
-        output_folder = waveforms_output_path / "images"
+        output_folder = postprocessing_output_path / "template_plots"
         output_folder.mkdir(exist_ok=True)
-        plt.savefig(waveforms_output_path / "images" / f"unit_{unit_id}.png")
+        plt.savefig(
+            postprocessing_output_path / "template_plots" / f"unit_{unit_id}.png"
+        )
         plt.clf()
 
     utils.message_user(f"Saving plots of templates took: {time.perf_counter() - t}")

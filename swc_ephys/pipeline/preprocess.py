@@ -157,11 +157,11 @@ def perform_preprocessing_step(
         applied across the entire preprocessing chain.
 
     pp_funcs : Dict
-        The cannonical SpikeInterface preprocessing functions. The key
+        The canonical SpikeInterface preprocessing functions. The key
         are the function name and value the function object.
 
     verbose : bool
-        If True, messages will be printed to consolve updating on the
+        If True, messages will be printed to console updating on the
         progress of preprocessing / sorting.
     """
     pp_name, pp_options = pp_info

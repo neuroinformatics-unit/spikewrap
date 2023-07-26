@@ -84,7 +84,7 @@ def run_sorting(
     ss.run_sorter(
         sorter,
         sorting_data.data["0-preprocessed"],
-        output_folder=sorting_data.sorter_base_output_path,
+        output_folder=sorting_data.sorting_output_path,
         singularity_image=singularity_image,
         remove_existing_folder=overwrite_existing_sorter_output,
         **sorter_options_dict,

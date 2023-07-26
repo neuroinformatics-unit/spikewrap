@@ -56,7 +56,7 @@ class SortingData(BaseUserDict):
         # is known, set_sorter_output_paths()
         self.sorter_base_output_path = Path()
         self.sorter_run_output_path = Path()
-        self.waveforms_output_path = Path()
+        self.postprocessing_output_path = Path()
         self.quality_metrics_path = Path()
         self.unit_locations_path = Path()
 
@@ -145,15 +145,18 @@ class SortingData(BaseUserDict):
             canonical name, is where spikeinterface
             automatically saves sorter output
         """
-        self.sorter_base_output_path = (
-            self.base_path
-            / "derivatives"
-            / self.sub_name
-            / f"{self.pp_run_name}"
-            / f"{sorter}-sorting"
+        self.sorter_base_output_path = utils.make_sorter_base_output_path(
+            self.base_path, self.sub_name, self.pp_run_name, sorter
         )
 
-        self.sorter_run_output_path = self.sorter_base_output_path / "sorter_output"
-        self.waveforms_output_path = self.sorter_base_output_path / "waveforms"
-        self.quality_metrics_path = self.sorter_base_output_path / "quality_metrics.csv"
-        self.unit_locations_path = self.sorter_base_output_path / "unit_locations.csv"
+        self.sorting_output_path = self.sorter_base_output_path / "sorting"
+        self.sorter_run_output_path = self.sorting_output_path / "sorter_output"
+        self.postprocessing_output_path = (
+            self.sorter_base_output_path / "postprocessing"
+        )
+        self.quality_metrics_path = (
+            self.postprocessing_output_path / "quality_metrics.csv"
+        )
+        self.unit_locations_path = (
+            self.postprocessing_output_path / "unit_locations.csv"
+        )

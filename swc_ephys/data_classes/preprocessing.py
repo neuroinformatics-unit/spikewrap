@@ -202,6 +202,11 @@ class PreprocessingData(BaseUserDict):
 
         return pp_run_name
 
+    def get_expected_sorter_path(self, sorter: str) -> Path:
+        return utils.make_sorter_base_output_path(
+            self.base_path, self.sub_name, self.pp_run_name, sorter
+        )
+
     # Load and Save --------------------------------------------------------------------
 
     def set_pp_steps(self, pp_steps: Dict) -> None:
