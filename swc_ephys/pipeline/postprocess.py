@@ -17,14 +17,12 @@ from ..configs.configs import get_configs
 from ..data_classes.sorting import SortingData
 from ..pipeline.load_data import load_data_for_sorting
 from ..utils import utils
+from ..utils.custom_typing import HandleExisting
 from .waveform_compare import get_waveform_similarity
 
 if TYPE_CHECKING:
     from spikeinterface import WaveformExtractor
     from spikeinterface.core import BaseSorting
-
-# TODO REMOVE DUPLICATION!!
-HandleExisting = Literal["overwrite", "load_if_exists", "fail_if_exists"]
 
 MATRIX_BACKEND: Literal["numpy", "jax"]
 try:

@@ -11,12 +11,11 @@ if TYPE_CHECKING:
 from ..configs.configs import get_configs
 from ..pipeline.load_data import load_data_for_sorting
 from ..utils import slurm, utils
+from ..utils.custom_typing import HandleExisting
 from .load_data import load_spikeglx_data
 from .postprocess import run_postprocess
 from .preprocess import preprocess
 from .sort import run_sorting
-
-HandleExisting = Literal["overwrite", "load_if_exists", "fail_if_exists"]
 
 
 def run_full_pipeline(
