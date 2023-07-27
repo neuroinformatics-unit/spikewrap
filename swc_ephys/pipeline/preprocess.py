@@ -1,5 +1,5 @@
 import json
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Tuple, Union
 
 import numpy as np
 import spikeinterface.preprocessing as spre
@@ -11,7 +11,7 @@ from ..utils import utils
 
 def preprocess(
     preprocess_data: PreprocessingData,
-    pp_steps: Optional[Dict] = None,
+    pp_steps: Union[Dict, str],
     verbose: bool = True,
 ) -> PreprocessingData:
     """
@@ -30,7 +30,13 @@ def preprocess(
         paths to rawdata. The pp_steps attribute is set on
         this class during execution of this function.
 
-    pp_steps: pp_steps dictionary, see configs/configs.py for details.
+    pp_steps: either a pp_steps dictionary, or name of valid
+              preprocessing .yaml file (without hte yaml extension).
+              See configs/configs.py for details.
+
+    verbose : bool
+        If True, messages will be printed to console updating on the
+        progress of preprocessing / sorting.
 
     Returns
     -------
@@ -41,16 +47,16 @@ def preprocess(
         associated SpikeInterface recording objects.
 
     """
-    if not pp_steps:
-        # TODO: should this ever be done? Might be
-        # very confusing if user forgets to pass pp_steps
-        pp_steps, _, _ = configs.get_configs("test")
+    if isinstance(pp_steps, str):
+        pp_steps_to_run, _, _ = configs.get_configs(pp_steps)
+    else:
+        pp_steps_to_run = pp_steps
 
     pp_funcs = get_pp_funcs()
 
-    checked_pp_steps, pp_step_names = check_and_sort_pp_steps(pp_steps, pp_funcs)
+    checked_pp_steps, pp_step_names = check_and_sort_pp_steps(pp_steps_to_run, pp_funcs)
 
-    preprocess_data.set_pp_steps(pp_steps)
+    preprocess_data.set_pp_steps(pp_steps_to_run)
 
     for step_num, pp_info in checked_pp_steps.items():
         perform_preprocessing_step(
@@ -110,8 +116,12 @@ def check_and_sort_pp_steps(pp_steps: Dict, pp_funcs: Dict) -> Tuple[Dict, List[
     return pp_steps, pp_step_names
 
 
-def validate_pp_steps(pp_steps):
-    # Check keys are numbers starting at 1 increasing by 1
+def validate_pp_steps(pp_steps: Dict):
+    """
+    Ensure the pp_steps dictionary of preprocessing steps to
+    has number-order that makes sense. The preprocessing step numbers
+    should start 1 at, and increase by 1 for each subsequent step.
+    """
     assert all(
         key.isdigit() for key in pp_steps.keys()
     ), "pp_steps keys must be integers"
@@ -191,6 +201,14 @@ def perform_preprocessing_step(
 
 
 def confidence_check_pp_func_name(pp_name, pp_funcs):
+    """
+    Ensure that the correct preprocessing function is retrieved. This
+    essentially checks the get_pp_funcs dictionary is correct.
+
+    TODO
+    ----
+    This should be a standalone test, not incorporated into the package.
+    """
     func_name_to_class_name = "".join([word.lower() for word in pp_name.split("_")])
 
     if pp_name == "silence_periods":

@@ -23,7 +23,7 @@ def run_full_pipeline(
     base_path: Union[Path, str],
     sub_name: str,
     run_names: Union[List[str], str],
-    config_name: str = "test",
+    config_name: str = "default",
     sorter: str = "kilosort2_5",
     existing_preprocessed_data: HandleExisting = "load_if_exists",
     existing_sorting_output: HandleExisting = "load_if_exists",

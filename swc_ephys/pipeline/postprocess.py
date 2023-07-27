@@ -99,7 +99,7 @@ def run_postprocess(
 
     # Create / load waveforms
     if waveform_options is None:
-        _, _, waveform_options = get_configs("test")
+        _, _, waveform_options = get_configs("default")
 
     sorting_data.set_sorter_output_paths(sorter)
 
