@@ -195,7 +195,6 @@ def confidence_check_pp_func_name(pp_name, pp_funcs):
 
     if pp_name == "silence_periods":
         assert pp_funcs[pp_name].__name__ == "SilencedPeriodsRecording"  # TODO: open PR
-
     elif isinstance(pp_funcs[pp_name], type):
         assert (
             func_name_to_class_name in pp_funcs[pp_name].__name__.lower()
