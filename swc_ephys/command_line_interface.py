@@ -33,7 +33,7 @@ parser.add_argument(
     "--config-name",
     "--config_name",
     type=str,
-    default="test",
+    default="default",
     help="name of the configuration file to use.",
 )
 

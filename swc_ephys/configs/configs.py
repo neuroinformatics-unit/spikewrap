@@ -61,9 +61,9 @@ def get_configs(name: str) -> Tuple[Dict, Dict, Dict]:
     with open(config_filepath) as file:
         config = yaml.full_load(file)
 
-    pp_steps = config["preprocessing"]
-    sorter_options = config["sorting"]
-    waveform_options = config["waveforms"]
+    pp_steps = config["preprocessing"] if "preprocessing" in config else {}
+    sorter_options = config["sorting"] if "sorting" in config else {}
+    waveform_options = config["waveforms"] if "waveforms" in config else {}
 
     utils.cast_pp_steps_values(pp_steps, "tuple")
 

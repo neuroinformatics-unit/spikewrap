@@ -6,8 +6,11 @@ import shutil
 from pathlib import Path
 
 import pytest
+from spikeinterface import concatenate_recordings
 
-from swc_ephys.pipeline import full_pipeline
+from swc_ephys.pipeline import full_pipeline, preprocess
+from swc_ephys.pipeline.full_pipeline import get_configs
+from swc_ephys.pipeline.load_data import load_spikeglx_data
 
 ON_HPC = True
 
@@ -21,8 +24,15 @@ class TestFirstEphys:
         return output_data_path
 
     @pytest.fixture(scope="function")
-    def test_info(self, output_data_path):
+    def test_info(self, output_data_path, request):
         """ """
+        if not hasattr(request, "param"):
+            mode = "time-short"
+        else:
+            mode = request.param
+
+        output_data_path = output_data_path / mode
+
         sub_name = "1119617"
         run_names = [
             "1119617_LSE1_shank12",
@@ -45,19 +55,45 @@ class TestFirstEphys:
         sub_name,
         run_names,
         existing_preprocessed_data="fail_if_exists",
-        overwrite_existing_sorter_output=True,
+        existing_sorting_output="overwrite",
         slurm_batch=False,
     ):
         full_pipeline.run_full_pipeline(
             base_path,
             sub_name,
             run_names,
-            config_name="test",
+            config_name="default",
             sorter="kilosort2_5",
             existing_preprocessed_data=existing_preprocessed_data,
-            overwrite_existing_sorter_output=overwrite_existing_sorter_output,
+            existing_sorting_output=existing_sorting_output,
+            overwrite_postprocessing=True,
             slurm_batch=slurm_batch,
         )
+
+    @pytest.mark.parametrize("test_info", ["time-tiny"], indirect=True)
+    def test_preprocessing_options_with_small_file(self, test_info):
+        """"""
+        pp_steps, __, __ = get_configs("test_pp_small_file")
+
+        preprocess_data = load_spikeglx_data(*test_info[:3])
+
+        preprocess_data = preprocess.preprocess(preprocess_data, pp_steps, verbose=True)
+        preprocess_data.save_all_preprocessed_data(overwrite=True)
+
+    def test_preprocessing_options_with_large_file(self, test_info):
+        """
+        Some preprocessing steps do not ru non the  short file because
+        of issues with chunk size. The ones that didn't work
+        are run here on a larger file.
+        """
+        pp_steps, __, __ = get_configs("test_pp_large_file")
+
+        preprocess_data = load_spikeglx_data(*test_info[:3])
+        # motion correction requires only 1 segment
+        preprocess_data["0-raw"] = concatenate_recordings([preprocess_data["0-raw"]])
+
+        preprocess_data = preprocess.preprocess(preprocess_data, pp_steps, verbose=True)
+        preprocess_data.save_all_preprocessed_data(overwrite=True)
 
     def test_single_run_local__(self, test_info):
         test_info.pop(3)

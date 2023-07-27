@@ -1,5 +1,5 @@
 import json
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Tuple, Union
 
 import numpy as np
 import spikeinterface.preprocessing as spre
@@ -11,7 +11,7 @@ from ..utils import utils
 
 def preprocess(
     preprocess_data: PreprocessingData,
-    pp_steps: Optional[Dict] = None,
+    pp_steps: Union[Dict, str],
     verbose: bool = True,
 ) -> PreprocessingData:
     """
@@ -30,7 +30,13 @@ def preprocess(
         paths to rawdata. The pp_steps attribute is set on
         this class during execution of this function.
 
-    pp_steps: pp_steps dictionary, see configs/configs.py for details.
+    pp_steps: either a pp_steps dictionary, or name of valid
+              preprocessing .yaml file (without hte yaml extension).
+              See configs/configs.py for details.
+
+    verbose : bool
+        If True, messages will be printed to console updating on the
+        progress of preprocessing / sorting.
 
     Returns
     -------
@@ -41,16 +47,16 @@ def preprocess(
         associated SpikeInterface recording objects.
 
     """
-    if not pp_steps:
-        # TODO: should this ever be done? Might be
-        # very confusing if user forgets to pass pp_steps
-        pp_steps, _, _ = configs.get_configs("test")
+    if isinstance(pp_steps, str):
+        pp_steps_to_run, _, _ = configs.get_configs(pp_steps)
+    else:
+        pp_steps_to_run = pp_steps
 
     pp_funcs = get_pp_funcs()
 
-    checked_pp_steps, pp_step_names = check_and_sort_pp_steps(pp_steps, pp_funcs)
+    checked_pp_steps, pp_step_names = check_and_sort_pp_steps(pp_steps_to_run, pp_funcs)
 
-    preprocess_data.set_pp_steps(pp_steps)
+    preprocess_data.set_pp_steps(pp_steps_to_run)
 
     for step_num, pp_info in checked_pp_steps.items():
         perform_preprocessing_step(
@@ -79,8 +85,8 @@ def check_and_sort_pp_steps(pp_steps: Dict, pp_funcs: Dict) -> Tuple[Dict, List[
 
     Returns
     -------
-    sorted_pp_steps :Dict
-        A sorted and checked preprocessing steps dictionary.
+    pp_steps :Dict
+        The checked preprocessing steps dictionary.
 
     pp_step_names : List
         Preprocessing step names (e.g. "bandpass_filter") in order
@@ -91,21 +97,8 @@ def check_and_sort_pp_steps(pp_steps: Dict, pp_funcs: Dict) -> Tuple[Dict, List[
     This will soon be deprecated and replaced by validation
     of the config file itself on load.
     """
-    sorted_pp_steps = {k: pp_steps[k] for k in sorted(pp_steps.keys())}
-    pp_step_names = [item[0] for item in sorted_pp_steps.values()]
-
-    # Check keys are numbers starting at 1 increasing by 1
-    assert all(
-        key.isdigit() for key in sorted_pp_steps.keys()
-    ), "pp_steps keys must be integers"
-
-    key_nums = [int(key) for key in sorted_pp_steps.keys()]
-
-    assert np.min(key_nums) == 1, "dict keys must start at 1"
-
-    diffs = np.diff(key_nums)
-    assert np.unique(diffs).size == 1, "all dict keys must increase in steps of 1"
-    assert diffs[0] == 1, "all dict keys must increase in steps of 1"
+    validate_pp_steps(pp_steps)
+    pp_step_names = [item[0] for item in pp_steps.values()]
 
     # Check the preprocessing function names are valid and print steps used
     canonical_step_names = list(pp_funcs.keys())
@@ -117,10 +110,30 @@ def check_and_sort_pp_steps(pp_steps: Dict, pp_funcs: Dict) -> Tuple[Dict, List[
 
     utils.message_user(
         f"\nThe preprocessing options dictionary is "
-        f"{json.dumps(sorted_pp_steps, indent=4, sort_keys=True)}"
+        f"{json.dumps(pp_steps, indent=4, sort_keys=True)}"
     )
 
-    return sorted_pp_steps, pp_step_names
+    return pp_steps, pp_step_names
+
+
+def validate_pp_steps(pp_steps: Dict):
+    """
+    Ensure the pp_steps dictionary of preprocessing steps to
+    has number-order that makes sense. The preprocessing step numbers
+    should start 1 at, and increase by 1 for each subsequent step.
+    """
+    assert all(
+        key.isdigit() for key in pp_steps.keys()
+    ), "pp_steps keys must be integers"
+
+    key_nums = [int(key) for key in pp_steps.keys()]
+
+    assert np.min(key_nums) == 1, "dict keys must start at 1"
+
+    if len(key_nums) > 1:
+        diffs = np.diff(key_nums)
+        assert np.unique(diffs).size == 1, "all dict keys must increase in steps of 1"
+        assert diffs[0] == 1, "all dict keys must increase in steps of 1"
 
 
 def perform_preprocessing_step(
@@ -145,7 +158,7 @@ def perform_preprocessing_step(
         Preprocessing step to run (e.g. "1", corresponds to the key in pp_dict).
 
     pp_info : Tuple[str, Dict]
-        Preprocessing name, preprocessing kwargs) tuple (they value from
+        Preprocessing name, preprocessing kwargs) tuple (the value from
         the pp_dict).
 
     preprocess_data : PreprocessingData
@@ -176,9 +189,41 @@ def perform_preprocessing_step(
 
     new_name = f"{step_num}-" + "-".join(["raw"] + pp_step_names[: int(step_num)])
 
-    assert pp_funcs[pp_name].__name__ == pp_name, "something is wrong in func dict"
+    confidence_check_pp_func_name(pp_name, pp_funcs)
 
-    preprocess_data[new_name] = pp_funcs[pp_name](last_pp_step_output, **pp_options)
+    if isinstance(last_pp_step_output, Dict):
+        preprocess_data[new_name] = {
+            k: pp_funcs[pp_name](v, **pp_options)
+            for k, v in last_pp_step_output.items()
+        }
+    else:
+        preprocess_data[new_name] = pp_funcs[pp_name](last_pp_step_output, **pp_options)
+
+
+def confidence_check_pp_func_name(pp_name, pp_funcs):
+    """
+    Ensure that the correct preprocessing function is retrieved. This
+    essentially checks the get_pp_funcs dictionary is correct.
+
+    TODO
+    ----
+    This should be a standalone test, not incorporated into the package.
+    """
+    func_name_to_class_name = "".join([word.lower() for word in pp_name.split("_")])
+
+    if pp_name == "silence_periods":
+        assert pp_funcs[pp_name].__name__ == "SilencedPeriodsRecording"  # TODO: open PR
+    elif isinstance(pp_funcs[pp_name], type):
+        assert (
+            func_name_to_class_name in pp_funcs[pp_name].__name__.lower()
+        ), "something is wrong in func dict"
+
+    else:
+        assert pp_funcs[pp_name].__name__ == pp_name
+
+
+def remove_channels(recording, bad_channel_ids):
+    return recording.remove_channels(bad_channel_ids)
 
 
 def get_pp_funcs() -> Dict:
@@ -195,6 +240,25 @@ def get_pp_funcs() -> Dict:
         "phase_shift": spre.phase_shift,
         "bandpass_filter": spre.bandpass_filter,
         "common_reference": spre.common_reference,
+        "blank_saturation": spre.blank_staturation,
+        "center": spre.center,
+        "clip": spre.clip,
+        "correct_lsb": spre.correct_lsb,
+        "correct_motion": spre.correct_motion,
+        "depth_order": spre.depth_order,
+        "filter": spre.filter,
+        "gaussian_bandpass_filter": spre.gaussian_bandpass_filter,
+        "highpass_filter": spre.highpass_filter,
+        "interpolate_bad_channels": spre.interpolate_bad_channels,
+        "normalize_by_quantile": spre.normalize_by_quantile,
+        "notch_filter": spre.notch_filter,
+        "remove_artifacts": spre.remove_artifacts,
+        "remove_channels": remove_channels,
+        "resample": spre.resample,
+        "scale": spre.scale,
+        "silence_periods": spre.silence_periods,
+        "whiten": spre.whiten,
+        "zscore": spre.zscore,
     }
 
     return pp_funcs
