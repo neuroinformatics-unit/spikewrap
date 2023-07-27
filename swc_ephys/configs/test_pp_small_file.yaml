@@ -11,7 +11,7 @@
   - operator: median
     reference: global
   '4':
-  - blank_saturation  # quite long
+  - blank_saturation
   - quantile_threshold: 0.01
     fill_value: 1
   '5':
@@ -64,15 +64,3 @@
   - remove_channels
   - bad_channel_ids:
       - 'imec0.ap#AP1'
-#  '12':
-#    - split_by_group
-#    - {}
-#  '13':
-#  - highpass_spatial_filter
-#  - apply_agc: False
-# silence periods
-# bad channel detection
-# bad channel removal
-# bad channel interpolation
-    # detect_bad_channels
-    # remove_bad_channels

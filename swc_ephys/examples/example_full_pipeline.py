@@ -13,7 +13,7 @@ run_names = [
     "1119617_pretest1_shank12",
 ]
 
-config_name = "test"
+config_name = "default"
 sorter = "kilosort2_5"  # "spykingcircus"
 
 if __name__ == "__main__":

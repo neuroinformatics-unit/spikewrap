@@ -62,7 +62,7 @@ class TestFirstEphys:
             base_path,
             sub_name,
             run_names,
-            config_name="test",
+            config_name="default",
             sorter="kilosort2_5",
             existing_preprocessed_data=existing_preprocessed_data,
             overwrite_existing_sorter_output=overwrite_existing_sorter_output,
@@ -80,7 +80,11 @@ class TestFirstEphys:
         preprocess_data.save_all_preprocessed_data(overwrite=True)
 
     def test_preprocessing_options_with_large_file(self, test_info):
-        """"""
+        """
+        Some preprocessing steps do not ru non the  short file because
+        of issues with chunk size. The ones that didn't work
+        are run here on a larger file.
+        """
         pp_steps, __, __ = get_configs("test_pp_large_file")
 
         preprocess_data = load_spikeglx_data(*test_info[:3])
