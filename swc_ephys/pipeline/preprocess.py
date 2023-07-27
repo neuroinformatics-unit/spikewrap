@@ -53,7 +53,6 @@ def preprocess(
     preprocess_data.set_pp_steps(pp_steps)
 
     for step_num, pp_info in checked_pp_steps.items():
-        # breakpoint()
         perform_preprocessing_step(
             step_num, pp_info, preprocess_data, pp_step_names, pp_funcs, verbose
         )
@@ -121,9 +120,10 @@ def validate_pp_steps(pp_steps):
 
     assert np.min(key_nums) == 1, "dict keys must start at 1"
 
-    diffs = np.diff(key_nums)
-    assert np.unique(diffs).size == 1, "all dict keys must increase in steps of 1"
-    assert diffs[0] == 1, "all dict keys must increase in steps of 1"
+    if len(key_nums) > 1:
+        diffs = np.diff(key_nums)
+        assert np.unique(diffs).size == 1, "all dict keys must increase in steps of 1"
+        assert diffs[0] == 1, "all dict keys must increase in steps of 1"
 
 
 def perform_preprocessing_step(
@@ -182,34 +182,31 @@ def perform_preprocessing_step(
     confidence_check_pp_func_name(pp_name, pp_funcs)
 
     if isinstance(last_pp_step_output, Dict):
-        preprocess_data[new_name] = {k: pp_funcs[pp_name](v, **pp_options) for k, v in last_pp_step_output.items()}
+        preprocess_data[new_name] = {
+            k: pp_funcs[pp_name](v, **pp_options)
+            for k, v in last_pp_step_output.items()
+        }
     else:
         preprocess_data[new_name] = pp_funcs[pp_name](last_pp_step_output, **pp_options)
-
-
-def split_by_group(recording, **kwargs):
-    # Only takes **kwargs to match signature of SI functions
-    # TODO: need to be very careful the first pp steps are included in this...
-    return recording.split_by(property="group")
 
 
 def confidence_check_pp_func_name(pp_name, pp_funcs):
     func_name_to_class_name = "".join([word.lower() for word in pp_name.split("_")])
 
     if pp_name == "silence_periods":
-        try:
-            assert pp_funcs[pp_name].__name__ == "SilencedPeriodsRecording"  # TODO: open PR
-        except:
-            breakpoint()
+        assert pp_funcs[pp_name].__name__ == "SilencedPeriodsRecording"  # TODO: open PR
+
     elif isinstance(pp_funcs[pp_name], type):
-        try:
-            assert (
-                func_name_to_class_name in pp_funcs[pp_name].__name__.lower()
-            ), "something is wrong in func dict"
-        except:
-            breakpoint()
+        assert (
+            func_name_to_class_name in pp_funcs[pp_name].__name__.lower()
+        ), "something is wrong in func dict"
+
     else:
         assert pp_funcs[pp_name].__name__ == pp_name
+
+
+def remove_channels(recording, bad_channel_ids):
+    return recording.remove_channels(bad_channel_ids)
 
 
 def get_pp_funcs() -> Dict:
@@ -235,21 +232,16 @@ def get_pp_funcs() -> Dict:
         "filter": spre.filter,
         "gaussian_bandpass_filter": spre.gaussian_bandpass_filter,
         "highpass_filter": spre.highpass_filter,
-        "highpass_spatial_filter": spre.highpass_spatial_filter,
         "interpolate_bad_channels": spre.interpolate_bad_channels,
         "normalize_by_quantile": spre.normalize_by_quantile,
         "notch_filter": spre.notch_filter,
         "remove_artifacts": spre.remove_artifacts,
+        "remove_channels": remove_channels,
         "resample": spre.resample,
         "scale": spre.scale,
         "silence_periods": spre.silence_periods,
         "whiten": spre.whiten,
         "zscore": spre.zscore,
-        "split_by_group": split_by_group,
     }
-
-
-    # detect_bad_channels
-    # remove_bad_channels
 
     return pp_funcs

@@ -18,6 +18,7 @@ from spikeinterface import concatenate_recordings
 
 # TODO: how does splitting by group work for sorting?
 
+
 def canonical_names(name: str) -> str:
     """
     Store the canonical names e.g. filenames, tags
@@ -65,7 +66,9 @@ def get_keys_first_char(
         the first numbers of the Preprocessing / Sorting Data
         .data dictionary keys.
     """
-    list_of_numbers = [int(key.split("-")[0]) if as_int else key.split("-")[0] for key in data.keys()]
+    list_of_numbers = [
+        int(key.split("-")[0]) if as_int else key.split("-")[0] for key in data.keys()
+    ]
     return list_of_numbers
 
 

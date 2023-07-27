@@ -26,20 +26,6 @@
   - correct_lsb
   - seed: 10
     chunk_size: 0
-#  '8':
-#  - correct_motion
-#  - chunk_size: 1
-#    preset: kilosort_like
-#    detect_kwargs:
-#      chunk_size: 1
-#    select_kwargs:
-#      chunk_size: 1
-#    localize_peaks_kwargs:
-#      chunk_size: 1
-#    estimate_motion_kwargs:
-#      chunk_size: 1
-#    interpolate_motion_kwargs:
-#      chunk_size: 1
   '8':
   - filter
   - band: 5000
@@ -55,50 +41,26 @@
     - p: 1.5
       bad_channel_ids:
         - 'imec0.ap#AP1'
-#  '12':
-#    - depth_order
-#    - channel_ids:
-#        - 'imec0.ap#AP0'
-#        - 'imec0.ap#AP1'
-#        - 'imec0.ap#AP2'
   '12':
-    - split_by_group
-    - {}
-  '13':
-  - highpass_spatial_filter
-  - apply_agc: False
-  '14':
   - normalize_by_quantile
   - chunk_size: 2
-  '15':
+  '13':
   - notch_filter
   - freq: 2000
-  '16':
+  '14':
   - remove_artifacts
   - list_triggers:
     - - 1
     - - 2
     - - 3
-  '17':
+  '15':
   - resample
   - resample_rate: 2
     margin_ms: 50
-  '18':
+  '16':
   - scale
   - gain: 2
-#  '19':
-#  - silence_periods
-#  - list_periods:
-#    - - - 1
-#        - 5
-#    - - - 10
-#        - 12
-#    - - - 15
-#        - 18
-#  '19':
-#  - whiten
-#  - chunk_size:
-#      1
-#  '19':
-#  - zscore
-#  - chunk_size: 1
+  '17':
+  - remove_channels
+  - bad_channel_ids:
+      - 'imec0.ap#AP1'

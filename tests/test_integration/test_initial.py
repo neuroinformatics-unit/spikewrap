@@ -6,10 +6,12 @@ import shutil
 from pathlib import Path
 
 import pytest
+from spikeinterface import concatenate_recordings
 
 from swc_ephys.pipeline import full_pipeline, preprocess
 from swc_ephys.pipeline.full_pipeline import get_configs
 from swc_ephys.pipeline.load_data import load_spikeglx_data
+
 ON_HPC = True
 
 
@@ -68,11 +70,22 @@ class TestFirstEphys:
         )
 
     @pytest.mark.parametrize("test_info", ["time-tiny"], indirect=True)
-    def test_all_preprocessing_options(self, test_info):
+    def test_preprocessing_options_with_small_file(self, test_info):
         """"""
-        pp_steps, __, __ = get_configs("test_all_pp")
+        pp_steps, __, __ = get_configs("test_pp_small_file")
 
         preprocess_data = load_spikeglx_data(*test_info[:3])
+
+        preprocess_data = preprocess.preprocess(preprocess_data, pp_steps, verbose=True)
+        preprocess_data.save_all_preprocessed_data(overwrite=True)
+
+    def test_preprocessing_options_with_large_file(self, test_info):
+        """"""
+        pp_steps, __, __ = get_configs("test_pp_large_file")
+
+        preprocess_data = load_spikeglx_data(*test_info[:3])
+        # motion correction requires only 1 segment
+        preprocess_data["0-raw"] = concatenate_recordings([preprocess_data["0-raw"]])
 
         preprocess_data = preprocess.preprocess(preprocess_data, pp_steps, verbose=True)
         preprocess_data.save_all_preprocessed_data(overwrite=True)

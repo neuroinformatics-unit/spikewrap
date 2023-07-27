@@ -1,0 +1,14 @@
+'preprocessing':
+  '1':
+  - correct_motion
+  - {}
+  '2':
+  - whiten
+  - dtype: float32
+  '3':
+  - zscore
+  - chunk_size: 50
+  '4':
+  - depth_order
+  - channel_ids:
+    - 'imec0.ap#AP3'
