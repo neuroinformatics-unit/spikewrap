@@ -10,6 +10,7 @@
   - common_reference
   - operator: median
     reference: global
+    verbose: True
 
 'sorting':
   'kilosort2':
@@ -18,6 +19,7 @@
   'kilosort2_5':
     'car': False
     'freq_min': 150
+    'delete_tmp_files': False
   'kilosort3':
     'car': False
     'freq_min': 300
