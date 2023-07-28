@@ -20,7 +20,7 @@ classifiers = [
 ]
 
 dependencies = [
-    "spikeinterface==0.97.1",
+    "spikeinterface==0.98.2",
     "jax",
     "jaxlib",
     "spython",  # I think missing from SI?
