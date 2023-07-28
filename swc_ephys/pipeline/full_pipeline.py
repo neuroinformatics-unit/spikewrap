@@ -29,6 +29,7 @@ def run_full_pipeline(
     existing_sorting_output: HandleExisting = "load_if_exists",
     overwrite_postprocessing: bool = False,
     postprocessing_to_run: Union[Literal["all"], Dict] = "all",
+    delete_intermediate_files: Tuple = ("recording_for_sorter", "waveforms"),
     verbose: bool = True,
     slurm_batch: bool = False,
 ) -> None:
@@ -93,6 +94,21 @@ def run_full_pipeline(
         all available postprocessing. Otherwise, provide a dict of
         including postprocessing to run e.g. {"quality_metrics: True"}.
 
+    delete_intermediate_files: Tuple[str]
+        Specify which intermediate files to delete. Valid inputs
+        are:
+            "preprocessing" - The preprocessed data, in which preprocessing
+                              steps are performed on the raw data and saved to file.
+            "recording_for_sorter" - The preprocessed data, concatenated across sessions
+                                     and saved to file in the 'sorter_output' folder.
+                                     This serves as the input to sorting, and may be further
+                                     processed by the sorter.
+            "preprocessed_by_sorter" - The data containing any preprocessing done by the
+                                       sorter, for example the 'temp_wh.dat' file output
+                                       by kilosort. NOTE: deleting this file will mean
+                                       sorting output cannot be loaded by Phy.
+
+            "waveforms" -
     verbose : bool
         If True, messages will be printed to console updating on the
         progress of preprocessing / sorting.

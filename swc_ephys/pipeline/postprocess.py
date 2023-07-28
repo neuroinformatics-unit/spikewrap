@@ -330,6 +330,10 @@ def save_waveform_similarities(
     t = time.perf_counter()
     for unit_id in waveforms.sorting.get_unit_ids():
         sim_matrix, spike_times = get_waveform_similarity(waveforms, unit_id, backend)
+
+        if sim_matrix is False or spike_times is False:
+            continue
+
         sim_matrix_pd = pd.DataFrame(sim_matrix, columns=spike_times, index=spike_times)
         sim_matrix_pd.to_csv(
             matrices_out_path / f"waveform_similarity_unit_{unit_id}.csv"

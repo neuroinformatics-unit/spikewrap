@@ -37,17 +37,17 @@ def get_waveform_similarity(
     """
     waveforms_data = waveforms.get_waveforms(unit_id=unit_id)
 
+    if waveforms_data.shape[0] < 2:
+        utils.message_user(
+            f"Skipping {unit_id} as one or less waveforms detected for this unit."
+        )
+        return False, False
+
     selected_waveform_peak_times = get_times_of_waveform_spikes(waveforms, unit_id)
 
     assert (
         waveforms_data.shape[0] == selected_waveform_peak_times.size
     ), "Number of waveform peak times does not match number of extracted waveforms."
-
-    if waveforms_data.shape[0] == 1:
-        utils.message_user(
-            f"Skipping {unit_id} as one waveform detected for this unit."
-        )
-        return np.nan, selected_waveform_peak_times
 
     if backend == "numpy":
         similarity_matrix = calculate_similarity_numpy(waveforms_data)
@@ -72,7 +72,10 @@ def get_times_of_waveform_spikes(waveforms, unit_id):
     Check manually that the correct spike times are extracted, as compared with Phy.
     """
     select_waveform_tuples = waveforms.get_sampled_indices(unit_id)
-    select_waveform_idxs, seg_idxs = zip(*select_waveform_tuples)
+    try:
+        select_waveform_idxs, seg_idxs = zip(*select_waveform_tuples)
+    except:
+        breakpoint()
     assert np.all(np.array(seg_idxs) == 0), "Multi-segment waveforms not tested."
 
     all_waveform_peak_idxs = waveforms.sorting.get_unit_spike_train(unit_id)
