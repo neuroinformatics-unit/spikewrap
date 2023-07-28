@@ -299,17 +299,19 @@ class PreprocessingData(BaseUserDict):
 
         TODO: move this to a canonical_filepaths module.
         """
-
-        run_path = (
-            self.base_path / "derivatives" / self.sub_name / f"{self.pp_run_name}"
+        self.preprocessed_data_path = (
+            self.base_path
+            / "derivatives"
+            / self.sub_name
+            / f"{self.pp_run_name}"
+            / "preprocessed"
         )
-        self.preprocessed_data_path = run_path / "preprocessed"
 
         self._pp_data_attributes_path = (
             self.preprocessed_data_path / utils.canonical_names("preprocessed_yaml")
         )
         self._pp_binary_data_path = self.preprocessed_data_path / "si_recording"
-        self._sync_channel_data_path = run_path / "sync_channel"
+        self._sync_channel_data_path = self.preprocessed_data_path / "sync_channel"
 
     def get_sub_folder_path(self) -> Path:
         """
