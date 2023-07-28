@@ -65,10 +65,12 @@ class PreprocessingData(BaseUserDict):
 
         self.pp_steps: Optional[Dict] = None
         self.data: Dict = {"0-raw": None}
+        self.sync = None
 
         self.preprocessed_data_path = Path()
         self._pp_data_attributes_path = Path()
         self._pp_binary_data_path = Path()
+        self._sync_channel_data_path = Path()
         self._set_preprocessing_output_path()
 
     # Handle Multiple Runs -------------------------------------------------------------
@@ -244,6 +246,7 @@ class PreprocessingData(BaseUserDict):
                 shutil.rmtree(self.preprocessed_data_path)
         self._save_data_class()
         self._save_preprocessed_binary()
+        self._save_sync_channel()
 
     def _save_preprocessed_binary(self) -> None:
         """
@@ -252,6 +255,11 @@ class PreprocessingData(BaseUserDict):
         """
         recording, __ = utils.get_dict_value_from_step_num(self, "last")
         recording.save(folder=self._pp_binary_data_path, chunk_memory="10M")
+
+    def _save_sync_channel(self) -> None:
+        """ """
+        assert self.sync is not None, "Sync channel on PreprocessData is None"
+        self.sync.save(folder=self._sync_channel_data_path, chunk_memory="10M")
 
     def _save_data_class(self) -> None:
         """
@@ -271,6 +279,7 @@ class PreprocessingData(BaseUserDict):
             "preprocessed_data_path": self.preprocessed_data_path.as_posix(),
             "_pp_binary_data_path": self._pp_binary_data_path.as_posix(),
             "_pp_data_attributes_path": self._pp_data_attributes_path.as_posix(),
+            "_sync_channel_data_path": self._sync_channel_data_path.as_posix(),
         }
         if not self.preprocessed_data_path.is_dir():
             os.makedirs(self.preprocessed_data_path)
@@ -290,17 +299,17 @@ class PreprocessingData(BaseUserDict):
 
         TODO: move this to a canonical_filepaths module.
         """
-        self.preprocessed_data_path = (
-            self.base_path
-            / "derivatives"
-            / self.sub_name
-            / f"{self.pp_run_name}"
-            / "preprocessed"
+
+        run_path = (
+            self.base_path / "derivatives" / self.sub_name / f"{self.pp_run_name}"
         )
+        self.preprocessed_data_path = run_path / "preprocessed"
+
         self._pp_data_attributes_path = (
             self.preprocessed_data_path / utils.canonical_names("preprocessed_yaml")
         )
         self._pp_binary_data_path = self.preprocessed_data_path / "si_recording"
+        self._sync_channel_data_path = run_path / "sync_channel"
 
     def get_sub_folder_path(self) -> Path:
         """

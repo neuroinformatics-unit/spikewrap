@@ -43,17 +43,24 @@ def load_spikeglx_data(
     """
     preprocess_data = PreprocessingData(base_path, sub_name, run_names)
 
-    all_recordings = [
-        se.read_spikeglx(
-            folder_path=run_path,
-            stream_id="imec0.ap",
-            all_annotations=True,
-            load_sync_channel=False,
-        )
-        for run_path in preprocess_data.all_run_paths
-    ]
+    all_recordings = []
+    all_sync = []
+    for run_path in preprocess_data.all_run_paths:
+        with_sync, without_sync = [
+            se.read_spikeglx(
+                folder_path=run_path,
+                stream_id="imec0.ap",
+                all_annotations=True,
+                load_sync_channel=sync,
+            )
+            for sync in [True, False]
+        ]
+        all_recordings.append(without_sync)
+        sync_channel_id = with_sync.get_channel_ids()[-1]
+        all_sync.append(with_sync.channel_slice(channel_ids=[sync_channel_id]))
 
     preprocess_data["0-raw"] = append_recordings(all_recordings)
+    preprocess_data.sync = append_recordings(all_sync)
 
     return preprocess_data
 
