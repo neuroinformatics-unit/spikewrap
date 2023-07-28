@@ -7,10 +7,10 @@ base_path = Path(
 )
 sub_name = "1119617"  # "1110925"  # "1119617"
 run_names = [
-  #  "1110925_test_shank1"
-     "1119617_LSE1_shank12",
-     "1119617_posttest1_shank12",
-     "1119617_pretest1_shank12",
+    #  "1110925_test_shank1"
+    "1119617_LSE1_shank12",
+    "1119617_posttest1_shank12",
+    "1119617_pretest1_shank12",
 ]
 
 config_name = "default"
