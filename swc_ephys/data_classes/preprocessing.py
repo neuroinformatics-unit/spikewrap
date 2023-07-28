@@ -67,10 +67,10 @@ class PreprocessingData(BaseUserDict):
         self.data: Dict = {"0-raw": None}
         self.sync = None
 
-        self.preprocessed_data_path = Path()
-        self._pp_data_attributes_path = Path()
-        self._pp_binary_data_path = Path()
-        self._sync_channel_data_path = Path()
+        self.preprocessed_data_path: Path
+        self._pp_data_attributes_path: Path
+        self._pp_binary_data_path: Path
+        self._sync_channel_data_path: Path
         self._set_preprocessing_output_path()
 
     # Handle Multiple Runs -------------------------------------------------------------

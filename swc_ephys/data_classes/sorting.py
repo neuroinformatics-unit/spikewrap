@@ -54,11 +54,11 @@ class SortingData(BaseUserDict):
 
         # These paths are set when the sorter
         # is known, set_sorter_output_paths()
-        self.sorter_base_output_path = Path()
-        self.sorter_run_output_path = Path()
-        self.postprocessing_output_path = Path()
-        self.quality_metrics_path = Path()
-        self.unit_locations_path = Path()
+        self.sorter_base_output_path: Path
+        self.sorter_run_output_path: Path
+        self.postprocessing_output_path: Path
+        self.quality_metrics_path: Path
+        self.unit_locations_path: Path
 
         # This is set later, depending on
         # concatenated or not.
