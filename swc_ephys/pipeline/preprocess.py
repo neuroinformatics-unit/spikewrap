@@ -3,12 +3,14 @@ from typing import Dict, List, Tuple, Union
 
 import numpy as np
 import spikeinterface.preprocessing as spre
+from pydantic import validate_call
 
 from ..configs import configs
 from ..data_classes.preprocessing import PreprocessingData
 from ..utils import utils
 
 
+@validate_call
 def preprocess(
     preprocess_data: PreprocessingData,
     pp_steps: Union[Dict, str],

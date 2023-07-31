@@ -4,17 +4,17 @@ import copy
 import os
 import shutil
 from pathlib import Path
-from typing import TYPE_CHECKING, Dict, Literal, Optional, Union
-
-if TYPE_CHECKING:
-    from ..data_classes.sorting import SortingData
+from typing import Dict, Literal, Optional, Union
 
 import spikeinterface.sorters as ss
+from pydantic import validate_call
 
+from ..data_classes.sorting import SortingData
 from ..pipeline.load_data import load_data_for_sorting
 from ..utils import slurm, utils
 
 
+@validate_call
 def run_sorting(
     preprocessed_data_path: Union[Path, str],
     sorter: str = "kilosort2_5",
@@ -49,7 +49,7 @@ def run_sorting(
          exists. If True, existing sorting output will be overwritten.
 
     verbose : bool
-        If True, messages will be printed to consolve updating on the
+        If True, messages will be printed to console updating on the
         progress of preprocessing / sorting.
 
     slurm_batch : bool

@@ -19,7 +19,7 @@ sorter = "kilosort2_5"  # "spykingcircus"
 if __name__ == "__main__":
     run_full_pipeline(
         base_path,
-        sub_name,
+        1,  # sub_name,
         run_names,
         config_name,
         sorter,

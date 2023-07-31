@@ -1,18 +1,17 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, List, Union
-
-if TYPE_CHECKING:
-    from pathlib import Path
-
+from pathlib import Path
+from typing import List, Union
 
 import spikeinterface.extractors as se
+from pydantic import validate_call
 from spikeinterface import append_recordings
 
 from ..data_classes.preprocessing import PreprocessingData
 from ..data_classes.sorting import SortingData
 
 
+@validate_call
 def load_spikeglx_data(
     base_path: Union[Path, str], sub_name: str, run_names: Union[List[str], str]
 ) -> PreprocessingData:

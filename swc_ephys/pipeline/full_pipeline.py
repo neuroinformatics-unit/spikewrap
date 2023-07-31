@@ -3,13 +3,13 @@ from __future__ import annotations
 import copy
 import shutil
 from pathlib import Path
-from typing import TYPE_CHECKING, Dict, List, Literal, Union
+from typing import Dict, List, Literal, Union
 
-if TYPE_CHECKING:
-    from ..data_classes.preprocessing import PreprocessingData
-    from ..data_classes.sorting import SortingData
+from pydantic import validate_call
 
 from ..configs.configs import get_configs
+from ..data_classes.preprocessing import PreprocessingData
+from ..data_classes.sorting import SortingData
 from ..pipeline.load_data import load_data_for_sorting
 from ..utils import slurm, utils
 from ..utils.custom_types import HandleExisting
@@ -19,6 +19,7 @@ from .preprocess import preprocess
 from .sort import run_sorting
 
 
+@validate_call
 def run_full_pipeline(
     base_path: Union[Path, str],
     sub_name: str,
@@ -101,6 +102,7 @@ def run_full_pipeline(
         If True, the pipeline will be run in a SLURM job. Set False
         if running on an interactive job, or locally.
     """
+    breakpoint()
     if slurm_batch:
         local_args = copy.deepcopy(locals())
         slurm.run_full_pipeline_slurm(**local_args)

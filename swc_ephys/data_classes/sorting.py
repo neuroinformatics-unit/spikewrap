@@ -4,12 +4,13 @@ from typing import Dict, Union
 
 import spikeinterface as si
 import yaml
+from pydantic import BaseModel
 
 from ..utils import utils
 from .base import BaseUserDict
 
 
-class SortingData(BaseUserDict):
+class SortingData(BaseUserDict, BaseModel):
     """
     Class to organise the sorting of preprocessed data. Handles the
     paths to preprocessed data, sorted output and all post-processing

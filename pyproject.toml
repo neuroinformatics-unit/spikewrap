@@ -25,6 +25,7 @@ dependencies = [
     "jaxlib",
     "spython",  # I think missing from SI?
     "submitit",
+    "pydantic",
 ]
 
 [project.urls]

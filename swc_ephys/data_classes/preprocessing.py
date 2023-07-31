@@ -6,12 +6,13 @@ from pathlib import Path
 from typing import Dict, List, Optional, Tuple, Union
 
 import yaml
+from pydantic import BaseModel
 
 from ..utils import utils
 from .base import BaseUserDict
 
 
-class PreprocessingData(BaseUserDict):
+class PreprocessingData(BaseUserDict, BaseModel):
     def __init__(
         self,
         base_path: Union[Path, str],

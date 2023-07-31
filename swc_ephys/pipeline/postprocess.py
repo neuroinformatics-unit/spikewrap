@@ -3,14 +3,16 @@ from __future__ import annotations
 import time
 import warnings
 from pathlib import Path
-from typing import TYPE_CHECKING, Dict, Literal, Optional, Union
+from typing import Dict, Literal, Optional, Union
 
 import matplotlib.pyplot as plt
 import numpy
 import numpy as np
 import pandas as pd
 import spikeinterface as si
-from spikeinterface import curation
+from pydantic import validate_call
+from spikeinterface import WaveformExtractor, curation
+from spikeinterface.core import BaseSorting
 from spikeinterface.extractors import KiloSortSortingExtractor
 
 from ..configs.configs import get_configs
@@ -19,10 +21,6 @@ from ..pipeline.load_data import load_data_for_sorting
 from ..utils import utils
 from ..utils.custom_types import HandleExisting
 from .waveform_compare import get_waveform_similarity
-
-if TYPE_CHECKING:
-    from spikeinterface import WaveformExtractor
-    from spikeinterface.core import BaseSorting
 
 MATRIX_BACKEND: Literal["numpy", "jax"]
 try:
@@ -36,11 +34,13 @@ except ImportError:
 
 # TODO: delete all quality checks before re-analysis.
 
+
 # --------------------------------------------------------------------------------------
 # Run Postprocessing
 # --------------------------------------------------------------------------------------
 
 
+@validate_call
 def run_postprocess(
     sorting_data: Union[Path, str, SortingData],
     sorter: str,
