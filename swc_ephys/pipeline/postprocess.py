@@ -11,7 +11,7 @@ import numpy as np
 import pandas as pd
 import spikeinterface as si
 from spikeinterface import curation
-from spikeinterface.extractors import KiloSortSortingExtractor
+from spikeinterface.extractors import NpzSortingExtractor
 
 from ..configs.configs import get_configs
 from ..data_classes.sorting import SortingData
@@ -261,10 +261,25 @@ def load_sorting_output(sorting_data: SortingData, sorter: str) -> BaseSorting:
 
     recording = sorting_data[sorting_data.init_data_key]
 
-    sorting = KiloSortSortingExtractor(
-        folder_path=sorting_data.sorter_run_output_path,
-        keep_good_only=False,
-    )
+    if "kilosort" in sorter:
+        sorting = si.extractors.read_kilosort(
+            folder_path=sorting_data.sorter_run_output_path,
+            keep_good_only=False,
+        )
+    elif sorter == "mountainsort5":
+        sorting = NpzSortingExtractor(
+            (sorting_data.sorter_run_output_path / "firings.npz").as_posix()
+        )  # si.extractors.read_mda_sorting(file_path=(sorting_data.sorter_run_output_path / "firings.npz").as_posix(), sampling_frequency=sorting_data["0-preprocessed"].get_sampling_frequency())
+
+    elif sorter == "tridesclous":
+        sorting = si.extractors.read_tridesclous(
+            folder_path=sorting_data.sorter_run_output_path.as_posix()
+        )
+
+    elif sorter == "spykingcircus":
+        sorting = si.extractors.read_spykingcircus(
+            folder_path=sorting_data.sorter_run_output_path.as_posix()
+        )
 
     sorting = sorting.remove_empty_units()
     sorting_without_excess_spikes = curation.remove_excess_spikes(sorting, recording)
