@@ -26,7 +26,8 @@ dependencies = [
     "spython",  # I think missing from SI?
     "submitit",
     # sorter-specific
-    "trisdesclous",
+    "tridesclous",
+    "pwd",
 ]
 
 [project.urls]

@@ -46,8 +46,8 @@ class TestFirstEphys:
 
         yield [output_data_path, sub_name, run_names, output_path]
 
-        if output_path.is_dir():
-            shutil.rmtree(output_path)
+    #      if output_path.is_dir():
+    #         shutil.rmtree(output_path)
 
     def run_full_pipeline(
         self,
@@ -55,7 +55,7 @@ class TestFirstEphys:
         sub_name,
         run_names,
         existing_preprocessed_data="fail_if_exists",
-        existing_sorting_output="overwrite",
+        existing_sorting_output="overwrite",  # TODO: should use "fail_if_exists"?
         slurm_batch=False,
         sorter="kilosort2_5",
     ):
