@@ -34,7 +34,6 @@ except ImportError:
     )
     MATRIX_BACKEND = "numpy"
 
-# TODO: delete all quality checks before re-analysis.
 
 # --------------------------------------------------------------------------------------
 # Run Postprocessing
@@ -269,7 +268,7 @@ def load_sorting_output(sorting_data: SortingData, sorter: str) -> BaseSorting:
     elif sorter == "mountainsort5":
         sorting = NpzSortingExtractor(
             (sorting_data.sorter_run_output_path / "firings.npz").as_posix()
-        )  # si.extractors.read_mda_sorting(file_path=(sorting_data.sorter_run_output_path / "firings.npz").as_posix(), sampling_frequency=sorting_data["0-preprocessed"].get_sampling_frequency())
+        )
 
     elif sorter == "tridesclous":
         sorting = si.extractors.read_tridesclous(

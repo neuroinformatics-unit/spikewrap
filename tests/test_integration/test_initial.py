@@ -46,8 +46,8 @@ class TestFirstEphys:
 
         yield [output_data_path, sub_name, run_names, output_path]
 
-    #      if output_path.is_dir():
-    #         shutil.rmtree(output_path)
+        if output_path.is_dir():
+            shutil.rmtree(output_path)
 
     def run_full_pipeline(
         self,
@@ -55,7 +55,7 @@ class TestFirstEphys:
         sub_name,
         run_names,
         existing_preprocessed_data="fail_if_exists",
-        existing_sorting_output="overwrite",  # TODO: should use "fail_if_exists"?
+        existing_sorting_output="fail_if_exists",
         slurm_batch=False,
         sorter="kilosort2_5",
     ):
@@ -97,9 +97,16 @@ class TestFirstEphys:
         preprocess_data.save_all_preprocessed_data(overwrite=True)
 
     @pytest.mark.parametrize(
-        "sorter", ["spykingcircus"]
-    )  # ["kilosort2", "kilosort2_5", "kilosort3",
-    #   "mountainsort5", "spykingcircus", "tridesclous"])
+        "sorter",
+        [
+            "kilosort2",
+            "kilosort2_5",
+            "kilosort3",
+            "mountainsort5",
+            "spykingcircus",
+            "tridesclous",
+        ],
+    )
     def test_single_run_local__(self, test_info, sorter):
         test_info.pop(3)
         test_info[2] = test_info[2][0]
