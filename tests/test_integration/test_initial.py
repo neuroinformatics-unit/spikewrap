@@ -7,6 +7,7 @@ from pathlib import Path
 
 import pytest
 from spikeinterface import concatenate_recordings
+
 from spikewrap.pipeline import full_pipeline, preprocess
 from spikewrap.pipeline.full_pipeline import get_configs
 from spikewrap.pipeline.load_data import load_spikeglx_data
