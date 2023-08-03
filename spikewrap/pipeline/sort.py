@@ -14,7 +14,7 @@ import platform
 import spikeinterface.sorters as ss
 
 from ..pipeline.load_data import load_data_for_sorting
-from ..utils import slurm, utils, checks
+from ..utils import checks, slurm, utils
 
 
 def run_sorting(
@@ -131,7 +131,9 @@ def move_singularity_image_if_required(
         Name of the sorter.
     """
     if singularity_image is True:
-        assert platform.system() == "Linux", "Docker Desktop should be used on Windows or macOS."
+        assert (
+            platform.system() == "Linux"
+        ), "Docker Desktop should be used on Windows or macOS."
         store_singularity_image(sorting_data.base_path, sorter)
 
 
@@ -169,8 +171,9 @@ def get_image_run_settings(
         assert checks._check_virtual_machine()
 
         if platform.system != "Linux":
-            assert checks.docker_desktop_is_running(),\
-                "Docker is not running. Open Docker Desktop to start Docker."
+            assert (
+                checks.docker_desktop_is_running()
+            ), "Docker is not running. Open Docker Desktop to start Docker."
 
     return singularity_image, docker_image
 
