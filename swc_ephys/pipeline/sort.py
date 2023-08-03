@@ -4,7 +4,7 @@ import copy
 import os
 import shutil
 from pathlib import Path
-from typing import TYPE_CHECKING, Dict, Literal, Optional, Union
+from typing import TYPE_CHECKING, Dict, Literal, Optional, Tuple, Union
 
 if TYPE_CHECKING:
     from ..data_classes.sorting import SortingData
@@ -93,12 +93,16 @@ def run_sorting(
         **sorter_options_dict,
     )
 
-    move_singularity_image_if_required(singularity_image, sorter)
+    move_singularity_image_if_required(sorting_data, singularity_image, sorter)
 
     return sorting_data
 
 
-def move_singularity_image_if_required(singularity_image, sorter):
+def move_singularity_image_if_required(
+    sorting_data: SortingData,
+    singularity_image: Optional[Union[Literal[True], str]],
+    sorter: str,
+) -> None:
     """
     On Linux, images are cased to the sorting_data base folder
     by default by SpikeInterface. To avoid re-downloading
@@ -119,14 +123,29 @@ def move_singularity_image_if_required(singularity_image, sorter):
     sorter : str
         Name of the sorter.
     """
-    if (
-        singularity_image is True
-    ):
+    if singularity_image is True:
         assert platform.system() != "Windows", "Docker should be used on windows."
         store_singularity_image(sorting_data.base_path, sorter)
 
 
-def get_image_run_settings(sorter):
+def get_image_run_settings(
+    sorter: str,
+) -> Tuple[
+    Optional[Union[Literal[True], str]], Optional[bool]
+]:  # cannot set this to Literal[True], for unknown reason.
+    """
+    Determine how to run the sorting, either locally or in a container
+    if required (e.g. kilosort2_5). On windows, Docker is used,
+    otherwise singularity. Docker images are handled by Docker-desktop,
+    but singularity image storage is handled internally, see
+    `move_singularity_image_if_required()`.
+
+    Parameters
+    ----------
+
+    sorter : str
+        Sorter name.
+    """
     can_run_locally = ["spykingcircus", "mountainsort5", "tridesclous"]
 
     if sorter in can_run_locally:

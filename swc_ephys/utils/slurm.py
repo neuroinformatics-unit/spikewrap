@@ -215,3 +215,8 @@ def send_user_start_message(
         f"{processing_function} submitted to SLURM with job id {job.job_id}\n"
         f"with arguments{kwargs}"
     )
+
+
+def is_slurm_installed():
+    slurm_installed = subprocess.run("sinfo -v", shell=True).returncode == 0
+    return slurm_installed

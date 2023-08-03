@@ -11,8 +11,9 @@ from spikeinterface import concatenate_recordings
 from swc_ephys.pipeline import full_pipeline, preprocess
 from swc_ephys.pipeline.full_pipeline import get_configs
 from swc_ephys.pipeline.load_data import load_spikeglx_data
+from swc_ephys.utils.slurm import is_slurm_installed
 
-ON_HPC = True
+CAN_SLURM = is_slurm_installed()
 
 
 class TestFirstEphys:
@@ -136,7 +137,7 @@ class TestFirstEphys:
 
         self.run_full_pipeline(*test_info)
 
-    @pytest.mark.skipif(ON_HPC is False, reason="ON_HPC is false")
+    @pytest.mark.skipif(CAN_SLURM is False, reason="CAN_SLURM is false")
     def test_single_run_slurm(self, test_info, output_data_path):
         test_info.pop(3)
 
@@ -162,7 +163,7 @@ class TestFirstEphys:
         assert "Quality metrics saved to" in log_output
         assert "Job completed successfully" in log_output
 
-    @pytest.mark.skipif(ON_HPC is False, reason="ON_HPC is false")
+    @pytest.mark.skipif(CAN_SLURM is False, reason="CAN_SLURM is false")
     def test_multi_run_slurm(self, test_info, output_data_path):
         test_info.pop(3)
 
