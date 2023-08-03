@@ -1,9 +1,11 @@
 from __future__ import annotations
 
 import copy
+import gc
 import shutil
+import time
 from pathlib import Path
-from typing import TYPE_CHECKING, Dict, List, Literal, Union
+from typing import TYPE_CHECKING, Dict, List, Literal, Tuple, Union
 
 if TYPE_CHECKING:
     from ..data_classes.preprocessing import PreprocessingData
@@ -29,6 +31,11 @@ def run_full_pipeline(
     existing_sorting_output: HandleExisting = "load_if_exists",
     overwrite_postprocessing: bool = False,
     postprocessing_to_run: Union[Literal["all"], Dict] = "all",
+    delete_intermediate_files: Tuple[
+        Literal["preprocessed", "recording.dat", "temp_wh.dat", "waveforms"]
+    ] = (
+        "recording.dat",
+    ),  # TODO: use new spikeinterface settings for kilosort.
     verbose: bool = True,
     slurm_batch: bool = False,
 ) -> None:
@@ -93,6 +100,22 @@ def run_full_pipeline(
         all available postprocessing. Otherwise, provide a dict of
         including postprocessing to run e.g. {"quality_metrics: True"}.
 
+    delete_intermediate_files : Tuple[Union["preprocessing", "recording.dat", "temp_wh.dat", "waveforms"]]  # TODO: check types
+        Specify intermediate files or folders to delete. This option is useful for
+        reducing the size of output data by deleting unneeded files.
+
+        preprocessing  - the 'preprocesed' folder holding the data that has been
+                         preprocessed by SpikeInterface
+        recording.dat - SpikeInterfaces copies the preprocessed data to folder
+                        prior to sorting, where it resides in the 'sorter_output'
+                        folder. Often, this can be deleted after sorting.
+        temp_wh.dat - Kilosort output file that holds the data preprocessed by
+                      Kilosort (e.g. drift correction). By default, this is used
+                      for visualisation in Phy.
+        waveforms - The waveform outputs that SpikeInterface generates to calculate
+                    quality metrics. Often, these can be deleted once final quality
+                    metrics are computed.
+
     verbose : bool
         If True, messages will be printed to console updating on the
         progress of preprocessing / sorting.
@@ -130,6 +153,41 @@ def run_full_pipeline(
         verbose=verbose,
         waveform_options=waveform_options,
     )
+
+    handle_delete_intermediate_files(sorting_data, delete_intermediate_files)
+
+
+def handle_delete_intermediate_files(sorting_data, delete_intermediate_files):
+    """ """
+    if "preprocessed" in delete_intermediate_files:
+        # remove the existing link to the preprocessed data binary.
+        # wait time of 5 s is arbitrary.
+        # TODO: this feels very hacky. Can unlink the memory map from the segment?
+        # Ask SI.
+        del sorting_data["0-preprocessed"]
+        gc.collect()
+        time.sleep(5)
+
+        if sorting_data.preprocessed_data_path.is_dir():
+            shutil.rmtree(sorting_data.preprocessed_data_path)
+
+    if "recording.dat" in delete_intermediate_files:
+        if (
+            recording_file := sorting_data.sorter_run_output_path / "recording.dat"
+        ).is_file():
+            recording_file.unlink()
+
+    if "temp_wh.dat" in delete_intermediate_files:
+        if (
+            recording_file := sorting_data.sorter_run_output_path / "temp_wh.dat"
+        ).is_file():
+            recording_file.unlink()
+
+    if "waveforms" in delete_intermediate_files:
+        if (
+            waveforms_path := sorting_data.postprocessing_output_path / "waveforms"
+        ).is_dir():
+            shutil.rmtree(waveforms_path)
 
 
 def delete_postprocessing_output_if_it_exists(
