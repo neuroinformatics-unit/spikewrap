@@ -83,6 +83,13 @@ def run_sorting(
 
     utils.message_user(f"Starting {sorter} sorting...")
 
+    # TODO: can remove on API change PR #1908
+    # Also, once #1908 is merged and updated, we need to check
+    # that 'delete_intermediate_files' is not passed by the
+    # user in the config file because it is overridden here.
+    if "kilosort" in sorter:
+        sorter_options_dict.update({"delete_tmp_files": False})
+
     ss.run_sorter(
         sorter,
         sorting_data.data["0-preprocessed"],
