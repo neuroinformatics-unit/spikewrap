@@ -7,7 +7,6 @@ from pathlib import Path
 
 import pytest
 from spikeinterface import concatenate_recordings
-
 from swc_ephys.pipeline import full_pipeline, preprocess
 from swc_ephys.pipeline.full_pipeline import get_configs
 from swc_ephys.pipeline.load_data import load_spikeglx_data
