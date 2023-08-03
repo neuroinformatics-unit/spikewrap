@@ -1,6 +1,6 @@
-from swc_ephys.pipeline.load_data import load_spikeglx_data
-from swc_ephys.pipeline.preprocess import preprocess
-from swc_ephys.pipeline.visualise import visualise
+from spikewrap.pipeline.load_data import load_spikeglx_data
+from spikewrap.pipeline.preprocess import preprocess
+from spikewrap.pipeline.visualise import visualise
 
 base_path = r"X:\neuroinformatics\scratch\jziminski\ephys\test_data\steve_multi_run\1119617\time-short"
 sub_name = "1119617"

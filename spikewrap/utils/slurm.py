@@ -147,7 +147,7 @@ def wrap_function_with_env_setup(
     if isinstance(slurm_opts, dict) and "env_name" in slurm_opts:
         env_name = slurm_opts["env_name"]
     else:
-        env_name = "swc_ephys"
+        env_name = "spikewrap"
 
     print(f"\nrunning {function.__name__} with SLURM....\n")
 

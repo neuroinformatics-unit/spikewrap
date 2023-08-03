@@ -53,7 +53,7 @@ def get_keys_first_char(
     Parameters
     ----------
     data : Union[PreprocessingData, SortingData]
-        swc_ephys PreprocessingData class holding filepath information.
+        spikewrap PreprocessingData class holding filepath information.
 
     as_int : bool
         If True, the first character of the keys are cast to
@@ -88,7 +88,7 @@ def get_dict_value_from_step_num(
     Parameters
     ----------
     data : Union[PreprocessingData, SortingData]
-        swc_ephys PreprocessingData class holding filepath information.
+        spikewrap PreprocessingData class holding filepath information.
 
     step_num : str
         The preprocessing step number to get the value (i.e. recording object)
@@ -166,7 +166,7 @@ def concatenate_runs(recording: BaseRecording) -> BaseRecording:
 def get_local_sorter_path(sorter: str) -> Path:
     """
     Return the path to a sorter singularity image. The sorters are
-    stored by swc_ephys in the home folder.
+    stored by spikewrap in the home folder.
 
     Parameters
     ----------
@@ -179,7 +179,7 @@ def get_local_sorter_path(sorter: str) -> Path:
         The path to the sorter image on the local machine.
     """
     local_path = (
-        Path.home() / ".swc_ephys" / "sorter_images" / get_sorter_image_name(sorter)
+        Path.home() / ".spikewrap" / "sorter_images" / get_sorter_image_name(sorter)
     )
     local_path.parent.mkdir(exist_ok=True, parents=True)
     return local_path

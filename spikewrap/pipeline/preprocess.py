@@ -162,7 +162,7 @@ def perform_preprocessing_step(
         the pp_dict).
 
     preprocess_data : PreprocessingData
-        swc_ephys PreprocessingData class (a UserDict in which key-values are
+        spikewrap PreprocessingData class (a UserDict in which key-values are
         the preprocessing chain name : spikeinterface recording objects).
 
     pp_step_names : List[str]

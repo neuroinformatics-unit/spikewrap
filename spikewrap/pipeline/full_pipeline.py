@@ -66,7 +66,7 @@ def run_full_pipeline(
     config_name : str
         The name of the configuration to use. Note this must be the name
         of a .yaml file (not including the extension) stored in
-        swc_ephys/configs.
+        spikewrap/configs.
 
     sorter : str
         name of the sorter to use e.g. "kilosort2_5".

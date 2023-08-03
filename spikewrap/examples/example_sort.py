@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from swc_ephys.pipeline.sort import run_sorting
+from spikewrap.pipeline.sort import run_sorting
 
 base_path = Path(
     r"/ceph/neuroinformatics/neuroinformatics/scratch/jziminski/ephys/test_data/steve_multi_run/1119617/time-mid"

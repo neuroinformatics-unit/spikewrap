@@ -7,10 +7,11 @@ from pathlib import Path
 
 import pytest
 from spikeinterface import concatenate_recordings
-from swc_ephys.pipeline import full_pipeline, preprocess
-from swc_ephys.pipeline.full_pipeline import get_configs
-from swc_ephys.pipeline.load_data import load_spikeglx_data
-from swc_ephys.utils.slurm import is_slurm_installed
+
+from spikewrap.pipeline import full_pipeline, preprocess
+from spikewrap.pipeline.full_pipeline import get_configs
+from spikewrap.pipeline.load_data import load_spikeglx_data
+from spikewrap.utils.slurm import is_slurm_installed
 
 CAN_SLURM = is_slurm_installed()
 

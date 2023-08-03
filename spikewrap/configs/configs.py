@@ -11,7 +11,7 @@ from ..utils import utils
 def get_configs(name: str) -> Tuple[Dict, Dict, Dict]:
     """
     Loads the config yaml file in the same folder
-    (swc_ephys/configs) containing preprocessing (pp)
+    (spikewrap/configs) containing preprocessing (pp)
     and sorter options.
 
     Once loaded, the list containing preprocesser name
