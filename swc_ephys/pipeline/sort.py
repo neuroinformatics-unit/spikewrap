@@ -4,10 +4,12 @@ import copy
 import os
 import shutil
 from pathlib import Path
-from typing import TYPE_CHECKING, Dict, Literal, Optional, Union
+from typing import TYPE_CHECKING, Dict, Literal, Optional, Tuple, Union
 
 if TYPE_CHECKING:
     from ..data_classes.sorting import SortingData
+
+import platform
 
 import spikeinterface.sorters as ss
 
@@ -77,7 +79,7 @@ def run_sorting(
     # This must be run from the folder that has both sorter output AND rawdata
     os.chdir(sorting_data.base_path)
 
-    singularity_image = get_singularity_image(sorter)
+    singularity_image, docker_image = get_image_run_settings(sorter)
 
     utils.message_user(f"Starting {sorter} sorting...")
 
@@ -86,16 +88,77 @@ def run_sorting(
         sorting_data.data["0-preprocessed"],
         output_folder=sorting_data.sorting_output_path,
         singularity_image=singularity_image,
+        docker_image=docker_image,
         remove_existing_folder=overwrite_existing_sorter_output,
         **sorter_options_dict,
     )
 
-    if (
-        singularity_image is True
-    ):  # no existing image was found # TODO: need to use this only on local!
-        store_singularity_image(sorting_data.base_path, sorter)
+    move_singularity_image_if_required(sorting_data, singularity_image, sorter)
 
     return sorting_data
+
+
+def move_singularity_image_if_required(
+    sorting_data: SortingData,
+    singularity_image: Optional[Union[Literal[True], str]],
+    sorter: str,
+) -> None:
+    """
+    On Linux, images are cased to the sorting_data base folder
+    by default by SpikeInterface. To avoid re-downloading
+    images, these are moved to a pre-determined folder (home
+    for local, pre-set on an HPC). This is only required
+    for singularity, as docker-desktop handles all image
+    storage.
+
+    Parameters
+    ----------
+
+    singularity_image: Optional[Union[Literal[True], Path]]
+        Holds either a path to an existing (stored) sorter, or
+        `True`. If `True`, no stored sorter image exists and so
+        we move it. The next time sorting is performed, it will use
+        this stored image.
+
+    sorter : str
+        Name of the sorter.
+    """
+    if singularity_image is True:
+        assert platform.system() != "Windows", "Docker should be used on windows."
+        store_singularity_image(sorting_data.base_path, sorter)
+
+
+def get_image_run_settings(
+    sorter: str,
+) -> Tuple[
+    Optional[Union[Literal[True], str]], Optional[bool]
+]:  # cannot set this to Literal[True], for unknown reason.
+    """
+    Determine how to run the sorting, either locally or in a container
+    if required (e.g. kilosort2_5). On windows, Docker is used,
+    otherwise singularity. Docker images are handled by Docker-desktop,
+    but singularity image storage is handled internally, see
+    `move_singularity_image_if_required()`.
+
+    Parameters
+    ----------
+
+    sorter : str
+        Sorter name.
+    """
+    can_run_locally = ["spykingcircus", "mountainsort5", "tridesclous"]
+
+    if sorter in can_run_locally:
+        singularity_image = docker_image = None
+    else:
+        if platform.system() == "Windows":
+            singularity_image = None
+            docker_image = True
+        else:
+            singularity_image = get_singularity_image(sorter)
+            docker_image = None
+
+    return singularity_image, docker_image
 
 
 def store_singularity_image(base_path: Path, sorter: str) -> None:
@@ -115,6 +178,38 @@ def store_singularity_image(base_path: Path, sorter: str) -> None:
     """
     path_to_image = base_path / utils.get_sorter_image_name(sorter)
     shutil.move(path_to_image, utils.get_local_sorter_path(sorter).parent)
+
+
+def get_singularity_image(sorter: str) -> Union[Literal[True], str]:
+    """
+    Get the path to a pre-installed system singularity image. If none
+    can be found, set to True. In this case SpikeInterface will
+    pull the image to the current working directory, and
+    this will be moved after sorting
+    (see store_singularity_image).
+
+    Parameters
+    ----------
+    sorter : str
+        Name of the sorter to get the image for.
+
+    Returns
+    -------
+    singularity_image [ Union[Literal[True], str]
+        If `str`, the path to the singularity image. Otherwise if `True`,
+        this tells SpikeInterface to pull the image.
+    """
+    singularity_image: Union[Literal[True], str]
+
+    if utils.get_hpc_sorter_path(sorter).is_file():
+        singularity_image = str(utils.get_hpc_sorter_path(sorter))
+
+    elif utils.get_local_sorter_path(sorter).is_file():
+        singularity_image = str(utils.get_local_sorter_path(sorter))
+    else:
+        singularity_image = True
+
+    return singularity_image
 
 
 def validate_inputs(
@@ -173,35 +268,3 @@ def validate_inputs(
     sorter_options_dict.update({"verbose": verbose})
 
     return sorter_options_dict
-
-
-def get_singularity_image(sorter: str) -> Union[Literal[True], str]:
-    """
-    Get the path to a pre-installed system singularity image. If none
-    can be found, set to True. In this case SpikeInterface will
-    pull the image to the current working directory, and
-    this will be moved after sorting
-    (see store_singularity_image).
-
-    Parameters
-    ----------
-    sorter : str
-        Name of the sorter to get the image for.
-
-    Returns
-    -------
-    singularity_image [ Union[Literal[True], str]
-        If `str`, the path to the singularity image. Otherwise if `True`,
-        this tells SpikeInterface to pull the image.
-    """
-    singularity_image: Union[Literal[True], str]
-
-    if utils.get_hpc_sorter_path(sorter).is_file():
-        singularity_image = str(utils.get_hpc_sorter_path(sorter))
-
-    elif utils.get_local_sorter_path(sorter).is_file():
-        singularity_image = str(utils.get_local_sorter_path(sorter))
-    else:
-        singularity_image = True
-
-    return singularity_image

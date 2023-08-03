@@ -27,7 +27,8 @@ dependencies = [
     "submitit",
     # sorter-specific
     "tridesclous",
-    "pwd",
+    "mountainsort5",
+    "docker",  # TODO: windows only!
 ]
 
 [project.urls]
