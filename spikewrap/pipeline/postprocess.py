@@ -235,7 +235,7 @@ def load_sorting_output(sorting_data: SortingData, sorter: str) -> BaseSorting:
     ----------
 
     sorting_data : SortingData
-        An swc_ephys SortingData object holding information about sorting
+        An spikewrap SortingData object holding information about sorting
 
     sorter : str
         The sorter used (e.g. "kilosort2_5")

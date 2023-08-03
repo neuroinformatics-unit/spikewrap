@@ -37,7 +37,7 @@ def visualise(
     If multiple preprocessing steps are shown, they will be placed in subplots
     on a single plot if as_subplots is True, otherwise in separate plots.
 
-    data : swc_ephys PreprocessingData class containing the preprocessing output (a dict
+    data : spikewrap PreprocessingData class containing the preprocessing output (a dict
            of keys indicating the preprocessing step and values are spikeinterface
            recording objects.
 

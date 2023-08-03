@@ -171,7 +171,7 @@ def get_image_run_settings(
 def store_singularity_image(base_path: Path, sorter: str) -> None:
     """
     When running locally, SpikeInterface will pull the docker image
-    to the current working directly. Move this to home/.swc_ephys
+    to the current working directly. Move this to home/.spikewrap
     so they can be used again in future and are centralised.
 
     Parameters

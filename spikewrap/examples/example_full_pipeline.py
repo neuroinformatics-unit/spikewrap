@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from swc_ephys.pipeline.full_pipeline import run_full_pipeline
+from spikewrap.pipeline.full_pipeline import run_full_pipeline
 
 base_path = Path(
     "/ceph/neuroinformatics/neuroinformatics/scratch/jziminski/ephys/test_data/steve_multi_run/1119617/time-short"
