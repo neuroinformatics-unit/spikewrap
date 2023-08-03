@@ -55,15 +55,16 @@ class TestFirstEphys:
         sub_name,
         run_names,
         existing_preprocessed_data="fail_if_exists",
-        existing_sorting_output="overwrite",
+        existing_sorting_output="fail_if_exists",
         slurm_batch=False,
+        sorter="kilosort2_5",
     ):
         full_pipeline.run_full_pipeline(
             base_path,
             sub_name,
             run_names,
             config_name="default",
-            sorter="kilosort2_5",
+            sorter=sorter,
             existing_preprocessed_data=existing_preprocessed_data,
             existing_sorting_output=existing_sorting_output,
             overwrite_postprocessing=True,
@@ -95,10 +96,21 @@ class TestFirstEphys:
         preprocess_data = preprocess.preprocess(preprocess_data, pp_steps, verbose=True)
         preprocess_data.save_all_preprocessed_data(overwrite=True)
 
-    def test_single_run_local__(self, test_info):
+    @pytest.mark.parametrize(
+        "sorter",
+        [
+            "kilosort2",
+            "kilosort2_5",
+            "kilosort3",
+            "mountainsort5",
+            "spykingcircus",
+            "tridesclous",
+        ],
+    )
+    def test_single_run_local__(self, test_info, sorter):
         test_info.pop(3)
         test_info[2] = test_info[2][0]
-        self.run_full_pipeline(*test_info)
+        self.run_full_pipeline(*test_info, sorter=sorter)
 
     def test_single_run_local_overwrite(self, test_info):
         test_info.pop(3)

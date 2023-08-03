@@ -25,6 +25,9 @@ dependencies = [
     "jaxlib",
     "spython",  # I think missing from SI?
     "submitit",
+    # sorter-specific
+    "tridesclous",
+    "pwd",
 ]
 
 [project.urls]

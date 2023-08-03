@@ -21,6 +21,9 @@
   'kilosort3':
     'car': False
     'freq_min': 300
+  'mountainsort5':
+    'scheme': '2'
+    'filter': False
 
 'waveforms':
   'ms_before': 2

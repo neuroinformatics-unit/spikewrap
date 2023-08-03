@@ -149,8 +149,18 @@ def validate_inputs(
     """
     assert slurm_batch is False, "SLURM run has slurm_batch set True"
 
-    supported_sorters = ["spykingcircus", "kilosort2", "kilosort2_5", "kilosort3"]
-    assert sorter in supported_sorters, f"sorter must be: {supported_sorters}"
+    supported_sorters = [
+        "kilosort2",
+        "kilosort2_5",
+        "kilosort3",
+        "mountainsort5",
+        "spykingcircus",
+        "tridesclous",
+    ]
+
+    assert (
+        sorter in supported_sorters
+    ), f"sorter {sorter} is invalid, must be one of: {supported_sorters}"
 
     assert (
         utils.check_singularity_install()
