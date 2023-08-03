@@ -1,7 +1,7 @@
 [project]
-name = "swc_ephys"
+name = "spikewrap"
 authors = [{name = "Joe Ziminski", email= "joseph.j.ziminski@gmail.com"}]
-description = "Manage extracellular electrophysiology analysis"
+description = "Run extracellular electrophysiology analysis with SpikeInterface"
 readme = "README.md"
 requires-python = ">=3.8.0"
 dynamic = ["version"]
@@ -33,11 +33,11 @@ dependencies = [
 ]
 
 [project.urls]
-homepage = "https://github.com/JoeZiminski/swc_ephys"
-bug_tracker = "https://github.com/JoeZiminski/swc_ephys/issues"
-documentation = "https://github.com/JoeZiminski/swc_ephys"
-source_code = "https://github.com/JoeZiminski/swc_ephys"
-user_support = "https://github.com/JoeZiminski/swc_ephys/issues"
+homepage = "https://github.com/JoeZiminski/spikewrap"
+bug_tracker = "https://github.com/JoeZiminski/spikewrap/issues"
+documentation = "https://github.com/JoeZiminski/spikewrap"
+source_code = "https://github.com/JoeZiminski/spikewrap"
+user_support = "https://github.com/JoeZiminski/spikewrap/issues"
 
 
 [project.optional-dependencies]
@@ -66,11 +66,11 @@ build-backend = "setuptools.build_meta"
 include-package-data = true
 
 [tool.setuptools.packages.find]
-include = ["swc_ephys*"]
+include = ["spikewrap*"]
 exclude = ["tests*"]
 
 [tool.pytest.ini_options]
-addopts = "--cov=swc_ephys"
+addopts = "--cov=spikewrap"
 
 [tool.black]
 target-version = ['py38', 'py39', 'py310']
@@ -103,4 +103,4 @@ build = "cp38-* cp39-* cp310-*"
 archs = ["x86_64", "arm64"]
 
 [project.scripts]
-swc_ephys = "swc_ephys.command_line_interface:main"
+spikewrap = "spikewrap.command_line_interface:main"
