@@ -1,15 +1,14 @@
 import platform
+import re
 import subprocess
 from pathlib import Path
-from spikewrap.utils import utils
 import toml
 import re
 from spikewrap.utils import utils
 
 
 def check_environment() -> None:
-    """
-    """
+    """ """
     _check_virtual_machine()
     _check_cuda()
     _check_pip_dependencies()
@@ -20,8 +19,10 @@ def _check_virtual_machine() -> bool:
     if platform.system() == "Linux":
         has_vm = _system_call_sucess("singularity")
         name = "Singularity"
-        link = "https://docs.sylabs.io/guides/main/user-guide/quick_start.html#quick" \
-               "-installation-steps"
+        link = (
+            "https://docs.sylabs.io/guides/main/user-guide/quick_start.html#quick"
+            "-installation-steps"
+        )
     else:
         has_vm = _system_call_sucess("docker -v")
         name = "Docker"
@@ -49,17 +50,14 @@ def docker_desktop_is_running():
     return _system_call_sucess("docker ps")
 
 
-
 def _check_cuda() -> None:
     """"""
     if _system_call_sucess("nvidia-smi"):
-        utils.message_user(
-            f"NVIDIA GPU drivers detected on the system."
-        )
+        utils.message_user("NVIDIA GPU drivers detected on the system.")
     else:
         utils.message_user(
-            f"NVIDIA GPU drivers not detected. Sorters that require\n"
-            f"GPU such as Kilosort will not be able to run."
+            "NVIDIA GPU drivers not detected. Sorters that require\n"
+            "GPU such as Kilosort will not be able to run."
         )
 
 
@@ -71,7 +69,7 @@ def _check_pip_dependencies() -> None:
     pyproject_toml = toml.load(pyproject_path.as_posix())
 
     pip_list = subprocess.run(
-        f"pip list",
+        "pip list",
         shell=True,
         stdout=subprocess.PIPE,
         stderr=None,
@@ -92,4 +90,9 @@ def _check_pip_dependencies() -> None:
 
 
 def _system_call_sucess(command: str) -> bool:
-    return subprocess.run(command, shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL).returncode == 0
+    return (
+        subprocess.run(
+            command, shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL
+        ).returncode
+        == 0
+    )
