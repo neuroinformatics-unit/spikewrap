@@ -1,12 +1,13 @@
 import platform
 import re
 import subprocess
+import sys
 from pathlib import Path
 
 import toml
-import re
+
 from spikewrap.utils import utils
-import sys
+
 
 def check_environment() -> None:
     """ """
@@ -65,7 +66,9 @@ def _check_cuda() -> None:
 def _check_pip_dependencies() -> None:
     """"""
     utils.message_user("Checking Python dependencies...")
-    pyproject_path = Path(sys.modules["spikewrap"].__path__[0]).parent / "pyproject.toml"
+    pyproject_path = (
+        Path(sys.modules["spikewrap"].__path__[0]).parent / "pyproject.toml"
+    )
     pyproject_toml = toml.load(pyproject_path.as_posix())
 
     pip_list = subprocess.run(
@@ -91,6 +94,8 @@ def _check_pip_dependencies() -> None:
 
 def _system_call_sucess(command: str) -> bool:
     return (
-        subprocess.run(command, shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL).returncode
+        subprocess.run(
+            command, shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL
+        ).returncode
         == 0
     )
