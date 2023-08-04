@@ -137,7 +137,7 @@ def message_user(message: str, verbose: bool = True) -> None:
         nothing is printed.
     """
     if verbose:
-        print(message)
+        print(f"\n{message}")
 
 
 def concatenate_runs(recording: BaseRecording) -> BaseRecording:
