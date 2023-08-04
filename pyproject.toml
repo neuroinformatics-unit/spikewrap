@@ -30,6 +30,7 @@ dependencies = [
     "tridesclous",
     "mountainsort5",
     "docker",  # TODO: windows only!
+    "cuda-python",
 ]
 
 [project.urls]
@@ -51,7 +52,9 @@ dev = [
   "pre-commit",
   "ruff",
   "setuptools_scm",
-  "types-PyYAML"
+  "types-setuptools",
+  "types-PyYAML",
+  "types-toml",
 ]
 
 [build-system]

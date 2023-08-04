@@ -28,3 +28,4 @@ repos:
             additional_dependencies:
                 - types-setuptools
                 - types-PyYAML
+                - types-toml
