@@ -4,7 +4,7 @@ import subprocess
 from pathlib import Path
 
 import toml
-import re
+
 from spikewrap.utils import utils
 
 
