@@ -29,3 +29,6 @@ repos:
                 - types-setuptools
                 - types-PyYAML
                 - types-toml
+
+ci:
+    autofix_prs: false
