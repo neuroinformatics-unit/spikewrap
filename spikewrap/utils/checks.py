@@ -4,7 +4,8 @@ import subprocess
 from pathlib import Path
 
 import toml
-from swc_ephys.utils import utils
+import re
+from spikewrap.utils import utils
 
 
 def check_environment() -> None:
