@@ -1,22 +1,19 @@
 from __future__ import annotations
 
+import copy
+import os.path
+import subprocess
+from pathlib import Path
 from typing import TYPE_CHECKING, Callable, Dict, List, Literal, Tuple, Union
+
+import numpy as np
+from spikeinterface import concatenate_recordings
 
 if TYPE_CHECKING:
     from spikeinterface.core import BaseRecording
 
     from ..data_classes.preprocessing import PreprocessingData
     from ..data_classes.sorting import SortingData
-
-import copy
-import os.path
-import subprocess
-from pathlib import Path
-
-import numpy as np
-from spikeinterface import concatenate_recordings
-
-# TODO: how does splitting by group work for sorting?
 
 
 def canonical_names(name: str) -> str:
@@ -156,7 +153,9 @@ def concatenate_runs(recording: BaseRecording) -> BaseRecording:
         The SpikeInterface recording object with all
         segments concatenated into a single segments.
     """
-    message_user(f"Concatenating {recording.get_num_segments()} into a single segment.")
+    message_user(
+        f"Concatenating {recording.get_num_segments()} sessions into a single segment."
+    )
 
     concatenated_recording = concatenate_recordings([recording])
 

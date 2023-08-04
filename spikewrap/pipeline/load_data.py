@@ -2,15 +2,14 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, List, Union
 
-if TYPE_CHECKING:
-    from pathlib import Path
-
-
 import spikeinterface.extractors as se
 from spikeinterface import append_recordings
 
 from ..data_classes.preprocessing import PreprocessingData
 from ..data_classes.sorting import SortingData
+
+if TYPE_CHECKING:
+    from pathlib import Path
 
 
 def load_spikeglx_data(
