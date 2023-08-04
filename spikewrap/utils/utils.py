@@ -423,3 +423,7 @@ def get_probe_num_groups(data: Union[PreprocessingData, SortingData]) -> int:
     """
     num_groups = np.unique(data[data.init_data_key].get_property("group")).size
     return num_groups
+
+
+def get_logging_path(base_path: Path, sub_name: str):
+    return base_path / "derivatives" / sub_name / "logs"

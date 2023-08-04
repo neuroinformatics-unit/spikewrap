@@ -9,7 +9,7 @@ from typing import TYPE_CHECKING, Dict, List, Literal, Tuple, Union
 
 from ..configs.configs import get_configs
 from ..pipeline.load_data import load_data_for_sorting
-from ..utils import slurm, utils
+from ..utils import logging_sw, slurm, utils
 from ..utils.custom_types import HandleExisting
 from .load_data import load_spikeglx_data
 from .postprocess import run_postprocess
@@ -132,6 +132,10 @@ def run_full_pipeline(
 
     pp_steps, sorter_options, waveform_options = get_configs(config_name)
 
+    logs = logging_sw.get_started_logger(
+        utils.get_logging_path(Path(base_path), sub_name), "full_pipeline"
+    )
+
     preprocess_data = load_spikeglx_data(base_path, sub_name, run_names)
 
     preprocess_and_save(preprocess_data, pp_steps, existing_preprocessed_data, verbose)
@@ -160,6 +164,8 @@ def run_full_pipeline(
     )
 
     handle_delete_intermediate_files(sorting_data, delete_intermediate_files)
+
+    logs.stop_logging()
 
 
 def handle_delete_intermediate_files(sorting_data, delete_intermediate_files):

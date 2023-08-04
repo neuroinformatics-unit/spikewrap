@@ -52,6 +52,9 @@ class SortingData(BaseUserDict):
         self.sub_name = self.pp_info["sub_name"]
         self.pp_run_name = self.pp_info["pp_run_name"]
 
+        # TODO: duplication from processing(). Figure out inheritance
+        self.logging_path = utils.get_logging_path(self.base_path, self.sub_name)
+
         # These paths are set when the sorter
         # is known, set_sorter_output_paths()
         self.sorter_base_output_path: Path

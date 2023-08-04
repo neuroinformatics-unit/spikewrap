@@ -67,6 +67,7 @@ class PreprocessingData(BaseUserDict):
         self.data: Dict = {"0-raw": None}
         self.sync = None
 
+        self.logging_path = utils.get_logging_path(self.base_path, self.sub_name)
         self.preprocessed_data_path: Path
         self._pp_data_attributes_path: Path
         self._pp_binary_data_path: Path

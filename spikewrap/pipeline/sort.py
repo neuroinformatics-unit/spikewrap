@@ -6,6 +6,8 @@ import shutil
 from pathlib import Path
 from typing import TYPE_CHECKING, Dict, Literal, Optional, Tuple, Union
 
+from ..utils import logging_sw
+
 if TYPE_CHECKING:
     from ..data_classes.sorting import SortingData
 
@@ -69,6 +71,8 @@ def run_sorting(
         slurm.run_sorting_slurm(**local_args)
         return sorting_data
 
+    logs = logging_sw.get_started_logger(sorting_data.logging_path, "sorting")
+
     sorter_options_dict = validate_inputs(slurm_batch, sorter, sorter_options, verbose)
 
     # Load preprocessed data from saved preprocess output path.
@@ -101,6 +105,8 @@ def run_sorting(
     )
 
     move_singularity_image_if_required(sorting_data, singularity_image, sorter)
+
+    logs.stop_logging()
 
     return sorting_data
 
