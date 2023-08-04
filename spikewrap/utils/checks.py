@@ -1,6 +1,7 @@
 import platform
 import re
 import subprocess
+import sys
 from pathlib import Path
 
 import toml
@@ -18,7 +19,7 @@ def check_environment() -> None:
 def _check_virtual_machine() -> bool:
     """"""
     if platform.system() == "Linux":
-        has_vm = _system_call_sucess("singularity")
+        has_vm = _system_call_sucess("singularity version")
         name = "Singularity"
         link = (
             "https://docs.sylabs.io/guides/main/user-guide/quick_start.html#quick"
@@ -65,15 +66,16 @@ def _check_cuda() -> None:
 def _check_pip_dependencies() -> None:
     """"""
     utils.message_user("Checking Python dependencies...")
-
-    pyproject_path = Path(__file__).parents[-4] / "pyproject.toml"
+    pyproject_path = (
+        Path(sys.modules["spikewrap"].__path__[0]).parent / "pyproject.toml"
+    )
     pyproject_toml = toml.load(pyproject_path.as_posix())
 
     pip_list = subprocess.run(
         "pip list",
         shell=True,
         stdout=subprocess.PIPE,
-        stderr=None,
+        stderr=subprocess.DEVNULL,
     ).stdout.decode()
 
     all_deps_installed = True
