@@ -132,18 +132,18 @@ def run_full_pipeline(
 
     pp_steps, sorter_options, waveform_options = get_configs(config_name)
 
-    logs = logging_sw.get_started_logger(
-        utils.get_logging_path(Path(base_path), sub_name), "full_pipeline"
-    )
+    data_class = PreprocessingData(base_path, sub_name, run_names)
 
-    preprocess_data = load_spikeglx_data(base_path, sub_name, run_names)
+    logs = logging_sw.get_started_logger(data_class.logging_path, "full_pipeline")
 
-    preprocess_and_save(preprocess_data, pp_steps, existing_preprocessed_data, verbose)
+    loaded_data = load_spikeglx_data(data_class)
 
-    expected_sorter_path = preprocess_data.get_expected_sorter_path(sorter) / "sorting"
+    preprocess_and_save(loaded_data, pp_steps, existing_preprocessed_data, verbose)
+
+    expected_sorter_path = loaded_data.get_expected_sorter_path(sorter) / "sorting"
 
     sorting_data = load_or_run_sorting(
-        preprocess_data.preprocessed_data_path,
+        loaded_data.preprocessed_data_path,
         expected_sorter_path,
         existing_sorting_output,
         sorter,

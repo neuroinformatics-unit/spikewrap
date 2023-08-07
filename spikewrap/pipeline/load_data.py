@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, List, Union
+from typing import TYPE_CHECKING
 
 import spikeinterface.extractors as se
 from spikeinterface import append_recordings
@@ -12,9 +12,14 @@ if TYPE_CHECKING:
     from pathlib import Path
 
 
-def load_spikeglx_data(
-    base_path: Union[Path, str], sub_name: str, run_names: Union[List[str], str]
-) -> PreprocessingData:
+def load_data(base_path, sub_name, run_name, type="spikeglx"):
+    """TODO: can get type from data itself"""
+    preprocess_data = PreprocessingData(base_path, sub_name, run_name)
+    if type == "spikeglx":
+        return load_spikeglx_data(preprocess_data)
+
+
+def load_spikeglx_data(preprocess_data: PreprocessingData) -> PreprocessingData:
     """
     Load raw SpikeGLX data (in rawdata). If multiple runs are selected
     in run_names, these will be stored as segments on a SpikeInterface
@@ -40,8 +45,6 @@ def load_spikeglx_data(
     PreprocessingData class containing SpikeInterface recording object and information
     on the data filepaths.
     """
-    preprocess_data = PreprocessingData(base_path, sub_name, run_names)
-
     all_recordings = []
     all_sync = []
     for run_path in preprocess_data.all_run_paths:

@@ -53,7 +53,7 @@ class SortingData(BaseUserDict):
         self.pp_run_name = self.pp_info["pp_run_name"]
 
         # TODO: duplication from processing(). Figure out inheritance
-        self.logging_path = utils.get_logging_path(self.base_path, self.sub_name)
+        self.logging_path = self.get_logging_path()
 
         # These paths are set when the sorter
         # is known, set_sorter_output_paths()
@@ -162,4 +162,9 @@ class SortingData(BaseUserDict):
         )
         self.unit_locations_path = (
             self.postprocessing_output_path / "unit_locations.csv"
+        )
+
+    def get_logging_path(self):
+        return (
+            self.base_path / "derivatives" / self.sub_name / self.pp_run_name / "logs"
         )

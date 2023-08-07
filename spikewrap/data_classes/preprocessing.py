@@ -67,7 +67,7 @@ class PreprocessingData(BaseUserDict):
         self.data: Dict = {"0-raw": None}
         self.sync = None
 
-        self.logging_path = utils.get_logging_path(self.base_path, self.sub_name)
+        self.logging_path = self.get_logging_path()
         self.preprocessed_data_path: Path
         self._pp_data_attributes_path: Path
         self._pp_binary_data_path: Path
@@ -388,3 +388,8 @@ class PreprocessingData(BaseUserDict):
                 f"in run name {name}. "
             )
         return base_path, run_names, rawdata_path
+
+    def get_logging_path(self):
+        return (
+            self.base_path / "derivatives" / self.sub_name / self.pp_run_name / "logs"
+        )
