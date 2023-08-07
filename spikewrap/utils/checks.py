@@ -81,6 +81,7 @@ def _check_cuda() -> None:
         utils.message_user(
             "NVIDIA GPU drivers not detected. Sorters that require\n"
             "NVIDIA GPU such as Kilosort will not be able to run."
+        )
 
 
 def _check_pip_dependencies() -> None:
@@ -115,7 +116,7 @@ def _check_pip_dependencies() -> None:
         utils.message_user("All python dependencies are installed.")
 
 
-def _system_call_sucess(command: str) -> bool:
+def _system_call_success(command: str) -> bool:
     return (
         subprocess.run(
             command, shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL

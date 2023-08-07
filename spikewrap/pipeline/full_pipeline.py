@@ -7,10 +7,6 @@ import time
 from pathlib import Path
 from typing import TYPE_CHECKING, Dict, List, Literal, Tuple, Union
 
-if TYPE_CHECKING:
-    from ..data_classes.preprocessing import PreprocessingData
-    from ..data_classes.sorting import SortingData
-
 from ..configs.configs import get_configs
 from ..pipeline.load_data import load_data_for_sorting
 from ..utils import slurm, utils
@@ -19,6 +15,10 @@ from .load_data import load_spikeglx_data
 from .postprocess import run_postprocess
 from .preprocess import preprocess
 from .sort import run_sorting
+
+if TYPE_CHECKING:
+    from ..data_classes.preprocessing import PreprocessingData
+    from ..data_classes.sorting import SortingData
 
 
 def run_full_pipeline(
@@ -134,12 +134,17 @@ def run_full_pipeline(
 
     preprocess_data = load_spikeglx_data(base_path, sub_name, run_names)
 
-    preprocess_data = preprocess(preprocess_data, pp_steps, verbose)
+    preprocess_and_save(preprocess_data, pp_steps, existing_preprocessed_data, verbose)
 
-    save_preprocessed_data_if_required(preprocess_data, existing_preprocessed_data)
+    expected_sorter_path = preprocess_data.get_expected_sorter_path(sorter) / "sorting"
 
-    sorting_data = run_or_get_sorting(
-        preprocess_data, existing_sorting_output, sorter, sorter_options, verbose
+    sorting_data = load_or_run_sorting(
+        preprocess_data.preprocessed_data_path,
+        expected_sorter_path,
+        existing_sorting_output,
+        sorter,
+        sorter_options,
+        verbose,
     )
 
     sorting_data.set_sorter_output_paths(sorter)
@@ -215,8 +220,9 @@ def delete_postprocessing_output_if_it_exists(
             )
 
 
-def run_or_get_sorting(
-    preprocess_data: PreprocessingData,
+def load_or_run_sorting(
+    preprocess_data_path: Path,
+    expected_sorter_path: Path,
     existing_sorting_output: HandleExisting,
     sorter: str,
     sorter_options: Dict,
@@ -226,21 +232,18 @@ def run_or_get_sorting(
     Handle existing sorting output. If previous output exists, load, error or
     overwrite according to `existing_sorting_output`. See `run_full_pipeline()` for details.
     """
-    # TODO: "sorting" to configs. In general handle this function better
-    # it should not be on preprocess_data. It could be a classmethod on
-    # SortingData but this may be even messier.
-    sorting_path = preprocess_data.get_expected_sorter_path(sorter) / "sorting"
-
-    if sorting_path.is_dir() and existing_sorting_output == "load_if_exists":
-        utils.message_user(f"Loaded pre-existing sorting output from {sorting_path}")
-
-        sorting_data = load_data_for_sorting(
-            preprocess_data.preprocessed_data_path,
+    if expected_sorter_path.is_dir() and existing_sorting_output == "load_if_exists":
+        utils.message_user(
+            f"Loaded pre-existing sorting output from {expected_sorter_path}"
         )
 
-    elif sorting_path.is_dir() and existing_sorting_output == "fail_if_exists":
+        sorting_data = load_data_for_sorting(
+            preprocess_data_path,
+        )
+
+    elif expected_sorter_path.is_dir() and existing_sorting_output == "fail_if_exists":
         raise RuntimeError(
-            f"Sorting output already exists at {sorting_path} and"
+            f"Sorting output already exists at {expected_sorter_path} and"
             f"`existing_sorting_output` is set to 'fail_if_exists'."
         )
 
@@ -250,7 +253,7 @@ def run_or_get_sorting(
         overwrite_existing_sorter_output = True
 
         sorting_data = run_sorting(
-            preprocess_data.preprocessed_data_path,
+            preprocess_data_path,
             sorter,
             sorter_options,
             overwrite_existing_sorter_output,
@@ -260,11 +263,13 @@ def run_or_get_sorting(
     return sorting_data
 
 
-def save_preprocessed_data_if_required(
+def preprocess_and_save(
     preprocess_data: PreprocessingData,
+    pp_steps,
     existing_preprocessed_data: Literal[
         "overwrite", "load_if_exists", "fail_if_exists"
     ],
+    verbose,
 ) -> None:
     """
     Handle the loading of existing preprocessed data.
@@ -272,25 +277,25 @@ def save_preprocessed_data_if_required(
     """
     preprocess_path = preprocess_data.preprocessed_data_path
 
-    if existing_preprocessed_data == "overwrite":
-        if preprocess_path.is_dir():
-            utils.message_user(f"Removing existing file at {preprocess_path}\n")
-
-        utils.message_user(f"Saving preprocessed data to {preprocess_path}")
-
-        preprocess_data.save_all_preprocessed_data(overwrite=True)
-
-    elif existing_preprocessed_data == "load_if_exists":
+    if existing_preprocessed_data == "load_if_exists":
         if preprocess_path.is_dir():
             utils.message_user(
                 f"\nSkipping preprocessing, using file at "
                 f"{preprocess_path} for sorting.\n"
             )
+            return
         else:
             utils.message_user(
                 f"No data found at {preprocess_path}, saving" f"preprocessed data."
             )
-            preprocess_data.save_all_preprocessed_data(overwrite=False)
+            overwrite = False
+
+    elif existing_preprocessed_data == "overwrite":
+        if preprocess_path.is_dir():
+            utils.message_user(f"Removing existing file at {preprocess_path}\n")
+
+        utils.message_user(f"Saving preprocessed data to {preprocess_path}")
+        overwrite = True
 
     elif existing_preprocessed_data == "fail_if_exists":
         if preprocess_path.is_dir():
@@ -299,10 +304,13 @@ def save_preprocessed_data_if_required(
                 f"{preprocess_path}. "
                 f"To overwrite, set 'existing_preprocessed_data' to 'overwrite'"
             )
-        preprocess_data.save_all_preprocessed_data(overwrite=False)
+        overwrite = False
 
     else:
         raise ValueError(
             "`existing_preproessed_data` argument not recognised."
             "Must be: 'load_if_exists', 'fail_if_exists' or 'overwrite'."
         )
+
+    preprocess_data = preprocess(preprocess_data, pp_steps, verbose)
+    preprocess_data.save_all_preprocessed_data(overwrite=overwrite)

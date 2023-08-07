@@ -2,12 +2,6 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, List, Optional, Tuple, Union
 
-if TYPE_CHECKING:
-    import matplotlib
-    from numpy.typing import NDArray
-    from spikeinterface.core import BaseRecording
-
-
 import matplotlib.pyplot as plt
 import numpy as np
 import spikeinterface.widgets as sw
@@ -15,6 +9,11 @@ import spikeinterface.widgets as sw
 from ..data_classes.preprocessing import PreprocessingData
 from ..data_classes.sorting import SortingData
 from ..utils import utils
+
+if TYPE_CHECKING:
+    import matplotlib
+    from numpy.typing import NDArray
+    from spikeinterface.core import BaseRecording
 
 
 def visualise(
