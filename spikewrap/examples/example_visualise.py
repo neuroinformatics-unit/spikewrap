@@ -1,3 +1,4 @@
+from spikewrap.pipeline.preprocess import preprocess
 from spikewrap.pipeline.visualise import visualise
 from spikewrap.pipline.load_data import load_data
 
@@ -7,8 +8,10 @@ run_names = "1119617_LSE1_shank12"
 
 data = load_data.load_data(base_path, sub_name, run_names, "spikeglx")
 
+preprocess_data = preprocess(data, pp_steps="default")
+
 visualise(
-    data,
+    preprocess_data,
     steps=["all"],
     mode="map",
     as_subplot=True,

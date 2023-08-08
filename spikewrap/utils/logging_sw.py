@@ -7,7 +7,7 @@ from pathlib import Path
 from typing import Literal, Union
 
 
-class HandleLogging:  # TODO: better explain when this is on / off
+class HandleLogging:
     """
     Handle logging for SpikeWrap. The aim of spike wrap logging is
     to agnostically log everything printed by stdout and stderr
@@ -22,6 +22,14 @@ class HandleLogging:  # TODO: better explain when this is on / off
 
     This ensures that all stdout and stderr messages are logged to file
     without interfering with the normal message printing.
+
+    Note that within spikewrap, the main entry methods `run_full_pipeline`,
+    `run_sorting` and `run_postprocessing` are exposed. We want to
+    log when these are run, but as `run_full_pipeline` calls the other two
+    methods, we do not want to duplicate logging. Here, logging only starts
+    if the named loggers do not have handlers. This is important because
+    the `logs` instantiation of this class at the level of the `run_sorting`
+    or `run_postprocessing` sub-functions will not be doing anything.
     """
 
     def __init__(self):
@@ -106,7 +114,19 @@ class HandleLogging:  # TODO: better explain when this is on / off
             sys.stderr = self.bkup_stderr
 
     def are_already_logging(self):
-        """ """
+        """
+        Check that we are logging by checking if any of the named
+        loggers have handlers. As these handlers are removed
+        when logging is stopped in this class, this is a valid check.
+
+        Returns
+
+        all_on : bool
+            `True` if the loggers are on and `False` if the loggers are off.
+            A check is performed to ensure all loggers are either off or on,
+            ensuring this is not `False` by some unexpected intermediate
+            state where some loggers but not all are on.
+        """
         loggers = [
             logging.getLogger("spikewrap_file"),
             logging.getLogger("spikewrap_stdout"),
@@ -122,14 +142,15 @@ class HandleLogging:  # TODO: better explain when this is on / off
             all_on or all_off
         ), "Some loggers are switched on while others are off. This should not happen."
 
-        if all_on:
-            return True
-        return False
+        return all_on
 
 
 class StreamToLogger(object):
     """
-    Fake file-like stream object that redirects writes to a logger instance.
+    A stream object that redirects writes to two logger
+    instances, one to file and another back to stdout and stderr.
+    The expected use of this class is to override stdout / stderr
+    to print it to file and feed it back to stdout / stderr.
     """
 
     def __init__(self, logger_file, logger_std, level):
@@ -152,7 +173,8 @@ def get_started_logger(
     run_name: Literal["full_pipeline", "preprocess", "sorting", "postprocess"],
 ) -> HandleLogging:
     """
-    Convenience function
+    Convenience function that creates logger name and stars a
+    HandleLogging() instance.
     """
     format_datetime = datetime.now().strftime("%Y-%m-%d_%H%M%S")
     log_name = f"{format_datetime}_{run_name}.log"

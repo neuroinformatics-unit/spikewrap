@@ -8,6 +8,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Dict, List, Literal, Tuple, Union
 
 from ..configs.configs import get_configs
+from ..data_classes.preprocessing import PreprocessingData
 from ..pipeline.load_data import load_data_for_sorting
 from ..utils import logging_sw, slurm, utils
 from ..utils.custom_types import HandleExisting
@@ -17,7 +18,6 @@ from .preprocess import preprocess
 from .sort import run_sorting
 
 if TYPE_CHECKING:
-    from ..data_classes.preprocessing import PreprocessingData
     from ..data_classes.sorting import SortingData
 
 
@@ -236,7 +236,8 @@ def load_or_run_sorting(
 ) -> SortingData:
     """
     Handle existing sorting output. If previous output exists, load, error or
-    overwrite according to `existing_sorting_output`. See `run_full_pipeline()` for details.
+    overwrite according to `existing_sorting_output`.
+    See `run_full_pipeline()` for details.
     """
     if expected_sorter_path.is_dir() and existing_sorting_output == "load_if_exists":
         utils.message_user(

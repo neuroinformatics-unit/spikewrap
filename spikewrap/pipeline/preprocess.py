@@ -47,8 +47,6 @@ def preprocess(
         associated SpikeInterface recording objects.
 
     """
-    # 1) get base dir from preproces_data / sorting data
-    # 2) addition of date, function name (make a utils in logging_sw)
     logs = logging_sw.get_started_logger(preprocess_data.logging_path, "preprocess")
 
     if isinstance(pp_steps, str):
