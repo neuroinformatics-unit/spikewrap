@@ -16,7 +16,7 @@ from spikeinterface.extractors import NpzSortingExtractor
 from ..configs.configs import get_configs
 from ..data_classes.sorting import SortingData
 from ..pipeline.load_data import load_data_for_sorting
-from ..utils import utils
+from ..utils import logging_sw, utils
 from ..utils.custom_types import HandleExisting
 from .waveform_compare import get_waveform_similarity
 
@@ -96,6 +96,8 @@ def run_postprocess(
         )
     assert isinstance(sorting_data, SortingData), "type narrow `sorting_data`."
 
+    logs = logging_sw.get_started_logger(sorting_data.logging_path, "postprocess")
+
     # Create / load waveforms
     if waveform_options is None:
         _, _, waveform_options = get_configs("default")
@@ -127,6 +129,8 @@ def run_postprocess(
         save_waveform_similarities(
             sorting_data.postprocessing_output_path, waveforms, MATRIX_BACKEND
         )
+
+    logs.stop_logging()
 
 
 # Sorting Loader -----------------------------------------------------------------------

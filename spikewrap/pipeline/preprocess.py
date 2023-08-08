@@ -6,7 +6,7 @@ import spikeinterface.preprocessing as spre
 
 from ..configs import configs
 from ..data_classes.preprocessing import PreprocessingData
-from ..utils import utils
+from ..utils import logging_sw, utils
 
 
 def preprocess(
@@ -47,6 +47,8 @@ def preprocess(
         associated SpikeInterface recording objects.
 
     """
+    logs = logging_sw.get_started_logger(preprocess_data.logging_path, "preprocess")
+
     if isinstance(pp_steps, str):
         pp_steps_to_run, _, _ = configs.get_configs(pp_steps)
     else:
@@ -62,6 +64,8 @@ def preprocess(
         perform_preprocessing_step(
             step_num, pp_info, preprocess_data, pp_step_names, pp_funcs, verbose
         )
+
+    logs.stop_logging()
 
     return preprocess_data
 

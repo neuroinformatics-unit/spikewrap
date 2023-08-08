@@ -23,7 +23,7 @@ if __name__ == "__main__":
         run_names,
         config_name,
         sorter,
-        existing_preprocessed_data="overwrite",
+        existing_preprocessed_data="load_if_exists",
         existing_sorting_output="overwrite",
         overwrite_postprocessing=True,
         slurm_batch=False,

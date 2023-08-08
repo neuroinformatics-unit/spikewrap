@@ -8,8 +8,9 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Dict, List, Literal, Tuple, Union
 
 from ..configs.configs import get_configs
+from ..data_classes.preprocessing import PreprocessingData
 from ..pipeline.load_data import load_data_for_sorting
-from ..utils import slurm, utils
+from ..utils import logging_sw, slurm, utils
 from ..utils.custom_types import HandleExisting
 from .load_data import load_spikeglx_data
 from .postprocess import run_postprocess
@@ -17,7 +18,6 @@ from .preprocess import preprocess
 from .sort import run_sorting
 
 if TYPE_CHECKING:
-    from ..data_classes.preprocessing import PreprocessingData
     from ..data_classes.sorting import SortingData
 
 
@@ -132,14 +132,18 @@ def run_full_pipeline(
 
     pp_steps, sorter_options, waveform_options = get_configs(config_name)
 
-    preprocess_data = load_spikeglx_data(base_path, sub_name, run_names)
+    data_class = PreprocessingData(base_path, sub_name, run_names)
 
-    preprocess_and_save(preprocess_data, pp_steps, existing_preprocessed_data, verbose)
+    logs = logging_sw.get_started_logger(data_class.logging_path, "full_pipeline")
 
-    expected_sorter_path = preprocess_data.get_expected_sorter_path(sorter) / "sorting"
+    loaded_data = load_spikeglx_data(data_class)
+
+    preprocess_and_save(loaded_data, pp_steps, existing_preprocessed_data, verbose)
+
+    expected_sorter_path = loaded_data.get_expected_sorter_path(sorter) / "sorting"
 
     sorting_data = load_or_run_sorting(
-        preprocess_data.preprocessed_data_path,
+        loaded_data.preprocessed_data_path,
         expected_sorter_path,
         existing_sorting_output,
         sorter,
@@ -160,6 +164,8 @@ def run_full_pipeline(
     )
 
     handle_delete_intermediate_files(sorting_data, delete_intermediate_files)
+
+    logs.stop_logging()
 
 
 def handle_delete_intermediate_files(sorting_data, delete_intermediate_files):
@@ -230,7 +236,8 @@ def load_or_run_sorting(
 ) -> SortingData:
     """
     Handle existing sorting output. If previous output exists, load, error or
-    overwrite according to `existing_sorting_output`. See `run_full_pipeline()` for details.
+    overwrite according to `existing_sorting_output`.
+    See `run_full_pipeline()` for details.
     """
     if expected_sorter_path.is_dir() and existing_sorting_output == "load_if_exists":
         utils.message_user(
