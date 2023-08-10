@@ -226,7 +226,7 @@ def validate_options_against_recording(
     but must be somewhere, this is wasteful.
     """
     if isinstance(data, PreprocessingData):
-        num_runs = len(data.all_run_names)
+        num_runs = len(data.run_names)
         assert run_number <= num_runs, (
             "The run_number must be less than or equal to the "
             "number of runs specified."
@@ -263,7 +263,7 @@ def get_run_name(data: Union[PreprocessingData, SortingData], run_number: int) -
         runs used to generated it.
     """
     if isinstance(data, PreprocessingData):
-        run_name = data.all_run_names[run_number - 1]
+        run_name = data.run_names[run_number - 1]
     elif isinstance(data, SortingData):
         run_name = data.pp_run_name
 

@@ -1,24 +1,25 @@
 from __future__ import annotations
 
 import copy
-import gc
 import shutil
-import time
 from pathlib import Path
 from typing import TYPE_CHECKING, Dict, List, Literal, Tuple, Union
 
 from ..configs.configs import get_configs
 from ..data_classes.preprocessing import PreprocessingData
-from ..pipeline.load_data import load_data_for_sorting
 from ..utils import logging_sw, slurm, utils
 from ..utils.custom_types import HandleExisting
-from .load_data import load_spikeglx_data
+from .load_data import load_data
 from .postprocess import run_postprocess
 from .preprocess import preprocess
 from .sort import run_sorting
 
 if TYPE_CHECKING:
-    from ..data_classes.sorting import SortingData
+    pass
+
+    # visualisation
+    # TODO: double check SLURM
+    # TODO: delete intermediate files: use new spikeinterface settings for kilosort.
 
 
 def run_full_pipeline(
@@ -27,15 +28,14 @@ def run_full_pipeline(
     run_names: Union[List[str], str],
     config_name: str = "default",
     sorter: str = "kilosort2_5",
+    concat_for_sorting: bool = True,
     existing_preprocessed_data: HandleExisting = "load_if_exists",
     existing_sorting_output: HandleExisting = "load_if_exists",
     overwrite_postprocessing: bool = False,
     postprocessing_to_run: Union[Literal["all"], Dict] = "all",
     delete_intermediate_files: Tuple[
-        Literal["preprocessed", "recording.dat", "temp_wh.dat", "waveforms"]
-    ] = (
-        "recording.dat",
-    ),  # TODO: use new spikeinterface settings for kilosort.
+        Literal["recording.dat", "temp_wh.dat", "waveforms"]
+    ] = ("recording.dat",),
     verbose: bool = True,
     slurm_batch: bool = False,
 ) -> None:
@@ -132,142 +132,49 @@ def run_full_pipeline(
 
     pp_steps, sorter_options, waveform_options = get_configs(config_name)
 
-    data_class = PreprocessingData(base_path, sub_name, run_names)
+    logs = logging_sw.get_started_logger(
+        utils.get_logging_path(base_path, sub_name), "full_pipeline"
+    )
 
-    logs = logging_sw.get_started_logger(data_class.logging_path, "full_pipeline")
-
-    loaded_data = load_spikeglx_data(data_class)
+    loaded_data = load_data(base_path, sub_name, run_names, data_format="spikeglx")
 
     preprocess_and_save(loaded_data, pp_steps, existing_preprocessed_data, verbose)
 
-    expected_sorter_path = loaded_data.get_expected_sorter_path(sorter) / "sorting"
-
-    sorting_data = load_or_run_sorting(
-        loaded_data.preprocessed_data_path,
-        expected_sorter_path,
-        existing_sorting_output,
+    sorting_data = run_sorting(
+        base_path,
+        sub_name,
+        run_names,
         sorter,
+        concat_for_sorting,
         sorter_options,
+        existing_sorting_output,
         verbose,
     )
 
-    sorting_data.set_sorter_output_paths(sorter)
-    delete_postprocessing_output_if_it_exists(sorting_data, overwrite_postprocessing)
+    # Run Postprocessing
+    for run_name in sorting_data.get_all_run_names():
+        sorting_path = sorting_data.get_sorting_path(run_name)
 
-    run_postprocess(
-        sorting_data,
-        sorter,
-        existing_waveform_data="fail_if_exists",
-        postprocessing_to_run=postprocessing_to_run,
-        verbose=verbose,
-        waveform_options=waveform_options,
-    )
+        postprocess_data = run_postprocess(
+            sorting_path,
+            overwrite_postprocessing=overwrite_postprocessing,
+            existing_waveform_data="fail_if_exists",
+            postprocessing_to_run=postprocessing_to_run,
+            verbose=verbose,
+            waveform_options=waveform_options,
+        )
 
-    handle_delete_intermediate_files(sorting_data, delete_intermediate_files)
+    for run_name in sorting_data.get_all_run_names():
+        handle_delete_intermediate_files(
+            run_name, sorting_data, delete_intermediate_files
+        )
 
     logs.stop_logging()
 
 
-def handle_delete_intermediate_files(sorting_data, delete_intermediate_files):
-    """ """
-    if "preprocessed" in delete_intermediate_files:
-        # remove the existing link to the preprocessed data binary.
-        # wait time of 5 s is arbitrary.
-        # TODO: this feels very hacky. Can unlink the memory map from the segment?
-        # Ask SI.
-        del sorting_data["0-preprocessed"]
-        gc.collect()
-        time.sleep(5)
-
-        if sorting_data.preprocessed_data_path.is_dir():
-            shutil.rmtree(sorting_data.preprocessed_data_path)
-
-    if "recording.dat" in delete_intermediate_files:
-        if (
-            recording_file := sorting_data.sorter_run_output_path / "recording.dat"
-        ).is_file():
-            recording_file.unlink()
-
-    if "temp_wh.dat" in delete_intermediate_files:
-        if (
-            recording_file := sorting_data.sorter_run_output_path / "temp_wh.dat"
-        ).is_file():
-            recording_file.unlink()
-
-    if "waveforms" in delete_intermediate_files:
-        if (
-            waveforms_path := sorting_data.postprocessing_output_path / "waveforms"
-        ).is_dir():
-            shutil.rmtree(waveforms_path)
-
-
-def delete_postprocessing_output_if_it_exists(
-    sorting_data: SortingData, overwrite_postprocessing: bool
-):
-    """
-    If previous postprocessing output exists, it must be deleted before
-    the new postprocessing is run. As a safety measure, `overwrite_postprocessing`
-    must be set to `True` to perform the deletion.
-    """
-    if sorting_data.postprocessing_output_path.is_dir():
-        if overwrite_postprocessing:
-            utils.message_user(
-                f"Deleting existing postprocessing "
-                f"output at {sorting_data.postprocessing_output_path}"
-            )
-            shutil.rmtree(sorting_data.postprocessing_output_path)
-        else:
-            raise RuntimeError(
-                f"Postprocessing output already exists at "
-                f"{sorting_data.postprocessing_output_path} "
-                f"but `overwrite_postprocessing` is `False`. Setting "
-                f"`overwrite_postprocessing` will delete the postprocessing "
-                f"folder and all it's contents."
-            )
-
-
-def load_or_run_sorting(
-    preprocess_data_path: Path,
-    expected_sorter_path: Path,
-    existing_sorting_output: HandleExisting,
-    sorter: str,
-    sorter_options: Dict,
-    verbose: bool,
-) -> SortingData:
-    """
-    Handle existing sorting output. If previous output exists, load, error or
-    overwrite according to `existing_sorting_output`.
-    See `run_full_pipeline()` for details.
-    """
-    if expected_sorter_path.is_dir() and existing_sorting_output == "load_if_exists":
-        utils.message_user(
-            f"Loaded pre-existing sorting output from {expected_sorter_path}"
-        )
-
-        sorting_data = load_data_for_sorting(
-            preprocess_data_path,
-        )
-
-    elif expected_sorter_path.is_dir() and existing_sorting_output == "fail_if_exists":
-        raise RuntimeError(
-            f"Sorting output already exists at {expected_sorter_path} and"
-            f"`existing_sorting_output` is set to 'fail_if_exists'."
-        )
-
-    else:
-        utils.message_user("Running sorting...")
-
-        overwrite_existing_sorter_output = True
-
-        sorting_data = run_sorting(
-            preprocess_data_path,
-            sorter,
-            sorter_options,
-            overwrite_existing_sorter_output,
-            verbose,
-        )
-
-    return sorting_data
+# --------------------------------------------------------------------------------------
+# Preprocessing
+# --------------------------------------------------------------------------------------
 
 
 def preprocess_and_save(
@@ -282,42 +189,72 @@ def preprocess_and_save(
     Handle the loading of existing preprocessed data.
     See `run_full_pipeline()` for details.
     """
-    preprocess_path = preprocess_data.preprocessed_data_path
+    for run_name in preprocess_data.run_names:
+        preprocess_path = preprocess_data.get_preprocessing_path(run_name)
 
-    if existing_preprocessed_data == "load_if_exists":
-        if preprocess_path.is_dir():
-            utils.message_user(
-                f"\nSkipping preprocessing, using file at "
-                f"{preprocess_path} for sorting.\n"
-            )
-            return
-        else:
-            utils.message_user(
-                f"No data found at {preprocess_path}, saving" f"preprocessed data."
-            )
+        if existing_preprocessed_data == "load_if_exists":
+            if preprocess_path.is_dir():
+                utils.message_user(
+                    f"\nSkipping preprocessing, using file at "
+                    f"{preprocess_path} for sorting.\n"
+                )
+                continue  # sorting will automatically use the existing data
+            else:
+                utils.message_user(
+                    f"No data found at {preprocess_path}, saving" f"preprocessed data."
+                )
+                overwrite = False
+
+        elif existing_preprocessed_data == "overwrite":
+            if preprocess_path.is_dir():
+                utils.message_user(f"Removing existing file at {preprocess_path}\n")
+
+            utils.message_user(f"Saving preprocessed data to {preprocess_path}")
+            overwrite = True
+
+        elif existing_preprocessed_data == "fail_if_exists":
+            if preprocess_path.is_dir():
+                raise FileExistsError(
+                    f"Preprocessed binary already exists at "
+                    f"{preprocess_path}. "
+                    f"To overwrite, set 'existing_preprocessed_data' to 'overwrite'"
+                )
             overwrite = False
 
-    elif existing_preprocessed_data == "overwrite":
-        if preprocess_path.is_dir():
-            utils.message_user(f"Removing existing file at {preprocess_path}\n")
-
-        utils.message_user(f"Saving preprocessed data to {preprocess_path}")
-        overwrite = True
-
-    elif existing_preprocessed_data == "fail_if_exists":
-        if preprocess_path.is_dir():
-            raise FileExistsError(
-                f"Preprocessed binary already exists at "
-                f"{preprocess_path}. "
-                f"To overwrite, set 'existing_preprocessed_data' to 'overwrite'"
+        else:
+            raise ValueError(  # TODO: use assert not and end here
+                "`existing_prepreprocessed_data` argument not recognised."
+                "Must be: 'load_if_exists', 'fail_if_exists' or 'overwrite'."
             )
-        overwrite = False
 
-    else:
-        raise ValueError(
-            "`existing_preproessed_data` argument not recognised."
-            "Must be: 'load_if_exists', 'fail_if_exists' or 'overwrite'."
-        )
+        preprocess_data = preprocess(preprocess_data, run_name, pp_steps, verbose)
+        preprocess_data.save_preprocessed_data(run_name, overwrite)
 
-    preprocess_data = preprocess(preprocess_data, pp_steps, verbose)
-    preprocess_data.save_all_preprocessed_data(overwrite=overwrite)
+
+# --------------------------------------------------------------------------------------
+# Remove Intermediate Files
+# --------------------------------------------------------------------------------------
+
+
+def handle_delete_intermediate_files(run_name, sorting_data, delete_intermediate_files):
+    """ """
+    if "recording.dat" in delete_intermediate_files:
+        if (
+            recording_file := sorting_data.get_sorter_output_path(run_name)
+            / "recording.dat"
+        ).is_file():
+            recording_file.unlink()
+
+    if "temp_wh.dat" in delete_intermediate_files:
+        if (
+            recording_file := sorting_data.get_sorter_output_path(run_name)
+            / "temp_wh.dat"
+        ).is_file():
+            recording_file.unlink()
+
+    if "waveforms" in delete_intermediate_files:
+        if (
+            waveforms_path := sorting_data.get_postprocessing_path(run_name)
+            / "waveforms"
+        ).is_dir():
+            shutil.rmtree(waveforms_path)

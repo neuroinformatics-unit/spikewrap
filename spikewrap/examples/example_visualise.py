@@ -8,7 +8,10 @@ run_names = "1119617_LSE1_shank12"
 
 data = load_data.load_data(base_path, sub_name, run_names, "spikeglx")
 
-preprocess_data = preprocess(data, pp_steps="default")
+for run_name in run_names:
+    preprocess_data = preprocess(
+        data, run_name, pp_steps="default"
+    )  # TODO: need to fix now!
 
 visualise(
     preprocess_data,

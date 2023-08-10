@@ -1,19 +1,21 @@
 from __future__ import annotations
 
-import copy
-import os.path
-import subprocess
+from datetime import datetime
 from pathlib import Path
-from typing import TYPE_CHECKING, Callable, Dict, List, Literal, Tuple, Union
+from typing import TYPE_CHECKING, Dict, List, Literal, Tuple, Union
 
 import numpy as np
-from spikeinterface import concatenate_recordings
+import yaml
 
 if TYPE_CHECKING:
     from spikeinterface.core import BaseRecording
 
     from ..data_classes.preprocessing import PreprocessingData
     from ..data_classes.sorting import SortingData
+
+
+def get_logging_path(base_path, sub_name):
+    return Path(base_path) / "derivatives" / sub_name / "logs"
 
 
 def canonical_names(name: str) -> str:
@@ -35,9 +37,14 @@ def canonical_names(name: str) -> str:
 
     """
     filenames = {
-        "preprocessed_yaml": "preprocess_data_attributes.yaml",
+        "preprocessed_yaml": "preprocessing_info.yaml",
+        "sorting_yaml": "sorting_info.yaml",
     }
     return filenames[name]
+
+
+def get_formatted_datetime():
+    return datetime.now().strftime("%Y-%m-%d_%H%M%S")
 
 
 def get_keys_first_char(
@@ -137,189 +144,6 @@ def message_user(message: str, verbose: bool = True) -> None:
         print(f"\n{message}")
 
 
-def concatenate_runs(recording: BaseRecording) -> BaseRecording:
-    """
-    Convenience function to concatenate the segments
-    of a recording object.
-
-    Parameters
-    ----------
-    recording : BaseRecording
-        A spikeinterface recording object.
-
-    Returns
-    -------
-    concatenated_recording : BaseRecording
-        The SpikeInterface recording object with all
-        segments concatenated into a single segments.
-    """
-    message_user(
-        f"Concatenating {recording.get_num_segments()} sessions into a single segment."
-    )
-
-    concatenated_recording = concatenate_recordings([recording])
-
-    return concatenated_recording
-
-
-def get_local_sorter_path(sorter: str) -> Path:
-    """
-    Return the path to a sorter singularity image. The sorters are
-    stored by spikewrap in the home folder.
-
-    Parameters
-    ----------
-    sorter : str
-        The name of the sorter to get the path to (e.g. kilosort2_5).
-
-    Returns
-    ---------
-    local_path : Path
-        The path to the sorter image on the local machine.
-    """
-    local_path = (
-        Path.home() / ".spikewrap" / "sorter_images" / get_sorter_image_name(sorter)
-    )
-    local_path.parent.mkdir(exist_ok=True, parents=True)
-    return local_path
-
-
-def get_hpc_sorter_path(sorter: str) -> Path:
-    """
-    Return the path to the sorter image on the SWC HCP (ceph).
-
-    Parameters
-    ----------
-    sorter : str
-        The name of the sorter to get the path to (e.g. kilosort2_5).
-
-    Returns
-    -------
-    sorter_path : Path
-        The base to the sorter image on SWC HCP (ceph).
-    """
-    base_path = Path("/ceph/neuroinformatics/neuroinformatics/scratch/sorter_images")
-    sorter_path = base_path / sorter / get_sorter_image_name(sorter)
-    return sorter_path
-
-
-def get_sorter_image_name(sorter: str) -> str:
-    """
-    Get the sorter image name, as defined by how
-    SpikeInterface names the docker images it provides.
-
-    Parameters
-    ----------
-    sorter : str
-        The name of the sorter to get the path to (e.g. kilosort2_5).
-
-    Returns
-    -------
-    sorter_name : str
-        The SpikeInterface filename of the docker image for that sorter.
-    """
-    if "kilosort" in sorter:
-        sorter_name = f"{sorter}-compiled-base.sif"
-    else:
-        if sorter == "spykingcircus":
-            sorter = "spyking-circus"
-        sorter_name = f"{sorter}-base.sif"
-    return sorter_name
-
-
-def check_singularity_install() -> bool:
-    """
-    Check the system install of singularity.
-
-    Returns
-    -------
-    is_installed : bool
-        Indicates whether Singularity is installed on the machine.
-    """
-    try:
-        subprocess.run("singularity --version", shell=True)
-        is_installed = True
-    except FileNotFoundError:
-        is_installed = False
-
-    return is_installed
-
-
-def sort_list_of_paths_by_datetime_order(list_of_paths: List[Path]) -> List[Path]:
-    """
-    Given a list of paths to folders, sort the paths by the creation
-    time of the folders they point to. Return the sorted
-    list of paths.
-
-    Parameters
-    ----------
-    list_of_paths : List[Path]
-        A list of paths to sort into datetime order.
-
-
-    Returns
-    -------
-    list_of_paths_by_creation_time : List[Path]
-        A list containing `list_of_paths` ordered by the
-        folder creation timestamp.
-    """
-    list_of_paths_by_creation_time = copy.deepcopy(list_of_paths)
-    list_of_paths_by_creation_time.sort(key=os.path.getctime)
-
-    return list_of_paths_by_creation_time
-
-
-def list_of_files_are_in_datetime_order(
-    list_of_paths: List[Path], creation_or_modification: str = "creation"
-) -> bool:
-    """
-    Assert whether a list of paths are in order. By default, check they are
-    in order by creation date. Can also check if they are ordered by
-    modification date.
-
-    Parameters
-    ----------
-    list_of_paths : List[Path]
-        A list of paths to sort into datetime order.
-
-    creation_or_modification : str
-        If "creation", check the list of paths are ordered by creation datetime.
-        Otherwise if "modification", check they are sorterd by modification datetime.
-
-    Returns
-    -------
-    is_in_time_order : bool
-        Indicates whether `list_of_paths` was in creation or modification time order.
-        depending on the value of `creation_or_modification`.
-    """
-    assert creation_or_modification in [
-        "creation",
-        "modification",
-    ], "creation_or_modification must be 'creation' or 'modification."
-
-    filter: Callable
-    filter = (
-        os.path.getctime if creation_or_modification == "creation" else os.path.getmtime
-    )
-
-    list_of_paths_by_time = copy.deepcopy(list_of_paths)
-    list_of_paths_by_time.sort(key=filter)
-
-    is_in_time_order = list_of_paths == list_of_paths_by_time
-
-    return is_in_time_order
-
-
-def make_sorter_base_output_path(base_path, sub_name, pp_run_name, sorter):
-    """
-    Make the canonical sorter output path.
-    """
-    sorter_base_output_path = (
-        base_path / "derivatives" / sub_name / f"{pp_run_name}" / f"{sorter}-sorting"
-    )
-    return sorter_base_output_path
-
-
 def make_preprocessing_plot_title(
     run_name: str,
     full_key: str,
@@ -397,6 +221,20 @@ def cast_pp_steps_values(
 
     for key in pp_steps.keys():
         pp_steps[key] = func(pp_steps[key])
+
+
+def dump_dict_to_yaml(filepath, dict_):
+    with open(
+        filepath,
+        "w",
+    ) as file_to_save:
+        yaml.dump(dict_, file_to_save, sort_keys=False)
+
+
+def load_dict_from_yaml(filepath):
+    with open(filepath, "r") as file:
+        loaded_dict = yaml.safe_load(file)
+    return loaded_dict
 
 
 # Misc. --------------------------------------------------------------------------------

@@ -2,9 +2,10 @@ from __future__ import annotations
 
 import logging
 import sys
-from datetime import datetime
 from pathlib import Path
 from typing import Literal, Union
+
+from . import utils
 
 
 class HandleLogging:
@@ -176,7 +177,7 @@ def get_started_logger(
     Convenience function that creates logger name and stars a
     HandleLogging() instance.
     """
-    format_datetime = datetime.now().strftime("%Y-%m-%d_%H%M%S")
+    format_datetime = utils.get_formatted_datetime()
     log_name = f"{format_datetime}_{run_name}.log"
 
     logs = HandleLogging()

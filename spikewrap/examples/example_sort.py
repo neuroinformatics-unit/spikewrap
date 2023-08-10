@@ -19,6 +19,7 @@ if __name__ == "__main__":
     run_sorting(
         preprocessed_data_path,
         sorter="mountainsort5",
+        concat_for_sorting=True,
         #        sorter_options={"kilosort2_5": {"car": False}},
         overwrite_existing_sorter_output=True,
         slurm_batch=False,
