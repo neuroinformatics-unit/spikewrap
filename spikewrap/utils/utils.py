@@ -119,8 +119,10 @@ def get_dict_value_from_step_num(
 
     select_step_pp_key = [key for key in data.keys() if key.split("-")[0] == step_num]
 
-    assert len(select_step_pp_key) == 1, "pp_key must always have unique first char"
-
+    try:
+        assert len(select_step_pp_key) == 1, "pp_key must always have unique first char"
+    except:
+        breakpoint()
     pp_key: str = select_step_pp_key[0]
     dict_value = data[pp_key]
 
@@ -235,29 +237,3 @@ def load_dict_from_yaml(filepath):
     with open(filepath, "r") as file:
         loaded_dict = yaml.safe_load(file)
     return loaded_dict
-
-
-# Misc. --------------------------------------------------------------------------------
-
-
-def get_probe_num_groups(data: Union[PreprocessingData, SortingData]) -> int:
-    """
-    Get the number of probe groups on a recording-objects `probe` attribute.
-    This is typically the number of shanks on the probe, which are treated
-    separately by SI.
-
-    By default, uses the first step on the recording, as probe metadata will not
-    change throughout preprocessing.
-
-    Parameters
-    ----------
-    data : Union[PreprocessingData, SortingData]
-        The data object on which the recordings are stored.
-
-    Returns
-    -------
-    num_groups : int
-        The number of groups on the probe associated with the data recordings.
-    """
-    num_groups = np.unique(data[data.init_data_key].get_property("group")).size
-    return num_groups
