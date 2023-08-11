@@ -55,12 +55,19 @@ class SortingData(BaseUserDict):
     """
 
     def __init__(
-        self, base_path, sub_name, run_names, sorter: str, concat_for_sorting: bool
+        self,
+        base_path,
+        sub_name,
+        run_names,
+        sorter: str,
+        concat_for_sorting: bool,
+        print_messages: bool = True,
     ):
         super(SortingData, self).__init__(base_path, sub_name, run_names)
 
         self.concat_for_sorting = concat_for_sorting
         self.sorter = sorter
+        self.print_messages = print_messages
 
         self._check_preprocessing_exists()
 
@@ -190,20 +197,22 @@ class SortingData(BaseUserDict):
 
         concatenated_recording = concatenate_recordings(recordings_list)
 
-        # Perform some checks before returning.
         assert loaded_prepro_run_names == tuple(
             self.preprocessing_run_names
         ), "Something has gone wrong in the `run_names` ordering."
 
-        if not self._run_names_are_in_datetime_order("creation"):
-            warnings.warn(
-                "The runs provided are not in creation datetime order.\n"
-                "They will be concatenated in the order provided."
-            )
+        if self.print_messages:
+            if not self._run_names_are_in_datetime_order("creation"):
+                warnings.warn(
+                    "The runs provided are not in creation datetime order.\n"
+                    "They will be concatenated in the order provided."
+                )
 
-        utils.message_user(
-            f"Concatenating runs in the order: " f"{loaded_prepro_run_names}"
-        )
+            utils.message_user(
+                f"Preprocessed data loaded prior to sorting. "
+                f"Runs were concatenated runs in the order: "
+                f"{loaded_prepro_run_names}"
+            )
 
         return concatenated_recording
 

@@ -82,9 +82,12 @@ def run_sorting(
         if running on an interactive job, or locally.
 
     """
+    passed_arguments = locals()
     logs = logging_sw.get_started_logger(
-        utils.get_logging_path(base_path, sub_name), "full_pipeline"
+        utils.get_logging_path(base_path, sub_name),
+        "sorting",
     )
+    utils.show_passed_arguments(passed_arguments, "`run_sorting`")
 
     sorting_data = SortingData(
         base_path,

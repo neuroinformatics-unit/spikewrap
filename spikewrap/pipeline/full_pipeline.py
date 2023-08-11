@@ -123,6 +123,8 @@ def run_full_pipeline(
         If True, the pipeline will be run in a SLURM job. Set False
         if running on an interactive job, or locally.
     """
+    passed_arguments = locals()
+
     if slurm_batch:
         local_args = copy.deepcopy(locals())
         slurm.run_full_pipeline_slurm(**local_args)
@@ -132,8 +134,10 @@ def run_full_pipeline(
     pp_steps, sorter_options, waveform_options = get_configs(config_name)
 
     logs = logging_sw.get_started_logger(
-        utils.get_logging_path(base_path, sub_name), "full_pipeline"
+        utils.get_logging_path(base_path, sub_name),
+        "full_pipeline",
     )
+    utils.show_passed_arguments(passed_arguments, "`run_full pipeline`")
 
     loaded_data = load_data(base_path, sub_name, run_names, data_format="spikeglx")
 

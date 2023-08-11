@@ -171,15 +171,18 @@ class StreamToLogger(object):
 
 def get_started_logger(
     log_filepath: Path,
-    run_name: Literal["full_pipeline", "preprocess", "sorting", "postprocess"],
+    run_name: Literal["full_pipeline", "sorting", "postprocess"],
 ) -> HandleLogging:
     """
     Convenience function that creates logger name and stars a
-    HandleLogging() instance.
+    HandleLogging() instance. Note that this may be called
+    even when the logging does not log, see HandleLogging()
+    docs for details.
     """
     format_datetime = utils.get_formatted_datetime()
     log_name = f"{format_datetime}_{run_name}.log"
 
     logs = HandleLogging()
     logs.start_logging(log_filepath / log_name)
+
     return logs
