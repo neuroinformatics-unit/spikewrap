@@ -9,7 +9,7 @@ sub_name = "1119617"
 run_name = "1119617_LSE1_shank12_posttest1_pretest1"
 
 sorting_path = (
-    base_path / "derivatives" / sub_name / f"{run_name}" / "mountainsort5" / "sorting"
+    base_path / "derivatives" / sub_name / "1119617-sorting-concat" / f"{run_name}" / "mountainsort5" / "sorting"
 )
 
 run_postprocess(

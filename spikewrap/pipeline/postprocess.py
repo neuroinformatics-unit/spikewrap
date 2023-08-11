@@ -94,6 +94,8 @@ def run_postprocess(
         "full_pipeline",
     )
 
+    utils.message_user(f"Postprocessing run: {postprocess_data.sorted_run_name}...")
+
     handle_delete_existing_postprocessing(
         postprocess_data.get_postprocessing_path(),
         overwrite_postprocessing,

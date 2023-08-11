@@ -26,6 +26,7 @@ dependencies = [
     "spython",  # I think missing from SI?
     "submitit",
     "PyYAML",
+    "toml",
     # sorter-specific
     "tridesclous",
     "mountainsort5",

@@ -51,8 +51,6 @@
   - remove_artifacts
   - list_triggers:
     - - 1
-    - - 2
-    - - 3
   '15':
   - resample
   - resample_rate: 2

@@ -74,7 +74,7 @@ def get_image_run_settings(
     if singularity_image or docker_image:
         assert checks._check_virtual_machine()
 
-        if platform.system != "Linux":
+        if platform.system() != "Linux":
             assert (
                 checks.docker_desktop_is_running()
             ), "Docker is not running. Open Docker Desktop to start Docker."

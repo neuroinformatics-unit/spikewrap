@@ -1,10 +1,11 @@
+from __future__ import annotations
+
 import copy
 import os
 import warnings
 from typing import TYPE_CHECKING, Callable, Dict, List, Optional, Union
 
 import spikeinterface as si
-from si import BaseRecording
 from spikeinterface import concatenate_recordings
 
 from ..utils import utils
@@ -65,7 +66,7 @@ class SortingData(BaseUserDict):
 
         self.data: Dict = {}
         self.preprocessing_info_paths: Dict = {}
-        self._load_preprocessed_binary()
+        self.load_preprocessed_binary()
 
     def _top_level_folder(self):
         return "derivatives"
@@ -140,7 +141,7 @@ class SortingData(BaseUserDict):
     # Load and concatenate preprocessed data
     # ----------------------------------------------------------------------------------
 
-    def _load_preprocessed_binary(self) -> None:
+    def load_preprocessed_binary(self) -> None:
         """
         Use SpikeInterface to load the binary-data into a recording object.
         see class docstring for details.
@@ -159,7 +160,7 @@ class SortingData(BaseUserDict):
             concatenated_recording = self._concatenate_si_recording(recordings)
             self.data = {self.concat_run_name(): concatenated_recording}
 
-    def _concatenate_si_recording(self, recordings: Dict) -> BaseRecording:
+    def _concatenate_si_recording(self, recordings: Dict) -> si.BaseRecording:
         """
         Concatenate the Spikeinterface recording objects together.
 
@@ -171,7 +172,7 @@ class SortingData(BaseUserDict):
 
         Returns
         -------
-        concatenated_recording : BaseRecording
+        concatenated_recording : si.BaseRecording
             A SI recording object holding the concatenated preprocessed data.
         """
         loaded_prepro_run_names, recordings_list = zip(*recordings.items())
@@ -266,6 +267,15 @@ class SortingData(BaseUserDict):
 
         return concat_run_name
 
+    def get_output_run_name(self, run_name: Optional[str]) -> str:
+        """
+        """
+        if run_name is None:
+            assert self.concat_for_sorting is True
+            return self.concat_run_name()
+        else:
+            return run_name
+
     @staticmethod
     def _make_run_name_from_multiple_run_names(run_names: List[str]) -> str:
         """
@@ -357,7 +367,7 @@ class SortingData(BaseUserDict):
 
     def get_preprocessed_recording(
         self, run_name: Optional[str] = None
-    ) -> BaseRecording:
+    ) -> si.BaseRecording:
         """
         Get the preprocessed recording, that is stored in a dict in which
         keys are the run names (not concentrated) or the amalgamated run name

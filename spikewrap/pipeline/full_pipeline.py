@@ -29,7 +29,7 @@ def run_full_pipeline(
     run_names: Union[List[str], str],
     config_name: str = "default",
     sorter: str = "kilosort2_5",
-    concat_for_sorting: bool = True,
+    concat_for_sorting: bool = False,
     existing_preprocessed_data: HandleExisting = "load_if_exists",
     existing_sorting_output: HandleExisting = "load_if_exists",
     overwrite_postprocessing: bool = False,
@@ -156,6 +156,7 @@ def run_full_pipeline(
 
     # Run Postprocessing
     for run_name in sorting_data.get_all_run_names():
+
         sorting_path = sorting_data.get_sorting_path(run_name)
 
         postprocess_data = run_postprocess(
@@ -193,6 +194,9 @@ def preprocess_and_save(
     See `run_full_pipeline()` for details.
     """
     for run_name in preprocess_data.run_names:
+
+        utils.message_user(f"Preprocessing run {run_name}...")
+
         preprocess_path = preprocess_data.get_preprocessing_path(run_name)
 
         if existing_preprocessed_data == "load_if_exists":
@@ -204,7 +208,7 @@ def preprocess_and_save(
                 continue  # sorting will automatically use the existing data
             else:
                 utils.message_user(
-                    f"No data found at {preprocess_path}, saving" f"preprocessed data."
+                    f"No data found at {preprocess_path}, saving preprocessed data."
                 )
                 overwrite = False
 
