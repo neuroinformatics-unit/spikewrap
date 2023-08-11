@@ -43,7 +43,7 @@ def run_postprocess(
         If `True`, existing postprocessing is deleted in it's entirely. Otherwise
         if `False` and postprocesing already exists, an error will be raised.
 
-    existing_waveform_data : Literal["overwrite", "load_if_exists", "fail_if_exists"]
+    existing_waveform_data : custom_types.HandleExisting
         Determines how existing preprocessed data (e.g. from a prior pipeline run)
         is treated.
             "overwrite" : will overwrite any existing preprocessed data output. This will

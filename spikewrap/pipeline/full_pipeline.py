@@ -69,7 +69,7 @@ def run_full_pipeline(
         If `True`, preprocessed runs are concatenated before sorting. Otherwise,
         sorting is performed per-run.
 
-    existing_preprocessed_data : Literal["overwrite", "load_if_exists", "fail_if_exists"]
+    existing_preprocessed_data : custom_types.HandleExisting
         Determines how existing preprocessed data (e.g. from a prior pipeline run)
         is handled.
             "overwrite" : will overwrite any existing preprocessed data output. This will
@@ -182,9 +182,7 @@ def run_full_pipeline(
 def preprocess_and_save(
     preprocess_data: PreprocessingData,
     pp_steps,
-    existing_preprocessed_data: Literal[
-        "overwrite", "load_if_exists", "fail_if_exists"
-    ],
+    existing_preprocessed_data: HandleExisting,
     verbose,
 ) -> None:
     """

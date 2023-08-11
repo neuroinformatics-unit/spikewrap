@@ -61,7 +61,7 @@ def run_sorting(
     sorter_options : Dict
         Kwargs to pass to spikeinterface sorter class.
 
-    existing_sorting_output : Literal["overwrite", "load_if_exists", "fail_if_exists"]
+    existing_sorting_output : custom_types.HandleExisting
         Determines how existing sorting output (e.g. from a prior pipeline run)
         is handled.
             "overwrite" : will overwrite any existing preprocessed data output. This will
