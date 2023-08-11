@@ -25,8 +25,8 @@ if __name__ == "__main__":
         config_name,
         sorter,
         concat_for_sorting=True,
-        existing_preprocessed_data="load_if_exists",
-        existing_sorting_output="load_if_exists",
+        existing_preprocessed_data="overwrite",
+        existing_sorting_output="overwrite",
         overwrite_postprocessing=True,
         delete_intermediate_files=(
             "recording.dat",

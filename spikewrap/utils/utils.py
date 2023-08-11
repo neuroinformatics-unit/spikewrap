@@ -69,6 +69,13 @@ def get_logging_path(base_path: Union[str, Path], sub_name: str) -> Path:
     return Path(base_path) / "derivatives" / sub_name / "logs"
 
 
+def show_passed_arguments(passed_arguments, function_name):
+    message_user(
+        f"Running {function_name}. The function was called "
+        f"with the arguments {passed_arguments}.",
+    )
+
+
 def message_user(message: str, verbose: bool = True) -> None:
     """
     Method to interact with user.

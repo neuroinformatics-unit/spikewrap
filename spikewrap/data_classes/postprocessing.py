@@ -30,8 +30,8 @@ class PostprocessingData:
             self.sorting_info["preprocessing_run_names"],
             self.sorting_info["sorter"],
             self.sorting_info["concat_for_sorting"],
+            print_messages=False,
         )
-        self.sorting_data.load_preprocessed_binary()
 
         self.sorted_run_name = self.sorting_info["sorted_run_name"]
         self.preprocessing_info = self.sorting_info["preprocessing"]

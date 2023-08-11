@@ -69,6 +69,8 @@ def run_postprocess(
         A dictionary containing options passed to SpikeInterface's
         `extract_waveforms()` function as kwargs.
     """
+    passed_arguments = locals()
+
     postprocess_data = PostprocessingData(sorting_path)
 
     logs = logging_sw.get_started_logger(
@@ -76,8 +78,9 @@ def run_postprocess(
             postprocess_data.sorting_info["base_path"],
             postprocess_data.sorting_info["sub_name"],
         ),
-        "full_pipeline",
+        "postprocess",
     )
+    utils.show_passed_arguments(passed_arguments, "`run_postprocess`")
 
     utils.message_user(f"Postprocessing run: {postprocess_data.sorted_run_name}...")
 
