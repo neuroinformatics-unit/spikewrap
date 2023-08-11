@@ -98,6 +98,7 @@ def run_full_pipeline(
         Specify the postprocessing to run. By default, "all" will run
         all available postprocessing. Otherwise, provide a dict of
         including postprocessing to run e.g. {"quality_metrics: True"}.
+        Accepted keys are "quality_metrics" and "unit_locations".
 
     delete_intermediate_files : DeleteIntermediate
         Specify intermediate files or folders to delete. This option is useful for
