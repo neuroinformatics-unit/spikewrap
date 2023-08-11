@@ -156,7 +156,6 @@ def run_full_pipeline(
 
     # Run Postprocessing
     for run_name in sorting_data.get_all_run_names():
-
         sorting_path = sorting_data.get_sorting_path(run_name)
 
         postprocess_data = run_postprocess(
@@ -194,7 +193,6 @@ def preprocess_and_save(
     See `run_full_pipeline()` for details.
     """
     for run_name in preprocess_data.run_names:
-
         utils.message_user(f"Preprocessing run {run_name}...")
 
         preprocess_path = preprocess_data.get_preprocessing_path(run_name)

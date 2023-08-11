@@ -160,8 +160,9 @@ def run_sorting_on_all_runs(
     utils.message_user(f"Starting {sorting_data.sorter} sorting...")
 
     for run_name in sorting_data.get_all_run_names():
-
-        utils.message_user(f"Sorting run {sorting_data.get_output_run_name(run_name)}...")
+        utils.message_user(
+            f"Sorting run {sorting_data.get_output_run_name(run_name)}..."
+        )
 
         output_path = sorting_data.get_sorting_path(run_name)
 

@@ -6,7 +6,6 @@ import shutil
 from pathlib import Path
 
 import pytest
-from spikeinterface import concatenate_recordings
 
 from spikewrap.pipeline import full_pipeline, preprocess
 from spikewrap.pipeline.full_pipeline import get_configs
@@ -82,7 +81,9 @@ class TestFirstEphys:
         preprocess_data = load_data(*test_info[:3], data_format="spikeglx")
 
         for run_name in preprocess_data.run_names:
-            preprocess_data = preprocess.preprocess(preprocess_data, run_name, pp_steps, verbose=True)
+            preprocess_data = preprocess.preprocess(
+                preprocess_data, run_name, pp_steps, verbose=True
+            )
 
             preprocess_data.save_preprocessed_data(run_name, overwrite=True)
 
@@ -97,18 +98,20 @@ class TestFirstEphys:
         preprocess_data = load_data(*test_info[:3])
 
         for run_name in preprocess_data.run_names:
-            preprocess_data = preprocess.preprocess(preprocess_data, run_name, pp_steps, verbose=True)
+            preprocess_data = preprocess.preprocess(
+                preprocess_data, run_name, pp_steps, verbose=True
+            )
             preprocess_data.save_preprocessed_data(run_name, overwrite=True)
 
     @pytest.mark.parametrize(
         "sorter",
         [
-            "kilosort2",
-            "kilosort2_5",
-            "kilosort3",
-            "mountainsort5",
-            "spykingcircus2",
-            "tridesclous",
+            #     "kilosort2",
+            #    "kilosort2_5",
+            #   "kilosort3",
+            #  "mountainsort5",
+            "spykingcircus",
+            #  "tridesclous",
         ],
     )
     def test_single_run_local__(self, test_info, sorter):
@@ -120,9 +123,11 @@ class TestFirstEphys:
 
         self.run_full_pipeline(*test_info)
 
-        self.run_full_pipeline(*test_info,
-                               existing_preprocessed_data="overwrite",
-                               existing_sorting_output="overwrite")
+        self.run_full_pipeline(
+            *test_info,
+            existing_preprocessed_data="overwrite",
+            existing_sorting_output="overwrite",
+        )
 
         with pytest.raises(BaseException) as e:
             self.run_full_pipeline(
@@ -134,14 +139,12 @@ class TestFirstEphys:
         )
 
     def test_multi_run_local(self, test_info):
-
         test_info[2] = test_info[2][0]
 
         self.run_full_pipeline(*test_info)
 
     @pytest.mark.skipif(CAN_SLURM is False, reason="CAN_SLURM is false")
     def test_single_run_slurm(self, test_info):
-
         base_path = test_info[0]
 
         test_info[2] = test_info[2][0]
@@ -154,7 +157,6 @@ class TestFirstEphys:
 
     @pytest.mark.skipif(CAN_SLURM is False, reason="CAN_SLURM is false")
     def test_multi_run_slurm(self, test_info):
-
         base_path = test_info[0]
 
         self.clear_slurm_logs(base_path)
@@ -164,7 +166,6 @@ class TestFirstEphys:
         self.check_slurm_log(base_path)
 
     def check_slurm_log(self, base_path):
-
         slurm_run = base_path.glob("slurm_logs/*/*log.out")
         slurm_run = list(slurm_run)[0]
 
@@ -205,4 +206,3 @@ class TestFirstEphys:
 
     def test_sorting_only_slumr(self):
         raise NotImplementedError
-

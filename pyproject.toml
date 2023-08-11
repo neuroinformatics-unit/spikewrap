@@ -29,6 +29,7 @@ dependencies = [
     "toml",
     # sorter-specific
     "tridesclous",
+    # "spyking-circus", TODO: this is not straightforward, requires mpi4py. TBD if we want to manage this.
     "mountainsort5",
     "docker",  # TODO: windows only!
     "cuda-python",

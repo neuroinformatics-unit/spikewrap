@@ -268,8 +268,7 @@ class SortingData(BaseUserDict):
         return concat_run_name
 
     def get_output_run_name(self, run_name: Optional[str]) -> str:
-        """
-        """
+        """ """
         if run_name is None:
             assert self.concat_for_sorting is True
             return self.concat_run_name()
