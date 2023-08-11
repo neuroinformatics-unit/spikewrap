@@ -159,7 +159,7 @@ def run_sorting_on_all_runs(
     """
     utils.message_user(f"Starting {sorting_data.sorter} sorting...")
 
-    for run_name in sorting_data.get_all_run_names():
+    for run_name in sorting_data.sorting_run_names():
         utils.message_user(
             f"Sorting run {sorting_data.get_output_run_name(run_name)}..."
         )
@@ -185,7 +185,7 @@ def run_sorting_on_all_runs(
 
         ss.run_sorter(
             sorting_data.sorter,
-            sorting_data[sorting_data.get_output_run_name(run_name)],
+            sorting_data[run_name],
             output_folder=output_path,
             singularity_image=singularity_image,
             docker_image=docker_image,

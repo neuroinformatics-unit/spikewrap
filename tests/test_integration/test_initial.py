@@ -80,7 +80,7 @@ class TestFirstEphys:
 
         preprocess_data = load_data(*test_info[:3], data_format="spikeglx")
 
-        for run_name in preprocess_data.run_names:
+        for run_name in preprocess_data.preprocessing_run_names:
             preprocess_data = preprocess.preprocess(
                 preprocess_data, run_name, pp_steps, verbose=True
             )
@@ -97,7 +97,7 @@ class TestFirstEphys:
 
         preprocess_data = load_data(*test_info[:3])
 
-        for run_name in preprocess_data.run_names:
+        for run_name in preprocess_data.preprocessing_run_names:
             preprocess_data = preprocess.preprocess(
                 preprocess_data, run_name, pp_steps, verbose=True
             )

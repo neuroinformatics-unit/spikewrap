@@ -3,7 +3,7 @@ from __future__ import annotations
 import copy
 import shutil
 from pathlib import Path
-from typing import TYPE_CHECKING, Dict, List, Literal, Optional, Union
+from typing import TYPE_CHECKING, Dict, List, Literal, Union
 
 from ..configs.configs import get_configs
 from ..data_classes.preprocessing import PreprocessingData
@@ -17,10 +17,6 @@ from .sort import run_sorting
 
 if TYPE_CHECKING:
     pass
-
-    # visualisation
-    # TODO: double check SLURM
-    # TODO: delete intermediate files: use new spikeinterface settings for kilosort.
 
 
 def run_full_pipeline(
@@ -155,7 +151,7 @@ def run_full_pipeline(
     )
 
     # Run Postprocessing
-    for run_name in sorting_data.get_all_run_names():
+    for run_name in sorting_data.sorting_run_names():
         sorting_path = sorting_data.get_sorting_path(run_name)
 
         postprocess_data = run_postprocess(
@@ -167,7 +163,7 @@ def run_full_pipeline(
             waveform_options=waveform_options,
         )
 
-    for run_name in sorting_data.get_all_run_names():
+    for run_name in sorting_data.sorting_run_names():
         handle_delete_intermediate_files(
             run_name, sorting_data, delete_intermediate_files
         )
@@ -192,7 +188,7 @@ def preprocess_and_save(
     Handle the loading of existing preprocessed data.
     See `run_full_pipeline()` for details.
     """
-    for run_name in preprocess_data.run_names:
+    for run_name in preprocess_data.preprocessing_run_names:
         utils.message_user(f"Preprocessing run {run_name}...")
 
         preprocess_path = preprocess_data.get_preprocessing_path(run_name)
@@ -242,7 +238,7 @@ def preprocess_and_save(
 
 
 def handle_delete_intermediate_files(
-    run_name: Optional[str],
+    run_name: str,
     sorting_data: SortingData,
     delete_intermediate_files: DeleteIntermediate,
 ):

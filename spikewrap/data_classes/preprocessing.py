@@ -45,8 +45,10 @@ class PreprocessingData(BaseUserDict):
         super(PreprocessingData, self).__init__(base_path, sub_name, run_names)
 
         self.pp_steps: Optional[Dict] = None
-        self.data: Dict = {run_name: {"0-raw": None} for run_name in self.run_names}
-        self.sync = {run_name: None for run_name in self.run_names}
+        self.data: Dict = {
+            run_name: {"0-raw": None} for run_name in self.preprocessing_run_names
+        }
+        self.sync = {run_name: None for run_name in self.preprocessing_run_names}
 
     def _top_level_folder(self) -> Literal["rawdata"]:
         return "rawdata"
@@ -77,7 +79,7 @@ class PreprocessingData(BaseUserDict):
         Parameters
         ----------
         run_name : str
-            Run name corresponding to one of `self.run_names`.
+            Run name corresponding to one of `self.preprocessing_run_names`.
 
         overwrite : bool
             If `True`, existing preprocessed output will be overwritten.
@@ -136,7 +138,8 @@ class PreprocessingData(BaseUserDict):
             "sub_name": self.sub_name,
             "rawdata_path": self.get_run_path(run_name).as_posix(),
             "pp_steps": self.pp_steps,
-            "si_version": spikeinterface.__version__,
+            "spikeinterface_version": spikeinterface.__version__,
+            "spikewrap_version": utils.spikewrap_version(),
             "datetime_written": utils.get_formatted_datetime(),
         }
 

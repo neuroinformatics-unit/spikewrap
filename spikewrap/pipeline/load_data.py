@@ -69,7 +69,7 @@ def load_spikeglx_data(preprocess_data: PreprocessingData) -> PreprocessingData:
 
     See load_data() for parameters.
     """
-    for run_name in preprocess_data.run_names:
+    for run_name in preprocess_data.preprocessing_run_names:
         run_path = preprocess_data.get_run_path(run_name)
         assert run_name == run_path.name, "TODO"
 

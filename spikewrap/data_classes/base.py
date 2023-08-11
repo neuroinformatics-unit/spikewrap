@@ -2,7 +2,7 @@ import fnmatch
 from collections import UserDict
 from collections.abc import ItemsView, KeysView, ValuesView
 from pathlib import Path
-from typing import List, Literal, Optional, Union
+from typing import List, Literal, Union
 
 from ..utils import utils
 
@@ -31,7 +31,7 @@ class BaseUserDict(UserDict):
         self.base_path = Path(base_path)
         self.sub_name = sub_name
 
-        self.run_names = self.validate_inputs(
+        self.preprocessing_run_names = self.validate_inputs(
             run_names,
         )
 
@@ -101,7 +101,7 @@ class BaseUserDict(UserDict):
 
         return run_names
 
-    def get_run_path(self, run_name: Optional[str] = None) -> Path:
+    def get_run_path(self, run_name: str) -> Path:
         return self.get_sub_folder_path() / f"{run_name}"
 
     def get_sub_folder_path(self) -> Path:
@@ -120,7 +120,7 @@ class BaseUserDict(UserDict):
 
     # Preprocessing Paths --------------------------------------------------------------
 
-    def get_preprocessing_path(self, run_name: Optional[str] = None) -> Path:
+    def get_preprocessing_path(self, run_name: str) -> Path:
         """
         Set the folder tree where preprocessing output will be
         saved. This is canonical and should not change.
@@ -134,13 +134,13 @@ class BaseUserDict(UserDict):
         )
         return preprocessed_output_path
 
-    def _get_pp_binary_data_path(self, run_name: Optional[str] = None) -> Path:
+    def _get_pp_binary_data_path(self, run_name: str) -> Path:
         return self.get_preprocessing_path(run_name) / "si_recording"
 
-    def _get_sync_channel_data_path(self, run_name: Optional[str] = None) -> Path:
+    def _get_sync_channel_data_path(self, run_name: str) -> Path:
         return self.get_preprocessing_path(run_name) / "sync_channel"
 
-    def _get_preprocessing_info_path(self, run_name: Optional[str] = None) -> Path:
+    def _get_preprocessing_info_path(self, run_name: str) -> Path:
         return self.get_preprocessing_path(run_name) / utils.canonical_names(
             "preprocessed_yaml"
         )

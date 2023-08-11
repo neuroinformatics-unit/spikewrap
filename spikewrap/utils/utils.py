@@ -46,6 +46,21 @@ def get_formatted_datetime() -> str:
     return datetime.now().strftime("%Y-%m-%d_%H%M%S")
 
 
+def spikewrap_version():
+    """
+    If the package is installd with `pip install -e .` then
+    .__version__ will not work.
+    """
+    try:
+        import spikewrap
+
+        spikewrap_version = spikewrap.__version__
+    except AttributeError:
+        spikewrap_version = "not found."
+
+    return spikewrap_version
+
+
 def get_logging_path(base_path: Union[str, Path], sub_name: str) -> Path:
     """
     The path where logs from `run_full_pipeline`, `run_sorting`

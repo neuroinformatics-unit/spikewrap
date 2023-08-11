@@ -27,7 +27,7 @@ class PostprocessingData:
         self.sorting_data = SortingData(
             self.sorting_info["base_path"],
             self.sorting_info["sub_name"],
-            self.sorting_info["run_names"],
+            self.sorting_info["preprocessing_run_names"],
             self.sorting_info["sorter"],
             self.sorting_info["concat_for_sorting"],
         )
@@ -44,7 +44,7 @@ class PostprocessingData:
     def check_that_preprocessing_data_has_not_changed_since_sorting(self):
         """ """
         if self.sorting_data.concat_for_sorting:
-            run_names = self.sorting_data.run_names
+            run_names = self.sorting_data.preprocessing_run_names
         else:
             run_names = [self.sorted_run_name]
 
@@ -93,7 +93,7 @@ class PostprocessingData:
 
         if not self.sorting_info_path.is_file():
             raise FileNotFoundError(
-                f"{utils.canonical_names('sorting_yaml')} was not found at"
+                f"{utils.canonical_names('sorting_yaml')} was not found at "
                 f"{self.sorting_info_path}. Please check sorting finished successfully."
             )
 
@@ -131,10 +131,7 @@ class PostprocessingData:
         return sorting_without_excess_spikes
 
     def get_postprocessing_path(self):
-        run_name = (
-            None if self.sorting_data.concat_for_sorting else self.sorted_run_name
-        )
-        return self.sorting_data.get_postprocessing_path(run_name)
+        return self.sorting_data.get_postprocessing_path(self.sorted_run_name)
 
     def get_quality_metrics_path(self):
         return self.get_postprocessing_path() / "quality_metrics.csv"

@@ -33,7 +33,7 @@ def preprocess(
 
     run_name: str
         Name of the run to preprocess. This should correspond to a
-        run_name in `preprocess_data.run_names`.
+        run_name in `preprocess_data.preprocessing_run_names`.
 
     pp_steps: either a pp_steps dictionary, or name of valid
               preprocessing .yaml file (without hte yaml extension).
@@ -179,7 +179,7 @@ def perform_preprocessing_step(
 
     run_name: str
         Name of the run to preprocess. This should correspond to a
-        run_name in `preprocess_data.run_names`.
+        run_name in `preprocess_data.preprocessing_run_names`.
 
     pp_step_names : List[str]
         Ordered list of preprocessing step names that are being
