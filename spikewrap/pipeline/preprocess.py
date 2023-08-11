@@ -6,11 +6,12 @@ import spikeinterface.preprocessing as spre
 
 from ..configs import configs
 from ..data_classes.preprocessing import PreprocessingData
-from ..utils import logging_sw, utils
+from ..utils import utils
 
 
 def preprocess(
     preprocess_data: PreprocessingData,
+    run_name: str,
     pp_steps: Union[Dict, str],
     verbose: bool = True,
 ) -> PreprocessingData:
@@ -30,6 +31,10 @@ def preprocess(
         paths to rawdata. The pp_steps attribute is set on
         this class during execution of this function.
 
+    run_name: str
+        Name of the run to preprocess. This should correspond to a
+        run_name in `preprocess_data.run_names`.
+
     pp_steps: either a pp_steps dictionary, or name of valid
               preprocessing .yaml file (without hte yaml extension).
               See configs/configs.py for details.
@@ -47,8 +52,6 @@ def preprocess(
         associated SpikeInterface recording objects.
 
     """
-    logs = logging_sw.get_started_logger(preprocess_data.logging_path, "preprocess")
-
     if isinstance(pp_steps, str):
         pp_steps_to_run, _, _ = configs.get_configs(pp_steps)
     else:
@@ -62,10 +65,14 @@ def preprocess(
 
     for step_num, pp_info in checked_pp_steps.items():
         perform_preprocessing_step(
-            step_num, pp_info, preprocess_data, pp_step_names, pp_funcs, verbose
+            step_num,
+            pp_info,
+            preprocess_data,
+            run_name,
+            pp_step_names,
+            pp_funcs,
+            verbose,
         )
-
-    logs.stop_logging()
 
     return preprocess_data
 
@@ -122,7 +129,7 @@ def check_and_sort_pp_steps(pp_steps: Dict, pp_funcs: Dict) -> Tuple[Dict, List[
 
 def validate_pp_steps(pp_steps: Dict):
     """
-    Ensure the pp_steps dictionary of preprocessing steps to
+    Ensure the pp_steps dictionary of preprocessing steps
     has number-order that makes sense. The preprocessing step numbers
     should start 1 at, and increase by 1 for each subsequent step.
     """
@@ -144,6 +151,7 @@ def perform_preprocessing_step(
     step_num: str,
     pp_info: Tuple[str, Dict],
     preprocess_data: PreprocessingData,
+    run_name: str,
     pp_step_names: List[str],
     pp_funcs: Dict,
     verbose: bool = True,
@@ -169,6 +177,10 @@ def perform_preprocessing_step(
         spikewrap PreprocessingData class (a UserDict in which key-values are
         the preprocessing chain name : spikeinterface recording objects).
 
+    run_name: str
+        Name of the run to preprocess. This should correspond to a
+        run_name in `preprocess_data.run_names`.
+
     pp_step_names : List[str]
         Ordered list of preprocessing step names that are being
         applied across the entire preprocessing chain.
@@ -188,7 +200,7 @@ def perform_preprocessing_step(
     )
 
     last_pp_step_output, __ = utils.get_dict_value_from_step_num(
-        preprocess_data, step_num=str(int(step_num) - 1)
+        preprocess_data[run_name], step_num=str(int(step_num) - 1)
     )
 
     new_name = f"{step_num}-" + "-".join(["raw"] + pp_step_names[: int(step_num)])
@@ -196,12 +208,14 @@ def perform_preprocessing_step(
     confidence_check_pp_func_name(pp_name, pp_funcs)
 
     if isinstance(last_pp_step_output, Dict):
-        preprocess_data[new_name] = {
+        preprocess_data[run_name][new_name] = {
             k: pp_funcs[pp_name](v, **pp_options)
             for k, v in last_pp_step_output.items()
         }
     else:
-        preprocess_data[new_name] = pp_funcs[pp_name](last_pp_step_output, **pp_options)
+        preprocess_data[run_name][new_name] = pp_funcs[pp_name](
+            last_pp_step_output, **pp_options
+        )
 
 
 def confidence_check_pp_func_name(pp_name, pp_funcs):

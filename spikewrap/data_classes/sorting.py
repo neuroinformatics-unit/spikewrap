@@ -1,170 +1,397 @@
+from __future__ import annotations
+
+import copy
+import os
 import warnings
-from pathlib import Path
-from typing import Dict, Union
+from typing import TYPE_CHECKING, Callable, Dict, List, Optional, Union
 
 import spikeinterface as si
-import yaml
+from spikeinterface import concatenate_recordings
 
 from ..utils import utils
 from .base import BaseUserDict
 
+if TYPE_CHECKING:
+    from pathlib import Path
+
 
 class SortingData(BaseUserDict):
     """
-    Class to organise the sorting of preprocessed data. Handles the
-    paths to preprocessed data, sorted output and all post-processing
-    steps.
-
-    This class should be agnostic to any rawdata and the PreprocessingData
-    class, and concerned only with preprocessed data onwards.
+    Class to organise the sorting of preprocessed data.
 
     Parameters
     ----------
-    preprocessed_data_path : Union[str, Path]
-        Path to the preprocessed data output path, that contains
-        the dumped si_recording and .yaml file of PreprocessingData
-        attributes.
+
+    base_path : Union[Path, str]
+        Path to the rawdata folder containing subjects folders.
+
+    sub_name : str
+        Subject to preprocess. The subject top level dir should reside in
+        base_path/rawdata/ .
+
+    run_names : Union[List[str], str],
+        The SpikeGLX run name (i.e. not including the gate index). This can
+        also be a list of run names. Preprocessing will still occur per-run.
+        Runs are concatenated in the order passed prior to sorting.
+
+    sorter : str
+        Name of the sorter to use (e.g. "kilosort2_5").
+
+    concat_for_sorting: bool
+        If `True`, preprocessed runs are concatenated together before sorting.
+        Otherwise, runs are sorted separately.
 
     Notes
     -----
-    This class matches the data-access signature of PreprocessData
-    for compatibility with `visualise()` methods. This pattern
-    does not really make sense for this class as it most likely will
-    only ever contain a single data attribute.This includes
-    some jiggery-pokery with the `self.init_data_key`. This is not a nice
-    pattern and can be improved on refactoring of `visualise.py`.
+
+    Preprocessed data are stored in this UserDict (i.e. in `self.data`).
+    If `self.concat_for_sorting`, these preprocessed data is concatenated
+    together. If concatenation is not performed, `self.data` will be
+    a dictionary of N runs. Otherwise if concatenation is performed,
+    `self.data` will always have only a single run - the concentrated data.
+    However, `self.run_names` will still hold the original preprocessed data
+    run names, and the new concatenated run name to which the data are
+    saved is accessed by `self.concat_run_name()`
     """
 
-    def __init__(self, preprocessed_data_path: Union[str, Path]):
-        """ """
-        super(SortingData, self).__init__()
+    def __init__(
+        self, base_path, sub_name, run_names, sorter: str, concat_for_sorting: bool
+    ):
+        super(SortingData, self).__init__(base_path, sub_name, run_names)
 
-        self.preprocessed_data_path = Path(preprocessed_data_path)
-        self.check_preprocessed_data_path_exists()
+        self.concat_for_sorting = concat_for_sorting
+        self.sorter = sorter
 
-        self.top_level_folder = "derivatives"
-        self.init_data_key = "0-preprocessed"
-        self.pp_info = self.load_preprocess_data_attributes()
+        self._check_preprocessing_exists()
 
-        self.base_path = Path(self.pp_info["base_path"])
-        self.show_warning_if_base_path_diverged()
+        self.data: Dict = {}
+        self.preprocessing_info_paths: Dict = {}
+        self.load_preprocessed_binary()
 
-        self.sub_name = self.pp_info["sub_name"]
-        self.pp_run_name = self.pp_info["pp_run_name"]
+    def _top_level_folder(self):
+        return "derivatives"
 
-        # TODO: duplication from processing(). Figure out inheritance
-        self.logging_path = self.get_logging_path()
+    # Checkers
+    # ----------------------------------------------------------------------------------
 
-        # These paths are set when the sorter
-        # is known, set_sorter_output_paths()
-        self.sorter_base_output_path: Path
-        self.sorter_run_output_path: Path
-        self.postprocessing_output_path: Path
-        self.quality_metrics_path: Path
-        self.unit_locations_path: Path
-
-        # This is set later, depending on
-        # concatenated or not.
-        self.data: Dict = {"0-preprocessed": None}
-
-    def show_warning_if_base_path_diverged(self):
+    def _check_preprocessing_exists(self) -> None:
         """
-        It is expected that the passed preprocessed data output path
-        is in the same location as the data was saved during preprocessed,
-        as stored in the PreprocessData attribute. This can be broken
-        however, in the case of accessing the same folder as a mounted drive.
+        Check that the preprocessed data to be sorted exists
+        at the expected filepaths
         """
-        pp_base_path = [
-            path
-            for path in self.preprocessed_data_path.parents
-            if path.stem == "derivatives"
-        ][0]
-        if pp_base_path != self.base_path:
-            warnings.warn(
-                f"The base path of the `preprocessed_data_path` does not match the "
-                f"`base_path` contained used to run the preprocessing. This is expected "
-                f"if running the same folder from a different location (e.g. mounted drive). "
-                f"Otherwise, check the base paths are correct.\n"
-                f"passed base path: {self.preprocessed_data_path}\n"
-                f"original base path: {self.base_path}"
+
+        def error_message(path_):
+            return (
+                f"The run folder {path_.stem} cannot be found at "
+                f"file path {path_.parent}."
             )
 
-    def check_preprocessed_data_path_exists(self) -> None:
-        """
-        Ensure the preprocessed data path exists, otherwise
-        it cannot be loaded and sorting will fail.
-        """
-        if not self.preprocessed_data_path.is_dir():
-            raise FileNotFoundError(
-                f"No preprocessed data found at " f"{self.preprocessed_data_path}"
-            )
+        for run_name in self.run_names:
+            assert (
+                prepro_path := self.get_run_path(run_name) / "preprocessed"
+            ).is_dir(), error_message(prepro_path)
 
-    def load_preprocess_data_attributes(self) -> Dict:
-        """
-        Load the PreprocessingData attributes that were
-        saved when writing the preprocessed data to file.
+            assert (
+                recording_path := prepro_path / "si_recording"
+            ).is_dir(), error_message(recording_path)
 
-        These fields are used to set the sorting and other
-        output paths, and for provenance.
+    def _run_names_are_in_datetime_order(
+        self, creation_or_modification: str = "creation"
+    ) -> bool:
         """
-        with open(
-            Path(self.preprocessed_data_path)
-            / utils.canonical_names("preprocessed_yaml")
-        ) as file:
-            pp_info = yaml.full_load(file)
-        return pp_info
-
-    def load_preprocessed_binary(self, concatenate: bool = True):
-        """
-        Use SpikeInterface to load the binary-data into a recording object.
+        Assert whether a list of paths are in order. By default, check they are
+        in order by creation date. Can also check if they are ordered by
+        modification date.
 
         Parameters
         ----------
-        concatenate : bool
-            If `True`, all segments in the loaded SpikeInterface
-            recording object will be concatenated into a single
-            segment.
-        """
-        binary_path = self.preprocessed_data_path / "si_recording"  # TODO: configs
+        creation_or_modification : str
+            If "creation", check the list of paths are ordered by creation datetime.
+            Otherwise if "modification", check they are sorterd by modification
+            datetime.
 
-        if not binary_path.is_dir():
-            raise FileNotFoundError(
-                f"No preprocessed SI binary-containing folder "
-                f"found at {binary_path}."
+        Returns
+        -------
+        is_in_time_order : bool
+            Indicates whether `list_of_paths` was in creation or modification time
+            order.
+            depending on the value of `creation_or_modification`.
+        """
+        assert creation_or_modification in [
+            "creation",
+            "modification",
+        ], "creation_or_modification must be 'creation' or 'modification."
+
+        filter: Callable
+        filter = (
+            os.path.getctime
+            if creation_or_modification == "creation"
+            else os.path.getmtime
+        )
+
+        list_of_paths = [self.get_run_path(run_name) for run_name in self.run_names]
+
+        list_of_paths_by_time = copy.deepcopy(list_of_paths)
+        list_of_paths_by_time.sort(key=filter)
+
+        is_in_time_order = list_of_paths == list_of_paths_by_time
+
+        return is_in_time_order
+
+    # Load and concatenate preprocessed data
+    # ----------------------------------------------------------------------------------
+
+    def load_preprocessed_binary(self) -> None:
+        """
+        Use SpikeInterface to load the binary-data into a recording object.
+        see class docstring for details.
+        """
+        # Load the preprocessing recordings
+        recordings = {}
+        for run_name in self.run_names:
+            recordings[run_name] = si.load_extractor(
+                self._get_pp_binary_data_path(run_name)
             )
-        recording = si.load_extractor(binary_path)
 
-        if concatenate:
-            recording = utils.concatenate_runs(recording)
+        # Set the dict data to the separate or concatenated recordings
+        if not self.concat_for_sorting:
+            self.data = recordings
+        else:
+            concatenated_recording = self._concatenate_si_recording(recordings)
+            self.data = {self.concat_run_name(): concatenated_recording}
 
-        self.data["0-preprocessed"] = recording
-
-    def set_sorter_output_paths(self, sorter: str) -> None:
+    def _concatenate_si_recording(self, recordings: Dict) -> si.BaseRecording:
         """
-        Set the sorter-specific output paths. The same data may be
-        sorted multiple times by different sorters.
+        Concatenate the Spikeinterface recording objects together.
 
-        sort_base_output_path : str
-            canonical name, is where spikeinterface
-            automatically saves sorter output
+        Parameters
+        ----------
+        recordings : Dict
+            A dictionary in which key are the run names and values are the
+            SI recording object holding the preprocessed data for that run.
+
+        Returns
+        -------
+        concatenated_recording : si.BaseRecording
+            A SI recording object holding the concatenated preprocessed data.
         """
-        self.sorter_base_output_path = utils.make_sorter_base_output_path(
-            self.base_path, self.sub_name, self.pp_run_name, sorter
+        loaded_prepro_run_names, recordings_list = zip(*recordings.items())
+
+        concatenated_recording = concatenate_recordings(recordings_list)
+
+        # Perform some checks before returning.
+        assert loaded_prepro_run_names == tuple(
+            self.run_names
+        ), "Something has gone wrong in the `run_names` ordering."
+
+        if not self._run_names_are_in_datetime_order("creation"):
+            warnings.warn(
+                "The runs provided are not in creation datetime order.\n"
+                "They will be concatenated in the order provided."
+            )
+
+        utils.message_user(
+            f"Concatenating runs in the order: " f"{loaded_prepro_run_names}"
         )
 
-        self.sorting_output_path = self.sorter_base_output_path / "sorting"
-        self.sorter_run_output_path = self.sorting_output_path / "sorter_output"
-        self.postprocessing_output_path = (
-            self.sorter_base_output_path / "postprocessing"
-        )
-        self.quality_metrics_path = (
-            self.postprocessing_output_path / "quality_metrics.csv"
-        )
-        self.unit_locations_path = (
-            self.postprocessing_output_path / "unit_locations.csv"
+        return concatenated_recording
+
+    # Paths
+    # ----------------------------------------------------------------------------------
+
+    def _get_base_sorting_path(self, run_name: Optional[str] = None) -> Path:
+        """
+        Key method underpinning path getters for the class. If
+        self.concat_for_sorting is `True`, then the sorting output
+        run name is an amalgamation of the concatenated run names.
+        Also, the folder structure is slightly different. In this case,
+        it does not make sense to have a specific run sorting output to
+        get the path for, so this must be `None`.
+
+        Otherwise, if concatenation is not performed, a run name to
+        get the sorting output for must be specified.
+        """
+        sub_folder = self.base_path / "derivatives" / self.sub_name
+
+        if self.concat_for_sorting:
+            assert run_name is None
+            base_sorting_path = (
+                sub_folder
+                / f"{self.sub_name}-sorting-concat"
+                / self.concat_run_name()
+                / self.sorter
+            )
+        else:
+            assert run_name is not None
+            base_sorting_path = sub_folder / run_name / self.sorter
+
+        return base_sorting_path
+
+    def get_sorting_path(self, run_name: Optional[str] = None):
+        return self._get_base_sorting_path(run_name) / "sorting"
+
+    def get_sorter_output_path(self, run_name: Optional[str] = None):
+        return self.get_sorting_path(run_name) / "sorter_output"
+
+    def get_postprocessing_path(self, run_name: Optional[str] = None):
+        return self._get_base_sorting_path(run_name) / "postprocessing"
+
+    # Concatenated run name
+    # ----------------------------------------------------------------------------------
+
+    def concat_run_name(
+        self,
+    ) -> str:
+        """
+        The run_names may be a single run, or a list of runs to process.
+        Return a list of paths to the runs found on the system. enforces
+        that the runs are in datetime order.
+
+        Returns
+        -------
+        run_names : List[str]
+            List of run names (folder names within the subject level folder)
+            to be used in the pipeline.
+
+        concat_run_name : str
+            A name consisting of the ordered combination of all run names
+            (see self.make_run_name_from_multiple_run_names)
+        """
+        assert len(self.run_names) > 1, (
+            f"Concatenate for sorting (`concat_for_sorting`) is "
+            f"true but only a single run"
+            f"has been passed: {self.run_names}."
         )
 
-    def get_logging_path(self):
-        return (
-            self.base_path / "derivatives" / self.sub_name / self.pp_run_name / "logs"
+        concat_run_name = self._make_run_name_from_multiple_run_names(self.run_names)
+
+        return concat_run_name
+
+    def get_output_run_name(self, run_name: Optional[str]) -> str:
+        """ """
+        if run_name is None:
+            assert self.concat_for_sorting is True
+            return self.concat_run_name()
+        else:
+            return run_name
+
+    @staticmethod
+    def _make_run_name_from_multiple_run_names(run_names: List[str]) -> str:
+        """
+        Make a single run_name given a list of run names. This will use the
+        first part of the first name and then add unique parts of the
+        subsequent names to the string.
+
+        Parameters
+        ----------
+        run_names : Union[List[str], str]
+            A list of run names.
+
+        Returns
+        -------
+        pp_run_name : str
+            A single run name formed from the list of run names.
+        """
+        all_names = []
+        for idx, name in enumerate(run_names):
+            if idx == 0:
+                all_names.extend(name.split("_"))
+            else:
+                split_name = name.split("_")
+                new_name = [n for n in split_name if n not in all_names]
+                all_names.extend(new_name)
+
+        if "g0" in all_names:
+            all_names.remove("g0")
+
+        concat_run_name = "_".join(all_names)
+
+        return concat_run_name
+
+    # Sorting info
+    # ----------------------------------------------------------------------------------
+
+    def save_sorting_info(self, run_name: Optional[str] = None) -> None:
+        """
+        Save a sorting_info.yaml file containing a dictionary holding
+        important information on the sorting. This is for provenance.
+        Importantly, the preprocessing_info.yaml files for all
+        preprocessed runs that were sorted are also loaded and
+        re-saved.
+
+        This is very important for PostprocessData in which the
+        waveforms are extracted from the preprocessed data based on the
+        results of the sorting. In this case it is critical the
+        preprocessing data at the expected Path is the same that was
+        used for sorting.
+        """
+        # Load the preprocessing info
+        if run_name is None:
+            assert self.concat_for_sorting is True
+            run_names_to_load = self.run_names
+        else:
+            assert self.concat_for_sorting is False
+            run_names_to_load = [run_name]
+
+        preprocessing_info: Dict = {"preprocessing": {}}
+
+        for load_prepro_run_name in run_names_to_load:
+            preprocessing_info["preprocessing"][
+                load_prepro_run_name
+            ] = utils.load_dict_from_yaml(
+                self._get_preprocessing_info_path(load_prepro_run_name)
+            )
+
+        # Add sorting-specific information
+        sorted_run_name = (
+            self.concat_run_name() if self.concat_for_sorting else run_name
         )
+
+        preprocessing_info["base_path"] = self.base_path.as_posix()
+        preprocessing_info["sub_name"] = self.sub_name
+        preprocessing_info["run_names"] = self.run_names
+        preprocessing_info["concat_for_sorting"] = self.concat_for_sorting
+        preprocessing_info["sorter"] = self.sorter
+        preprocessing_info["sorted_run_name"] = sorted_run_name
+
+        # Save
+        output_path = self.get_sorting_path(run_name) / utils.canonical_names(
+            "sorting_yaml"
+        )
+
+        utils.dump_dict_to_yaml(output_path, preprocessing_info)
+
+    # Sorting info
+    # ----------------------------------------------------------------------------------
+
+    def get_preprocessed_recording(
+        self, run_name: Optional[str] = None
+    ) -> si.BaseRecording:
+        """
+        Get the preprocessed recording, that is stored in a dict in which
+        keys are the run names (not concentrated) or the amalgamated run name
+        (if concatenation is performed).
+        """
+        if self.concat_for_sorting:
+            assert run_name is None
+            recording = self[self.concat_run_name()]
+        else:
+            assert isinstance(run_name, str)
+            recording = self[run_name]
+
+        return recording
+
+    def get_all_run_names(self) -> Union[List[None], List[str]]:
+        """
+        Convenience function to get the run names expected for
+        sorting with (None) and without (the run names) concatenation.
+        This is useful for getting sorting output paths
+        (see self.`_get_base_sorting_path()`).
+        """
+        run_names: Union[List[None], List[str]]
+
+        if self.concat_for_sorting:
+            run_names = [None]
+        else:
+            run_names = self.run_names
+        return run_names

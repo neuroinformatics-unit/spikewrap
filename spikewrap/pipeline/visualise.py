@@ -18,12 +18,12 @@ if TYPE_CHECKING:
 
 def visualise(
     data: Union[PreprocessingData, SortingData],
+    run_name: str,
     steps: Union[List[str], str] = "all",
     mode: str = "auto",
     as_subplot: bool = False,
     time_range: Optional[Tuple] = None,
     show_channel_ids: bool = False,
-    run_number: int = 1,
 ) -> None:
     """
     Plot the data at various preprocessing steps, useful for quality-checking.
@@ -57,25 +57,28 @@ def visualise(
     run_number : The run number to visualise (in the case of a concatenated recording.
                  Under the hood, each run maps to a SpikeInterface segment_index.
     """
-    steps, as_subplot = process_input_arguments(data, steps, as_subplot)
+    steps, as_subplot = process_input_arguments(data, run_name, steps, as_subplot)
 
-    total_used_shanks = utils.get_probe_num_groups(data)
+    first_key = list(data[run_name].keys())[-1]
+    total_used_shanks = np.unique(
+        data[run_name][first_key].get_property("group")
+    ).size  # TODO
 
     for shank_idx in range(total_used_shanks):
         if as_subplot:
             fig, ax, num_rows, num_cols = generate_subplot(steps)
 
         for idx, step in enumerate(steps):
-            recording, full_key = utils.get_dict_value_from_step_num(data, str(step))
+            recording, full_key = utils.get_dict_value_from_step_num(
+                data[run_name], str(step)
+            )
 
-            validate_options_against_recording(recording, data, time_range, run_number)
+            validate_options_against_recording(recording, data, run_name, time_range)
 
             recordings = recording.split_by(property="group")
             recording_to_plot = recordings[shank_idx]
 
-            run_name = get_run_name(data, run_number)
-
-            plot_title = utils.make_preprocessing_plot_title(
+            plot_title = make_preprocessing_plot_title(
                 run_name,
                 full_key,
                 shank_idx,
@@ -95,7 +98,7 @@ def visualise(
                 show_channel_ids=show_channel_ids,
                 mode=mode,
                 ax=current_ax,
-                segment_index=run_number - 1,
+                segment_index=0,
             )
 
             if current_ax is None:
@@ -176,6 +179,7 @@ def get_subplot_ax(
 
 def process_input_arguments(
     data: Union[PreprocessingData, SortingData],
+    run_name: str,
     steps: Union[List[str], str],
     as_subplot: bool,
 ) -> Tuple[Union[List[str], str], bool]:
@@ -197,9 +201,9 @@ def process_input_arguments(
 
     if "all" in steps:
         assert len(steps) == 1, "if using 'all' only put one step input"
-        steps = utils.get_keys_first_char(data)  # type: ignore
+        steps = utils.get_keys_first_char(data[run_name])  # type: ignore
 
-    assert len(steps) <= len(data), (
+    assert len(steps) <= len(data[run_name]), (
         "The number of steps must be less or equal to the "
         "number of steps in the recording"
     )
@@ -213,8 +217,8 @@ def process_input_arguments(
 def validate_options_against_recording(
     recording: BaseRecording,
     data: Union[PreprocessingData, SortingData],
+    run_name: str,
     time_range: Optional[Tuple],
-    run_number: int,
 ) -> None:
     """
     Check the passed configurations are valid.
@@ -226,45 +230,60 @@ def validate_options_against_recording(
     but must be somewhere, this is wasteful.
     """
     if isinstance(data, PreprocessingData):
-        num_runs = len(data.all_run_names)
-        assert run_number <= num_runs, (
-            "The run_number must be less than or equal to the "
-            "number of runs specified."
-        )
+        assert (
+            run_name in data
+        ), "The run_name must be a key in the loaded `preprocessing_data` dict."
     if time_range is not None:
         assert (
-            time_range[1] <= recording.get_times(segment_index=run_number - 1)[-1]
+            time_range[1] <= recording.get_times(segment_index=0)[-1]
         ), "The time range specified is longer than the maximum time of the recording."
 
 
-def get_run_name(data: Union[PreprocessingData, SortingData], run_number: int) -> str:
+def make_preprocessing_plot_title(
+    run_name: str,
+    full_key: str,
+    shank_idx: int,
+    recording_to_plot: BaseRecording,
+    total_used_shanks: int,
+) -> str:
     """
-    Get the name of the run of which the data is being displayed.
-    If the object is PreprocessingData, the data is not concatenated
-    and it is one of the rawdata runs for the subject.
-
-    Otherwise it is a SortingData object, of which there is only one, concatenated
-    output run.
+    For visualising data, make the plot titles (with headers in bold). If
+    more than one shank is used, the title will also contain information
+    on the displayed shank.
 
     Parameters
     ----------
-    data : Union[PreprocessingData, SortingData]
-        Preprocessing or sorting data dictionary.
+    run_name : str
+        The name of the preprocessing run (e.g. "1-phase_shift").
 
-    run_number : int
-        Run of the run to plot.
+    full_key : str
+        The full preprocessing key (as defined in preprocess.py).
+
+    shank_idx : int
+        The SpikeInterface group number representing the shank number.
+
+    recording_to_plot : BaseRecording
+        The SpikeInterface recording object that is being displayed.
+
+    total_used_shanks : int
+        The total number of shanks used in the recording. For a 4-shank probe,
+        this could be between 1 - 4 if not all shanks are mapped.
 
     Returns
     -------
-    run_name : str
-        Name of the run. For PreprocessingData, this will be the raw
-        data run name. For SortingData, if multiple runs are
-        concatenated it will be an amalgamation of the rawdata
-        runs used to generated it.
+    plot_title : str
+        The formatted plot title.
     """
-    if isinstance(data, PreprocessingData):
-        run_name = data.all_run_names[run_number - 1]
-    elif isinstance(data, SortingData):
-        run_name = data.pp_run_name
-
-    return run_name
+    plot_title = (
+        r"$\bf{Run \ name:}$" + f"{run_name}"
+        "\n" + r"$\bf{Preprocessing \ step:}$" + f"{full_key}"
+    )
+    if total_used_shanks > 1:
+        plot_title += (
+            "\n"
+            + r"$\bf{Shank \ group:}$"
+            + f"{shank_idx}, "
+            + r"$\bf{Num \ channels:}$"
+            + f"{recording_to_plot.get_num_channels()}"
+        )
+    return plot_title

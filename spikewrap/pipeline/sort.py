@@ -2,35 +2,34 @@ from __future__ import annotations
 
 import copy
 import os
-import shutil
-from pathlib import Path
-from typing import TYPE_CHECKING, Dict, Literal, Optional, Tuple, Union
-
-from ..utils import logging_sw
-
-if TYPE_CHECKING:
-    from ..data_classes.sorting import SortingData
-
-import platform
+from typing import Dict, Literal, Optional, Union
 
 import spikeinterface.sorters as ss
 
-from ..pipeline.load_data import load_data_for_sorting
-from ..utils import checks, slurm, utils
+from ..data_classes.sorting import SortingData
+from ..utils import logging_sw, slurm, utils
+from ..utils.custom_types import HandleExisting
+from ..utils.managing_images import (
+    get_image_run_settings,
+    move_singularity_image_if_required,
+)
 
 
 def run_sorting(
-    preprocessed_data_path: Union[Path, str],
-    sorter: str = "kilosort2_5",
+    base_path,
+    sub_name,
+    run_names,
+    sorter: str,
+    concat_for_sorting: bool,
     sorter_options: Optional[Dict] = None,
-    overwrite_existing_sorter_output: bool = False,
+    existing_sorting_output: HandleExisting = "fail_if_exists",
     verbose: bool = True,
     slurm_batch: bool = False,
 ) -> SortingData:
     """
     Run a sorter on pre-processed data. Takes a PreprocessingData (pipeline.data_class)
     object that contains spikeinterface recording objects for the preprocessing
-    pipeline (or path to existing 'preprocessed' output folder.
+    pipeline (or path to existing 'preprocessed' output folder).
 
     Here, save the preprocessed recording to binary file. Then, run sorting
     on the saved binary. The preprocessed binary and sorting output are
@@ -39,21 +38,43 @@ def run_sorting(
 
     Parameters
     ----------
-    preprocessed_data_path : Union[Path, str]
-        Path to previously saved 'preprocessed' directory.
+
+    base_path : Union[Path, str]
+        Path to the rawdata folder containing subjects folders.
+
+    sub_name : str
+        Subject to preprocess. The subject top level dir should reside in
+        base_path/rawdata/ .
+
+    run_names : Union[List[str], str],
+        The SpikeGLX run name (i.e. not including the gate index). This can
+        also be a list of run names. Preprocessing will still occur per-run.
+        Runs are concatenated in the order passed prior to sorting.
 
     sorter : str
         Name of the sorter to use (e.g. "kilosort2_5").
 
+    concat_for_sorting: bool
+        If `True`, preprocessed runs are concatenated before sorting. Otherwise,
+        sorting is performed per-run.
+
     sorter_options : Dict
         Kwargs to pass to spikeinterface sorter class.
 
-    overwrite_existing_sorter_output : bool
-         If False, an error will be raised if sorting output already
-         exists. If True, existing sorting output will be overwritten.
+    existing_sorting_output : Literal["overwrite", "load_if_exists", "fail_if_exists"]
+        Determines how existing sorting output (e.g. from a prior pipeline run)
+        is handled.
+            "overwrite" : will overwrite any existing preprocessed data output. This will
+                          delete the 'preprocessed' folder. Therefore, never save
+                          derivative work there.
+            "load_if_exists" : will search for existing data and load if it exists.
+                               Otherwise, will use the preprocessing from the
+                               current run.
+            "fail_if_exists" : If existing preprocessed data is found, an error
+                               will be raised.
 
     verbose : bool
-        If True, messages will be printed to consolve updating on the
+        If True, messages will be printed to console updating on the
         progress of preprocessing / sorting.
 
     slurm_batch : bool
@@ -61,46 +82,38 @@ def run_sorting(
         if running on an interactive job, or locally.
 
     """
-    preprocessed_data_path = Path(preprocessed_data_path)
+    logs = logging_sw.get_started_logger(
+        utils.get_logging_path(base_path, sub_name), "full_pipeline"
+    )
 
-    sorting_data = load_data_for_sorting(preprocessed_data_path)
-    sorting_data.set_sorter_output_paths(sorter)
+    sorting_data = SortingData(
+        base_path,
+        sub_name,
+        run_names,
+        sorter=sorter,
+        concat_for_sorting=concat_for_sorting,
+    )
 
     if slurm_batch:
         local_args = copy.deepcopy(locals())
         slurm.run_sorting_slurm(**local_args)
         return sorting_data
 
-    logs = logging_sw.get_started_logger(sorting_data.logging_path, "sorting")
-
     sorter_options_dict = validate_inputs(slurm_batch, sorter, sorter_options, verbose)
-
-    # Load preprocessed data from saved preprocess output path.
-    utils.message_user(
-        f"\nLoading binary preprocessed data from {preprocessed_data_path.as_posix()}\n"
-    )
 
     # This must be run from the folder that has both sorter output AND rawdata
     os.chdir(sorting_data.base_path)
 
     singularity_image, docker_image = get_image_run_settings(sorter)
 
-    utils.message_user(f"Starting {sorter} sorting...")
-
-    # TODO: can remove on API change PR #1908
-    # Also, once #1908 is merged and updated, we need to check
-    # that 'delete_intermediate_files' is not passed by the
-    # user in the config file because it is overridden here.
     if "kilosort" in sorter:
         sorter_options_dict.update({"delete_tmp_files": False})
 
-    ss.run_sorter(
-        sorter,
-        sorting_data.data["0-preprocessed"],
-        output_folder=sorting_data.sorting_output_path,
-        singularity_image=singularity_image,
-        docker_image=docker_image,
-        remove_existing_folder=overwrite_existing_sorter_output,
+    run_sorting_on_all_runs(
+        sorting_data,
+        singularity_image,
+        docker_image,
+        existing_sorting_output=existing_sorting_output,
         **sorter_options_dict,
     )
 
@@ -111,128 +124,76 @@ def run_sorting(
     return sorting_data
 
 
-def move_singularity_image_if_required(
+def run_sorting_on_all_runs(
     sorting_data: SortingData,
-    singularity_image: Optional[Union[Literal[True], str]],
-    sorter: str,
-) -> None:
+    singularity_image: Union[Literal[True], None, str],
+    docker_image: Optional[Literal[True]],
+    existing_sorting_output: HandleExisting,
+    **sorter_options_dict,
+):
     """
-    On Linux, images are cased to the sorting_data base folder
-    by default by SpikeInterface. To avoid re-downloading
-    images, these are moved to a pre-determined folder (home
-    for local, pre-set on an HPC). This is only required
-    for singularity, as docker-desktop handles all image
-    storage.
+    Run the sorting data for each run. If the data is concatenated
+    prior to sorting, the `run_name` will be `None` (this is handled
+    under the hood by `sorting_data`). Otherwise, run_names
+    will be the names of the individually sorted runs.
 
-    Parameters
-    ----------
+    Parameters:
 
-    singularity_image: Optional[Union[Literal[True], Path]]
-        Holds either a path to an existing (stored) sorter, or
-        `True`. If `True`, no stored sorter image exists and so
-        we move it. The next time sorting is performed, it will use
-        this stored image.
+    sorting_data: SortingData
+        Spikewrap SortingData object.
 
-    sorter : str
-        Name of the sorter.
+    singularity_image: Union[True, None, str]
+        If True, image is saved locally by SI. If False, docker is not used.
+        If str, must be a path to a singularity image to be used.
+        Note must be `False` if docker image is `True`.
+
+    docker_image: bool
+        If `True`, docker is used otherwise it is not used. No path
+        option is given as docker images are managed with Docker Desktop.
+        Note must be `False` if singularity image is `True` or a Path.
+
+    existing_sorting_output: see `run_sorter()`
+
+    sorter_options_dict: Dict
+        List of kwargs passed to SI's `run_sorter`.
     """
-    if singularity_image is True:
-        assert (
-            platform.system() == "Linux"
-        ), "Docker Desktop should be used on Windows or macOS."
-        store_singularity_image(sorting_data.base_path, sorter)
+    utils.message_user(f"Starting {sorting_data.sorter} sorting...")
 
+    for run_name in sorting_data.get_all_run_names():
+        utils.message_user(
+            f"Sorting run {sorting_data.get_output_run_name(run_name)}..."
+        )
 
-def get_image_run_settings(
-    sorter: str,
-) -> Tuple[
-    Optional[Union[Literal[True], str]], Optional[bool]
-]:  # cannot set this to Literal[True], for unknown reason.
-    """
-    Determine how to run the sorting, either locally or in a container
-    if required (e.g. kilosort2_5). On windows, Docker is used,
-    otherwise singularity. Docker images are handled by Docker-desktop,
-    but singularity image storage is handled internally, see
-    `move_singularity_image_if_required()`.
+        output_path = sorting_data.get_sorting_path(run_name)
 
-    Parameters
-    ----------
+        if output_path.is_dir():
+            if existing_sorting_output == "fail_if_exists":
+                raise RuntimeError(
+                    f"Sorting output already exists at {output_path} and"
+                    f"`existing_sorting_output` is set to 'fail_if_exists'."
+                )
 
-    sorter : str
-        Sorter name.
-    """
-    can_run_locally = ["spykingcircus", "mountainsort5", "tridesclous"]
+            elif existing_sorting_output == "load_if_exists":
+                utils.message_user(
+                    f"Sorting output already exists at {output_path}. Nothing "
+                    f"will be done. The existing sorting will be used for postprocessing "
+                    f"if running with `run_full_pipeline`"
+                )
+                continue
 
-    if sorter in can_run_locally:
-        singularity_image = docker_image = None
-    else:
-        if platform.system() == "Windows":
-            singularity_image = None
-            docker_image = True
-        else:
-            singularity_image = get_singularity_image(sorter)
-            docker_image = None
+            quick_safety_check(existing_sorting_output, output_path)
 
-    if singularity_image or docker_image:
-        assert checks._check_virtual_machine()
+        ss.run_sorter(
+            sorting_data.sorter,
+            sorting_data[sorting_data.get_output_run_name(run_name)],
+            output_folder=output_path,
+            singularity_image=singularity_image,
+            docker_image=docker_image,
+            remove_existing_folder=True,
+            **sorter_options_dict,
+        )
 
-        if platform.system != "Linux":
-            assert (
-                checks.docker_desktop_is_running()
-            ), "Docker is not running. Open Docker Desktop to start Docker."
-
-    return singularity_image, docker_image
-
-
-def store_singularity_image(base_path: Path, sorter: str) -> None:
-    """
-    When running locally, SpikeInterface will pull the docker image
-    to the current working directly. Move this to home/.spikewrap
-    so they can be used again in future and are centralised.
-
-    Parameters
-    ----------
-    base_path : Path
-        Base-path on the SortingData object, the path that holds
-        `rawdata` and `derivatives` folders.
-
-    sorter : str
-        Name of the sorter for which to store the image.
-    """
-    path_to_image = base_path / utils.get_sorter_image_name(sorter)
-    shutil.move(path_to_image, utils.get_local_sorter_path(sorter).parent)
-
-
-def get_singularity_image(sorter: str) -> Union[Literal[True], str]:
-    """
-    Get the path to a pre-installed system singularity image. If none
-    can be found, set to True. In this case SpikeInterface will
-    pull the image to the current working directory, and
-    this will be moved after sorting
-    (see store_singularity_image).
-
-    Parameters
-    ----------
-    sorter : str
-        Name of the sorter to get the image for.
-
-    Returns
-    -------
-    singularity_image [ Union[Literal[True], str]
-        If `str`, the path to the singularity image. Otherwise if `True`,
-        this tells SpikeInterface to pull the image.
-    """
-    singularity_image: Union[Literal[True], str]
-
-    if utils.get_hpc_sorter_path(sorter).is_file():
-        singularity_image = str(utils.get_hpc_sorter_path(sorter))
-
-    elif utils.get_local_sorter_path(sorter).is_file():
-        singularity_image = str(utils.get_local_sorter_path(sorter))
-    else:
-        singularity_image = True
-
-    return singularity_image
+        sorting_data.save_sorting_info(run_name)
 
 
 def validate_inputs(
@@ -280,10 +241,6 @@ def validate_inputs(
         sorter in supported_sorters
     ), f"sorter {sorter} is invalid, must be one of: {supported_sorters}"
 
-    assert (
-        utils.check_singularity_install()
-    ), "Singularity must be installed to run sorting."
-
     sorter_options_dict = {}
     if sorter_options is not None and sorter in sorter_options:
         sorter_options_dict = sorter_options[sorter]
@@ -291,3 +248,15 @@ def validate_inputs(
     sorter_options_dict.update({"verbose": verbose})
 
     return sorter_options_dict
+
+
+def quick_safety_check(existing_sorting_output, output_path):
+    """
+     In this case, either output path does not exist, or it does
+     and `existing_sorter_output` is "overwrite"
+
+    TODO: delete after some testing
+    """
+    assert existing_sorting_output != "fail_if_exists"
+    if existing_sorting_output == "load_if_exists":
+        assert not output_path.is_dir()

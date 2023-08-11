@@ -1,13 +1,11 @@
 from __future__ import annotations
 
-import copy
-import os.path
-import subprocess
+from datetime import datetime
 from pathlib import Path
-from typing import TYPE_CHECKING, Callable, Dict, List, Literal, Tuple, Union
+from typing import TYPE_CHECKING, Dict, List, Literal, Tuple, Union
 
 import numpy as np
-from spikeinterface import concatenate_recordings
+import yaml
 
 if TYPE_CHECKING:
     from spikeinterface.core import BaseRecording
@@ -16,12 +14,15 @@ if TYPE_CHECKING:
     from ..data_classes.sorting import SortingData
 
 
+# --------------------------------------------------------------------------------------
+# Convenience functions and canonical objects
+# --------------------------------------------------------------------------------------
+
+
 def canonical_names(name: str) -> str:
     """
     Store the canonical names e.g. filenames, tags
-    that are used throughout the project. This setup
-    means filenames can be edited without requiring
-    extensive code changes.
+    that are used throughout the project.
 
     Parameters
     ----------
@@ -35,9 +36,94 @@ def canonical_names(name: str) -> str:
 
     """
     filenames = {
-        "preprocessed_yaml": "preprocess_data_attributes.yaml",
+        "preprocessed_yaml": "preprocessing_info.yaml",
+        "sorting_yaml": "sorting_info.yaml",
     }
     return filenames[name]
+
+
+def get_formatted_datetime() -> str:
+    return datetime.now().strftime("%Y-%m-%d_%H%M%S")
+
+
+def get_logging_path(base_path: Union[str, Path], sub_name: str) -> Path:
+    """
+    The path where logs from `run_full_pipeline`, `run_sorting`
+    and `run_postprocessing` are saved.
+    """
+    return Path(base_path) / "derivatives" / sub_name / "logs"
+
+
+def message_user(message: str, verbose: bool = True) -> None:
+    """
+    Method to interact with user.
+
+    Parameters
+    ----------
+    message : str
+        Message to print.
+
+    verbose : bool
+        The mode of the application. If verbose is False,
+        nothing is printed.
+    """
+    if verbose:
+        print(f"\n{message}")
+
+
+def dump_dict_to_yaml(filepath: Union[Path, str], dict_: Dict) -> None:
+    """
+    Save a dictionary to Yaml file. Note that keys are
+    not sorted and will be saved in the dictionary order.
+    """
+    with open(
+        filepath,
+        "w",
+    ) as file_to_save:
+        yaml.dump(dict_, file_to_save, sort_keys=False)
+
+
+def load_dict_from_yaml(filepath: Union[Path, str]) -> Dict:
+    """
+    Load a dictionary from yaml file.
+    """
+    with open(filepath, "r") as file:
+        loaded_dict = yaml.safe_load(file)
+    return loaded_dict
+
+
+def cast_pp_steps_values(
+    pp_steps: Dict, list_or_tuple: Literal["list", "tuple"]
+) -> None:
+    """
+    The settings in the pp_steps dictionary that defines the options
+    for preprocessing should be stored in Tuple as they are not to
+    be edited. However, when dumping Tuple to .yaml, there are tags
+    displayed on the .yaml file which are very ugly.
+
+    These are not shown when storing list, so this function serves
+    to convert Tuple and List values in the preprocessing dict when
+    loading / saving the preprocessing dict to .yaml files. This
+    function converts `pp_steps` in place.
+
+    Parameters
+    ----------
+    pp_steps : Dict
+        The dictionary indicating the preprocessing steps to perform.
+
+    list_or_tuple : Literal["list", "tuple"]
+        The direction to convert (i.e. if "tuple", will convert to Tuple).
+    """
+    assert list_or_tuple in ["list", "tuple"], "Must cast to `list` or `tuple`."
+    func = tuple if list_or_tuple == "tuple" else list
+
+    for key in pp_steps.keys():
+        pp_steps[key] = func(pp_steps[key])
+
+
+# --------------------------------------------------------------------------------------
+# Data class helpers
+# --------------------------------------------------------------------------------------
 
 
 def get_keys_first_char(
@@ -118,308 +204,3 @@ def get_dict_value_from_step_num(
     dict_value = data[pp_key]
 
     return dict_value, pp_key
-
-
-def message_user(message: str, verbose: bool = True) -> None:
-    """
-    Method to interact with user.
-
-    Parameters
-    ----------
-    message : str
-        Message to print.
-
-    verbose : bool
-        The mode of the application. If verbose is False,
-        nothing is printed.
-    """
-    if verbose:
-        print(f"\n{message}")
-
-
-def concatenate_runs(recording: BaseRecording) -> BaseRecording:
-    """
-    Convenience function to concatenate the segments
-    of a recording object.
-
-    Parameters
-    ----------
-    recording : BaseRecording
-        A spikeinterface recording object.
-
-    Returns
-    -------
-    concatenated_recording : BaseRecording
-        The SpikeInterface recording object with all
-        segments concatenated into a single segments.
-    """
-    message_user(
-        f"Concatenating {recording.get_num_segments()} sessions into a single segment."
-    )
-
-    concatenated_recording = concatenate_recordings([recording])
-
-    return concatenated_recording
-
-
-def get_local_sorter_path(sorter: str) -> Path:
-    """
-    Return the path to a sorter singularity image. The sorters are
-    stored by spikewrap in the home folder.
-
-    Parameters
-    ----------
-    sorter : str
-        The name of the sorter to get the path to (e.g. kilosort2_5).
-
-    Returns
-    ---------
-    local_path : Path
-        The path to the sorter image on the local machine.
-    """
-    local_path = (
-        Path.home() / ".spikewrap" / "sorter_images" / get_sorter_image_name(sorter)
-    )
-    local_path.parent.mkdir(exist_ok=True, parents=True)
-    return local_path
-
-
-def get_hpc_sorter_path(sorter: str) -> Path:
-    """
-    Return the path to the sorter image on the SWC HCP (ceph).
-
-    Parameters
-    ----------
-    sorter : str
-        The name of the sorter to get the path to (e.g. kilosort2_5).
-
-    Returns
-    -------
-    sorter_path : Path
-        The base to the sorter image on SWC HCP (ceph).
-    """
-    base_path = Path("/ceph/neuroinformatics/neuroinformatics/scratch/sorter_images")
-    sorter_path = base_path / sorter / get_sorter_image_name(sorter)
-    return sorter_path
-
-
-def get_sorter_image_name(sorter: str) -> str:
-    """
-    Get the sorter image name, as defined by how
-    SpikeInterface names the docker images it provides.
-
-    Parameters
-    ----------
-    sorter : str
-        The name of the sorter to get the path to (e.g. kilosort2_5).
-
-    Returns
-    -------
-    sorter_name : str
-        The SpikeInterface filename of the docker image for that sorter.
-    """
-    if "kilosort" in sorter:
-        sorter_name = f"{sorter}-compiled-base.sif"
-    else:
-        if sorter == "spykingcircus":
-            sorter = "spyking-circus"
-        sorter_name = f"{sorter}-base.sif"
-    return sorter_name
-
-
-def check_singularity_install() -> bool:
-    """
-    Check the system install of singularity.
-
-    Returns
-    -------
-    is_installed : bool
-        Indicates whether Singularity is installed on the machine.
-    """
-    try:
-        subprocess.run("singularity --version", shell=True)
-        is_installed = True
-    except FileNotFoundError:
-        is_installed = False
-
-    return is_installed
-
-
-def sort_list_of_paths_by_datetime_order(list_of_paths: List[Path]) -> List[Path]:
-    """
-    Given a list of paths to folders, sort the paths by the creation
-    time of the folders they point to. Return the sorted
-    list of paths.
-
-    Parameters
-    ----------
-    list_of_paths : List[Path]
-        A list of paths to sort into datetime order.
-
-
-    Returns
-    -------
-    list_of_paths_by_creation_time : List[Path]
-        A list containing `list_of_paths` ordered by the
-        folder creation timestamp.
-    """
-    list_of_paths_by_creation_time = copy.deepcopy(list_of_paths)
-    list_of_paths_by_creation_time.sort(key=os.path.getctime)
-
-    return list_of_paths_by_creation_time
-
-
-def list_of_files_are_in_datetime_order(
-    list_of_paths: List[Path], creation_or_modification: str = "creation"
-) -> bool:
-    """
-    Assert whether a list of paths are in order. By default, check they are
-    in order by creation date. Can also check if they are ordered by
-    modification date.
-
-    Parameters
-    ----------
-    list_of_paths : List[Path]
-        A list of paths to sort into datetime order.
-
-    creation_or_modification : str
-        If "creation", check the list of paths are ordered by creation datetime.
-        Otherwise if "modification", check they are sorterd by modification datetime.
-
-    Returns
-    -------
-    is_in_time_order : bool
-        Indicates whether `list_of_paths` was in creation or modification time order.
-        depending on the value of `creation_or_modification`.
-    """
-    assert creation_or_modification in [
-        "creation",
-        "modification",
-    ], "creation_or_modification must be 'creation' or 'modification."
-
-    filter: Callable
-    filter = (
-        os.path.getctime if creation_or_modification == "creation" else os.path.getmtime
-    )
-
-    list_of_paths_by_time = copy.deepcopy(list_of_paths)
-    list_of_paths_by_time.sort(key=filter)
-
-    is_in_time_order = list_of_paths == list_of_paths_by_time
-
-    return is_in_time_order
-
-
-def make_sorter_base_output_path(base_path, sub_name, pp_run_name, sorter):
-    """
-    Make the canonical sorter output path.
-    """
-    sorter_base_output_path = (
-        base_path / "derivatives" / sub_name / f"{pp_run_name}" / f"{sorter}-sorting"
-    )
-    return sorter_base_output_path
-
-
-def make_preprocessing_plot_title(
-    run_name: str,
-    full_key: str,
-    shank_idx: int,
-    recording_to_plot: BaseRecording,
-    total_used_shanks: int,
-) -> str:
-    """
-    For visualising data, make the plot titles (with headers in bold). If
-    more than one shank is used, the title will also contain information
-    on the displayed shank.
-
-    Parameters
-    ----------
-    run_name : str
-        The name of the preprocessing run (e.g. "1-phase_shift").
-
-    full_key : str
-        The full preprocessing key (as defined in preprocess.py).
-
-    shank_idx : int
-        The SpikeInterface group number representing the shank number.
-
-    recording_to_plot : BaseRecording
-        The SpikeInterface recording object that is being displayed.
-
-    total_used_shanks : int
-        The total number of shanks used in the recording. For a 4-shank probe,
-        this could be between 1 - 4 if not all shanks are mapped.
-
-    Returns
-    -------
-    plot_title : str
-        The formatted plot title.
-    """
-    plot_title = (
-        r"$\bf{Run \ name:}$" + f"{run_name}"
-        "\n" + r"$\bf{Preprocessing \ step:}$" + f"{full_key}"
-    )
-    if total_used_shanks > 1:
-        plot_title += (
-            "\n"
-            + r"$\bf{Shank \ group:}$"
-            + f"{shank_idx}, "
-            + r"$\bf{Num \ channels:}$"
-            + f"{recording_to_plot.get_num_channels()}"
-        )
-    return plot_title
-
-
-def cast_pp_steps_values(
-    pp_steps: Dict, list_or_tuple: Literal["list", "tuple"]
-) -> None:
-    """
-    The settings in the pp_steps dictionary that defines the options
-    for preprocessing should be stored in Tuple as they are not to
-    be edited. However, when dumping Tuple to .yaml, there are tags
-    displayed on the .yaml file which are very ugly.
-
-    These are not shown when storing list, so this function serves
-    to convert Tuple and List values in the preprocessing dict when
-    loading / saving the preprocessing dict to .yaml files. This
-    function converts `pp_steps` in place.
-
-    Parameters
-    ----------
-    pp_steps : Dict
-        The dictionary indicating the preprocessing steps to perform.
-
-    list_or_tuple : Literal["list", "tuple"]
-        The direction to convert (i.e. if "tuple", will convert to Tuple).
-    """
-    assert list_or_tuple in ["list", "tuple"], "Must cast to `list` or `tuple`."
-    func = tuple if list_or_tuple == "tuple" else list
-
-    for key in pp_steps.keys():
-        pp_steps[key] = func(pp_steps[key])
-
-
-# Misc. --------------------------------------------------------------------------------
-
-
-def get_probe_num_groups(data: Union[PreprocessingData, SortingData]) -> int:
-    """
-    Get the number of probe groups on a recording-objects `probe` attribute.
-    This is typically the number of shanks on the probe, which are treated
-    separately by SI.
-
-    By default, uses the first step on the recording, as probe metadata will not
-    change throughout preprocessing.
-
-    Parameters
-    ----------
-    data : Union[PreprocessingData, SortingData]
-        The data object on which the recordings are stored.
-
-    Returns
-    -------
-    num_groups : int
-        The number of groups on the probe associated with the data recordings.
-    """
-    num_groups = np.unique(data[data.init_data_key].get_property("group")).size
-    return num_groups

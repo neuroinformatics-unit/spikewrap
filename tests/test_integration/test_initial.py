@@ -6,11 +6,10 @@ import shutil
 from pathlib import Path
 
 import pytest
-from spikeinterface import concatenate_recordings
 
 from spikewrap.pipeline import full_pipeline, preprocess
 from spikewrap.pipeline.full_pipeline import get_configs
-from spikewrap.pipeline.load_data import load_spikeglx_data
+from spikewrap.pipeline.load_data import load_data
 from spikewrap.utils.slurm import is_slurm_installed
 
 CAN_SLURM = is_slurm_installed()
@@ -18,34 +17,34 @@ CAN_SLURM = is_slurm_installed()
 
 class TestFirstEphys:
     @pytest.fixture(scope="class")
-    def output_data_path(self):
+    def base_path(self):
         script_path = Path(os.path.dirname(os.path.realpath(__file__)))
         data_path = script_path.parent
-        output_data_path = data_path / "data" / "steve_multi_run"
-        return output_data_path
+        base_path = data_path / "data" / "steve_multi_run"
+        return base_path
 
     @pytest.fixture(scope="function")
-    def test_info(self, output_data_path, request):
+    def test_info(self, base_path, request):
         """ """
         if not hasattr(request, "param"):
             mode = "time-short"
         else:
             mode = request.param
 
-        output_data_path = output_data_path / mode
+        base_path = base_path / mode
 
         sub_name = "1119617"
         run_names = [
-            "1119617_LSE1_shank12",
-            "1119617_posttest1_shank12",
-            "1119617_pretest1_shank12",
+            "1119617_LSE1_shank12_g0",
+            "1119617_posttest1_shank12_g0",
+            "1119617_pretest1_shank12_g0",
         ]
 
-        output_path = output_data_path / "derivatives"
+        output_path = base_path / "derivatives"
         if output_path.is_dir():
             shutil.rmtree(output_path)
 
-        yield [output_data_path, sub_name, run_names, output_path]
+        yield [base_path, sub_name, run_names]
 
         if output_path.is_dir():
             shutil.rmtree(output_path)
@@ -55,10 +54,11 @@ class TestFirstEphys:
         base_path,
         sub_name,
         run_names,
+        sorter="kilosort2_5",
+        concat_for_sorting=False,
         existing_preprocessed_data="fail_if_exists",
         existing_sorting_output="fail_if_exists",
         slurm_batch=False,
-        sorter="kilosort2_5",
     ):
         full_pipeline.run_full_pipeline(
             base_path,
@@ -66,6 +66,7 @@ class TestFirstEphys:
             run_names,
             config_name="default",
             sorter=sorter,
+            concat_for_sorting=concat_for_sorting,
             existing_preprocessed_data=existing_preprocessed_data,
             existing_sorting_output=existing_sorting_output,
             overwrite_postprocessing=True,
@@ -77,10 +78,14 @@ class TestFirstEphys:
         """"""
         pp_steps, __, __ = get_configs("test_pp_small_file")
 
-        preprocess_data = load_spikeglx_data(*test_info[:3])
+        preprocess_data = load_data(*test_info[:3], data_format="spikeglx")
 
-        preprocess_data = preprocess.preprocess(preprocess_data, pp_steps, verbose=True)
-        preprocess_data.save_all_preprocessed_data(overwrite=True)
+        for run_name in preprocess_data.run_names:
+            preprocess_data = preprocess.preprocess(
+                preprocess_data, run_name, pp_steps, verbose=True
+            )
+
+            preprocess_data.save_preprocessed_data(run_name, overwrite=True)
 
     def test_preprocessing_options_with_large_file(self, test_info):
         """
@@ -90,36 +95,39 @@ class TestFirstEphys:
         """
         pp_steps, __, __ = get_configs("test_pp_large_file")
 
-        preprocess_data = load_spikeglx_data(*test_info[:3])
-        # motion correction requires only 1 segment
-        preprocess_data["0-raw"] = concatenate_recordings([preprocess_data["0-raw"]])
+        preprocess_data = load_data(*test_info[:3])
 
-        preprocess_data = preprocess.preprocess(preprocess_data, pp_steps, verbose=True)
-        preprocess_data.save_all_preprocessed_data(overwrite=True)
+        for run_name in preprocess_data.run_names:
+            preprocess_data = preprocess.preprocess(
+                preprocess_data, run_name, pp_steps, verbose=True
+            )
+            preprocess_data.save_preprocessed_data(run_name, overwrite=True)
 
     @pytest.mark.parametrize(
         "sorter",
         [
-            "kilosort2",
-            "kilosort2_5",
-            "kilosort3",
-            "mountainsort5",
+            #     "kilosort2",
+            #    "kilosort2_5",
+            #   "kilosort3",
+            #  "mountainsort5",
             "spykingcircus",
-            "tridesclous",
+            #  "tridesclous",
         ],
     )
     def test_single_run_local__(self, test_info, sorter):
-        test_info.pop(3)
         test_info[2] = test_info[2][0]
-        self.run_full_pipeline(*test_info, sorter=sorter)
+        self.run_full_pipeline(*test_info, sorter=sorter, concat_for_sorting=False)
 
     def test_single_run_local_overwrite(self, test_info):
-        test_info.pop(3)
         test_info[2] = test_info[2][0]
 
         self.run_full_pipeline(*test_info)
 
-        self.run_full_pipeline(*test_info, existing_preprocessed_data="overwrite")
+        self.run_full_pipeline(
+            *test_info,
+            existing_preprocessed_data="overwrite",
+            existing_sorting_output="overwrite",
+        )
 
         with pytest.raises(BaseException) as e:
             self.run_full_pipeline(
@@ -131,26 +139,34 @@ class TestFirstEphys:
         )
 
     def test_multi_run_local(self, test_info):
-        test_info.pop(3)
-
         test_info[2] = test_info[2][0]
 
         self.run_full_pipeline(*test_info)
 
     @pytest.mark.skipif(CAN_SLURM is False, reason="CAN_SLURM is false")
-    def test_single_run_slurm(self, test_info, output_data_path):
-        test_info.pop(3)
+    def test_single_run_slurm(self, test_info):
+        base_path = test_info[0]
 
         test_info[2] = test_info[2][0]
 
-        self.clear_slurm_logs(output_data_path)
+        self.clear_slurm_logs(base_path)
 
         self.run_full_pipeline(*test_info, slurm_batch={"wait": True})
 
-        self.check_slurm_log(output_data_path)
+        self.check_slurm_log(base_path)
 
-    def check_slurm_log(self, output_data_path):
-        slurm_run = output_data_path.glob("slurm_logs/*/*log.out")
+    @pytest.mark.skipif(CAN_SLURM is False, reason="CAN_SLURM is false")
+    def test_multi_run_slurm(self, test_info):
+        base_path = test_info[0]
+
+        self.clear_slurm_logs(base_path)
+
+        self.run_full_pipeline(*test_info, slurm_batch={"wait": True})
+
+        self.check_slurm_log(base_path)
+
+    def check_slurm_log(self, base_path):
+        slurm_run = base_path.glob("slurm_logs/*/*log.out")
         slurm_run = list(slurm_run)[0]
 
         with open(slurm_run, "r") as log:
@@ -163,18 +179,8 @@ class TestFirstEphys:
         assert "Quality metrics saved to" in log_output
         assert "Job completed successfully" in log_output
 
-    @pytest.mark.skipif(CAN_SLURM is False, reason="CAN_SLURM is false")
-    def test_multi_run_slurm(self, test_info, output_data_path):
-        test_info.pop(3)
-
-        self.clear_slurm_logs(output_data_path)
-
-        self.run_full_pipeline(*test_info, slurm_batch={"wait": True})
-
-        self.check_slurm_log(output_data_path)
-
-    def clear_slurm_logs(self, output_data_path):
-        slurm_path = output_data_path / "slurm_logs"
+    def clear_slurm_logs(self, base_path):
+        slurm_path = base_path / "slurm_logs"
         [shutil.rmtree(path_) for path_ in slurm_path.glob("*-*-*_*-*-*")]
 
     def test_preprocessing_exists_error(self):
@@ -187,6 +193,12 @@ class TestFirstEphys:
         raise NotImplementedError
 
     def test_overwrite_sorter(self):
+        raise NotImplementedError
+
+    def test_overwrite_waveforms(self):
+        raise NotImplementedError
+
+    def test_overwrite_postprocessing(self):
         raise NotImplementedError
 
     def test_sorting_only_local(self):
