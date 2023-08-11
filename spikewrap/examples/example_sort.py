@@ -7,20 +7,18 @@ base_path = Path(
     # r"/ceph/neuroinformatics/neuroinformatics/scratch/jziminski/ephys/test_data/steve_multi_run/1119617/time-mid"
 )
 sub_name = "1119617"
-run_name = "1119617_LSE1_shank12_posttest1_pretest1"
-
-preprocessed_data_path = (
-    base_path / "derivatives" / sub_name / f"{run_name}" / "preprocessed"
-)
+run_names = "1119617_LSE1_shank12_posttest1_pretest1"
 
 
 if __name__ == "__main__":
     # sorting uses multiprocessing so must be in __main__
     run_sorting(
-        preprocessed_data_path,
+        base_path,
+        sub_name,
+        run_names,
         sorter="mountainsort5",
         concat_for_sorting=True,
         #        sorter_options={"kilosort2_5": {"car": False}},
-        overwrite_existing_sorter_output=True,
+        existing_sorting_output="fail_if_exists",
         slurm_batch=False,
     )

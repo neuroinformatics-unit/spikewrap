@@ -3,13 +3,13 @@ from __future__ import annotations
 import copy
 import shutil
 from pathlib import Path
-from typing import TYPE_CHECKING, Dict, List, Literal, Optional, Tuple, Union
+from typing import TYPE_CHECKING, Dict, List, Literal, Optional, Union
 
 from ..configs.configs import get_configs
 from ..data_classes.preprocessing import PreprocessingData
 from ..data_classes.sorting import SortingData
 from ..utils import logging_sw, slurm, utils
-from ..utils.custom_types import HandleExisting
+from ..utils.custom_types import DeleteIntermediate, HandleExisting
 from .load_data import load_data
 from .postprocess import run_postprocess
 from .preprocess import preprocess
@@ -34,9 +34,7 @@ def run_full_pipeline(
     existing_sorting_output: HandleExisting = "load_if_exists",
     overwrite_postprocessing: bool = False,
     postprocessing_to_run: Union[Literal["all"], Dict] = "all",
-    delete_intermediate_files: Tuple[
-        Literal["recording.dat", "temp_wh.dat", "waveforms"]
-    ] = ("recording.dat",),
+    delete_intermediate_files: DeleteIntermediate = ("recording.dat",),
     verbose: bool = True,
     slurm_batch: bool = False,
 ) -> None:
@@ -105,7 +103,7 @@ def run_full_pipeline(
         all available postprocessing. Otherwise, provide a dict of
         including postprocessing to run e.g. {"quality_metrics: True"}.
 
-    delete_intermediate_files : Tuple[Union["preprocessing", "recording.dat", "temp_wh.dat", "waveforms"]]  # TODO: check types
+    delete_intermediate_files : DeleteIntermediate
         Specify intermediate files or folders to delete. This option is useful for
         reducing the size of output data by deleting unneeded files.
 
@@ -244,9 +242,7 @@ def preprocess_and_save(
 def handle_delete_intermediate_files(
     run_name: Optional[str],
     sorting_data: SortingData,
-    delete_intermediate_files: Tuple[
-        Literal["recording.dat", "temp_wh.dat", "waveforms"]
-    ],
+    delete_intermediate_files: DeleteIntermediate,
 ):
     """
     Handle the cleanup of intermediate files created during sorting and

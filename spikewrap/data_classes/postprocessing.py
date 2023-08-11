@@ -6,7 +6,6 @@ import spikeinterface as si
 from spikeinterface import curation
 from spikeinterface.extractors import NpzSortingExtractor
 
-from ..data_classes.sorting import SortingData
 from ..utils import utils
 from .sorting import SortingData
 
