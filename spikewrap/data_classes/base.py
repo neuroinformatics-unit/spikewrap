@@ -2,18 +2,30 @@ import fnmatch
 from collections import UserDict
 from collections.abc import ItemsView, KeysView, ValuesView
 from pathlib import Path
-from typing import List, Tuple, Union
+from typing import List, Literal, Optional, Union
 
 from ..utils import utils
 
 
 class BaseUserDict(UserDict):
     """
+    Base class for `PreprocessingData` and `SortingData`
+    used for checking and formatting `base_path`, `sub_name`
+    and `run_names`. The layout of the `rawdata` and
+    `derivatives` folder is identical up to the run
+    folder, allowing use of this class for
+    preprocessing and sorting.
+
     Base UserDict that implements the
     keys(), values() and items() convenience functions.
     """
 
-    def __init__(self, base_path, sub_name, run_names):
+    def __init__(
+        self,
+        base_path: Union[str, Path],
+        sub_name: str,
+        run_names: Union[List[str], str],
+    ) -> None:
         super(BaseUserDict, self).__init__()
 
         self.base_path = Path(base_path)
@@ -23,20 +35,21 @@ class BaseUserDict(UserDict):
             run_names,
         )
 
-    def _top_level_folder(self):
+    def _top_level_folder(self) -> Literal["rawdata", "derivatives"]:
+        """
+        The name of the top level folder, either 'rawdata' for
+        preprocessing (i.e. loaded from rawdata) or `derivatives`
+        for sorting (i.e. loaded from derivatives).
+        """
         raise NotImplementedError
 
-    def validate_inputs(self, run_names: Union[str, list]) -> Tuple[Path, List[str]]:
+    def validate_inputs(self, run_names: Union[str, List[str]]) -> List[str]:
         """
         Check the rawdata / derivatives path, subject path exists
         and ensure run_names is a list of strings.
 
         Parameters
         ----------
-        base_path : Union[str, Path]
-            Path to the base folder in which `rawdata` folder containing
-            all rawdata (i.e. list of subject names) are held.
-
         run_names : List[str]
             List of run names to process, in order they should be
             processed / concatenated.
@@ -88,7 +101,7 @@ class BaseUserDict(UserDict):
 
         return run_names
 
-    def get_run_path(self, run_name):
+    def get_run_path(self, run_name: Optional[str] = None) -> Path:
         return self.get_sub_folder_path() / f"{run_name}"
 
     def get_sub_folder_path(self) -> Path:
@@ -107,7 +120,7 @@ class BaseUserDict(UserDict):
 
     # Preprocessing Paths --------------------------------------------------------------
 
-    def get_preprocessing_path(self, run_name) -> None:
+    def get_preprocessing_path(self, run_name: Optional[str] = None) -> Path:
         """
         Set the folder tree where preprocessing output will be
         saved. This is canonical and should not change.
@@ -119,16 +132,15 @@ class BaseUserDict(UserDict):
             / f"{run_name}"
             / "preprocessed"
         )
-
         return preprocessed_output_path
 
-    def _get_pp_binary_data_path(self, run_name):
+    def _get_pp_binary_data_path(self, run_name: Optional[str] = None) -> Path:
         return self.get_preprocessing_path(run_name) / "si_recording"
 
-    def _get_sync_channel_data_path(self, run_name):
+    def _get_sync_channel_data_path(self, run_name: Optional[str] = None) -> Path:
         return self.get_preprocessing_path(run_name) / "sync_channel"
 
-    def _get_preprocessing_info_path(self, run_name):
+    def _get_preprocessing_info_path(self, run_name: Optional[str] = None) -> Path:
         return self.get_preprocessing_path(run_name) / utils.canonical_names(
             "preprocessed_yaml"
         )

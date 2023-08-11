@@ -78,7 +78,7 @@ def visualise(
             recordings = recording.split_by(property="group")
             recording_to_plot = recordings[shank_idx]
 
-            plot_title = utils.make_preprocessing_plot_title(
+            plot_title = make_preprocessing_plot_title(
                 run_name,
                 full_key,
                 shank_idx,
@@ -237,3 +237,53 @@ def validate_options_against_recording(
         assert (
             time_range[1] <= recording.get_times(segment_index=0)[-1]
         ), "The time range specified is longer than the maximum time of the recording."
+
+
+def make_preprocessing_plot_title(
+    run_name: str,
+    full_key: str,
+    shank_idx: int,
+    recording_to_plot: BaseRecording,
+    total_used_shanks: int,
+) -> str:
+    """
+    For visualising data, make the plot titles (with headers in bold). If
+    more than one shank is used, the title will also contain information
+    on the displayed shank.
+
+    Parameters
+    ----------
+    run_name : str
+        The name of the preprocessing run (e.g. "1-phase_shift").
+
+    full_key : str
+        The full preprocessing key (as defined in preprocess.py).
+
+    shank_idx : int
+        The SpikeInterface group number representing the shank number.
+
+    recording_to_plot : BaseRecording
+        The SpikeInterface recording object that is being displayed.
+
+    total_used_shanks : int
+        The total number of shanks used in the recording. For a 4-shank probe,
+        this could be between 1 - 4 if not all shanks are mapped.
+
+    Returns
+    -------
+    plot_title : str
+        The formatted plot title.
+    """
+    plot_title = (
+        r"$\bf{Run \ name:}$" + f"{run_name}"
+        "\n" + r"$\bf{Preprocessing \ step:}$" + f"{full_key}"
+    )
+    if total_used_shanks > 1:
+        plot_title += (
+            "\n"
+            + r"$\bf{Shank \ group:}$"
+            + f"{shank_idx}, "
+            + r"$\bf{Num \ channels:}$"
+            + f"{recording_to_plot.get_num_channels()}"
+        )
+    return plot_title

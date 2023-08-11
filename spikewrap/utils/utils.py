@@ -14,16 +14,15 @@ if TYPE_CHECKING:
     from ..data_classes.sorting import SortingData
 
 
-def get_logging_path(base_path, sub_name):
-    return Path(base_path) / "derivatives" / sub_name / "logs"
+# --------------------------------------------------------------------------------------
+# Convenience functions and canonical objects
+# --------------------------------------------------------------------------------------
 
 
 def canonical_names(name: str) -> str:
     """
     Store the canonical names e.g. filenames, tags
-    that are used throughout the project. This setup
-    means filenames can be edited without requiring
-    extensive code changes.
+    that are used throughout the project.
 
     Parameters
     ----------
@@ -43,8 +42,88 @@ def canonical_names(name: str) -> str:
     return filenames[name]
 
 
-def get_formatted_datetime():
+def get_formatted_datetime() -> str:
     return datetime.now().strftime("%Y-%m-%d_%H%M%S")
+
+
+def get_logging_path(base_path: Union[str, Path], sub_name: str) -> Path:
+    """
+    The path where logs from `run_full_pipeline`, `run_sorting`
+    and `run_postprocessing` are saved.
+    """
+    return Path(base_path) / "derivatives" / sub_name / "logs"
+
+
+def message_user(message: str, verbose: bool = True) -> None:
+    """
+    Method to interact with user.
+
+    Parameters
+    ----------
+    message : str
+        Message to print.
+
+    verbose : bool
+        The mode of the application. If verbose is False,
+        nothing is printed.
+    """
+    if verbose:
+        print(f"\n{message}")
+
+
+def dump_dict_to_yaml(filepath: Union[Path, str], dict_: Dict) -> None:
+    """
+    Save a dictionary to Yaml file. Note that keys are
+    not sorted and will be saved in the dictionary order.
+    """
+    with open(
+        filepath,
+        "w",
+    ) as file_to_save:
+        yaml.dump(dict_, file_to_save, sort_keys=False)
+
+
+def load_dict_from_yaml(filepath: Union[Path, str]) -> Dict:
+    """
+    Load a dictionary from yaml file.
+    """
+    with open(filepath, "r") as file:
+        loaded_dict = yaml.safe_load(file)
+    return loaded_dict
+
+
+def cast_pp_steps_values(
+    pp_steps: Dict, list_or_tuple: Literal["list", "tuple"]
+) -> None:
+    """
+    The settings in the pp_steps dictionary that defines the options
+    for preprocessing should be stored in Tuple as they are not to
+    be edited. However, when dumping Tuple to .yaml, there are tags
+    displayed on the .yaml file which are very ugly.
+
+    These are not shown when storing list, so this function serves
+    to convert Tuple and List values in the preprocessing dict when
+    loading / saving the preprocessing dict to .yaml files. This
+    function converts `pp_steps` in place.
+
+    Parameters
+    ----------
+    pp_steps : Dict
+        The dictionary indicating the preprocessing steps to perform.
+
+    list_or_tuple : Literal["list", "tuple"]
+        The direction to convert (i.e. if "tuple", will convert to Tuple).
+    """
+    assert list_or_tuple in ["list", "tuple"], "Must cast to `list` or `tuple`."
+    func = tuple if list_or_tuple == "tuple" else list
+
+    for key in pp_steps.keys():
+        pp_steps[key] = func(pp_steps[key])
+
+
+# --------------------------------------------------------------------------------------
+# Data class helpers
+# --------------------------------------------------------------------------------------
 
 
 def get_keys_first_char(
@@ -119,121 +198,9 @@ def get_dict_value_from_step_num(
 
     select_step_pp_key = [key for key in data.keys() if key.split("-")[0] == step_num]
 
-    try:
-        assert len(select_step_pp_key) == 1, "pp_key must always have unique first char"
-    except:
-        breakpoint()
+    assert len(select_step_pp_key) == 1, "pp_key must always have unique first char"
+
     pp_key: str = select_step_pp_key[0]
     dict_value = data[pp_key]
 
     return dict_value, pp_key
-
-
-def message_user(message: str, verbose: bool = True) -> None:
-    """
-    Method to interact with user.
-
-    Parameters
-    ----------
-    message : str
-        Message to print.
-
-    verbose : bool
-        The mode of the application. If verbose is False,
-        nothing is printed.
-    """
-    if verbose:
-        print(f"\n{message}")
-
-
-def make_preprocessing_plot_title(
-    run_name: str,
-    full_key: str,
-    shank_idx: int,
-    recording_to_plot: BaseRecording,
-    total_used_shanks: int,
-) -> str:
-    """
-    For visualising data, make the plot titles (with headers in bold). If
-    more than one shank is used, the title will also contain information
-    on the displayed shank.
-
-    Parameters
-    ----------
-    run_name : str
-        The name of the preprocessing run (e.g. "1-phase_shift").
-
-    full_key : str
-        The full preprocessing key (as defined in preprocess.py).
-
-    shank_idx : int
-        The SpikeInterface group number representing the shank number.
-
-    recording_to_plot : BaseRecording
-        The SpikeInterface recording object that is being displayed.
-
-    total_used_shanks : int
-        The total number of shanks used in the recording. For a 4-shank probe,
-        this could be between 1 - 4 if not all shanks are mapped.
-
-    Returns
-    -------
-    plot_title : str
-        The formatted plot title.
-    """
-    plot_title = (
-        r"$\bf{Run \ name:}$" + f"{run_name}"
-        "\n" + r"$\bf{Preprocessing \ step:}$" + f"{full_key}"
-    )
-    if total_used_shanks > 1:
-        plot_title += (
-            "\n"
-            + r"$\bf{Shank \ group:}$"
-            + f"{shank_idx}, "
-            + r"$\bf{Num \ channels:}$"
-            + f"{recording_to_plot.get_num_channels()}"
-        )
-    return plot_title
-
-
-def cast_pp_steps_values(
-    pp_steps: Dict, list_or_tuple: Literal["list", "tuple"]
-) -> None:
-    """
-    The settings in the pp_steps dictionary that defines the options
-    for preprocessing should be stored in Tuple as they are not to
-    be edited. However, when dumping Tuple to .yaml, there are tags
-    displayed on the .yaml file which are very ugly.
-
-    These are not shown when storing list, so this function serves
-    to convert Tuple and List values in the preprocessing dict when
-    loading / saving the preprocessing dict to .yaml files. This
-    function converts `pp_steps` in place.
-
-    Parameters
-    ----------
-    pp_steps : Dict
-        The dictionary indicating the preprocessing steps to perform.
-
-    list_or_tuple : Literal["list", "tuple"]
-        The direction to convert (i.e. if "tuple", will convert to Tuple).
-    """
-    assert list_or_tuple in ["list", "tuple"], "Must cast to `list` or `tuple`."
-    func = tuple if list_or_tuple == "tuple" else list
-
-    for key in pp_steps.keys():
-        pp_steps[key] = func(pp_steps[key])
-
-
-def dump_dict_to_yaml(filepath, dict_):
-    with open(
-        filepath,
-        "w",
-    ) as file_to_save:
-        yaml.dump(dict_, file_to_save, sort_keys=False)
-
-
-def load_dict_from_yaml(filepath):
-    with open(filepath, "r") as file:
-        loaded_dict = yaml.safe_load(file)
-    return loaded_dict

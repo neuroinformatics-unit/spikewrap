@@ -2,12 +2,13 @@ from __future__ import annotations
 
 import copy
 import os
-from typing import Dict, Optional
+from typing import Dict, Literal, Optional, Union
 
 import spikeinterface.sorters as ss
 
 from ..data_classes.sorting import SortingData
 from ..utils import logging_sw, slurm, utils
+from ..utils.custom_types import HandleExisting
 from ..utils.managing_images import (
     get_image_run_settings,
     move_singularity_image_if_required,
@@ -21,14 +22,14 @@ def run_sorting(
     sorter: str,
     concat_for_sorting: bool,
     sorter_options: Optional[Dict] = None,
-    existing_sorting_output: bool = False,  # TODO: fix
+    existing_sorting_output: HandleExisting = "fail_if_exists",
     verbose: bool = True,
     slurm_batch: bool = False,
 ) -> SortingData:
     """
     Run a sorter on pre-processed data. Takes a PreprocessingData (pipeline.data_class)
     object that contains spikeinterface recording objects for the preprocessing
-    pipeline (or path to existing 'preprocessed' output folder.
+    pipeline (or path to existing 'preprocessed' output folder).
 
     Here, save the preprocessed recording to binary file. Then, run sorting
     on the saved binary. The preprocessed binary and sorting output are
@@ -37,21 +38,43 @@ def run_sorting(
 
     Parameters
     ----------
-    preprocessed_data_path : Union[Path, str]
-        Path to previously saved 'preprocessed' directory.
+
+    base_path : Union[Path, str]
+        Path to the rawdata folder containing subjects folders.
+
+    sub_name : str
+        Subject to preprocess. The subject top level dir should reside in
+        base_path/rawdata/ .
+
+    run_names : Union[List[str], str],
+        The SpikeGLX run name (i.e. not including the gate index). This can
+        also be a list of run names. Preprocessing will still occur per-run.
+        Runs are concatenated in the order passed prior to sorting.
 
     sorter : str
         Name of the sorter to use (e.g. "kilosort2_5").
 
+    concat_for_sorting: bool
+        If `True`, preprocessed runs are concatenated before sorting. Otherwise,
+        sorting is performed per-run.
+
     sorter_options : Dict
         Kwargs to pass to spikeinterface sorter class.
 
-    overwrite_existing_sorter_output : bool
-         If False, an error will be raised if sorting output already
-         exists. If True, existing sorting output will be overwritten.
+    existing_sorting_output : Literal["overwrite", "load_if_exists", "fail_if_exists"]
+        Determines how existing sorting output (e.g. from a prior pipeline run)
+        is handled.
+            "overwrite" : will overwrite any existing preprocessed data output. This will
+                          delete the 'preprocessed' folder. Therefore, never save
+                          derivative work there.
+            "load_if_exists" : will search for existing data and load if it exists.
+                               Otherwise, will use the preprocessing from the
+                               current run.
+            "fail_if_exists" : If existing preprocessed data is found, an error
+                               will be raised.
 
     verbose : bool
-        If True, messages will be printed to consolve updating on the
+        If True, messages will be printed to console updating on the
         progress of preprocessing / sorting.
 
     slurm_batch : bool
@@ -102,23 +125,39 @@ def run_sorting(
 
 
 def run_sorting_on_all_runs(
-    sorting_data,
-    singularity_image,
-    docker_image,
-    existing_sorting_output,
+    sorting_data: SortingData,
+    singularity_image: Union[Literal[True], None, str],
+    docker_image: Optional[Literal[True]],
+    existing_sorting_output: HandleExisting,
     **sorter_options_dict,
 ):
-    """ """
+    """
+    Run the sorting data for each run. If the data is concatenated
+    prior to sorting, the `run_name` will be `None` (this is handled
+    under the hood by `sorting_data`). Otherwise, run_names
+    will be the names of the individually sorted runs.
+
+    Parameters:
+
+    sorting_data: SortingData
+        Spikewrap SortingData object.
+
+    singularity_image: Union[True, None, str]
+        If True, image is saved locally by SI. If False, docker is not used.
+        If str, must be a path to a singularity image to be used.
+        Note must be `False` if docker image is `True`.
+
+    docker_image: bool
+        If `True`, docker is used otherwise it is not used. No path
+        option is given as docker images are managed with Docker Desktop.
+        Note must be `False` if singularity image is `True` or a Path.
+
+    existing_sorting_output: see `run_sorter()`
+
+    sorter_options_dict: Dict
+        List of kwargs passed to SI's `run_sorter`.
+    """
     utils.message_user(f"Starting {sorting_data.sorter} sorting...")
-
-    #    if sorting_data.concat_for_sorting:
-    #        run_names = [sorting_data.concat_run_name()]
-    #        output_paths = [sorting_data.get_sorting_path(run_name=None)]  # TODO: figure out this confusing thing?
-    #    else:
-    #        run_names = sorting_data.run_names
-    #        output_paths = [sorting_data.get_sorting_path(run_name) for run_name in sorting_data.run_names]
-
-    #    for run_name, output_path in zip(run_names, output_paths):
 
     for run_name in sorting_data.get_all_run_names():
         output_path = sorting_data.get_sorting_path(run_name)

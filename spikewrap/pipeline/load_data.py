@@ -1,18 +1,22 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, List, Union
 
 import spikeinterface.extractors as se
 
 from ..data_classes.preprocessing import PreprocessingData
-from ..data_classes.sorting import SortingData
 from ..utils import utils
 
 if TYPE_CHECKING:
     from pathlib import Path
 
 
-def load_data(base_path, sub_name, run_names, data_format="spikeglx"):
+def load_data(
+    base_path: Union[Path, str],
+    sub_name: str,
+    run_names: Union[str, List[str]],
+    data_format: str = "spikeglx",
+):
     """
     Load raw data (in rawdata). If multiple runs are selected
     in run_names, these will be stored as segments on a SpikeInterface
@@ -50,48 +54,6 @@ def load_data(base_path, sub_name, run_names, data_format="spikeglx"):
 
     if data_format == "spikeglx":
         return load_spikeglx_data(empty_data_class)
-
-
-def load_data_for_sorting(
-    preprocessed_data_path: Path,
-    sorter: str,
-    concatenate: bool = True,
-) -> SortingData:
-    """
-    Returns the previously preprocessed PreprocessingData and
-    recording object loaded from the preprocess path.
-
-    During sorting, preprocessed data is saved to
-    derivatives/<sub level dirs>/preprocessed. The spikeinterface
-    recording (si_recording) and PreprocessingData (data_class.pkl) are saved.
-
-    Parameters
-    ----------
-    preprocessed_data_path : Path
-        Path to the preprocessed folder, containing the binary si_recording
-        of the preprocessed data and the data_class.pkl containing all filepath
-        information.
-
-    concatenate : bool
-        If True, the multi-segment recording object will be concatenated
-        together. This is used prior to sorting. Segments should be
-        experimental runs.
-
-    Returns
-    -------
-    sorting_data : SortingData
-        The sorting_data dict with the loaded spikeinterface
-        recording attached to the '0-preprocessed' field.
-    """
-    sorting_data = SortingData(
-        preprocessed_data_path,
-        sorter=sorter,
-        concat_for_sorting=concatenate,  # TODO: fix
-    )
-
-    sorting_data.load_preprocessed_binary(concatenate)
-
-    return sorting_data
 
 
 # --------------------------------------------------------------------------------------

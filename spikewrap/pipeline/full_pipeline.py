@@ -3,10 +3,11 @@ from __future__ import annotations
 import copy
 import shutil
 from pathlib import Path
-from typing import TYPE_CHECKING, Dict, List, Literal, Tuple, Union
+from typing import TYPE_CHECKING, Dict, List, Literal, Optional, Tuple, Union
 
 from ..configs.configs import get_configs
 from ..data_classes.preprocessing import PreprocessingData
+from ..data_classes.sorting import SortingData
 from ..utils import logging_sw, slurm, utils
 from ..utils.custom_types import HandleExisting
 from .load_data import load_data
@@ -71,9 +72,13 @@ def run_full_pipeline(
     sorter : str
         name of the sorter to use e.g. "kilosort2_5".
 
+    concat_for_sorting: bool
+        If `True`, preprocessed runs are concatenated before sorting. Otherwise,
+        sorting is performed per-run.
+
     existing_preprocessed_data : Literal["overwrite", "load_if_exists", "fail_if_exists"]
         Determines how existing preprocessed data (e.g. from a prior pipeline run)
-        is treated.
+        is handled.
             "overwrite" : will overwrite any existing preprocessed data output. This will
                           delete the 'preprocessed' folder. Therefore, never save
                           derivative work there.
@@ -236,8 +241,18 @@ def preprocess_and_save(
 # --------------------------------------------------------------------------------------
 
 
-def handle_delete_intermediate_files(run_name, sorting_data, delete_intermediate_files):
-    """ """
+def handle_delete_intermediate_files(
+    run_name: Optional[str],
+    sorting_data: SortingData,
+    delete_intermediate_files: Tuple[
+        Literal["recording.dat", "temp_wh.dat", "waveforms"]
+    ],
+):
+    """
+    Handle the cleanup of intermediate files created during sorting and
+    postprocessing. Some of these files are sorter-specific (e.g. `temp_wh.dat`
+    for Kilosort). See `run_full_pipeline` for inputs
+    """
     if "recording.dat" in delete_intermediate_files:
         if (
             recording_file := sorting_data.get_sorter_output_path(run_name)

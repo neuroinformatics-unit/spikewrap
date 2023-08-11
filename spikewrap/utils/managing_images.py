@@ -45,9 +45,7 @@ def move_singularity_image_if_required(
 
 def get_image_run_settings(
     sorter: str,
-) -> Tuple[
-    Optional[Union[Literal[True], str]], Optional[bool]
-]:  # cannot set this to Literal[True], for unknown reason.
+) -> Tuple[Optional[Union[Literal[True], str]], Optional[Literal[True]]]:
     """
     Determine how to run the sorting, either locally or in a container
     if required (e.g. kilosort2_5). On windows, Docker is used,
@@ -81,7 +79,7 @@ def get_image_run_settings(
                 checks.docker_desktop_is_running()
             ), "Docker is not running. Open Docker Desktop to start Docker."
 
-    return singularity_image, docker_image
+    return singularity_image, docker_image  # type: ignore
 
 
 def store_singularity_image(base_path: Path, sorter: str) -> None:

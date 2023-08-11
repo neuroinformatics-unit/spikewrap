@@ -1,6 +1,6 @@
 import shutil
 from pathlib import Path
-from typing import Dict, List, Optional, Union
+from typing import Dict, List, Literal, Optional, Union
 
 import spikeinterface
 
@@ -17,16 +17,17 @@ class PreprocessingData(BaseUserDict):
     ):
         """
         Dictionary to store SpikeInterface preprocessing recordings.
-        These are lazy and preprocessing only run when the recording.get_traces()
-        is called, or the data is saved to binary.
 
         Details on the preprocessing steps are held in the dictionary keys e.g.
         e.g. 0-raw, 1-raw-bandpass_filter, 2-raw_bandpass_filter-common_average
-        and recording objects are held in the value.
+        and recording objects are held in the value. These are generated
+        by the `pipeline.preprocess.run_preprocessing()` function.
 
         The class manages paths to raw data and preprocessing output,
         as defines methods to dump key information and the SpikeInterface
-        binary to disk.
+        binary to disk. Note that SI preprocessing  is lazy and
+        preprocessing only run when the recording.get_traces()
+        is called, or the data is saved to binary.
 
         Parameters
         ----------
@@ -47,9 +48,7 @@ class PreprocessingData(BaseUserDict):
         self.data: Dict = {run_name: {"0-raw": None} for run_name in self.run_names}
         self.sync = {run_name: None for run_name in self.run_names}
 
-    # Load and Save --------------------------------------------------------------------
-
-    def _top_level_folder(self):
+    def _top_level_folder(self) -> Literal["rawdata"]:
         return "rawdata"
 
     def set_pp_steps(self, pp_steps: Dict) -> None:
@@ -65,6 +64,8 @@ class PreprocessingData(BaseUserDict):
         """
         self.pp_steps = pp_steps
 
+    # Saving preprocessed data ---------------------------------------------------------
+
     def save_preprocessed_data(self, run_name: str, overwrite: bool = False) -> None:
         """
         Save the preprocessed output data to binary, as well
@@ -75,6 +76,9 @@ class PreprocessingData(BaseUserDict):
 
         Parameters
         ----------
+        run_name : str
+            Run name corresponding to one of `self.run_names`.
+
         overwrite : bool
             If `True`, existing preprocessed output will be overwritten.
             By default, SpikeInterface will error if a binary recording file
@@ -102,14 +106,27 @@ class PreprocessingData(BaseUserDict):
         )
 
     def _save_sync_channel(self, run_name: str) -> None:
-        """ """
-        assert self.sync is not None, "Sync channel on PreprocessData is None"
-        self.sync[run_name].save(
+        """
+        Save the sync channel separately. In SI, sorting cannot proceed
+        if the sync channel is loaded to ensure it does not interfere with
+        sorting. As such, the sync channel is handled separately here.
+        """
+        assert (
+            self.sync[run_name] is not None
+        ), f"Sync channel on PreprocessData run {run_name} is None"
+
+        self.sync[run_name].save(  # type: ignore
             folder=self._get_sync_channel_data_path(run_name), chunk_memory="10M"
         )
 
     def _save_preprocessing_info(self, run_name: str) -> None:
-        """ """
+        """
+        Save important details of the postprocessing for provenance.
+
+        Importantly, this is used to check that the preprocessing
+        file used for waveform extraction in `PostprocessData`
+        matches the preprocessing that was used for sorting.
+        """
         assert self.pp_steps is not None, "type narrow `pp_steps`."
 
         utils.cast_pp_steps_values(self.pp_steps, "list")

@@ -45,21 +45,19 @@ def run_postprocess(
     waveform_options: Optional[Dict] = None,
 ) -> PostprocessingData:
     """
-    Run post-processing, including ave quality metrics on sorting
-    output to a quality_metrics.csv file.
+    Run post-processing, including quality metrics on sorting
+    output and the unit positions on the electrode.
 
     Parameters
     ----------
 
-    sorting_data : Union[Path, str, SortingData]
-        The path to the 'preprocessed' folder in the subject / run
-        folder used for sorting or a SortingData object. If a
+    sorting_path : Union[Path, str, SortingData]
+        The path to the sorting output, the 'sorting' folder that
+        resides in the folder with a sorter-name (e.g. kilosort2_5).
 
-        SortingData object, the path will be read from the
-        `preprocessed_data_path` attribute.
-
-    sorter : str
-        The name of the sorter (e.g. "kilosort2_5").
+    overwrite_postprocessing: bool
+        If `True`, existing postprocessing is deleted in it's entirely. Otherwise
+        if `False` and postprocesing already exists, an error will be raised.
 
     existing_waveform_data : Literal["overwrite", "load_if_exists", "fail_if_exists"]
         Determines how existing preprocessed data (e.g. from a prior pipeline run)
@@ -138,6 +136,11 @@ def run_postprocess(
 
 
 def run_option(run_settings: Dict, option: str):
+    """
+    When to run the option that may either not be in the dict
+    (do not run) or is in the dict and set `False`.
+    TODO: just use a Tuple instead.
+    """
     return option in run_settings and run_settings[option]
 
 
@@ -238,15 +241,19 @@ def handle_delete_existing_postprocessing(
 # Helpers ------------------------------------------------------------------------------
 
 
-def save_quality_metrics(waveforms: WaveformExtractor, quality_metrics_path):
-    """ """
+def save_quality_metrics(
+    waveforms: WaveformExtractor, quality_metrics_path: Path
+) -> None:
+    """"""
     quality_metrics = si.qualitymetrics.compute_quality_metrics(waveforms)
     quality_metrics.to_csv(quality_metrics_path)
     utils.message_user(f"Quality metrics saved to {quality_metrics_path}")
 
 
-def save_unit_locations(waveforms: WaveformExtractor, unit_locations_path):
-    """ """
+def save_unit_locations(
+    waveforms: WaveformExtractor, unit_locations_path: Path
+) -> None:
+    """"""
     unit_locations = si.postprocessing.compute_unit_locations(
         waveforms, outputs="by_unit"
     )
@@ -256,6 +263,11 @@ def save_unit_locations(waveforms: WaveformExtractor, unit_locations_path):
     unit_locations_pandas.to_csv(unit_locations_path)
 
     utils.message_user(f"Unit locations saved to {unit_locations_path}")
+
+
+# --------------------------------------------------------------------------------------
+# TODO: remove
+# --------------------------------------------------------------------------------------
 
 
 def save_waveform_similarities(
@@ -302,11 +314,6 @@ def save_waveform_similarities(
     utils.message_user(
         f"Saving waveform similarity matrices took: {time.perf_counter() - t}"
     )
-
-
-# --------------------------------------------------------------------------------------
-# Save imagines
-# --------------------------------------------------------------------------------------
 
 
 def save_plots_of_templates(postprocessing_path: Path, waveforms: WaveformExtractor):

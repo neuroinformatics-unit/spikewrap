@@ -31,6 +31,10 @@ def preprocess(
         paths to rawdata. The pp_steps attribute is set on
         this class during execution of this function.
 
+    run_name: str
+        Name of the run to preprocess. This should correspond to a
+        run_name in `preprocess_data.run_names`.
+
     pp_steps: either a pp_steps dictionary, or name of valid
               preprocessing .yaml file (without hte yaml extension).
               See configs/configs.py for details.
@@ -125,7 +129,7 @@ def check_and_sort_pp_steps(pp_steps: Dict, pp_funcs: Dict) -> Tuple[Dict, List[
 
 def validate_pp_steps(pp_steps: Dict):
     """
-    Ensure the pp_steps dictionary of preprocessing steps to
+    Ensure the pp_steps dictionary of preprocessing steps
     has number-order that makes sense. The preprocessing step numbers
     should start 1 at, and increase by 1 for each subsequent step.
     """
@@ -172,6 +176,10 @@ def perform_preprocessing_step(
     preprocess_data : PreprocessingData
         spikewrap PreprocessingData class (a UserDict in which key-values are
         the preprocessing chain name : spikeinterface recording objects).
+
+    run_name: str
+        Name of the run to preprocess. This should correspond to a
+        run_name in `preprocess_data.run_names`.
 
     pp_step_names : List[str]
         Ordered list of preprocessing step names that are being
