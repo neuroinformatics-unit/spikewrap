@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, List, Optional, Tuple, Union
+from typing import TYPE_CHECKING, Dict, List, Optional, Tuple, Union
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -9,6 +9,7 @@ import spikeinterface.widgets as sw
 from ..data_classes.preprocessing import PreprocessingData
 from ..data_classes.sorting import SortingData
 from ..utils import utils
+from .sort import get_sorting_data_class
 
 if TYPE_CHECKING:
     import matplotlib
@@ -18,7 +19,7 @@ if TYPE_CHECKING:
 
 def visualise(
     data: Union[PreprocessingData, SortingData],
-    run_name: str,
+    sessions_and_runs: Dict,
     steps: Union[List[str], str] = "all",
     mode: str = "auto",
     as_subplot: bool = False,
@@ -57,58 +58,141 @@ def visualise(
     run_number : The run number to visualise (in the case of a concatenated recording.
                  Under the hood, each run maps to a SpikeInterface segment_index.
     """
-    steps, as_subplot = process_input_arguments(data, run_name, steps, as_subplot)
+    if not isinstance(steps, List):
+        steps = [steps]
 
-    first_key = list(data[run_name].keys())[-1]
-    total_used_shanks = np.unique(
-        data[run_name][first_key].get_property("group")
-    ).size  # TODO
+    for ses_name in sessions_and_runs.keys():
+        for run_name in sessions_and_runs[ses_name]:
+            first_key = list(data[ses_name][run_name].keys())[-1]
+            total_used_shanks = np.unique(
+                data[ses_name][run_name][first_key].get_property("group")
+            ).size  # TODO
 
-    for shank_idx in range(total_used_shanks):
-        if as_subplot:
-            fig, ax, num_rows, num_cols = generate_subplot(steps)
+            if "all" in steps:
+                assert len(steps) == 1, "if using 'all' only put one step input"
+                steps = utils.get_keys_first_char(
+                    data[ses_name][run_name]  # type: ignore
+                )
 
-        for idx, step in enumerate(steps):
-            recording, full_key = utils.get_dict_value_from_step_num(
-                data[run_name], str(step)
+            plot_subplot = as_subplot
+            if len(steps) == 1 and as_subplot:
+                plot_subplot = False
+
+            assert len(steps) <= len(data[ses_name][run_name]), (
+                "The number of steps must be less or equal to the "
+                "number of steps in the recording"
             )
 
-            validate_options_against_recording(recording, data, run_name, time_range)
+            for shank_idx in range(total_used_shanks):
+                if plot_subplot:
+                    fig, ax, num_rows, num_cols = generate_subplot(steps)
 
-            recordings = recording.split_by(property="group")
-            recording_to_plot = recordings[shank_idx]
+                for idx, step in enumerate(steps):
+                    recording, full_key = utils.get_dict_value_from_step_num(
+                        data[ses_name][run_name], str(step)
+                    )
 
-            plot_title = make_preprocessing_plot_title(
-                run_name,
-                full_key,
-                shank_idx,
-                recording_to_plot,
-                total_used_shanks,
-            )
+                    validate_options_against_recording(recording, time_range)
 
-            current_ax = (
-                None if not as_subplot else get_subplot_ax(idx, ax, num_rows, num_cols)
-            )
+                    recordings = recording.split_by(property="group")
+                    recording_to_plot = recordings[shank_idx]
 
-            sw.plot_timeseries(
-                recording_to_plot,
-                order_channel_by_depth=False,
-                time_range=time_range,
-                return_scaled=True,
-                show_channel_ids=show_channel_ids,
-                mode=mode,
-                ax=current_ax,
-                segment_index=0,
-            )
+                    plot_title = make_preprocessing_plot_title(
+                        f"ses: {ses_name}, run: {run_name}",
+                        full_key,
+                        shank_idx,
+                        recording_to_plot,
+                        total_used_shanks,
+                    )
 
-            if current_ax is None:
+                    current_ax = (
+                        None
+                        if not plot_subplot
+                        else get_subplot_ax(idx, ax, num_rows, num_cols)
+                    )
+
+                    sw.plot_timeseries(
+                        recording_to_plot,
+                        order_channel_by_depth=True,
+                        time_range=time_range,
+                        return_scaled=True,
+                        show_channel_ids=show_channel_ids,
+                        mode=mode,
+                        ax=current_ax,
+                        segment_index=0,
+                    )
+
+                    if current_ax is None:
+                        plt.title(plot_title)
+                        plt.show()
+                    else:
+                        current_ax.set_title(plot_title)
+
+                if plot_subplot:
+                    plt.show()
+
+
+def visualise_preprocessed(
+    base_path,
+    sub_name,
+    sessions_and_runs,
+    concatenate_sessions,
+    concatenate_runs,
+    mode: str = "auto",
+    time_range: Optional[Tuple] = None,
+    show_channel_ids: bool = False,
+):
+    SortingDataClass = get_sorting_data_class(
+        concatenate_sessions,
+        concatenate_runs,
+    )
+
+    sorting_data = SortingDataClass(
+        base_path,
+        sub_name,
+        sessions_and_runs,
+        sorter="placeholder",
+        print_messages=False,
+    )
+    # TODO: this automatically splits by group, the main pipeline does not....
+
+    for ses_name in sorting_data.keys():
+        for run_name in sorting_data[ses_name].keys():
+            total_used_shanks = np.unique(
+                sorting_data[ses_name][run_name].get_property("group")
+            ).size
+
+            # TODO: the below is a direct copy from above! Try and merge
+            # these as best possible... !!
+            # !!
+            # !!
+            for shank_idx in range(total_used_shanks):
+                recording = sorting_data[ses_name][run_name]
+
+                recordings = recording.split_by(property="group")
+                recording_to_plot = recordings[shank_idx]
+
+                plot_title = make_preprocessing_plot_title(
+                    f"ses: {ses_name}, run: {run_name}",
+                    "",
+                    shank_idx,
+                    recording_to_plot,
+                    total_used_shanks,
+                )
+
+                sw.plot_timeseries(
+                    recording_to_plot,
+                    order_channel_by_depth=True,
+                    time_range=time_range,
+                    return_scaled=True,
+                    show_channel_ids=show_channel_ids,
+                    mode=mode,
+                    ax=None,
+                    segment_index=0,
+                )
+
                 plt.title(plot_title)
                 plt.show()
-            else:
-                current_ax.set_title(plot_title)
-
-        if as_subplot:
-            plt.show()
 
 
 def generate_subplot(
@@ -177,47 +261,8 @@ def get_subplot_ax(
     return current_ax
 
 
-def process_input_arguments(
-    data: Union[PreprocessingData, SortingData],
-    run_name: str,
-    steps: Union[List[str], str],
-    as_subplot: bool,
-) -> Tuple[Union[List[str], str], bool]:
-    """
-    Check the passed configurations are valid.
-    See `visualise()` for arguments.
-
-    Returns
-    -------
-    steps : Dict
-        `steps` as a List, checked for validity.
-
-    as_subplot: bool
-        `as_subplot`, possibly forced to False if the number
-        of steps is only 1 (in which case subplot is redundant).
-    """
-    if not isinstance(steps, List):
-        steps = [steps]
-
-    if "all" in steps:
-        assert len(steps) == 1, "if using 'all' only put one step input"
-        steps = utils.get_keys_first_char(data[run_name])  # type: ignore
-
-    assert len(steps) <= len(data[run_name]), (
-        "The number of steps must be less or equal to the "
-        "number of steps in the recording"
-    )
-
-    if len(steps) == 1 and as_subplot:
-        as_subplot = False
-
-    return steps, as_subplot
-
-
 def validate_options_against_recording(
     recording: BaseRecording,
-    data: Union[PreprocessingData, SortingData],
-    run_name: str,
     time_range: Optional[Tuple],
 ) -> None:
     """
@@ -229,10 +274,6 @@ def validate_options_against_recording(
     can't find a better way to get final timepoint,
     but must be somewhere, this is wasteful.
     """
-    if isinstance(data, PreprocessingData):
-        assert (
-            run_name in data
-        ), "The run_name must be a key in the loaded `preprocessing_data` dict."
     if time_range is not None:
         assert (
             time_range[1] <= recording.get_times(segment_index=0)[-1]

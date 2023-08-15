@@ -1,9 +1,10 @@
 from __future__ import annotations
 
-import copy
-import os
 import warnings
-from typing import TYPE_CHECKING, Callable, Dict, List, Optional
+from abc import ABC, abstractmethod
+from dataclasses import dataclass
+from itertools import chain
+from typing import TYPE_CHECKING, Dict, List, Optional
 
 import spikeinterface as si
 from spikeinterface import concatenate_recordings
@@ -15,7 +16,18 @@ if TYPE_CHECKING:
     from pathlib import Path
 
 
-class SortingData(BaseUserDict):
+# TODO: do some checking of order!
+# TODO: test here with multiple runs
+# TODO: need to validate more, preprocessing data is not validating correctly!!
+# TODO: add "all"
+# TODO: remove UserDict?
+
+
+@dataclass
+class SortingData(BaseUserDict, ABC):
+    sorter: str
+    print_messages: bool = True
+
     """
     Class to organise the sorting of preprocessed data.
 
@@ -53,39 +65,31 @@ class SortingData(BaseUserDict):
     run names, and the new concatenated run name to which the data are
     saved is accessed by `self.concat_run_name()`
     """
+    #        base_path: Path
+    #        sub_name: str
+    #        sessions_and_runs: Dict
+    #        sorter: str
+    #        print_messages: bool = True
 
-    def __init__(
-        self,
-        base_path,
-        sub_name,
-        run_names,
-        sorter: str,
-        concat_for_sorting: bool,
-        print_messages: bool = True,
-    ):
-        super(SortingData, self).__init__(base_path, sub_name, run_names)
+    #    def __init__(
+    #            self,
+    #            base_path,
+    #            sub_name,
+    #            sessions_and_runs: Dict,
+    #            sorter: str,
+    #            print_messages: bool = True,
+    #    ):
+    #        super(SortingData, self).__init__(base_path, sub_name, sessions_and_runs)
 
-        self.concat_for_sorting = concat_for_sorting
-        self.sorter = sorter
-        self.print_messages = print_messages
+    def __post_init__(self):
+        super().__post_init__()
+        #     self.sorter = sorter
+        #    self.print_messages = print_messages
 
+        self._validate_derivatives_inputs()
         self._check_preprocessing_exists()
 
-        self.data: Dict = {}
-        self.preprocessing_info_paths: Dict = {}
-
         self.load_preprocessed_binary()
-
-    def sorting_run_names(self) -> List[str]:
-        if self.concat_for_sorting:
-            assert self.concat_run_name() == list(self.keys())[0]
-            return [self.concat_run_name()]
-        else:
-            assert self.preprocessing_run_names == list(self.keys())
-            return self.preprocessing_run_names
-
-    def _top_level_folder(self):
-        return "derivatives"
 
     # Checkers
     # ----------------------------------------------------------------------------------
@@ -102,83 +106,29 @@ class SortingData(BaseUserDict):
                 f"file path {path_.parent}."
             )
 
-        for run_name in self.preprocessing_run_names:
+        for ses_name, run_name in self.preprocessing_sessions_and_runs():
             assert (
-                prepro_path := self.get_run_path(run_name) / "preprocessed"
+                prepro_path := self.get_derivatives_run_path(ses_name, run_name)
+                / "preprocessed"
             ).is_dir(), error_message(prepro_path)
 
             assert (
                 recording_path := prepro_path / "si_recording"
             ).is_dir(), error_message(recording_path)
 
-    def _run_names_are_in_datetime_order(
-        self, creation_or_modification: str = "creation"
-    ) -> bool:
-        """
-        Assert whether a list of paths are in order. By default, check they are
-        in order by creation date. Can also check if they are ordered by
-        modification date.
-
-        Parameters
-        ----------
-        creation_or_modification : str
-            If "creation", check the list of paths are ordered by creation datetime.
-            Otherwise if "modification", check they are sorterd by modification
-            datetime.
-
-        Returns
-        -------
-        is_in_time_order : bool
-            Indicates whether `list_of_paths` was in creation or modification time
-            order.
-            depending on the value of `creation_or_modification`.
-        """
-        assert creation_or_modification in [
-            "creation",
-            "modification",
-        ], "creation_or_modification must be 'creation' or 'modification."
-
-        filter: Callable
-        filter = (
-            os.path.getctime
-            if creation_or_modification == "creation"
-            else os.path.getmtime
-        )
-
-        list_of_paths = [
-            self.get_run_path(run_name) for run_name in self.preprocessing_run_names
-        ]
-
-        list_of_paths_by_time = copy.deepcopy(list_of_paths)
-        list_of_paths_by_time.sort(key=filter)
-
-        is_in_time_order = list_of_paths == list_of_paths_by_time
-
-        return is_in_time_order
-
     # Load and concatenate preprocessed data
     # ----------------------------------------------------------------------------------
 
-    def load_preprocessed_binary(self) -> None:
-        """
-        Use SpikeInterface to load the binary-data into a recording object.
-        see class docstring for details.
-        """
-        # Load the preprocessing recordings
+    def initialise_preprocessed_recordings_dict(self):
+        """"""
         recordings = {}
-        for run_name in self.preprocessing_run_names:
-            recordings[run_name] = si.load_extractor(
-                self._get_pp_binary_data_path(run_name)
-            )
+        for ses_name, run_name in self.preprocessing_sessions_and_runs():
+            rec = si.load_extractor(self._get_pp_binary_data_path(ses_name, run_name))
+            utils.update(recordings, ses_name, run_name, value=rec)
 
-        # Set the dict data to the separate or concatenated recordings
-        if not self.concat_for_sorting:
-            self.data = recordings
-        else:
-            concatenated_recording = self._concatenate_si_recording(recordings)
-            self.data = {self.concat_run_name(): concatenated_recording}
+        return recordings
 
-    def _concatenate_si_recording(self, recordings: Dict) -> si.BaseRecording:
+    def _concatenate_runs(self, ses_name: str, recordings: Dict) -> si.BaseRecording:
         """
         Concatenate the Spikeinterface recording objects together.
 
@@ -193,119 +143,82 @@ class SortingData(BaseUserDict):
         concatenated_recording : si.BaseRecording
             A SI recording object holding the concatenated preprocessed data.
         """
-        loaded_prepro_run_names, recordings_list = zip(*recordings.items())
-
+        session_run_names, recordings_list = zip(*recordings[ses_name].items())
         concatenated_recording = concatenate_recordings(recordings_list)
 
-        assert loaded_prepro_run_names == tuple(
-            self.preprocessing_run_names
+        assert session_run_names == tuple(
+            self.sessions_and_runs[ses_name]
         ), "Something has gone wrong in the `run_names` ordering."
 
         if self.print_messages:
-            if not self._run_names_are_in_datetime_order("creation"):
-                warnings.warn(
-                    "The runs provided are not in creation datetime order.\n"
-                    "They will be concatenated in the order provided."
-                )
+            self.check_ses_or_run_folders_in_datetime_order(ses_name)
 
             utils.message_user(
-                f"Preprocessed data loaded prior to sorting. "
+                f"Preprocessed data loaded prior to sorting for session {ses_name}. "
                 f"Runs were concatenated runs in the order: "
-                f"{loaded_prepro_run_names}"
+                f"{session_run_names}"
             )
 
         return concatenated_recording
 
+    def check_ses_or_run_folders_in_datetime_order(
+        self, ses_name: Optional[str] = None
+    ) -> None:
+        """"""
+        if ses_name is None:
+            list_of_paths = [
+                self.get_rawdata_ses_path(ses_name)
+                for ses_name in self.sessions_and_runs.keys()
+            ]
+        else:
+            list_of_paths = [
+                self.get_rawdata_run_path(ses_name, run_name)
+                for run_name in self.sessions_and_runs[ses_name]
+            ]
+
+        for path_ in list_of_paths:
+            if not path_.is_dir():
+                utils.message_user(
+                    f"Could not find raw data to check concatenation order."
+                    f"Concatenation will proceed in the following order: {list_of_paths}"
+                )
+                return
+
+        if not utils.paths_are_in_datetime_order(list_of_paths, "creation"):
+            warnings.warn(
+                f"The sessions or runs provided for are not in creation datetime "
+                f"order. \nThey will be concatenated in the order provided, as: {list_of_paths}."
+            )
+
     # Paths
     # ----------------------------------------------------------------------------------
 
-    def _get_base_sorting_path(self, run_name: str) -> Path:
-        """
-        Key method underpinning path getters for the class. If
-        self.concat_for_sorting is `True`, then the sorting output
-        run name is an amalgamation of the concatenated run names.
-        Also, the folder structure is slightly different. In this case,
-        it does not make sense to have a specific run sorting output to
-        get the path for, so this must be `None`.
+    def get_sorting_path(self, ses_name: str, run_name: Optional[str]) -> Path:
+        return self._get_base_sorting_path(ses_name, run_name) / "sorting"
 
-        Otherwise, if concatenation is not performed, a run name to
-        get the sorting output for must be specified.
-        """
-        sub_folder = self.base_path / "derivatives" / self.sub_name
+    def get_sorter_output_path(self, ses_name: str, run_name: Optional[str]) -> Path:
+        return self.get_sorting_path(ses_name, run_name) / "sorter_output"
 
-        if self.concat_for_sorting:
-            assert run_name == self.sorting_run_names()[0], (
-                f"The passed concatenated "
-                f"run name is incorrect."
-                f"It should be {self.sorting_run_names()[0]}"
-            )
+    def _get_sorting_info_path(self, ses_name: str, run_name: Optional[str]) -> Path:
+        return self.get_sorting_path(ses_name, run_name) / utils.canonical_names(
+            "sorting_yaml"
+        )
 
-            base_sorting_path = (
-                sub_folder / f"{self.sub_name}-sorting-concat" / run_name / self.sorter
-            )
-        else:
-            assert run_name in self.sorting_run_names(), (
-                f"The passed run name is incorrect. It should be one "
-                f"of {self.sorting_run_names()}."
-            )
-            base_sorting_path = sub_folder / run_name / self.sorter
+    def get_postprocessing_path(self, ses_name: str, run_name: Optional[str]) -> Path:
+        return self._get_base_sorting_path(ses_name, run_name) / "postprocessing"
 
-        return base_sorting_path
+    def _validate_derivatives_inputs(self):
+        self._validate_inputs(
+            "derivatives",
+            self.get_derivatives_top_level_path,
+            self.get_derivatives_sub_path,
+            self.get_derivatives_ses_path,
+            self.get_derivatives_run_path,
+        )
 
-    def get_sorting_path(self, run_name: str) -> Path:
-        return self._get_base_sorting_path(run_name) / "sorting"
-
-    def get_sorter_output_path(self, run_name: str) -> Path:
-        return self.get_sorting_path(run_name) / "sorter_output"
-
-    def _get_sorting_info_path(self, run_name: str) -> Path:
-        return self.get_sorting_path(run_name) / utils.canonical_names("sorting_yaml")
-
-    def get_postprocessing_path(self, run_name: str) -> Path:
-        return self._get_base_sorting_path(run_name) / "postprocessing"
-
-    # Concatenated run name
+    # Multiple Run Names
     # ----------------------------------------------------------------------------------
 
-    def concat_run_name(
-        self,
-    ) -> str:
-        """
-        The run_names may be a single run, or a list of runs to process.
-        Return a list of paths to the runs found on the system. enforces
-        that the runs are in datetime order.
-
-        Returns
-        -------
-        run_names : List[str]
-            List of run names (folder names within the subject level folder)
-            to be used in the pipeline.
-
-        concat_run_name : str
-            A name consisting of the ordered combination of all run names
-            (see self.make_run_name_from_multiple_run_names)
-        """
-        assert len(self.preprocessing_run_names) > 1, (
-            f"Concatenate for sorting (`concat_for_sorting`) is "
-            f"true but only a single run"
-            f"has been passed: {self.preprocessing_run_names}."
-        )
-
-        concat_run_name = self._make_run_name_from_multiple_run_names(
-            self.preprocessing_run_names
-        )
-
-        return concat_run_name
-
-    def get_output_run_name(self, run_name: Optional[str]) -> str:
-        """ """
-        if run_name is None:
-            assert self.concat_for_sorting is True
-            return self.concat_run_name()
-        else:
-            return run_name
-
-    @staticmethod
     def _make_run_name_from_multiple_run_names(run_names: List[str]) -> str:
         """
         Make a single run_name given a list of run names. This will use the
@@ -341,7 +254,7 @@ class SortingData(BaseUserDict):
     # Sorting info
     # ----------------------------------------------------------------------------------
 
-    def save_sorting_info(self, run_name: str) -> None:
+    def save_sorting_info(self, ses_name: str, run_name: Optional[str]) -> None:
         """
         Save a sorting_info.yaml file containing a dictionary holding
         important information on the sorting. This is for provenance.
@@ -355,49 +268,273 @@ class SortingData(BaseUserDict):
         preprocessing data at the expected Path is the same that was
         used for sorting.
         """
-        # Load the preprocessing info
-        if self.concat_for_sorting:
-            run_names_to_load = self.preprocessing_run_names
-        else:
-            run_names_to_load = [run_name]
+        # Load preprocessing info to store for provenance
+        preprocessing_info_paths = self.preprocessing_info_paths(ses_name, run_name)
 
         sorting_info: Dict = {"preprocessing": {}}
 
-        for load_prepro_run_name in run_names_to_load:
-            sorting_info["preprocessing"][
-                load_prepro_run_name
-            ] = utils.load_dict_from_yaml(
-                self._get_preprocessing_info_path(load_prepro_run_name)
+        for load_prepro_path in preprocessing_info_paths:
+            pp_dict = utils.load_dict_from_yaml(load_prepro_path)
+            utils.update(
+                sorting_info["preprocessing"],
+                pp_dict["ses_name"],
+                pp_dict["run_name"],
+                value=pp_dict,
             )
 
         # Add sorting-specific information
         sorting_info["base_path"] = self.base_path.as_posix()
         sorting_info["sub_name"] = self.sub_name
-        sorting_info["preprocessing_run_names"] = self.preprocessing_run_names
-        sorting_info["sorting_run_names"] = self.sorting_run_names()
+        sorting_info["sessions_and_runs"] = self.sessions_and_runs
+        sorting_info["sorted_ses_name"] = ses_name
         sorting_info["sorted_run_name"] = run_name
         sorting_info["sorter"] = self.sorter
-        sorting_info["concat_for_sorting"] = self.concat_for_sorting
+        sorting_info["concatenate_sessions"] = self.concatenate_sessions
+        sorting_info["concatenate_runs"] = self.concatenate_runs
         sorting_info["spikeinterface_version"] = si.__version__
         sorting_info["spikewrap_version"] = utils.spikewrap_version()
         sorting_info["datetime_created"] = utils.get_formatted_datetime()
 
-        utils.dump_dict_to_yaml(self._get_sorting_info_path(run_name), sorting_info)
+        utils.dump_dict_to_yaml(
+            self._get_sorting_info_path(ses_name, run_name), sorting_info
+        )
 
-    # Sorting info
-    # ----------------------------------------------------------------------------------
+    @property
+    @abstractmethod
+    def concatenate_sessions(self) -> bool:
+        raise NotImplementedError
 
-    def get_preprocessed_recording(self, run_name: str) -> si.BaseRecording:
-        """
-        Get the preprocessed recording, that is stored in a dict in which
-        keys are the run names (not concentrated) or the amalgamated run name
-        (if concatenation is performed).
-        """
-        if self.concat_for_sorting:
-            assert run_name is None
-            recording = self[self.concat_run_name()]
-        else:
-            assert isinstance(run_name, str)
-            recording = self[run_name]
+    @property
+    @abstractmethod
+    def concatenate_runs(self) -> bool:
+        raise NotImplementedError
 
-        return recording
+    @abstractmethod
+    def preprocessing_info_paths(self, ses_name, run_name):
+        raise NotImplementedError
+
+    @abstractmethod
+    def load_preprocessed_binary(self):
+        raise NotImplementedError
+
+    @abstractmethod
+    def get_sorting_sessions_and_runs(self):
+        raise NotImplementedError
+
+    @abstractmethod
+    def get_preprocessed_recordings(self, ses_name, run_name):
+        raise NotImplementedError
+
+    @abstractmethod
+    def _get_base_sorting_path(self, ses_name, run_name):
+        raise NotImplementedError
+
+
+class ConcatenateSessions(SortingData):
+    #    """
+    #    """
+    #    def __init__(self,
+    #                 base_path,
+    #                 sub_name,
+    #                 sessions_and_runs,
+    #                 sorter,
+    #                 print_messages: bool = True
+    #                 ):
+    #        super(ConcatenateSessions, self).__init__(
+    #            base_path,
+    #            sub_name,
+    #            sessions_and_runs,
+    #            sorter,
+    #            print_messages
+    #        )
+
+    @property
+    def concatenate_sessions(self) -> bool:
+        return True
+
+    @property
+    def concatenate_runs(self) -> bool:
+        return True
+
+    def load_preprocessed_binary(self):
+        """"""
+        recordings = self.initialise_preprocessed_recordings_dict()
+
+        self.check_ses_or_run_folders_in_datetime_order()
+
+        concat_run_recordings = []
+        for ses_name in recordings.keys():
+            concat_run_recordings.append(self._concatenate_runs(ses_name, recordings))
+        self.data[self.concat_ses_name()] = concatenate_recordings(
+            concat_run_recordings
+        )
+
+    def get_sorting_sessions_and_runs(self):
+        return [(self.concat_ses_name(), None)]
+
+    def concat_ses_name(self):
+        ses_names = self.sessions_and_runs.keys()
+        return self._make_run_name_from_multiple_run_names(ses_names)
+
+    def get_preprocessed_recordings(self, ses_name, run_name):
+        self.assert_names(ses_name, run_name)
+        return self[self.concat_ses_name()]
+
+    def _get_base_sorting_path(self, ses_name, run_name):
+        """"""
+        self.assert_names(ses_name, run_name)
+
+        base_sorting_path = (
+            self.get_derivatives_sub_path()
+            / f"{self.sub_name}-sorting-concat"
+            / self.concat_ses_name()
+            / self.sorter
+        )
+        return base_sorting_path
+
+    def preprocessing_info_paths(self, ses_name, run_name):
+        """"""
+        self.assert_names(ses_name, run_name)
+
+        preprocessing_info_paths = []
+        for pp_ses_name, pp_run_name in self.preprocessing_sessions_and_runs():
+            preprocessing_info_paths.append(
+                self.get_preprocessing_info_path(pp_ses_name, pp_run_name)
+            )
+
+        return preprocessing_info_paths
+
+    def assert_names(self, ses_name, run_name):
+        assert ses_name == self.concat_ses_name()
+        assert run_name is None
+
+
+class ConcatenateRuns(SortingData):
+    #    """
+    #    """
+    #    def __init__(self,
+    #                 base_path,
+    #                 sub_name,
+    #                 sessions_and_runs,
+    #                 sorter,
+    #                 print_messages: bool = True
+    #                 ):
+    #        super(ConcatenateRuns, self).__init__(
+    #            base_path,
+    #            sub_name,
+    #            sessions_and_runs,
+    #            sorter,
+    #            print_messages
+    #        )
+
+    @property
+    def concatenate_sessions(self) -> bool:
+        return False
+
+    @property
+    def concatenate_runs(self) -> bool:
+        return True
+
+    def load_preprocessed_binary(self):
+        """"""
+        recordings = self.initialise_preprocessed_recordings_dict()
+
+        for ses_name in self.sessions_and_runs.keys():
+            concat_recording = self._concatenate_runs(ses_name, recordings)
+            utils.update(
+                self.data, ses_name, self.concat_run_name(ses_name), concat_recording
+            )
+
+    def get_sorting_sessions_and_runs(self):
+        """"""
+        sorting_sessions_and_runs = []
+        for ses_name in self.sessions_and_runs.keys():
+            sorting_sessions_and_runs.append((ses_name, self.concat_run_name(ses_name)))
+
+        return sorting_sessions_and_runs
+
+    def concat_run_name(self, ses_name: str):
+        """ """
+        if not len(self.sessions_and_runs[ses_name]) > 1:
+            warnings.warn(
+                f"Concatenate runs is true but only a single "
+                f"run has been passed for sessions {ses_name}."
+            )
+        concat_run_name = self._make_run_name_from_multiple_run_names(
+            self.sessions_and_runs[ses_name]
+        )
+
+        return concat_run_name
+
+    def get_preprocessed_recordings(self, ses_name, run_name):
+        assert run_name == self.concat_run_name(ses_name)
+        return self[ses_name][run_name]
+
+    def _get_base_sorting_path(self, ses_name, run_name):
+        assert run_name == self.concat_run_name(ses_name)
+        base_sorting_path = (
+            self.get_derivatives_sub_path()
+            / ses_name
+            / f"{self.sub_name}-sorting-concat"
+            / run_name
+            / self.sorter
+        )
+        return base_sorting_path
+
+    def preprocessing_info_paths(self, ses_name, run_name):
+        """"""
+        assert run_name == self.concat_run_name(ses_name)
+
+        preprocessing_info_paths = []
+        for pp_run_name in self.sessions_and_runs[ses_name]:
+            preprocessing_info_paths.append(
+                self.get_preprocessing_info_path(ses_name, pp_run_name)
+            )
+        return preprocessing_info_paths
+
+
+class NoConcatenation(SortingData):
+    #    """
+    #    """
+    #    def __init__(self,
+    #                 base_path,
+    #                 sub_name,
+    #                 sessions_and_runs,
+    #                 sorter,
+    #                 print_messages: bool = True
+    #                 ):
+    #        super(NoConcatenation, self).__init__(
+    #            base_path,
+    #            sub_name,
+    #            sessions_and_runs,
+    #            sorter,
+    #            print_messages
+    #        )
+    #
+    @property
+    def concatenate_sessions(self) -> bool:
+        return False
+
+    @property
+    def concatenate_runs(self) -> bool:
+        return False
+
+    def load_preprocessed_binary(self):
+        recordings = self.initialise_preprocessed_recordings_dict()
+        self.data = recordings
+
+    def get_sorting_sessions_and_runs(self):
+        ordered_ses_names = list(
+            chain(*[[ses] * len(runs) for ses, runs in self.items()])
+        )
+        ordered_run_names = list(chain(*[runs for runs in self.values()]))
+        return list(zip(ordered_ses_names, ordered_run_names))
+
+    def get_preprocessed_recordings(self, ses_name, run_name):
+        return self[ses_name][run_name]
+
+    def _get_base_sorting_path(self, ses_name, run_name):
+        return self.get_derivatives_sub_path() / ses_name / run_name / self.sorter
+
+    def preprocessing_info_paths(self, ses_name, run_name):
+        return [self.get_preprocessing_info_path(ses_name, run_name)]

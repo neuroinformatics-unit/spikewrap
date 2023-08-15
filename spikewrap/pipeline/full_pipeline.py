@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import shutil
 from pathlib import Path
-from typing import TYPE_CHECKING, Dict, List, Literal, Union
+from typing import TYPE_CHECKING, Dict, Literal, Union
 
 from ..configs.configs import get_configs
 from ..data_classes.preprocessing import PreprocessingData
@@ -21,10 +21,11 @@ if TYPE_CHECKING:
 def run_full_pipeline(
     base_path: Union[Path, str],
     sub_name: str,
-    run_names: Union[List[str], str],
+    sessions_and_runs: Dict,
     config_name: str = "default",
     sorter: str = "kilosort2_5",
-    concat_for_sorting: bool = False,
+    concat_sessions_for_sorting: bool = False,
+    concat_runs_for_sorting: bool = False,
     existing_preprocessed_data: HandleExisting = "load_if_exists",
     existing_sorting_output: HandleExisting = "load_if_exists",
     overwrite_postprocessing: bool = False,
@@ -138,24 +139,27 @@ def run_full_pipeline(
     )
     utils.show_passed_arguments(passed_arguments, "`run_full pipeline`")
 
-    loaded_data = load_data(base_path, sub_name, run_names, data_format="spikeglx")
+    loaded_data = load_data(
+        base_path, sub_name, sessions_and_runs, data_format="spikeglx"
+    )
 
     preprocess_and_save(loaded_data, pp_steps, existing_preprocessed_data, verbose)
 
     sorting_data = run_sorting(
         base_path,
         sub_name,
-        run_names,
+        sessions_and_runs,
         sorter,
-        concat_for_sorting,
+        concat_sessions_for_sorting,
+        concat_runs_for_sorting,
         sorter_options,
         existing_sorting_output,
         verbose,
     )
 
     # Run Postprocessing
-    for run_name in sorting_data.sorting_run_names():
-        sorting_path = sorting_data.get_sorting_path(run_name)
+    for ses_name, run_name in sorting_data.get_sorting_sessions_and_runs():
+        sorting_path = sorting_data.get_sorting_path(ses_name, run_name)
 
         postprocess_data = run_postprocess(
             sorting_path,
@@ -166,11 +170,11 @@ def run_full_pipeline(
             waveform_options=waveform_options,
         )
 
-    for run_name in sorting_data.sorting_run_names():
+    # Delete intermediate files
+    for ses_name, run_name in sorting_data.get_sorting_sessions_and_runs():
         handle_delete_intermediate_files(
-            run_name, sorting_data, delete_intermediate_files
+            ses_name, run_name, sorting_data, delete_intermediate_files
         )
-
     logs.stop_logging()
 
 
@@ -189,10 +193,13 @@ def preprocess_and_save(
     Handle the loading of existing preprocessed data.
     See `run_full_pipeline()` for details.
     """
-    for run_name in preprocess_data.preprocessing_run_names:
+    # TODO: for now, all preprocessing is per-session / per-run. If you want
+    # to preprocess over concatenated runs, runs must be concentrated prior to
+    # preprocessing.
+    for ses_name, run_name in preprocess_data.preprocessing_sessions_and_runs():
         utils.message_user(f"Preprocessing run {run_name}...")
 
-        preprocess_path = preprocess_data.get_preprocessing_path(run_name)
+        preprocess_path = preprocess_data.get_preprocessing_path(ses_name, run_name)
 
         if existing_preprocessed_data == "load_if_exists":
             if preprocess_path.is_dir():
@@ -229,8 +236,10 @@ def preprocess_and_save(
                 "Must be: 'load_if_exists', 'fail_if_exists' or 'overwrite'."
             )
 
-        preprocess_data = preprocess(preprocess_data, run_name, pp_steps, verbose)
-        preprocess_data.save_preprocessed_data(run_name, overwrite)
+        preprocess_data = preprocess(
+            preprocess_data, ses_name, run_name, pp_steps, verbose
+        )
+        preprocess_data.save_preprocessed_data(ses_name, run_name, overwrite)
 
 
 # --------------------------------------------------------------------------------------
@@ -239,7 +248,8 @@ def preprocess_and_save(
 
 
 def handle_delete_intermediate_files(
-    run_name: str,
+    ses_name: str,
+    run_name: Optional[str],
     sorting_data: SortingData,
     delete_intermediate_files: DeleteIntermediate,
 ):
@@ -250,21 +260,21 @@ def handle_delete_intermediate_files(
     """
     if "recording.dat" in delete_intermediate_files:
         if (
-            recording_file := sorting_data.get_sorter_output_path(run_name)
+            recording_file := sorting_data.get_sorter_output_path(ses_name, run_name)
             / "recording.dat"
         ).is_file():
             recording_file.unlink()
 
     if "temp_wh.dat" in delete_intermediate_files:
         if (
-            recording_file := sorting_data.get_sorter_output_path(run_name)
+            recording_file := sorting_data.get_sorter_output_path(ses_name, run_name)
             / "temp_wh.dat"
         ).is_file():
             recording_file.unlink()
 
     if "waveforms" in delete_intermediate_files:
         if (
-            waveforms_path := sorting_data.get_postprocessing_path(run_name)
+            waveforms_path := sorting_data.get_postprocessing_path(ses_name, run_name)
             / "waveforms"
         ).is_dir():
             shutil.rmtree(waveforms_path)

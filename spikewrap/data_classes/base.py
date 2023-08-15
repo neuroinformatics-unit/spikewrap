@@ -1,12 +1,15 @@
 import fnmatch
 from collections import UserDict
 from collections.abc import ItemsView, KeysView, ValuesView
+from dataclasses import dataclass
+from itertools import chain
 from pathlib import Path
-from typing import List, Literal, Union
+from typing import Dict, List, Union
 
 from ..utils import utils
 
 
+@dataclass
 class BaseUserDict(UserDict):
     """
     Base class for `PreprocessingData` and `SortingData`
@@ -17,33 +20,56 @@ class BaseUserDict(UserDict):
     preprocessing and sorting.
 
     Base UserDict that implements the
-    keys(), values() and items() convenience functions.
-    """
+    keys(), values() and items() convenience functions."""
 
-    def __init__(
-        self,
-        base_path: Union[str, Path],
-        sub_name: str,
-        run_names: Union[List[str], str],
-    ) -> None:
-        super(BaseUserDict, self).__init__()
+    base_path: Union[str, Path]
+    sub_name: str
+    sessions_and_runs: Dict
 
-        self.base_path = Path(base_path)
-        self.sub_name = sub_name
+    #    def __init__(
+    #        self,
+    #        base_path: Union[str, Path],
+    #        sub_name: str,
+    #        sessions_and_runs,
+    #    ) -> None:
+    #        super(BaseUserDict, self).__init__()
 
-        self.preprocessing_run_names = self.validate_inputs(
-            run_names,
+    #      self.base_path = Path(base_path)
+    #      self.sub_name = sub_name
+    #      self.sessions_and_runs = sessions_and_runs
+    def __post_init__(self):
+        self.data: Dict = {}
+        self.base_path = Path(self.base_path)
+        self.check_run_names_are_formatted_as_list()
+
+    def check_run_names_are_formatted_as_list(self):
+        """"""
+        for key, value in self.sessions_and_runs.items():
+            if not isinstance(value, List):
+                assert isinstance(
+                    value, str
+                ), "Run names must be string or list of strings"
+                self.sessions_and_runs[key] = [value]
+
+    def preprocessing_sessions_and_runs(self):
+        """"""
+        ordered_ses_names = list(
+            chain(*[[ses] * len(runs) for ses, runs in self.sessions_and_runs.items()])
+        )
+        ordered_run_names = list(
+            chain(*[runs for runs in self.sessions_and_runs.values()])
         )
 
-    def _top_level_folder(self) -> Literal["rawdata", "derivatives"]:
-        """
-        The name of the top level folder, either 'rawdata' for
-        preprocessing (i.e. loaded from rawdata) or `derivatives`
-        for sorting (i.e. loaded from derivatives).
-        """
-        raise NotImplementedError
+        return list(zip(ordered_ses_names, ordered_run_names))
 
-    def validate_inputs(self, run_names: Union[str, List[str]]) -> List[str]:
+    def _validate_inputs(
+        self,
+        top_level_folder,
+        get_top_level_folder,
+        get_sub_level_folder,
+        get_sub_path,
+        get_run_path,
+    ):
         """
         Check the rawdata / derivatives path, subject path exists
         and ensure run_names is a list of strings.
@@ -59,89 +85,96 @@ class BaseUserDict(UserDict):
         run_names : List[str]
             Validated `run_names` as a List.
         """
-        top_level_folder_path = self.base_path / self._top_level_folder()
-
-        assert (top_level_folder_path / self.sub_name).is_dir(), (
-            f"Subject directory not found. {self.sub_name} "
-            f"is not a folder in {top_level_folder_path}"
-        )
-
-        assert top_level_folder_path.is_dir(), (
-            f"Ensure there is a folder in base path called '{self._top_level_folder()}'.\n"
-            f"No {self._top_level_folder()} directory found at {top_level_folder_path}\n"
+        assert get_top_level_folder().is_dir(), (
+            f"Ensure there is a folder in base path called '"
+            f"{top_level_folder}'.\n"
+            f"No {top_level_folder} directory found at "
+            f"{get_top_level_folder()}\n"
             f"where subject-level folders must be placed."
         )
 
-        if not isinstance(run_names, list):
-            run_names = [run_names]
-
-        for run_name in run_names:
-            gate_str = fnmatch.filter(run_name.split("_"), "g?")
-
-            assert len(gate_str) > 0, (
-                f"The SpikeGLX gate index should be in the run name. "
-                f"It was not found in the name {run_name}."
-                f"\nEnsure the gate number is in the SpikeGLX-output filename."
-            )
-
-            assert len(gate_str) == 1, (
-                f"The SpikeGLX gate appears in the name " f"{run_name} more than once"
-            )
-
-            assert int(gate_str[0][1:]) == 0, (
-                f"Gate with index larger than 0 is not supported. This is found "
-                f"in run name {run_name}. "
-            )
-
-            run_path = self.get_run_path(run_name)
-            assert run_path.is_dir(), (
-                f"The run folder {run_path.stem} cannot be found at "
-                f"file path {run_path.parent}."
-            )
-
-        return run_names
-
-    def get_run_path(self, run_name: str) -> Path:
-        return self.get_sub_folder_path() / f"{run_name}"
-
-    def get_sub_folder_path(self) -> Path:
-        """
-        Get the path to the rawdata subject folder.
-
-        Returns
-        -------
-        sub_folder_path : Path
-            Path to the self.sub_name folder in the `rawdata` path folder.
-        """
-        sub_folder_path = Path(
-            self.base_path / self._top_level_folder() / self.sub_name
+        assert get_sub_level_folder().is_dir(), (
+            f"Subject directory not found. {self.sub_name} "
+            f"is not a folder in {get_top_level_folder()}"
         )
-        return sub_folder_path
+
+        for ses_name in self.sessions_and_runs.keys():
+            assert (
+                ses_path := get_sub_path(ses_name)
+            ).is_dir(), f"{ses_name} was not found at folder path {ses_path}"
+
+            for run_name in self.sessions_and_runs[ses_name]:
+                assert (run_path := get_run_path(ses_name, run_name)).is_dir(), (
+                    f"The run folder {run_path.stem} cannot be found at "
+                    f"file path {run_path.parent}."
+                )
+
+                gate_str = fnmatch.filter(run_name.split("_"), "g?")
+
+                assert len(gate_str) > 0, (
+                    f"The SpikeGLX gate index should be in the run name. "
+                    f"It was not found in the name {run_name}."
+                    f"\nEnsure the gate number is in the SpikeGLX-output filename."
+                )
+
+                assert len(gate_str) == 1, (
+                    f"The SpikeGLX gate appears in the name "
+                    f"{run_name} more than once"
+                )
+
+                assert int(gate_str[0][1:]) == 0, (
+                    f"Gate with index larger than 0 is not supported. This is found "
+                    f"in run name {run_name}. "
+                )
+
+    # Rawdata Paths --------------------------------------------------------------
+
+    def get_rawdata_top_level_path(self) -> Path:
+        return self.base_path / "rawdata"
+
+    def get_rawdata_sub_path(self) -> Path:
+        return self.get_rawdata_top_level_path() / self.sub_name
+
+    def get_rawdata_ses_path(self, ses_name: str) -> Path:
+        return self.get_rawdata_sub_path() / ses_name
+
+    def get_rawdata_run_path(self, ses_name: str, run_name: str) -> Path:
+        return self.get_rawdata_ses_path(ses_name) / "ephys" / run_name
+
+    # Derivatives Paths --------------------------------------------------------------
+
+    def get_derivatives_top_level_path(self) -> Path:
+        return self.base_path / "derivatives" / "spikewrap"
+
+    def get_derivatives_sub_path(self) -> Path:
+        return self.get_derivatives_top_level_path() / self.sub_name
+
+    def get_derivatives_ses_path(self, ses_name: str) -> Path:
+        return self.get_derivatives_sub_path() / ses_name
+
+    def get_derivatives_run_path(self, ses_name: str, run_name: str) -> Path:
+        return self.get_derivatives_ses_path(ses_name) / run_name
 
     # Preprocessing Paths --------------------------------------------------------------
 
-    def get_preprocessing_path(self, run_name: str) -> Path:
+    def get_preprocessing_path(self, ses_name: str, run_name: str) -> Path:
         """
         Set the folder tree where preprocessing output will be
         saved. This is canonical and should not change.
         """
         preprocessed_output_path = (
-            self.base_path
-            / "derivatives"
-            / self.sub_name
-            / f"{run_name}"
-            / "preprocessed"
+            self.get_derivatives_run_path(ses_name, run_name) / "preprocessed"
         )
         return preprocessed_output_path
 
-    def _get_pp_binary_data_path(self, run_name: str) -> Path:
-        return self.get_preprocessing_path(run_name) / "si_recording"
+    def _get_pp_binary_data_path(self, ses_name: str, run_name: str) -> Path:
+        return self.get_preprocessing_path(ses_name, run_name) / "si_recording"
 
-    def _get_sync_channel_data_path(self, run_name: str) -> Path:
-        return self.get_preprocessing_path(run_name) / "sync_channel"
+    def _get_sync_channel_data_path(self, ses_name: str, run_name: str) -> Path:
+        return self.get_preprocessing_path(ses_name, run_name) / "sync_channel"
 
-    def _get_preprocessing_info_path(self, run_name: str) -> Path:
-        return self.get_preprocessing_path(run_name) / utils.canonical_names(
+    def get_preprocessing_info_path(self, ses_name: str, run_name: str) -> Path:
+        return self.get_preprocessing_path(ses_name, run_name) / utils.canonical_names(
             "preprocessed_yaml"
         )
 

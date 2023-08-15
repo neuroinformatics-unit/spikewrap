@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, List, Union
+from typing import TYPE_CHECKING, Union
 
 import spikeinterface.extractors as se
 
@@ -14,7 +14,7 @@ if TYPE_CHECKING:
 def load_data(
     base_path: Union[Path, str],
     sub_name: str,
-    run_names: Union[str, List[str]],
+    sessions_and_runs: Dict,
     data_format: str = "spikeglx",
 ):
     """
@@ -50,7 +50,7 @@ def load_data(
     Figure out the format from the data itself, instead of passing as argument.
     Do this when adding the next supported format.
     """
-    empty_data_class = PreprocessingData(base_path, sub_name, run_names)
+    empty_data_class = PreprocessingData(base_path, sub_name, sessions_and_runs)
 
     if data_format == "spikeglx":
         return load_spikeglx_data(empty_data_class)
@@ -69,8 +69,8 @@ def load_spikeglx_data(preprocess_data: PreprocessingData) -> PreprocessingData:
 
     See load_data() for parameters.
     """
-    for run_name in preprocess_data.preprocessing_run_names:
-        run_path = preprocess_data.get_run_path(run_name)
+    for ses_name, run_name in preprocess_data.preprocessing_sessions_and_runs():
+        run_path = preprocess_data.get_rawdata_run_path(ses_name, run_name)
         assert run_name == run_path.name, "TODO"
 
         with_sync, without_sync = [
@@ -82,9 +82,9 @@ def load_spikeglx_data(preprocess_data: PreprocessingData) -> PreprocessingData:
             )
             for sync in [True, False]
         ]
-        preprocess_data[run_name]["0-raw"] = without_sync
-        preprocess_data.sync[run_name] = with_sync
+        preprocess_data[ses_name][run_name]["0-raw"] = without_sync
+        preprocess_data.sync[ses_name][run_name] = with_sync
 
-        utils.message_user(f"Raw session data was loaded from " f"{run_path}")
+        utils.message_user(f"Raw session data was loaded from {run_path}")
 
     return preprocess_data

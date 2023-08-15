@@ -103,15 +103,38 @@ class TestFirstEphys:
             )
             preprocess_data.save_preprocessed_data(run_name, overwrite=True)
 
+    def test_bad_input_errors(self):
+        pass
+
+    def test_no_concatenation(self):
+        # have some very small test files  << key first move for tomorrow
+        # load test files and take their 1) num samples 2) first 20 samples
+        # run the pipeline
+        # test the preprocessed data are the same as SI pre-procesesd (separately)
+        # test the sorting output? I guess
+        # for all other tests, variations on this theme!
+        pass
+
+    # TODO: test delete intermediate files
+
+    def test_concatenate_runs(self):
+        pass
+
+    def test_concatenate_sessions(self):
+        pass
+
+    def test_concatenate_sessions_not_runs_error(self):
+        pass
+
     @pytest.mark.parametrize(
         "sorter",
         [
-            #     "kilosort2",
-            #    "kilosort2_5",
-            #   "kilosort3",
-            #  "mountainsort5",
+            "kilosort2",
+            "kilosort2_5",
+            "kilosort3",
+            "mountainsort5",
             "spykingcircus",
-            #  "tridesclous",
+            "tridesclous",
         ],
     )
     def test_single_run_local__(self, test_info, sorter):
