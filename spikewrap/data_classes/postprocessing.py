@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from pathlib import Path
+from typing import Union
 
 import spikeinterface as si
 from spikeinterface import curation
@@ -13,7 +14,7 @@ from ..utils import utils
 class PostprocessingData:
     """ """
 
-    def __init__(self, sorting_path):
+    def __init__(self, sorting_path: Union[str, Path]) -> None:
         self.sorting_path = Path(sorting_path)
         self.sorter_output_path = self.sorting_path / "sorter_output"
         self.sorting_info_path = self.sorting_path / utils.canonical_names(
@@ -46,7 +47,7 @@ class PostprocessingData:
         )
         self.sorting_output = self.get_sorting_extractor_object()
 
-    def check_that_preprocessing_data_has_not_changed_since_sorting(self):
+    def check_that_preprocessing_data_has_not_changed_since_sorting(self) -> None:
         """ """
         for ses_name in self.preprocessing_info.keys():
             for run_name in self.preprocessing_info[ses_name].keys():
@@ -70,7 +71,7 @@ class PostprocessingData:
                     f"data has changed, the waveforms will not be valid."
                 )
 
-    def check_sorting_paths_exist(self):
+    def check_sorting_paths_exist(self) -> None:
         """ """
         if not self.sorting_path.is_dir():
             raise FileNotFoundError(
@@ -107,7 +108,7 @@ class PostprocessingData:
                 f"{self.sorting_info_path}. Please check sorting finished successfully."
             )
 
-    def get_sorting_extractor_object(self):
+    def get_sorting_extractor_object(self) -> si.SortingExtractor:
         """"""
         sorter_output_path = self.sorting_path / "sorter_output"
 
@@ -140,13 +141,13 @@ class PostprocessingData:
 
         return sorting_without_excess_spikes
 
-    def get_postprocessing_path(self):
+    def get_postprocessing_path(self) -> Path:
         return self.sorting_data.get_postprocessing_path(
             self.sorted_ses_name, self.sorted_run_name
         )
 
-    def get_quality_metrics_path(self):
+    def get_quality_metrics_path(self) -> Path:
         return self.get_postprocessing_path() / "quality_metrics.csv"
 
-    def get_unit_locations_path(self):
+    def get_unit_locations_path(self) -> Path:
         return self.get_postprocessing_path() / "unit_locations.csv"

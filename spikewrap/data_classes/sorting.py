@@ -20,14 +20,10 @@ if TYPE_CHECKING:
 # TODO: test here with multiple runs
 # TODO: need to validate more, preprocessing data is not validating correctly!!
 # TODO: add "all"
-# TODO: remove UserDict?
 
 
 @dataclass
 class SortingData(BaseUserDict, ABC):
-    sorter: str
-    print_messages: bool = True
-
     """
     Class to organise the sorting of preprocessed data.
 
@@ -35,23 +31,23 @@ class SortingData(BaseUserDict, ABC):
     ----------
 
     base_path : Union[Path, str]
-        Path to the rawdata folder containing subjects folders.
+     Path to the rawdata folder containing subjects folders.
 
     sub_name : str
-        Subject to preprocess. The subject top level dir should reside in
-        base_path/rawdata/ .
+     Subject to preprocess. The subject top level dir should reside in
+     base_path/rawdata/ .
 
     run_names : Union[List[str], str],
-        The SpikeGLX run name (i.e. not including the gate index). This can
-        also be a list of run names. Preprocessing will still occur per-run.
-        Runs are concatenated in the order passed prior to sorting.
+     The SpikeGLX run name (i.e. not including the gate index). This can
+     also be a list of run names. Preprocessing will still occur per-run.
+     Runs are concatenated in the order passed prior to sorting.
 
     sorter : str
-        Name of the sorter to use (e.g. "kilosort2_5").
+     Name of the sorter to use (e.g. "kilosort2_5").
 
     concat_for_sorting: bool
-        If `True`, preprocessed runs are concatenated together before sorting.
-        Otherwise, runs are sorted separately.
+     If `True`, preprocessed runs are concatenated together before sorting.
+     Otherwise, runs are sorted separately.
 
     Notes
     -----
@@ -65,26 +61,12 @@ class SortingData(BaseUserDict, ABC):
     run names, and the new concatenated run name to which the data are
     saved is accessed by `self.concat_run_name()`
     """
-    #        base_path: Path
-    #        sub_name: str
-    #        sessions_and_runs: Dict
-    #        sorter: str
-    #        print_messages: bool = True
 
-    #    def __init__(
-    #            self,
-    #            base_path,
-    #            sub_name,
-    #            sessions_and_runs: Dict,
-    #            sorter: str,
-    #            print_messages: bool = True,
-    #    ):
-    #        super(SortingData, self).__init__(base_path, sub_name, sessions_and_runs)
+    sorter: str
+    print_messages: bool = True
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         super().__post_init__()
-        #     self.sorter = sorter
-        #    self.print_messages = print_messages
 
         self._validate_derivatives_inputs()
         self._check_preprocessing_exists()
@@ -119,9 +101,9 @@ class SortingData(BaseUserDict, ABC):
     # Load and concatenate preprocessed data
     # ----------------------------------------------------------------------------------
 
-    def initialise_preprocessed_recordings_dict(self):
+    def initialise_preprocessed_recordings_dict(self) -> Dict:
         """"""
-        recordings = {}
+        recordings: Dict = {}
         for ses_name, run_name in self.preprocessing_sessions_and_runs():
             rec = si.load_extractor(self._get_pp_binary_data_path(ses_name, run_name))
             utils.update(recordings, ses_name, run_name, value=rec)
@@ -219,7 +201,7 @@ class SortingData(BaseUserDict, ABC):
     # Multiple Run Names
     # ----------------------------------------------------------------------------------
 
-    def _make_run_name_from_multiple_run_names(run_names: List[str]) -> str:
+    def _make_run_name_from_multiple_run_names(self, run_names: List[str]) -> str:
         """
         Make a single run_name given a list of run names. This will use the
         first part of the first name and then add unique parts of the
@@ -254,7 +236,7 @@ class SortingData(BaseUserDict, ABC):
     # Sorting info
     # ----------------------------------------------------------------------------------
 
-    def save_sorting_info(self, ses_name: str, run_name: Optional[str]) -> None:
+    def save_sorting_info(self, ses_name: str, run_name: str) -> None:
         """
         Save a sorting_info.yaml file containing a dictionary holding
         important information on the sorting. This is for provenance.
@@ -310,43 +292,34 @@ class SortingData(BaseUserDict, ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def preprocessing_info_paths(self, ses_name, run_name):
+    def preprocessing_info_paths(
+        self,
+        ses_name: str,
+        run_name: str,
+    ) -> List[Path]:
         raise NotImplementedError
 
     @abstractmethod
-    def load_preprocessed_binary(self):
+    def load_preprocessed_binary(self) -> None:
         raise NotImplementedError
 
     @abstractmethod
-    def get_sorting_sessions_and_runs(self):
+    def get_sorting_sessions_and_runs(self):  # TODO: iterable!
         raise NotImplementedError
 
     @abstractmethod
-    def get_preprocessed_recordings(self, ses_name, run_name):
+    def get_preprocessed_recordings(
+        self, ses_name: str, run_name: Optional[str]
+    ) -> si.BaseRecording:
         raise NotImplementedError
 
     @abstractmethod
-    def _get_base_sorting_path(self, ses_name, run_name):
+    def _get_base_sorting_path(self, ses_name: str, run_name: Optional[str]) -> Path:
         raise NotImplementedError
 
 
 class ConcatenateSessions(SortingData):
-    #    """
-    #    """
-    #    def __init__(self,
-    #                 base_path,
-    #                 sub_name,
-    #                 sessions_and_runs,
-    #                 sorter,
-    #                 print_messages: bool = True
-    #                 ):
-    #        super(ConcatenateSessions, self).__init__(
-    #            base_path,
-    #            sub_name,
-    #            sessions_and_runs,
-    #            sorter,
-    #            print_messages
-    #        )
+    """ """
 
     @property
     def concatenate_sessions(self) -> bool:
@@ -356,7 +329,7 @@ class ConcatenateSessions(SortingData):
     def concatenate_runs(self) -> bool:
         return True
 
-    def load_preprocessed_binary(self):
+    def load_preprocessed_binary(self) -> None:
         """"""
         recordings = self.initialise_preprocessed_recordings_dict()
 
@@ -369,18 +342,20 @@ class ConcatenateSessions(SortingData):
             concat_run_recordings
         )
 
-    def get_sorting_sessions_and_runs(self):
+    def get_sorting_sessions_and_runs(self):  # TODO: type
         return [(self.concat_ses_name(), None)]
 
-    def concat_ses_name(self):
-        ses_names = self.sessions_and_runs.keys()
+    def concat_ses_name(self) -> str:
+        ses_names = list(self.sessions_and_runs.keys())
         return self._make_run_name_from_multiple_run_names(ses_names)
 
-    def get_preprocessed_recordings(self, ses_name, run_name):
+    def get_preprocessed_recordings(
+        self, ses_name: str, run_name: Optional[str]
+    ) -> si.BaseRecording:
         self.assert_names(ses_name, run_name)
         return self[self.concat_ses_name()]
 
-    def _get_base_sorting_path(self, ses_name, run_name):
+    def _get_base_sorting_path(self, ses_name: str, run_name: Optional[str]) -> Path:
         """"""
         self.assert_names(ses_name, run_name)
 
@@ -392,7 +367,9 @@ class ConcatenateSessions(SortingData):
         )
         return base_sorting_path
 
-    def preprocessing_info_paths(self, ses_name, run_name):
+    def preprocessing_info_paths(
+        self, ses_name: str, run_name: Optional[str]
+    ) -> List[Path]:
         """"""
         self.assert_names(ses_name, run_name)
 
@@ -404,28 +381,13 @@ class ConcatenateSessions(SortingData):
 
         return preprocessing_info_paths
 
-    def assert_names(self, ses_name, run_name):
+    def assert_names(self, ses_name: str, run_name: Optional[str]) -> None:
         assert ses_name == self.concat_ses_name()
         assert run_name is None
 
 
 class ConcatenateRuns(SortingData):
-    #    """
-    #    """
-    #    def __init__(self,
-    #                 base_path,
-    #                 sub_name,
-    #                 sessions_and_runs,
-    #                 sorter,
-    #                 print_messages: bool = True
-    #                 ):
-    #        super(ConcatenateRuns, self).__init__(
-    #            base_path,
-    #            sub_name,
-    #            sessions_and_runs,
-    #            sorter,
-    #            print_messages
-    #        )
+    """ """
 
     @property
     def concatenate_sessions(self) -> bool:
@@ -435,7 +397,7 @@ class ConcatenateRuns(SortingData):
     def concatenate_runs(self) -> bool:
         return True
 
-    def load_preprocessed_binary(self):
+    def load_preprocessed_binary(self) -> None:
         """"""
         recordings = self.initialise_preprocessed_recordings_dict()
 
@@ -445,7 +407,7 @@ class ConcatenateRuns(SortingData):
                 self.data, ses_name, self.concat_run_name(ses_name), concat_recording
             )
 
-    def get_sorting_sessions_and_runs(self):
+    def get_sorting_sessions_and_runs(self):  # TODO: type
         """"""
         sorting_sessions_and_runs = []
         for ses_name in self.sessions_and_runs.keys():
@@ -453,7 +415,7 @@ class ConcatenateRuns(SortingData):
 
         return sorting_sessions_and_runs
 
-    def concat_run_name(self, ses_name: str):
+    def concat_run_name(self, ses_name: str) -> str:
         """ """
         if not len(self.sessions_and_runs[ses_name]) > 1:
             warnings.warn(
@@ -466,12 +428,18 @@ class ConcatenateRuns(SortingData):
 
         return concat_run_name
 
-    def get_preprocessed_recordings(self, ses_name, run_name):
+    def get_preprocessed_recordings(
+        self, ses_name: str, run_name: Optional[str]
+    ) -> si.BaseRecording:
         assert run_name == self.concat_run_name(ses_name)
+        assert run_name is not None
+
         return self[ses_name][run_name]
 
-    def _get_base_sorting_path(self, ses_name, run_name):
+    def _get_base_sorting_path(self, ses_name: str, run_name: Optional[str]) -> Path:
         assert run_name == self.concat_run_name(ses_name)
+        assert run_name is not None
+
         base_sorting_path = (
             self.get_derivatives_sub_path()
             / ses_name
@@ -481,7 +449,7 @@ class ConcatenateRuns(SortingData):
         )
         return base_sorting_path
 
-    def preprocessing_info_paths(self, ses_name, run_name):
+    def preprocessing_info_paths(self, ses_name: str, run_name: str) -> List[Path]:
         """"""
         assert run_name == self.concat_run_name(ses_name)
 
@@ -494,23 +462,8 @@ class ConcatenateRuns(SortingData):
 
 
 class NoConcatenation(SortingData):
-    #    """
-    #    """
-    #    def __init__(self,
-    #                 base_path,
-    #                 sub_name,
-    #                 sessions_and_runs,
-    #                 sorter,
-    #                 print_messages: bool = True
-    #                 ):
-    #        super(NoConcatenation, self).__init__(
-    #            base_path,
-    #            sub_name,
-    #            sessions_and_runs,
-    #            sorter,
-    #            print_messages
-    #        )
-    #
+    """ """
+
     @property
     def concatenate_sessions(self) -> bool:
         return False
@@ -519,22 +472,26 @@ class NoConcatenation(SortingData):
     def concatenate_runs(self) -> bool:
         return False
 
-    def load_preprocessed_binary(self):
+    def load_preprocessed_binary(self) -> None:
         recordings = self.initialise_preprocessed_recordings_dict()
         self.data = recordings
 
-    def get_sorting_sessions_and_runs(self):
+    def get_sorting_sessions_and_runs(self):  # TODO: type
         ordered_ses_names = list(
             chain(*[[ses] * len(runs) for ses, runs in self.items()])
         )
         ordered_run_names = list(chain(*[runs for runs in self.values()]))
         return list(zip(ordered_ses_names, ordered_run_names))
 
-    def get_preprocessed_recordings(self, ses_name, run_name):
+    def get_preprocessed_recordings(
+        self, ses_name: str, run_name: Optional[str]
+    ) -> si.BaseRecording:
+        assert run_name is not None
         return self[ses_name][run_name]
 
-    def _get_base_sorting_path(self, ses_name, run_name):
+    def _get_base_sorting_path(self, ses_name: str, run_name: Optional[str]) -> Path:
+        assert run_name is not None
         return self.get_derivatives_sub_path() / ses_name / run_name / self.sorter
 
-    def preprocessing_info_paths(self, ses_name, run_name):
+    def preprocessing_info_paths(self, ses_name: str, run_name: str) -> List[Path]:
         return [self.get_preprocessing_info_path(ses_name, run_name)]

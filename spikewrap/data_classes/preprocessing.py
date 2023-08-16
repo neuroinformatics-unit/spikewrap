@@ -10,12 +10,6 @@ from .base import BaseUserDict
 
 @dataclass
 class PreprocessingData(BaseUserDict):
-    #    def __init__(
-    #        self,
-    #        base_path: Union[Path, str],
-    #        sub_name: str,
-    #        sessions_and_runs: Dict,
-    #    ):
     """
     Dictionary to store SpikeInterface preprocessing recordings.
 
@@ -44,8 +38,7 @@ class PreprocessingData(BaseUserDict):
         or list of run names.
     """
 
-    #      super(PreprocessingData, self).__init__(base_path, sub_name, sessions_and_runs)
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         super().__post_init__()
         self._validate_rawdata_inputs()
 
@@ -68,7 +61,7 @@ class PreprocessingData(BaseUserDict):
         """
         self.pp_steps = pp_steps
 
-    def _validate_rawdata_inputs(self):
+    def _validate_rawdata_inputs(self) -> None:
         self._validate_inputs(
             "rawdata",
             self.get_rawdata_top_level_path,

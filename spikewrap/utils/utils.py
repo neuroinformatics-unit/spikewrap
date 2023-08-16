@@ -4,7 +4,7 @@ import copy
 import os
 from datetime import datetime
 from pathlib import Path
-from typing import TYPE_CHECKING, Dict, List, Literal, Tuple, Union
+from typing import TYPE_CHECKING, Callable, Dict, List, Literal, Tuple, Union
 
 import numpy as np
 import yaml

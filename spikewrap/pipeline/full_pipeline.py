@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import shutil
 from pathlib import Path
-from typing import TYPE_CHECKING, Dict, Literal, Union
+from typing import Dict, Literal, Optional, Union
 
 from ..configs.configs import get_configs
 from ..data_classes.preprocessing import PreprocessingData
@@ -13,9 +13,6 @@ from .load_data import load_data
 from .postprocess import run_postprocess
 from .preprocess import preprocess
 from .sort import run_sorting
-
-if TYPE_CHECKING:
-    pass
 
 
 def run_full_pipeline(
@@ -156,6 +153,7 @@ def run_full_pipeline(
         existing_sorting_output,
         verbose,
     )
+    assert sorting_data is not None
 
     # Run Postprocessing
     for ses_name, run_name in sorting_data.get_sorting_sessions_and_runs():
@@ -187,7 +185,7 @@ def preprocess_and_save(
     preprocess_data: PreprocessingData,
     pp_steps,
     existing_preprocessed_data: HandleExisting,
-    verbose,
+    verbose: bool,
 ) -> None:
     """
     Handle the loading of existing preprocessed data.

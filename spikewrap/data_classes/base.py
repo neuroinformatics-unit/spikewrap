@@ -4,7 +4,7 @@ from collections.abc import ItemsView, KeysView, ValuesView
 from dataclasses import dataclass
 from itertools import chain
 from pathlib import Path
-from typing import Dict, List, Union
+from typing import Callable, Dict, List, Literal
 
 from ..utils import utils
 
@@ -22,27 +22,16 @@ class BaseUserDict(UserDict):
     Base UserDict that implements the
     keys(), values() and items() convenience functions."""
 
-    base_path: Union[str, Path]
+    base_path: Path
     sub_name: str
     sessions_and_runs: Dict
 
-    #    def __init__(
-    #        self,
-    #        base_path: Union[str, Path],
-    #        sub_name: str,
-    #        sessions_and_runs,
-    #    ) -> None:
-    #        super(BaseUserDict, self).__init__()
-
-    #      self.base_path = Path(base_path)
-    #      self.sub_name = sub_name
-    #      self.sessions_and_runs = sessions_and_runs
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         self.data: Dict = {}
         self.base_path = Path(self.base_path)
         self.check_run_names_are_formatted_as_list()
 
-    def check_run_names_are_formatted_as_list(self):
+    def check_run_names_are_formatted_as_list(self) -> None:
         """"""
         for key, value in self.sessions_and_runs.items():
             if not isinstance(value, List):
@@ -51,7 +40,7 @@ class BaseUserDict(UserDict):
                 ), "Run names must be string or list of strings"
                 self.sessions_and_runs[key] = [value]
 
-    def preprocessing_sessions_and_runs(self):
+    def preprocessing_sessions_and_runs(self):  # TODO: type hint
         """"""
         ordered_ses_names = list(
             chain(*[[ses] * len(runs) for ses, runs in self.sessions_and_runs.items()])
@@ -64,12 +53,12 @@ class BaseUserDict(UserDict):
 
     def _validate_inputs(
         self,
-        top_level_folder,
-        get_top_level_folder,
-        get_sub_level_folder,
-        get_sub_path,
-        get_run_path,
-    ):
+        top_level_folder: Literal["rawdata", "derivatives"],
+        get_top_level_folder: Callable,
+        get_sub_level_folder: Callable,
+        get_sub_path: Callable,
+        get_run_path: Callable,
+    ) -> None:
         """
         Check the rawdata / derivatives path, subject path exists
         and ensure run_names is a list of strings.

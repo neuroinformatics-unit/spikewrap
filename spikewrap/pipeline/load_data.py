@@ -1,14 +1,12 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Union
+from pathlib import Path
+from typing import Dict, Union
 
 import spikeinterface.extractors as se
 
 from ..data_classes.preprocessing import PreprocessingData
 from ..utils import utils
-
-if TYPE_CHECKING:
-    from pathlib import Path
 
 
 def load_data(
@@ -16,7 +14,7 @@ def load_data(
     sub_name: str,
     sessions_and_runs: Dict,
     data_format: str = "spikeglx",
-):
+) -> PreprocessingData:
     """
     Load raw data (in rawdata). If multiple runs are selected
     in run_names, these will be stored as segments on a SpikeInterface
@@ -50,10 +48,12 @@ def load_data(
     Figure out the format from the data itself, instead of passing as argument.
     Do this when adding the next supported format.
     """
-    empty_data_class = PreprocessingData(base_path, sub_name, sessions_and_runs)
+    empty_data_class = PreprocessingData(Path(base_path), sub_name, sessions_and_runs)
 
     if data_format == "spikeglx":
         return load_spikeglx_data(empty_data_class)
+
+    raise RuntimeError("`data_format` not recognised.")
 
 
 # --------------------------------------------------------------------------------------

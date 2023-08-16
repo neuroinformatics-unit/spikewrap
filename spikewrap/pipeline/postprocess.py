@@ -114,7 +114,7 @@ def run_postprocess(
 # Sorting Loader -----------------------------------------------------------------------
 
 
-def run_option(run_settings: Dict, option: str):
+def run_option(run_settings: Dict, option: str) -> bool:
     """
     When to run the option that may either not be in the dict
     (do not run) or is in the dict and set `False`.
@@ -128,7 +128,7 @@ def run_or_get_waveforms(
     existing_waveform_data: HandleExisting,
     waveform_options: Dict,
     verbose: bool,
-):
+) -> WaveformExtractor:
     """
     How to handle existing waveform output, either load, fail if exists or
     overwrite.
@@ -162,7 +162,9 @@ def run_or_get_waveforms(
     return waveforms
 
 
-def handle_postprocessing_to_run(postprocessing_to_run: Union[Literal["all"], Dict]):
+def handle_postprocessing_to_run(
+    postprocessing_to_run: Union[Literal["all"], Dict]
+) -> Dict:
     """
     Set to run all postprocessing steps. If user-dict is provided,
     ensure it contains expected keys / values.
@@ -193,7 +195,7 @@ def handle_postprocessing_to_run(postprocessing_to_run: Union[Literal["all"], Di
 
 def handle_delete_existing_postprocessing(
     postprocessing_path: Path, overwrite_postprocessing: bool
-):
+) -> None:
     """
     If previous postprocessing output exists, it must be deleted before
     the new postprocessing is run. As a safety measure, `overwrite_postprocessing`
