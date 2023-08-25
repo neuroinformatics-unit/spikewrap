@@ -72,8 +72,8 @@ include-package-data = true
 include = ["spikewrap*"]
 exclude = ["tests*"]
 
-# [tool.pytest.ini_options]
-# addopts = "--cov=spikewrap"
+[tool.pytest.ini_options]
+addopts = "--cov=spikewrap"
 
 [tool.black]
 target-version = ['py38', 'py39', 'py310']

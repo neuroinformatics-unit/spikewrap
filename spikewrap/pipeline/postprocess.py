@@ -23,7 +23,7 @@ if TYPE_CHECKING:
 def run_postprocess(
     sorting_path: Union[Path, str],
     overwrite_postprocessing: bool = False,
-    existing_waveform_data: HandleExisting = "load_if_exists",
+    existing_waveform_data: HandleExisting = "fail_if_exists",
     postprocessing_to_run: Union[Literal["all"], Dict] = "all",
     verbose: bool = True,
     waveform_options: Optional[Dict] = None,
