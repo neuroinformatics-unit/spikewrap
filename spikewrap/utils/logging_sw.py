@@ -171,7 +171,7 @@ class StreamToLogger(object):
 
 def get_started_logger(
     log_filepath: Path,
-    run_name: Literal["full_pipeline", "sorting", "postprocess"],
+    run_name: Literal["full_pipeline", "sorting", "postprocess", "preprocessing"],
 ) -> HandleLogging:
     """
     Convenience function that creates logger name and stars a

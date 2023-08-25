@@ -75,6 +75,13 @@ def run_sorting_slurm(**kwargs) -> None:
     run_job(kwargs, run_sorting, "Sorting")
 
 
+def run_preprocessing_slurm(**kwargs) -> None:
+    """ """
+    from ..pipeline.preproces import run_preprocess
+
+    run_job(kwargs, run_preprocess, "Preprocessing")
+
+
 # Utils --------------------------------------------------------------------------------
 
 

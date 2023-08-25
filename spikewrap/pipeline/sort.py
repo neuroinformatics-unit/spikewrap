@@ -69,13 +69,12 @@ def run_sorting(
     existing_sorting_output : custom_types.HandleExisting
         Determines how existing sorting output (e.g. from a prior pipeline run)
         is handled.
-            "overwrite" : will overwrite any existing preprocessed data output. This will
-                          delete the 'preprocessed' folder. Therefore, never save
+            "overwrite" : will overwrite any existing sorting output. This will
+                          delete the 'sorting' folder. Therefore, never save
                           derivative work there.
-            "load_if_exists" : will search for existing data and load if it exists.
-                               Otherwise, will use the preprocessing from the
-                               current run.
-            "fail_if_exists" : If existing preprocessed data is found, an error
+            "skip_if_exists" : will search for existing sorting output and load if it exists.
+                               Otherwise, will perform sorting.
+            "fail_if_exists" : If existing sorting output is found, an error
                                will be raised.
 
     slurm_batch : bool
@@ -201,7 +200,7 @@ def run_sorting_on_all_runs(
                     f"`existing_sorting_output` is set to 'fail_if_exists'."
                 )
 
-            elif existing_sorting_output == "load_if_exists":
+            elif existing_sorting_output == "skip_if_exists":
                 utils.message_user(
                     f"Sorting output already exists at {sorting_output_path}. Nothing "
                     f"will be done. The existing sorting will be used for "
@@ -286,5 +285,5 @@ def quick_safety_check(
     TODO: delete after some testing
     """
     assert existing_sorting_output != "fail_if_exists"
-    if existing_sorting_output == "load_if_exists":
+    if existing_sorting_output == "skip_if_exists":
         assert not output_path.is_dir()

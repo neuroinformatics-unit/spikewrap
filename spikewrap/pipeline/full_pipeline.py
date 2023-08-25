@@ -11,7 +11,7 @@ from ..utils import logging_sw, slurm, utils
 from ..utils.custom_types import DeleteIntermediate, HandleExisting
 from .load_data import load_data
 from .postprocess import run_postprocess
-from .preprocess import preprocess
+from .preprocess import run_preprocess
 from .sort import run_sorting
 
 
@@ -72,9 +72,9 @@ def run_full_pipeline(
             "overwrite" : will overwrite any existing preprocessed data output. This will
                           delete the 'preprocessed' folder. Therefore, never save
                           derivative work there.
-            "load_if_exists" : will search for existing data and load if it exists.
-                               Otherwise, will use the preprocessing from the
-                               current run.
+            "skip_if_exists" : will search for existing data and skip preprocesing
+                               if it exists (sorting will run on existing preprocessed data).
+                               Otherwise, will preprocess and save the current run.
             "fail_if_exists" : If existing preprocessed data is found, an error
                                will be raised.
 
@@ -135,7 +135,7 @@ def run_full_pipeline(
         base_path, sub_name, sessions_and_runs, data_format="spikeglx"
     )
 
-    preprocess_and_save(loaded_data, pp_steps, existing_preprocessed_data)
+    run_preprocess(loaded_data, pp_steps, save_to_file=existing_preprocessed_data)
 
     sorting_data = run_sorting(
         base_path,
@@ -177,63 +177,6 @@ def run_full_pipeline(
 # --------------------------------------------------------------------------------------
 # Preprocessing
 # --------------------------------------------------------------------------------------
-
-
-def preprocess_and_save(
-    preprocess_data: PreprocessingData,
-    pp_steps,
-    existing_preprocessed_data: HandleExisting,
-) -> None:
-    """
-    Handle the loading of existing preprocessed data.
-    See `run_full_pipeline()` for details.
-    """
-    # TODO: for now, all preprocessing is per-session / per-run. If you want
-    # to preprocess over concatenated runs, runs must be concentrated prior to
-    # preprocessing.
-    for ses_name, run_name in preprocess_data.preprocessing_sessions_and_runs():
-        utils.message_user(f"Preprocessing run {run_name}...")
-
-        preprocess_path = preprocess_data.get_preprocessing_path(ses_name, run_name)
-
-        if existing_preprocessed_data == "load_if_exists":
-            if preprocess_path.is_dir():
-                utils.message_user(
-                    f"\nSkipping preprocessing, using file at "
-                    f"{preprocess_path} for sorting.\n"
-                )
-                continue  # sorting will automatically use the existing data
-            else:
-                utils.message_user(
-                    f"No data found at {preprocess_path}, saving preprocessed data."
-                )
-                overwrite = False
-
-        elif existing_preprocessed_data == "overwrite":
-            if preprocess_path.is_dir():
-                utils.message_user(f"Removing existing file at {preprocess_path}\n")
-
-            utils.message_user(f"Saving preprocessed data to {preprocess_path}")
-            overwrite = True
-
-        elif existing_preprocessed_data == "fail_if_exists":
-            if preprocess_path.is_dir():
-                raise FileExistsError(
-                    f"Preprocessed binary already exists at "
-                    f"{preprocess_path}. "
-                    f"To overwrite, set 'existing_preprocessed_data' to 'overwrite'"
-                )
-            overwrite = False
-
-        else:
-            raise ValueError(  # TODO: use assert not and end here
-                "`existing_prepreprocessed_data` argument not recognised."
-                "Must be: 'load_if_exists', 'fail_if_exists' or 'overwrite'."
-            )
-
-        preprocess_data = preprocess(preprocess_data, ses_name, run_name, pp_steps)
-        preprocess_data.save_preprocessed_data(ses_name, run_name, overwrite)
-
 
 # --------------------------------------------------------------------------------------
 # Remove Intermediate Files
