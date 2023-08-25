@@ -91,7 +91,7 @@ class SortingData(BaseUserDict, ABC):
         for ses_name, run_name in self.preprocessing_sessions_and_runs():
             assert (
                 prepro_path := self.get_derivatives_run_path(ses_name, run_name)
-                / "preprocessed"
+                / "preprocessing"
             ).is_dir(), error_message(prepro_path)
 
             assert (

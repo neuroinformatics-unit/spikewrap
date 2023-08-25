@@ -152,7 +152,7 @@ class BaseUserDict(UserDict):
         saved. This is canonical and should not change.
         """
         preprocessed_output_path = (
-            self.get_derivatives_run_path(ses_name, run_name) / "preprocessed"
+            self.get_derivatives_run_path(ses_name, run_name) / "preprocessing"
         )
         return preprocessed_output_path
 
