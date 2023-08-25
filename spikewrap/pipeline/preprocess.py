@@ -27,7 +27,7 @@ def run_preprocess(
     passed_arguments = locals()
 
     if slurm_batch:
-        assert save_to_file is True, "`save_to_file` must be `True` if running in SLURM"
+        assert save_to_file is not False, "`save_to_file` cannot be `False` if running in SLURM"  # TODO: validation!
         slurm.run_preprocessing_slurm(**passed_arguments)
         return None, None
     assert slurm_batch is False, "SLURM run has slurm_batch set True"
@@ -44,9 +44,9 @@ def run_preprocess(
 
         preprocess_path = preprocess_data.get_preprocessing_path(ses_name, run_name)
 
-        preprocess_data = preprocess(preprocess_data, ses_name, run_name, pp_steps)
-
-        if save_to_file is not False:
+        if save_to_file is False:
+            preprocess_data = preprocess(preprocess_data, ses_name, run_name, pp_steps)
+        else:
             if save_to_file == "skip_if_exists":
                 if preprocess_path.is_dir():
                     utils.message_user(
@@ -81,6 +81,7 @@ def run_preprocess(
             #                "`existing_prepreprocessed_data` argument not recognised."
             #               "Must be: 'skip_if_exists', 'fail_if_exists' or 'overwrite'."
             #          )
+            preprocess_data = preprocess(preprocess_data, ses_name, run_name, pp_steps)
 
             preprocess_data.save_preprocessed_data(ses_name, run_name, overwrite)
 
