@@ -27,9 +27,11 @@ def run_preprocess(
     passed_arguments = locals()
 
     if slurm_batch:
-        assert save_to_file is not False, "`save_to_file` cannot be `False` if running in SLURM"  # TODO: validation!
+        assert (
+            save_to_file is not False
+        ), "`save_to_file` cannot be `False` if running in SLURM"  # TODO: validation!
         slurm.run_preprocessing_slurm(**passed_arguments)
-        return None, None
+        return
     assert slurm_batch is False, "SLURM run has slurm_batch set True"
 
     if log:

@@ -24,4 +24,10 @@ sessions_and_runs = {
 
 loaded_data = load_data(base_path, sub_name, sessions_and_runs, data_format="spikeglx")
 
-run_preprocess(loaded_data, pp_steps="default", save_to_file="overwrite", log=True, slurm_batch=True)
+run_preprocess(
+    loaded_data,
+    pp_steps="default",
+    save_to_file="overwrite",
+    log=True,
+    slurm_batch=True,
+)
