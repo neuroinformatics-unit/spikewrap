@@ -231,9 +231,7 @@ def preprocess_and_save(
                 "Must be: 'load_if_exists', 'fail_if_exists' or 'overwrite'."
             )
 
-        preprocess_data = preprocess(
-            preprocess_data, ses_name, run_name, pp_steps
-        )
+        preprocess_data = preprocess(preprocess_data, ses_name, run_name, pp_steps)
         preprocess_data.save_preprocessed_data(ses_name, run_name, overwrite)
 
 
