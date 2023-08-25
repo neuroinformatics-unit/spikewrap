@@ -21,5 +21,4 @@ sorting_path = (
 run_postprocess(
     sorting_path,
     existing_waveform_data="overwrite",
-    postprocessing_to_run="all",
 )

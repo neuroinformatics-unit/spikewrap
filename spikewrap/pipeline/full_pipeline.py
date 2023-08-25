@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import shutil
 from pathlib import Path
-from typing import Dict, Literal, Optional, Tuple, Union
+from typing import Dict, Optional, Tuple, Union
 
 from ..configs.configs import get_configs
 from ..data_classes.preprocessing import PreprocessingData
@@ -26,7 +26,6 @@ def run_full_pipeline(
     existing_preprocessed_data: HandleExisting = "fail_if_exists",
     existing_sorting_output: HandleExisting = "fail_if_exists",
     overwrite_postprocessing: bool = False,
-    postprocessing_to_run: Union[Literal["all"], Dict] = "all",
     delete_intermediate_files: DeleteIntermediate = ("recording.dat",),
     slurm_batch: bool = False,
 ) -> Tuple[Optional[PreprocessingData], Optional[SortingData]]:
@@ -90,12 +89,6 @@ def run_full_pipeline(
         that the entire 'postprocessing' folder (including all contents) will be
         deleted. Therefore, never save derivative work there.
 
-    postprocessing_to_run : Union[Literal["all"], Dict]
-        Specify the postprocessing to run. By default, "all" will run
-        all available postprocessing. Otherwise, provide a dict of
-        including postprocessing to run e.g. {"quality_metrics: True"}.
-        Accepted keys are "quality_metrics" and "unit_locations".
-
     delete_intermediate_files : DeleteIntermediate
         Specify intermediate files or folders to delete. This option is useful for
         reducing the size of output data by deleting unneeded files.
@@ -157,7 +150,6 @@ def run_full_pipeline(
             sorting_path,
             overwrite_postprocessing=overwrite_postprocessing,
             existing_waveform_data="fail_if_exists",
-            postprocessing_to_run=postprocessing_to_run,
             waveform_options=waveform_options,
         )
 
