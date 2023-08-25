@@ -75,6 +75,13 @@ def run_sorting_slurm(**kwargs) -> None:
     run_job(kwargs, run_sorting, "Sorting")
 
 
+def run_preprocessing_slurm(**kwargs) -> None:
+    """ """
+    from ..pipeline.preprocess import run_preprocess
+
+    run_job(kwargs, run_preprocess, "Preprocessing")
+
+
 # Utils --------------------------------------------------------------------------------
 
 
@@ -185,7 +192,7 @@ def make_job_log_output_path(kwargs: Dict) -> Path:
     if "base_path" in kwargs:
         log_path = kwargs["base_path"] / log_subpath
     else:
-        log_path = kwargs["data"].base_path / log_subpath
+        log_path = kwargs["preprocess_data"].base_path / log_subpath  # TODO: jenky
 
     log_path.mkdir(exist_ok=True, parents=True)
 

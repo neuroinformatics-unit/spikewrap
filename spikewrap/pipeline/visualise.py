@@ -129,7 +129,6 @@ def visualise(
                         ax=current_ax,
                         segment_index=0,
                         clim=clim,
-                        interpolation="billinear",
                     )
 
                     if current_ax is None:

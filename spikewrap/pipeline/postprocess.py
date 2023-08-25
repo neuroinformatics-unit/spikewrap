@@ -43,13 +43,10 @@ def run_postprocess(
         if `False` and postprocesing already exists, an error will be raised.
 
     existing_waveform_data : custom_types.HandleExisting
-        Determines how existing preprocessed data (e.g. from a prior pipeline run)
-        is treated.
-            "overwrite" : will overwrite any existing preprocessed data output. This will
-                          delete the 'preprocessed' folder. Therefore, never save
-                          derivative work there.
-            "load_if_exists" : will search for existing data and load if it exists.
-                               Otherwise, will use the preprocessing from the
+        Determines how existing waveforms (e.g. from a prior pipeline run) are treated.
+            "overwrite" : will overwrite any existing waveforms.
+            "skip_if_exists" : will search for existing waveforms and compute postprocessing on
+                               these if they exist. Otherwise, will use the waveforms from the
                                current run.
             "fail_if_exists" : If existing preprocessed data is found, an error
                                will be raised.
@@ -129,7 +126,7 @@ def run_or_get_waveforms(
     """
     postprocessing_path = postprocess_data.get_postprocessing_path()
 
-    if postprocessing_path.is_dir() and existing_waveform_data == "load_if_exists":
+    if postprocessing_path.is_dir() and existing_waveform_data == "skip_if_exists":
         utils.message_user(
             f"Loading existing waveforms from: " f"{postprocessing_path}",
         )

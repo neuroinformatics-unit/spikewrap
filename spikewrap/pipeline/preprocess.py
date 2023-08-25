@@ -1,12 +1,94 @@
 import json
-from typing import Dict, List, Tuple, Union
+from typing import Dict, List, Literal, Tuple, Union
 
 import numpy as np
 import spikeinterface.preprocessing as spre
 
 from ..configs import configs
 from ..data_classes.preprocessing import PreprocessingData
-from ..utils import utils
+from ..utils import logging_sw, slurm, utils
+from ..utils.custom_types import HandleExisting
+
+
+def run_preprocess(
+    preprocess_data: PreprocessingData,
+    pp_steps,
+    save_to_file: Union[Literal[False], HandleExisting],
+    slurm_batch: bool = False,
+    log: bool = True,
+) -> None:
+    """
+
+    SLURM:  # TODO: save_to_file must be TRUE
+
+    Handle the loading of existing preprocessed data.
+    See `run_full_pipeline()` for details.
+    """
+    passed_arguments = locals()
+
+    if slurm_batch:
+        assert (
+            save_to_file is not False
+        ), "`save_to_file` cannot be `False` if running in SLURM"  # TODO: validation!
+        slurm.run_preprocessing_slurm(**passed_arguments)
+        return
+    assert slurm_batch is False, "SLURM run has slurm_batch set True"
+
+    if log:
+        logs = logging_sw.get_started_logger(
+            utils.get_logging_path(preprocess_data.base_path, preprocess_data.sub_name),
+            "preprocessing",
+        )
+        utils.show_passed_arguments(passed_arguments, "`run_preprocessing`")
+
+    for ses_name, run_name in preprocess_data.preprocessing_sessions_and_runs():
+        utils.message_user(f"Preprocessing run {run_name}...")
+
+        preprocess_path = preprocess_data.get_preprocessing_path(ses_name, run_name)
+
+        if save_to_file is False:
+            preprocess_data = preprocess(preprocess_data, ses_name, run_name, pp_steps)
+        else:
+            if save_to_file == "skip_if_exists":
+                if preprocess_path.is_dir():
+                    utils.message_user(
+                        f"\nSkipping preprocessing, using file at "
+                        f"{preprocess_path} for sorting.\n"
+                    )
+                    continue  # sorting will automatically use the existing data
+                else:
+                    utils.message_user(
+                        f"No data found at {preprocess_path}, saving preprocessed data."
+                    )
+                    overwrite = False
+
+            elif save_to_file == "overwrite":
+                if preprocess_path.is_dir():
+                    utils.message_user(f"Removing existing file at {preprocess_path}\n")
+
+                utils.message_user(f"Saving preprocessed data to {preprocess_path}")
+                overwrite = True
+
+            elif save_to_file == "fail_if_exists":
+                if preprocess_path.is_dir():
+                    raise FileExistsError(
+                        f"Preprocessed binary already exists at "
+                        f"{preprocess_path}. "
+                        f"To overwrite, set 'existing_preprocessed_data' to 'overwrite'"
+                    )
+                overwrite = False
+
+            #          else:
+            #             raise ValueError(  # TODO: use assert not and end here (Validate Inputs)
+            #                "`existing_prepreprocessed_data` argument not recognised."
+            #               "Must be: 'skip_if_exists', 'fail_if_exists' or 'overwrite'."
+            #          )
+            preprocess_data = preprocess(preprocess_data, ses_name, run_name, pp_steps)
+
+            preprocess_data.save_preprocessed_data(ses_name, run_name, overwrite)
+
+    if log:
+        logs.stop_logging()
 
 
 def preprocess(
