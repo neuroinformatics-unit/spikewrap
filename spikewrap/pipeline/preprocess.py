@@ -11,6 +11,7 @@ from ..utils import utils
 
 def preprocess(
     preprocess_data: PreprocessingData,
+    ses_name: str,
     run_name: str,
     pp_steps: Union[Dict, str],
     verbose: bool = True,
@@ -68,6 +69,7 @@ def preprocess(
             step_num,
             pp_info,
             preprocess_data,
+            ses_name,
             run_name,
             pp_step_names,
             pp_funcs,
@@ -151,6 +153,7 @@ def perform_preprocessing_step(
     step_num: str,
     pp_info: Tuple[str, Dict],
     preprocess_data: PreprocessingData,
+    ses_name: str,
     run_name: str,
     pp_step_names: List[str],
     pp_funcs: Dict,
@@ -200,22 +203,22 @@ def perform_preprocessing_step(
     )
 
     last_pp_step_output, __ = utils.get_dict_value_from_step_num(
-        preprocess_data[run_name], step_num=str(int(step_num) - 1)
+        preprocess_data[ses_name][run_name], step_num=str(int(step_num) - 1)
     )
 
     new_name = f"{step_num}-" + "-".join(["raw"] + pp_step_names[: int(step_num)])
 
     confidence_check_pp_func_name(pp_name, pp_funcs)
 
-    if isinstance(last_pp_step_output, Dict):
-        preprocess_data[run_name][new_name] = {
-            k: pp_funcs[pp_name](v, **pp_options)
-            for k, v in last_pp_step_output.items()
-        }
-    else:
-        preprocess_data[run_name][new_name] = pp_funcs[pp_name](
-            last_pp_step_output, **pp_options
-        )
+    #    if isinstance(last_pp_step_output, Dict):
+    #        preprocess_data[ses_name][run_name][new_name] = {
+    #            k: pp_funcs[pp_name](v, **pp_options)
+    #            for k, v in last_pp_step_output.items()
+    #        }
+    #    else:
+    preprocess_data[ses_name][run_name][new_name] = pp_funcs[pp_name](
+        last_pp_step_output, **pp_options
+    )
 
 
 def confidence_check_pp_func_name(pp_name, pp_funcs):
@@ -272,7 +275,7 @@ def get_pp_funcs() -> Dict:
         "notch_filter": spre.notch_filter,
         "remove_artifacts": spre.remove_artifacts,
         "remove_channels": remove_channels,
-        "resample": spre.resample,
+        #        "resample": spre.resample,  leading to linAlg error
         "scale": spre.scale,
         "silence_periods": spre.silence_periods,
         "whiten": spre.whiten,

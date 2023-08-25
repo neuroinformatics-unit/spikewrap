@@ -1,6 +1,6 @@
 import shutil
-from pathlib import Path
-from typing import Dict, List, Literal, Optional, Union
+from dataclasses import dataclass
+from typing import Dict
 
 import spikeinterface
 
@@ -8,50 +8,45 @@ from ..utils import utils
 from .base import BaseUserDict
 
 
+@dataclass
 class PreprocessingData(BaseUserDict):
-    def __init__(
-        self,
-        base_path: Union[Path, str],
-        sub_name: str,
-        run_names: Union[List[str], str],
-    ):
-        """
-        Dictionary to store SpikeInterface preprocessing recordings.
+    """
+    Dictionary to store SpikeInterface preprocessing recordings.
 
-        Details on the preprocessing steps are held in the dictionary keys e.g.
-        e.g. 0-raw, 1-raw-bandpass_filter, 2-raw_bandpass_filter-common_average
-        and recording objects are held in the value. These are generated
-        by the `pipeline.preprocess.run_preprocessing()` function.
+    Details on the preprocessing steps are held in the dictionary keys e.g.
+    e.g. 0-raw, 1-raw-bandpass_filter, 2-raw_bandpass_filter-common_average
+    and recording objects are held in the value. These are generated
+    by the `pipeline.preprocess.run_preprocessing()` function.
 
-        The class manages paths to raw data and preprocessing output,
-        as defines methods to dump key information and the SpikeInterface
-        binary to disk. Note that SI preprocessing  is lazy and
-        preprocessing only run when the recording.get_traces()
-        is called, or the data is saved to binary.
+    The class manages paths to raw data and preprocessing output,
+    as defines methods to dump key information and the SpikeInterface
+    binary to disk. Note that SI preprocessing  is lazy and
+    preprocessing only run when the recording.get_traces()
+    is called, or the data is saved to binary.
 
-        Parameters
-        ----------
-        base_path : Union[Path, str]
-            Path where the rawdata folder containing subjects.
+    Parameters
+    ----------
+    base_path : Union[Path, str]
+        Path where the rawdata folder containing subjects.
 
-        sub_name : str
-            'subject' to preprocess. The subject top level dir should
-            reside in base_path/rawdata/.
+    sub_name : str
+        'subject' to preprocess. The subject top level dir should
+        reside in base_path/rawdata/.
 
-        run_names : Union[List[str], str]
-            The SpikeGLX run name (i.e. not including the gate index)
-            or list of run names.
-        """
-        super(PreprocessingData, self).__init__(base_path, sub_name, run_names)
+    run_names : Union[List[str], str]
+        The SpikeGLX run name (i.e. not including the gate index)
+        or list of run names.
+    """
 
-        self.pp_steps: Optional[Dict] = None
-        self.data: Dict = {
-            run_name: {"0-raw": None} for run_name in self.preprocessing_run_names
-        }
-        self.sync = {run_name: None for run_name in self.preprocessing_run_names}
+    def __post_init__(self) -> None:
+        super().__post_init__()
+        self._validate_rawdata_inputs()
 
-    def _top_level_folder(self) -> Literal["rawdata"]:
-        return "rawdata"
+        self.sync: Dict = {}
+
+        for ses_name, run_name in self.preprocessing_sessions_and_runs():
+            utils.update(self.data, ses_name, run_name, {"0-raw": None})
+            utils.update(self.sync, ses_name, run_name, None)
 
     def set_pp_steps(self, pp_steps: Dict) -> None:
         """
@@ -66,9 +61,20 @@ class PreprocessingData(BaseUserDict):
         """
         self.pp_steps = pp_steps
 
+    def _validate_rawdata_inputs(self) -> None:
+        self._validate_inputs(
+            "rawdata",
+            self.get_rawdata_top_level_path,
+            self.get_rawdata_sub_path,
+            self.get_rawdata_ses_path,
+            self.get_rawdata_run_path,
+        )
+
     # Saving preprocessed data ---------------------------------------------------------
 
-    def save_preprocessed_data(self, run_name: str, overwrite: bool = False) -> None:
+    def save_preprocessed_data(
+        self, ses_name: str, run_name: str, overwrite: bool = False
+    ) -> None:
         """
         Save the preprocessed output data to binary, as well
         as important class attributes to a .yaml file.
@@ -90,38 +96,43 @@ class PreprocessingData(BaseUserDict):
 
         """
         if overwrite:
-            if self.get_preprocessing_path(run_name).is_dir():
-                shutil.rmtree(self.get_preprocessing_path(run_name))
+            if self.get_preprocessing_path(ses_name, run_name).is_dir():
+                shutil.rmtree(self.get_preprocessing_path(ses_name, run_name))
 
-        self._save_preprocessed_binary(run_name)
-        self._save_sync_channel(run_name)
-        self._save_preprocessing_info(run_name)
+        self._save_preprocessed_binary(ses_name, run_name)
+        self._save_sync_channel(ses_name, run_name)
+        self._save_preprocessing_info(ses_name, run_name)
 
-    def _save_preprocessed_binary(self, run_name: str) -> None:
+    def _save_preprocessed_binary(self, ses_name: str, run_name: str) -> None:
         """
         Save the fully preprocessed data (i.e. last step in the
         preprocessing chain) to binary file. This is required for sorting.
         """
-        recording, __ = utils.get_dict_value_from_step_num(self[run_name], "last")
+        recording, __ = utils.get_dict_value_from_step_num(
+            self[ses_name][run_name], "last"
+        )
         recording.save(
-            folder=self._get_pp_binary_data_path(run_name), chunk_memory="10M"
+            folder=self._get_pp_binary_data_path(ses_name, run_name), chunk_memory="10M"
         )
 
-    def _save_sync_channel(self, run_name: str) -> None:
+    def _save_sync_channel(self, ses_name: str, run_name: str) -> None:
         """
         Save the sync channel separately. In SI, sorting cannot proceed
         if the sync channel is loaded to ensure it does not interfere with
         sorting. As such, the sync channel is handled separately here.
         """
-        assert (
-            self.sync[run_name] is not None
-        ), f"Sync channel on PreprocessData run {run_name} is None"
+        utils.message_user(f"Saving sync channel for {ses_name} run {run_name}")
 
-        self.sync[run_name].save(  # type: ignore
-            folder=self._get_sync_channel_data_path(run_name), chunk_memory="10M"
+        assert (
+            self.sync[ses_name][run_name] is not None
+        ), f"Sync channel on PreprocessData session {ses_name} run {run_name} is None"
+
+        self.sync[ses_name][run_name].save(  # type: ignore
+            folder=self._get_sync_channel_data_path(ses_name, run_name),
+            chunk_memory="10M",
         )
 
-    def _save_preprocessing_info(self, run_name: str) -> None:
+    def _save_preprocessing_info(self, ses_name: str, run_name: str) -> None:
         """
         Save important details of the postprocessing for provenance.
 
@@ -136,7 +147,9 @@ class PreprocessingData(BaseUserDict):
         preprocessing_info = {
             "base_path": self.base_path.as_posix(),
             "sub_name": self.sub_name,
-            "rawdata_path": self.get_run_path(run_name).as_posix(),
+            "ses_name": ses_name,
+            "run_name": run_name,
+            "rawdata_path": self.get_rawdata_run_path(ses_name, run_name).as_posix(),
             "pp_steps": self.pp_steps,
             "spikeinterface_version": spikeinterface.__version__,
             "spikewrap_version": utils.spikewrap_version(),
@@ -144,5 +157,5 @@ class PreprocessingData(BaseUserDict):
         }
 
         utils.dump_dict_to_yaml(
-            self._get_preprocessing_info_path(run_name), preprocessing_info
+            self.get_preprocessing_info_path(ses_name, run_name), preprocessing_info
         )

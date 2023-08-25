@@ -12,3 +12,7 @@
   - depth_order
   - channel_ids:
     - 'imec0.ap#AP3'
+#  '5':
+#  - resample
+#  - resample_rate: 1  # TODO: why does resample rate 2 not work?
+#    margin_ms: 50

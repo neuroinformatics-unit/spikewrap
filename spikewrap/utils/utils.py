@@ -1,8 +1,10 @@
 from __future__ import annotations
 
+import copy
+import os
 from datetime import datetime
 from pathlib import Path
-from typing import TYPE_CHECKING, Dict, List, Literal, Tuple, Union
+from typing import TYPE_CHECKING, Callable, Dict, List, Literal, Tuple, Union
 
 import numpy as np
 import yaml
@@ -66,7 +68,7 @@ def get_logging_path(base_path: Union[str, Path], sub_name: str) -> Path:
     The path where logs from `run_full_pipeline`, `run_sorting`
     and `run_postprocessing` are saved.
     """
-    return Path(base_path) / "derivatives" / sub_name / "logs"
+    return Path(base_path) / "derivatives" / "spikewrap" / sub_name / "logs"
 
 
 def show_passed_arguments(passed_arguments, function_name):
@@ -112,6 +114,13 @@ def load_dict_from_yaml(filepath: Union[Path, str]) -> Dict:
     with open(filepath, "r") as file:
         loaded_dict = yaml.safe_load(file)
     return loaded_dict
+
+
+def update(dict_, ses_name, run_name, value):
+    try:
+        dict_[ses_name][run_name] = value
+    except KeyError:
+        dict_[ses_name] = {run_name: value}
 
 
 def cast_pp_steps_values(
@@ -226,3 +235,47 @@ def get_dict_value_from_step_num(
     dict_value = data[pp_key]
 
     return dict_value, pp_key
+
+
+def paths_are_in_datetime_order(
+    list_of_paths: List[Path], creation_or_modification: str = "creation"
+) -> bool:
+    """
+    Assert whether a list of paths are in order. By default, check they are
+    in order by creation date. Can also check if they are ordered by
+    modification date.
+
+    Parameters
+    ----------
+    list_of_paths: List[Path]
+        A list of paths to folders / files to check are in datetime
+        order.
+
+    creation_or_modification : str
+        If "creation", check the list of paths are ordered by creation datetime.
+        Otherwise if "modification", check they are sorterd by modification
+        datetime.
+
+    Returns
+    -------
+    is_in_time_order : bool
+        Indicates whether `list_of_paths` was in creation or modification time
+        order.
+        depending on the value of `creation_or_modification`.
+    """
+    assert creation_or_modification in [
+        "creation",
+        "modification",
+    ], "creation_or_modification must be 'creation' or 'modification."
+
+    filter: Callable
+    filter = (
+        os.path.getctime if creation_or_modification == "creation" else os.path.getmtime
+    )
+
+    list_of_paths_by_time = copy.deepcopy(list_of_paths)
+    list_of_paths_by_time.sort(key=filter)
+
+    is_in_time_order = list_of_paths == list_of_paths_by_time
+
+    return is_in_time_order

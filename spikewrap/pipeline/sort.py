@@ -1,12 +1,17 @@
 from __future__ import annotations
 
-import copy
 import os
+from pathlib import Path
 from typing import Dict, Literal, Optional, Union
 
 import spikeinterface.sorters as ss
 
-from ..data_classes.sorting import SortingData
+from ..data_classes.sorting import (
+    ConcatenateRuns,
+    ConcatenateSessions,
+    NoConcatenation,
+    SortingData,
+)
 from ..utils import logging_sw, slurm, utils
 from ..utils.custom_types import HandleExisting
 from ..utils.managing_images import (
@@ -16,16 +21,17 @@ from ..utils.managing_images import (
 
 
 def run_sorting(
-    base_path,
-    sub_name,
-    run_names,
+    base_path: Union[str, Path],
+    sub_name: str,
+    sessions_and_runs: Dict,
     sorter: str,
-    concat_for_sorting: bool,
+    concatenate_sessions: bool,
+    concatenate_runs: bool,
     sorter_options: Optional[Dict] = None,
     existing_sorting_output: HandleExisting = "fail_if_exists",
     verbose: bool = True,
     slurm_batch: bool = False,
-) -> SortingData:
+) -> Optional[SortingData]:
     """
     Run a sorter on pre-processed data. Takes a PreprocessingData (pipeline.data_class)
     object that contains spikeinterface recording objects for the preprocessing
@@ -83,24 +89,23 @@ def run_sorting(
 
     """
     passed_arguments = locals()
+
+    if slurm_batch:
+        slurm.run_sorting_slurm(**passed_arguments)
+        return None
+    assert slurm_batch is False, "SLURM run has slurm_batch set True"
+
     logs = logging_sw.get_started_logger(
         utils.get_logging_path(base_path, sub_name),
         "sorting",
     )
     utils.show_passed_arguments(passed_arguments, "`run_sorting`")
 
-    sorting_data = SortingData(
-        base_path,
-        sub_name,
-        run_names,
-        sorter=sorter,
-        concat_for_sorting=concat_for_sorting,
-    )
+    SortingDataClass = get_sorting_data_class(concatenate_sessions, concatenate_runs)
 
-    if slurm_batch:
-        local_args = copy.deepcopy(locals())
-        slurm.run_sorting_slurm(**local_args)
-        return sorting_data
+    sorting_data = SortingDataClass(
+        Path(base_path), sub_name, sessions_and_runs, sorter
+    )
 
     sorter_options_dict = validate_inputs(slurm_batch, sorter, sorter_options, verbose)
 
@@ -110,7 +115,9 @@ def run_sorting(
     singularity_image, docker_image = get_image_run_settings(sorter)
 
     if "kilosort" in sorter:
-        sorter_options_dict.update({"delete_tmp_files": False})
+        sorter_options_dict.update(
+            {"delete_tmp_files": False, "delete_recording_dat": False}
+        )
 
     run_sorting_on_all_runs(
         sorting_data,
@@ -127,13 +134,31 @@ def run_sorting(
     return sorting_data
 
 
+def get_sorting_data_class(
+    concatenate_sessions: bool, concatenate_runs: bool
+) -> Union[type[ConcatenateSessions], type[ConcatenateRuns], type[NoConcatenation]]:
+    """"""
+    if concatenate_sessions and not concatenate_runs:
+        raise ValueError(
+            "`concatenate_runs` must be `True` if `concatenate_sessions` is `True`"
+        )
+
+    if concatenate_sessions:
+        return ConcatenateSessions
+    else:
+        if concatenate_runs:
+            return ConcatenateRuns
+        else:
+            return NoConcatenation
+
+
 def run_sorting_on_all_runs(
     sorting_data: SortingData,
     singularity_image: Union[Literal[True], None, str],
     docker_image: Optional[Literal[True]],
     existing_sorting_output: HandleExisting,
     **sorter_options_dict,
-):
+) -> None:
     """
     Run the sorting data for each run. If the data is concatenated
     prior to sorting, the `run_name` will be `None` (this is handled
@@ -162,41 +187,47 @@ def run_sorting_on_all_runs(
     """
     utils.message_user(f"Starting {sorting_data.sorter} sorting...")
 
-    for run_name in sorting_data.sorting_run_names():
-        utils.message_user(
-            f"Sorting run {sorting_data.get_output_run_name(run_name)}..."
+    for ses_name, run_name in sorting_data.get_sorting_sessions_and_runs():
+        sorting_output_path = sorting_data.get_sorting_path(ses_name, run_name)
+        preprocessed_recording = sorting_data.get_preprocessed_recordings(
+            ses_name, run_name
         )
 
-        output_path = sorting_data.get_sorting_path(run_name)
+        utils.message_user(
+            f"Sorting session: {ses_name} \n"
+            f"run: {ses_name}..."
+            # TODO: I think can just use run_name now?
+        )
 
-        if output_path.is_dir():
+        if sorting_output_path.is_dir():
             if existing_sorting_output == "fail_if_exists":
                 raise RuntimeError(
-                    f"Sorting output already exists at {output_path} and"
+                    f"Sorting output already exists at {sorting_output_path} and"
                     f"`existing_sorting_output` is set to 'fail_if_exists'."
                 )
 
             elif existing_sorting_output == "load_if_exists":
                 utils.message_user(
-                    f"Sorting output already exists at {output_path}. Nothing "
-                    f"will be done. The existing sorting will be used for postprocessing "
+                    f"Sorting output already exists at {sorting_output_path}. Nothing "
+                    f"will be done. The existing sorting will be used for "
+                    f"postprocessing "
                     f"if running with `run_full_pipeline`"
                 )
                 continue
 
-            quick_safety_check(existing_sorting_output, output_path)
+            quick_safety_check(existing_sorting_output, sorting_output_path)
 
         ss.run_sorter(
             sorting_data.sorter,
-            sorting_data[run_name],
-            output_folder=output_path,
+            preprocessed_recording,
+            output_folder=sorting_output_path,
             singularity_image=singularity_image,
             docker_image=docker_image,
             remove_existing_folder=True,
             **sorter_options_dict,
         )
 
-        sorting_data.save_sorting_info(run_name)
+        sorting_data.save_sorting_info(ses_name, run_name)
 
 
 def validate_inputs(
@@ -253,7 +284,9 @@ def validate_inputs(
     return sorter_options_dict
 
 
-def quick_safety_check(existing_sorting_output, output_path):
+def quick_safety_check(
+    existing_sorting_output: HandleExisting, output_path: Path
+) -> None:
     """
      In this case, either output path does not exist, or it does
      and `existing_sorter_output` is "overwrite"

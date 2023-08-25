@@ -1,28 +1,40 @@
 from pathlib import Path
 
-from spikewrap.data_classes.sorting import SortingData
-from spikewrap.pipeline.visualise import visualise
+from spikewrap.pipeline.visualise import visualise_preprocessed
 
+# WARNING ------------------- THIS DOES NOT CURRENTLY WORK ----------------------------#
+# WARNING ------------------- THIS DOES NOT CURRENTLY WORK ----------------------------#
 # WARNING ------------------- THIS DOES NOT CURRENTLY WORK ----------------------------#
 
 # TODO: move this into a convenience wrapper.
 # TODO: need to completely rework this in lgiht of recent refactorings.
 #
-base_path = Path(r"C:\data\ephys\test_data\steve_multi_run\1119617\time-short")
+base_path = Path(
+    r"X:\neuroinformatics\scratch\jziminski\ephys\test_data\steve_multi_run\1119617\time-long_origdata"
+)
 sub_name = "1119617"
-run_names = [
-    "1119617_LSE1_shank12_g0",
-    #    "1119617_posttest1_shank12_g0",
-    #    "1119617_pretest1_shank12_g0",
-]
+sessions_and_runs = {
+    "ses-001": [
+        "1119617_LSE1_shank12_g0"
+    ],  # ["run-001_1119617_LSE1_shank12_g0", "run-002_made_up_g0"],
+    #    "ses-002": [
+    #       "run-001_1119617_pretest1_shank12_g0",
+    #      "run-002_1119617_LSE1_shank12_g0",
+    # ],
+    #   "ses-003": [
+    #      "run-001_1119617_posttest1_shank12_g0",
+    #     "run-002_1119617_pretest1_shank12_g0",
+    #   ],
+}
 
-sorting_data = SortingData(
+# TODO: the problem is visualise has an extra dict layer ["0-raw"] while
+# preprocessed data does not.
+visualise_preprocessed(
     base_path,
     sub_name,
-    run_names,
-    sorter="kilsort2_5",  # This does nothing here
-    concat_for_sorting=False,  # TODO: this is a bad variable name here.
+    sessions_and_runs,
+    concatenate_sessions=False,
+    concatenate_runs=False,
+    show_channel_ids=True,
+    time_range=(0, 2),
 )
-
-for run_name in run_names:
-    visualise(sorting_data, run_name, time_range=(1, 2))
