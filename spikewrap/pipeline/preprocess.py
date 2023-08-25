@@ -210,15 +210,15 @@ def perform_preprocessing_step(
 
     confidence_check_pp_func_name(pp_name, pp_funcs)
 
-    if isinstance(last_pp_step_output, Dict):
-        preprocess_data[ses_name][run_name][new_name] = {
-            k: pp_funcs[pp_name](v, **pp_options)
-            for k, v in last_pp_step_output.items()
-        }
-    else:
-        preprocess_data[ses_name][run_name][new_name] = pp_funcs[pp_name](
-            last_pp_step_output, **pp_options
-        )
+    #    if isinstance(last_pp_step_output, Dict):
+    #        preprocess_data[ses_name][run_name][new_name] = {
+    #            k: pp_funcs[pp_name](v, **pp_options)
+    #            for k, v in last_pp_step_output.items()
+    #        }
+    #    else:
+    preprocess_data[ses_name][run_name][new_name] = pp_funcs[pp_name](
+        last_pp_step_output, **pp_options
+    )
 
 
 def confidence_check_pp_func_name(pp_name, pp_funcs):
@@ -275,7 +275,7 @@ def get_pp_funcs() -> Dict:
         "notch_filter": spre.notch_filter,
         "remove_artifacts": spre.remove_artifacts,
         "remove_channels": remove_channels,
-        "resample": spre.resample,
+        #        "resample": spre.resample,  leading to linAlg error
         "scale": spre.scale,
         "silence_periods": spre.silence_periods,
         "whiten": spre.whiten,

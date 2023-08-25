@@ -52,13 +52,9 @@
   - list_triggers:
     - - 1
   '15':
-  - resample
-  - resample_rate: 2
-    margin_ms: 50
-  '16':
   - scale
   - gain: 2
-  '17':
+  '16':
   - remove_channels
   - bad_channel_ids:
       - 'imec0.ap#AP1'

@@ -11,6 +11,32 @@ from ..pipeline.sort import get_sorting_data_class
 from ..utils import utils
 
 
+# TODO: figure out where to put this function.
+def load_saved_sorting_output(
+    sorter_output_path: Path, sorter: str
+) -> si.SortingExtractor:
+    """ """
+    if "kilosort" in sorter:
+        sorting = si.extractors.read_kilosort(
+            folder_path=sorter_output_path.as_posix(),
+            keep_good_only=False,
+        )
+    elif sorter == "mountainsort5":
+        sorting = NpzSortingExtractor((sorter_output_path / "firings.npz").as_posix())
+
+    elif sorter == "tridesclous":
+        sorting = si.extractors.read_tridesclous(
+            folder_path=sorter_output_path.as_posix()
+        )
+
+    elif sorter == "spykingcircus":
+        sorting = si.extractors.read_spykingcircus(
+            folder_path=sorter_output_path.as_posix()
+        )
+
+    return sorting
+
+
 class PostprocessingData:
     """ """
 
@@ -114,27 +140,10 @@ class PostprocessingData:
 
         sorter = self.sorting_data.sorter
 
-        if "kilosort" in self.sorting_data.sorter:
-            sorting = si.extractors.read_kilosort(
-                folder_path=sorter_output_path,
-                keep_good_only=False,
-            )
-        elif sorter == "mountainsort5":
-            sorting = NpzSortingExtractor(
-                (sorter_output_path / "firings.npz").as_posix()
-            )
-
-        elif sorter == "tridesclous":
-            sorting = si.extractors.read_tridesclous(
-                folder_path=sorter_output_path.as_posix()
-            )
-
-        elif sorter == "spykingcircus":
-            sorting = si.extractors.read_spykingcircus(
-                folder_path=sorter_output_path.as_posix()
-            )
+        sorting = load_saved_sorting_output(sorter_output_path, sorter)
 
         sorting = sorting.remove_empty_units()
+
         sorting_without_excess_spikes = curation.remove_excess_spikes(
             sorting, self.preprocessed_recording
         )

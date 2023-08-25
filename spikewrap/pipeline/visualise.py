@@ -4,6 +4,7 @@ from typing import TYPE_CHECKING, Dict, List, Optional, Tuple, Union
 
 import matplotlib.pyplot as plt
 import numpy as np
+import spikeinterface.preprocessing as spre
 import spikeinterface.widgets as sw
 
 from ..data_classes.preprocessing import PreprocessingData
@@ -25,6 +26,8 @@ def visualise(
     as_subplot: bool = False,
     time_range: Optional[Tuple] = None,
     show_channel_ids: bool = False,
+    clip_values=None,
+    clim=None,
 ) -> None:
     """
     Plot the data at various preprocessing steps, useful for quality-checking.
@@ -97,6 +100,11 @@ def visualise(
                     recordings = recording.split_by(property="group")
                     recording_to_plot = recordings[shank_idx]
 
+                    if clip_values is not None:
+                        recording_to_plot = spre.clip(
+                            recording, clip_values[0], clip_values[1]
+                        )
+
                     plot_title = make_preprocessing_plot_title(
                         f"ses: {ses_name}, run: {run_name}",
                         full_key,
@@ -115,11 +123,13 @@ def visualise(
                         recording_to_plot,
                         order_channel_by_depth=True,
                         time_range=time_range,
-                        return_scaled=True,
+                        return_scaled=False,
                         show_channel_ids=show_channel_ids,
                         mode=mode,
                         ax=current_ax,
                         segment_index=0,
+                        clim=clim,
+                        interpolation="billinear",
                     )
 
                     if current_ax is None:

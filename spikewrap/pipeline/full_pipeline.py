@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import shutil
 from pathlib import Path
-from typing import Dict, Literal, Optional, Union
+from typing import Dict, Literal, Optional, Tuple, Union
 
 from ..configs.configs import get_configs
 from ..data_classes.preprocessing import PreprocessingData
@@ -30,7 +30,7 @@ def run_full_pipeline(
     delete_intermediate_files: DeleteIntermediate = ("recording.dat",),
     verbose: bool = True,
     slurm_batch: bool = False,
-) -> None:
+) -> Tuple[Optional[PreprocessingData], Optional[SortingData]]:
     """
     Run preprocessing, sorting and post-processing on SpikeGLX data.
     see README.md for detailed information on use. If waveforms and
@@ -125,7 +125,7 @@ def run_full_pipeline(
 
     if slurm_batch:
         slurm.run_full_pipeline_slurm(**passed_arguments)
-        return
+        return None, None
     assert slurm_batch is False, "SLURM run has slurm_batch set True"
 
     pp_steps, sorter_options, waveform_options = get_configs(config_name)
@@ -174,6 +174,11 @@ def run_full_pipeline(
             ses_name, run_name, sorting_data, delete_intermediate_files
         )
     logs.stop_logging()
+
+    return (
+        loaded_data,
+        sorting_data,
+    )
 
 
 # --------------------------------------------------------------------------------------
