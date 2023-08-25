@@ -25,7 +25,6 @@ def run_postprocess(
     overwrite_postprocessing: bool = False,
     existing_waveform_data: HandleExisting = "fail_if_exists",
     postprocessing_to_run: Union[Literal["all"], Dict] = "all",
-    verbose: bool = True,
     waveform_options: Optional[Dict] = None,
 ) -> PostprocessingData:
     """
@@ -61,10 +60,6 @@ def run_postprocess(
         including postprocessing to run e.g. {"quality_metrics: True"}.
         Accepted keys are "quality_metrics" and "unit_locations".
 
-    verbose : bool
-        If True, messages will be printed to console updating on the
-        progress of preprocessing / sorting.
-
     waveform_options: Dict
         A dictionary containing options passed to SpikeInterface's
         `extract_waveforms()` function as kwargs.
@@ -94,7 +89,7 @@ def run_postprocess(
         _, _, waveform_options = get_configs("default")
 
     waveforms = run_or_get_waveforms(
-        postprocess_data, existing_waveform_data, waveform_options, verbose
+        postprocess_data, existing_waveform_data, waveform_options
     )
 
     # Perform postprocessing
@@ -127,7 +122,6 @@ def run_or_get_waveforms(
     postprocess_data: PostprocessingData,
     existing_waveform_data: HandleExisting,
     waveform_options: Dict,
-    verbose: bool,
 ) -> WaveformExtractor:
     """
     How to handle existing waveform output, either load, fail if exists or
@@ -138,7 +132,6 @@ def run_or_get_waveforms(
     if postprocessing_path.is_dir() and existing_waveform_data == "load_if_exists":
         utils.message_user(
             f"Loading existing waveforms from: " f"{postprocessing_path}",
-            verbose,
         )
         waveforms = si.load_waveforms(postprocessing_path)
 

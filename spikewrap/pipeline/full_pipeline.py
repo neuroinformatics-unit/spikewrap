@@ -28,7 +28,6 @@ def run_full_pipeline(
     overwrite_postprocessing: bool = False,
     postprocessing_to_run: Union[Literal["all"], Dict] = "all",
     delete_intermediate_files: DeleteIntermediate = ("recording.dat",),
-    verbose: bool = True,
     slurm_batch: bool = False,
 ) -> Tuple[Optional[PreprocessingData], Optional[SortingData]]:
     """
@@ -113,10 +112,6 @@ def run_full_pipeline(
                     quality metrics. Often, these can be deleted once final quality
                     metrics are computed.
 
-    verbose : bool
-        If True, messages will be printed to console updating on the
-        progress of preprocessing / sorting.
-
     slurm_batch : bool
         If True, the pipeline will be run in a SLURM job. Set False
         if running on an interactive job, or locally.
@@ -140,7 +135,7 @@ def run_full_pipeline(
         base_path, sub_name, sessions_and_runs, data_format="spikeglx"
     )
 
-    preprocess_and_save(loaded_data, pp_steps, existing_preprocessed_data, verbose)
+    preprocess_and_save(loaded_data, pp_steps, existing_preprocessed_data)
 
     sorting_data = run_sorting(
         base_path,
@@ -151,7 +146,6 @@ def run_full_pipeline(
         concat_runs_for_sorting,
         sorter_options,
         existing_sorting_output,
-        verbose,
     )
     assert sorting_data is not None
 
@@ -164,7 +158,6 @@ def run_full_pipeline(
             overwrite_postprocessing=overwrite_postprocessing,
             existing_waveform_data="fail_if_exists",
             postprocessing_to_run=postprocessing_to_run,
-            verbose=verbose,
             waveform_options=waveform_options,
         )
 
@@ -190,7 +183,6 @@ def preprocess_and_save(
     preprocess_data: PreprocessingData,
     pp_steps,
     existing_preprocessed_data: HandleExisting,
-    verbose: bool,
 ) -> None:
     """
     Handle the loading of existing preprocessed data.
@@ -239,9 +231,7 @@ def preprocess_and_save(
                 "Must be: 'load_if_exists', 'fail_if_exists' or 'overwrite'."
             )
 
-        preprocess_data = preprocess(
-            preprocess_data, ses_name, run_name, pp_steps, verbose
-        )
+        preprocess_data = preprocess(preprocess_data, ses_name, run_name, pp_steps)
         preprocess_data.save_preprocessed_data(ses_name, run_name, overwrite)
 
 
