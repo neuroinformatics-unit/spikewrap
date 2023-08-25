@@ -14,7 +14,6 @@ def preprocess(
     ses_name: str,
     run_name: str,
     pp_steps: Union[Dict, str],
-    verbose: bool = True,
 ) -> PreprocessingData:
     """
     Returns an updated PreprocessingData dictionary of SpikeInterface
@@ -39,10 +38,6 @@ def preprocess(
     pp_steps: either a pp_steps dictionary, or name of valid
               preprocessing .yaml file (without hte yaml extension).
               See configs/configs.py for details.
-
-    verbose : bool
-        If True, messages will be printed to console updating on the
-        progress of preprocessing / sorting.
 
     Returns
     -------
@@ -73,7 +68,6 @@ def preprocess(
             run_name,
             pp_step_names,
             pp_funcs,
-            verbose,
         )
 
     return preprocess_data
@@ -157,7 +151,6 @@ def perform_preprocessing_step(
     run_name: str,
     pp_step_names: List[str],
     pp_funcs: Dict,
-    verbose: bool = True,
 ) -> None:
     """
     Given the preprocessing step and preprocess_data UserDict containing
@@ -191,15 +184,11 @@ def perform_preprocessing_step(
     pp_funcs : Dict
         The canonical SpikeInterface preprocessing functions. The key
         are the function name and value the function object.
-
-    verbose : bool
-        If True, messages will be printed to console updating on the
-        progress of preprocessing / sorting.
     """
     pp_name, pp_options = pp_info
 
     utils.message_user(
-        f"Running preprocessing step: {pp_name} with options {pp_options}", verbose
+        f"Running preprocessing step: {pp_name} with options {pp_options}"
     )
 
     last_pp_step_output, __ = utils.get_dict_value_from_step_num(

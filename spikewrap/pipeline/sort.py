@@ -29,7 +29,6 @@ def run_sorting(
     concatenate_runs: bool = False,
     sorter_options: Optional[Dict] = None,
     existing_sorting_output: HandleExisting = "fail_if_exists",
-    verbose: bool = True,
     slurm_batch: bool = False,
 ) -> Optional[SortingData]:
     """
@@ -79,10 +78,6 @@ def run_sorting(
             "fail_if_exists" : If existing preprocessed data is found, an error
                                will be raised.
 
-    verbose : bool
-        If True, messages will be printed to console updating on the
-        progress of preprocessing / sorting.
-
     slurm_batch : bool
         If True, the pipeline will be run in a SLURM job. Set False
         if running on an interactive job, or locally.
@@ -107,7 +102,7 @@ def run_sorting(
         Path(base_path), sub_name, sessions_and_runs, sorter
     )
 
-    sorter_options_dict = validate_inputs(slurm_batch, sorter, sorter_options, verbose)
+    sorter_options_dict = validate_inputs(slurm_batch, sorter, sorter_options)
 
     # This must be run from the folder that has both sorter output AND rawdata
     os.chdir(sorting_data.base_path)
@@ -231,7 +226,7 @@ def run_sorting_on_all_runs(
 
 
 def validate_inputs(
-    slurm_batch: bool, sorter: str, sorter_options: Optional[Dict], verbose: bool
+    slurm_batch: bool, sorter: str, sorter_options: Optional[Dict]
 ) -> Dict:
     """
     Check that the sorter is valid, singularity is installed and format
@@ -250,9 +245,6 @@ def validate_inputs(
     sorter_options : Optional[Dict]
         Options to pass to the SpikeInterface sorter. If None, no options
         are passed.
-
-    verbose : bool
-        Whether SpikeInterface sorting is run in 'verbose' mode.
 
     Returns
     -------
@@ -279,7 +271,7 @@ def validate_inputs(
     if sorter_options is not None and sorter in sorter_options:
         sorter_options_dict = sorter_options[sorter]
 
-    sorter_options_dict.update({"verbose": verbose})
+    sorter_options_dict.update({"verbose": True})
 
     return sorter_options_dict
 

@@ -28,7 +28,7 @@ for ses_name in sessions_and_runs.keys():
         t = time.time()
 
         preprocess_data = preprocess(
-            loaded_data, ses_name, run_name, pp_steps="default", verbose=True
+            loaded_data, ses_name, run_name, pp_steps="default"
         )
         preprocess_data.save_preprocessed_data(ses_name, run_name, overwrite=True)
 

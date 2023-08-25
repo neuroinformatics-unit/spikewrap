@@ -78,7 +78,7 @@ def show_passed_arguments(passed_arguments, function_name):
     )
 
 
-def message_user(message: str, verbose: bool = True) -> None:
+def message_user(message: str) -> None:
     """
     Method to interact with user.
 
@@ -86,13 +86,8 @@ def message_user(message: str, verbose: bool = True) -> None:
     ----------
     message : str
         Message to print.
-
-    verbose : bool
-        The mode of the application. If verbose is False,
-        nothing is printed.
     """
-    if verbose:
-        print(f"\n{message}")
+    print(f"\n{message}")
 
 
 def dump_dict_to_yaml(filepath: Union[Path, str], dict_: Dict) -> None:
