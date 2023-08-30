@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Dict, Union
+from typing import Dict, List, Union
 
 import spikeinterface.extractors as se
 
@@ -12,7 +12,7 @@ from ..utils import utils
 def load_data(
     base_path: Union[Path, str],
     sub_name: str,
-    sessions_and_runs: Dict,
+    sessions_and_runs: Dict[str, List[str]],
     data_format: str = "spikeglx",
 ) -> PreprocessingData:
     """

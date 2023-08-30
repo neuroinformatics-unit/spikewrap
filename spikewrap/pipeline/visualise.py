@@ -20,7 +20,7 @@ if TYPE_CHECKING:
 
 def visualise(
     data: Union[PreprocessingData, SortingData],
-    sessions_and_runs: Dict,
+    sessions_and_runs: Dict[str, List[str]],
     steps: Union[List[str], str] = "all",
     mode: str = "auto",
     as_subplot: bool = False,
