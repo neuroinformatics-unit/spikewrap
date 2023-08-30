@@ -5,9 +5,9 @@ from spikewrap.pipeline.full_pipeline import run_full_pipeline
 
 base_path = Path(
     # "/ceph/neuroinformatics/neuroinformatics/scratch/jziminski/ephys/code/spikewrap/tests/data/steve_multi_run/time-short-multises"
-    "/ceph/neuroinformatics/neuroinformatics/scratch/jziminski/ephys/test_data/steve_multi_run/1119617/time-short-multises"
+    # "/ceph/neuroinformatics/neuroinformatics/scratch/jziminski/ephys/test_data/steve_multi_run/1119617/time-short-multises"
     # r"C:\data\ephys\test_data\steve_multi_run\1119617\time-miniscule-mutlises"
-    # r"C:\data\ephys\test_data\steve_multi_run\1119617\time-short-multises"
+    r"C:\data\ephys\test_data\steve_multi_run\1119617\time-short-multises"
     # "/ceph/neuroinformatics/neuroinformatics/scratch/jziminski/ephys/test_data/steve_multi_run/1119617/time-short"
 )
 
@@ -28,7 +28,7 @@ sessions_and_runs = {
 }
 
 config_name = "test_default"
-sorter = "kilosort2_5"  #  "kilosort2_5"  # "spykingcircus" # mountainsort5
+sorter = "mountainsort5"  #  "kilosort2_5"  # "spykingcircus" # mountainsort5
 
 if __name__ == "__main__":
     t = time.time()
@@ -41,8 +41,8 @@ if __name__ == "__main__":
         sorter,
         concat_sessions_for_sorting=True,  # TODO: validate this at the start, in `run_full_pipeline`
         concat_runs_for_sorting=True,
-        existing_preprocessed_data="overwrite",
-        existing_sorting_output="overwrite",
+        existing_preprocessed_data="skip_if_exists",  # this is kind of confusing...
+        existing_sorting_output="skip_if_exists",
         overwrite_postprocessing=True,
         delete_intermediate_files=(),
         #        "recording.dat",

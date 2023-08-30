@@ -30,9 +30,14 @@ def load_data(
         Subject to preprocess. The subject top level dir should reside in
         base_path/rawdata/ .
 
-    run_names : Union[List[str], str],
-        The SpikeGLX run name (i.e. not including the gate index). This can
-        also be a list of run names.
+    sessions_and_runs : Dict[str, Union[str, List]]
+        A dictionary containing the sessions and runs to run through the pipeline.
+        Each session should be a session-level folder name residing in the passed
+        `sub_name` folder. Each session to run is a key in the
+        `sessions_and_runs` dict.
+        For each session key, the value can be a single run name (str)
+        or a list of run names. The runs will be processed in the
+        order passed.
 
     data_format : str
         The data type format to load. Currently only "spikeglx" is accepted.
@@ -51,7 +56,7 @@ def load_data(
     empty_data_class = PreprocessingData(Path(base_path), sub_name, sessions_and_runs)
 
     if data_format == "spikeglx":
-        return load_spikeglx_data(empty_data_class)
+        return _load_spikeglx_data(empty_data_class)
 
     raise RuntimeError("`data_format` not recognised.")
 
@@ -61,7 +66,7 @@ def load_data(
 # --------------------------------------------------------------------------------------
 
 
-def load_spikeglx_data(preprocess_data: PreprocessingData) -> PreprocessingData:
+def _load_spikeglx_data(preprocess_data: PreprocessingData) -> PreprocessingData:
     """
     Load raw SpikeGLX data (in rawdata). If multiple runs are selected
     in run_names, these will be stored as segments on a SpikeInterface

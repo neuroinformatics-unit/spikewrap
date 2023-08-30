@@ -9,7 +9,7 @@ import spikeinterface as si
 
 from ..configs.configs import get_configs
 from ..data_classes.postprocessing import PostprocessingData
-from ..utils import logging_sw, utils
+from ..utils import logging_sw, utils, validate
 from ..utils.custom_types import HandleExisting
 
 if TYPE_CHECKING:
@@ -55,6 +55,7 @@ def run_postprocess(
         `extract_waveforms()` function as kwargs.
     """
     passed_arguments = locals()
+    validate.check_function_arguments(passed_arguments)
 
     postprocess_data = PostprocessingData(sorting_path)
 

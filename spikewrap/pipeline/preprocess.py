@@ -6,30 +6,28 @@ import spikeinterface.preprocessing as spre
 
 from ..configs import configs
 from ..data_classes.preprocessing import PreprocessingData
-from ..utils import logging_sw, slurm, utils
+from ..utils import logging_sw, slurm, utils, validate
 from ..utils.custom_types import HandleExisting
 
 
 def run_preprocess(
     preprocess_data: PreprocessingData,
-    pp_steps,
+    pp_steps: Union[Dict, str],
     save_to_file: Union[Literal[False], HandleExisting],
     slurm_batch: bool = False,
     log: bool = True,
 ) -> None:
     """
-
-    SLURM:  # TODO: save_to_file must be TRUE
-
     Handle the loading of existing preprocessed data.
     See `run_full_pipeline()` for details.
     """
     passed_arguments = locals()
+    validate.check_function_arguments(passed_arguments)
 
     if slurm_batch:
         assert (
             save_to_file is not False
-        ), "`save_to_file` cannot be `False` if running in SLURM"  # TODO: validation!
+        ), "`save_to_file` cannot be `False` if running in SLURM"
         slurm.run_preprocessing_slurm(**passed_arguments)
         return
     assert slurm_batch is False, "SLURM run has slurm_batch set True"
@@ -78,11 +76,6 @@ def run_preprocess(
                     )
                 overwrite = False
 
-            #          else:
-            #             raise ValueError(  # TODO: use assert not and end here (Validate Inputs)
-            #                "`existing_prepreprocessed_data` argument not recognised."
-            #               "Must be: 'skip_if_exists', 'fail_if_exists' or 'overwrite'."
-            #          )
             preprocess_data = preprocess(preprocess_data, ses_name, run_name, pp_steps)
 
             preprocess_data.save_preprocessed_data(ses_name, run_name, overwrite)
