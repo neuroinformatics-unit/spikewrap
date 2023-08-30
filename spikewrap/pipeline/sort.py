@@ -12,7 +12,7 @@ from ..data_classes.sorting import (
     NoConcatenation,
     SortingData,
 )
-from ..utils import logging_sw, slurm, utils
+from ..utils import logging_sw, slurm, utils, validate
 from ..utils.custom_types import HandleExisting
 from ..utils.managing_images import (
     get_image_run_settings,
@@ -51,19 +51,28 @@ def run_sorting(
         Subject to preprocess. The subject top level dir should reside in
         base_path/rawdata/ .
 
-    run_names : Union[List[str], str],
-        The SpikeGLX run name (i.e. not including the gate index). This can
-        also be a list of run names. Preprocessing will still occur per-run.
-        Runs are concatenated in the order passed prior to sorting.
+    sessions_and_runs : Dict[str, Union[str, List]]
+        A dictionary containing the sessions and runs to run through the pipeline.
+        Each session should be a session-level folder name residing in the passed
+        `sub_name` folder. Each session to run is a key in the
+        `sessions_and_runs` dict.
+        For each session key, the value can be a single run name (str)
+        or a list of run names. The runs will be processed in the
+        order passed.
 
     sorter : str
         Name of the sorter to use (e.g. "kilosort2_5").
 
-    concat_for_sorting: bool
-        If `True`, preprocessed runs are concatenated before sorting. Otherwise,
-        sorting is performed per-run.
+    concatenate_sessions: bool
+        If `True`, preprocessed sessions are concatenated before sorting. If `True`,
+        `concat_runs_for_sorting` must be `True`, as first all runs-per session are
+        concatenated, and then all sessions are concatenated.
 
-    sorter_options : Dict
+    concatenate_runs : bool
+        If `True`, the runs for each session are concatenated, in the order
+        they are passed in the `sessions_and_runs` dictionary.
+
+    sorter_options : Optional[Dict]
         Kwargs to pass to spikeinterface sorter class.
 
     existing_sorting_output : custom_types.HandleExisting
@@ -83,6 +92,7 @@ def run_sorting(
 
     """
     passed_arguments = locals()
+    validate.check_function_arguments(passed_arguments)
 
     if slurm_batch:
         slurm.run_sorting_slurm(**passed_arguments)
@@ -101,7 +111,7 @@ def run_sorting(
         Path(base_path), sub_name, sessions_and_runs, sorter
     )
 
-    sorter_options_dict = validate_inputs(slurm_batch, sorter, sorter_options)
+    sorter_options_dict = get_sorter_options_dict(sorter_options, sorter)
 
     # This must be run from the folder that has both sorter output AND rawdata
     os.chdir(sorting_data.base_path)
@@ -126,6 +136,17 @@ def run_sorting(
     logs.stop_logging()
 
     return sorting_data
+
+
+def get_sorter_options_dict(sorter_options: Optional[Dict], sorter: str) -> Dict:
+    """"""
+    sorter_options_dict = {}
+    if sorter_options is not None and sorter in sorter_options:
+        sorter_options_dict = sorter_options[sorter]
+
+    sorter_options_dict.update({"verbose": True})
+
+    return sorter_options_dict
 
 
 def get_sorting_data_class(
@@ -222,57 +243,6 @@ def run_sorting_on_all_runs(
         )
 
         sorting_data.save_sorting_info(ses_name, run_name)
-
-
-def validate_inputs(
-    slurm_batch: bool, sorter: str, sorter_options: Optional[Dict]
-) -> Dict:
-    """
-    Check that the sorter is valid, singularity is installed and format
-    the dictionary of options to pass to the sorter.
-
-    Parameters
-    ----------
-    slurm_batch : bool
-        Whether the run is a SLURM batch. This must be False, otherwise
-        indicates some recursion has occurred when SLURM run itself
-        calls this function.
-
-    sorter : str
-        Name of the sorter.
-
-    sorter_options : Optional[Dict]
-        Options to pass to the SpikeInterface sorter. If None, no options
-        are passed.
-
-    Returns
-    -------
-    sorter_options_dict : Dict
-        A dictionary of configurations to run the sorter with, these
-        are passed to SpikeInterface sorter.
-    """
-    assert slurm_batch is False, "SLURM run has slurm_batch set True"
-
-    supported_sorters = [
-        "kilosort2",
-        "kilosort2_5",
-        "kilosort3",
-        "mountainsort5",
-        "spykingcircus",
-        "tridesclous",
-    ]
-
-    assert (
-        sorter in supported_sorters
-    ), f"sorter {sorter} is invalid, must be one of: {supported_sorters}"
-
-    sorter_options_dict = {}
-    if sorter_options is not None and sorter in sorter_options:
-        sorter_options_dict = sorter_options[sorter]
-
-    sorter_options_dict.update({"verbose": True})
-
-    return sorter_options_dict
 
 
 def quick_safety_check(

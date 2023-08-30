@@ -2,12 +2,12 @@ from __future__ import annotations
 
 import shutil
 from pathlib import Path
-from typing import Dict, Optional, Tuple, Union
+from typing import Dict, List, Optional, Tuple, Union
 
 from ..configs.configs import get_configs
 from ..data_classes.preprocessing import PreprocessingData
 from ..data_classes.sorting import SortingData
-from ..utils import logging_sw, slurm, utils
+from ..utils import logging_sw, slurm, utils, validate
 from ..utils.custom_types import DeleteIntermediate, HandleExisting
 from .load_data import load_data
 from .postprocess import run_postprocess
@@ -18,7 +18,7 @@ from .sort import run_sorting
 def run_full_pipeline(
     base_path: Union[Path, str],
     sub_name: str,
-    sessions_and_runs: Dict,
+    sessions_and_runs: Dict[str, Union[str, List[str]]],
     config_name: str = "default",
     sorter: str = "kilosort2_5",
     concat_sessions_for_sorting: bool = False,
@@ -48,10 +48,14 @@ def run_full_pipeline(
         Subject to preprocess. The subject top level dir should reside in
         base_path/rawdata/ .
 
-    run_names : Union[List[str], str],
-        The SpikeGLX run name (i.e. not including the gate index). This can
-        also be a list of run names. Preprocessing will still occur per-run.
-        Runs are concatenated in the order passed prior to sorting.
+    sessions_and_runs : Dict[str, Union[str, List]]
+        A dictionary containing the sessions and runs to run through the pipeline.
+        Each session should be a session-level folder name residing in the passed
+        `sub_name` folder. Each session to run is a key in the
+        `sessions_and_runs` dict.
+        For each session key, the value can be a single run name (str)
+        or a list of run names. The runs will be processed in the
+        order passed.
 
     config_name : str
         The name of the configuration to use. Note this must be the name
@@ -61,25 +65,31 @@ def run_full_pipeline(
     sorter : str
         name of the sorter to use e.g. "kilosort2_5".
 
-    concat_for_sorting: bool
-        If `True`, preprocessed runs are concatenated before sorting. Otherwise,
-        sorting is performed per-run.
+    concat_sessions_for_sorting: bool
+        If `True`, preprocessed sessions are concatenated after preprocessing
+        and before sorting. `concat_runs_for_sorting` must be `True`, as first
+        all runs-per session are concatenated, and then all sessions are concatenated.
+
+    concat_runs_for_sorting : bool
+        If `True`, the runs for each session are concatenated, in the order
+        they are passed in the `sessions_and_runs` dictionary.
 
     existing_preprocessed_data : custom_types.HandleExisting
         Determines how existing preprocessed data (e.g. from a prior pipeline run)
         is handled.
-            "overwrite" : will overwrite any existing preprocessed data output. This will
-                          delete the 'preprocessed' folder. Therefore, never save
-                          derivative work there.
+            "overwrite" : Will overwrite any existing preprocessed data output.
+                          This will delete the 'preprocessed' folder. Therefore,
+                          never save derivative work there.
             "skip_if_exists" : will search for existing data and skip preprocesing
-                               if it exists (sorting will run on existing preprocessed data).
+                               if it exists (sorting will run on existing
+                               preprocessed data).
                                Otherwise, will preprocess and save the current run.
             "fail_if_exists" : If existing preprocessed data is found, an error
                                will be raised.
 
     existing_sorting_output : bool
         Determines how existing sorted data is treated. The same behaviour
-        as `existing_preprocessed_data` but for sorting output. If overwrite,
+        as `existing_preprocessed_data` but for sorting output. If "overwrite",
         the 'sorting' folder will be deleted. Therefore, never save
         derivative work there.
 
@@ -93,8 +103,6 @@ def run_full_pipeline(
         Specify intermediate files or folders to delete. This option is useful for
         reducing the size of output data by deleting unneeded files.
 
-        preprocessing  - the 'preprocesed' folder holding the data that has been
-                         preprocessed by SpikeInterface
         recording.dat - SpikeInterfaces copies the preprocessed data to folder
                         prior to sorting, where it resides in the 'sorter_output'
                         folder. Often, this can be deleted after sorting.
@@ -110,6 +118,7 @@ def run_full_pipeline(
         if running on an interactive job, or locally.
     """
     passed_arguments = locals()
+    validate.check_function_arguments(passed_arguments)
 
     if slurm_batch:
         slurm.run_full_pipeline_slurm(**passed_arguments)
@@ -165,10 +174,6 @@ def run_full_pipeline(
         sorting_data,
     )
 
-
-# --------------------------------------------------------------------------------------
-# Preprocessing
-# --------------------------------------------------------------------------------------
 
 # --------------------------------------------------------------------------------------
 # Remove Intermediate Files

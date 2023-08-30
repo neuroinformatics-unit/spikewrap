@@ -1,7 +1,3 @@
-"""
-TODO: these tests don't check any output, only that things run without error
-"""
-
 import numpy as np
 import pytest
 import spikeinterface as si
@@ -12,10 +8,15 @@ from spikeinterface.preprocessing import bandpass_filter, common_reference, phas
 from spikewrap.data_classes.postprocessing import load_saved_sorting_output
 from spikewrap.pipeline import full_pipeline, preprocess
 from spikewrap.pipeline.load_data import load_data
+from spikewrap.utils.checks import check_cuda, check_virtual_machine
 
 from .base import BaseTest
 
-DEFAULT_SORTER = "mountainsort5"
+SKIP_KILOSORT = not (check_virtual_machine() and check_cuda())
+if SKIP_KILOSORT:
+    DEFAULT_SORTER = "mountainsort5"
+else:
+    DEFAULT_SORTER = "kilosort2_5"
 
 
 class TestFullPipeline(BaseTest):
@@ -56,9 +57,18 @@ class TestFullPipeline(BaseTest):
     @pytest.mark.parametrize(
         "sorter",
         [
-            "kilosort2",
-            "kilosort2_5",
-            "kilosort3",
+            pytest.param(
+                "kilosort2",
+                marks=pytest.mark.skipif(SKIP_KILOSORT, reason="No VM available."),
+            ),
+            pytest.param(
+                "kilosort2_5",
+                marks=pytest.mark.skipif(SKIP_KILOSORT, reason="No VM available."),
+            ),
+            pytest.param(
+                "kilosort3",
+                marks=pytest.mark.skipif(SKIP_KILOSORT, reason="No VM available."),
+            ),
             "mountainsort5",
             "tridesclous",
         ],

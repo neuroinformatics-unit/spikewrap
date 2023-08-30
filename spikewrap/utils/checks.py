@@ -16,12 +16,12 @@ def check_environment() -> None:
     are installed. Finally, check all dependencies listed in pyproject.toml
     are installed in the environment.
     """
-    _check_virtual_machine()
-    _check_cuda()
+    check_virtual_machine()
+    check_cuda()
     _check_pip_dependencies()
 
 
-def _check_virtual_machine() -> bool:
+def check_virtual_machine() -> bool:
     """
     Check that a virtual machine manager is installed on the
     system (singularity for Linux, Docker otherwise). Note that
@@ -70,18 +70,20 @@ def docker_desktop_is_running():
     return _system_call_success("docker ps")
 
 
-def _check_cuda() -> None:
+def check_cuda() -> bool:
     """
     Perform a very basic check that NVIDIA drivers are installed. This
     however does not ensure GPU processing will work without error.
     """
     if _system_call_success("nvidia-smi"):
         utils.message_user("NVIDIA GPU drivers detected on the system.")
+        return True
     else:
         utils.message_user(
             "NVIDIA GPU drivers not detected. Sorters that require\n"
             "NVIDIA GPU such as Kilosort will not be able to run."
         )
+        return False
 
 
 def _check_pip_dependencies() -> None:
