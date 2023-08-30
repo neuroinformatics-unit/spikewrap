@@ -32,14 +32,14 @@ def check_virtual_machine() -> bool:
     a link to installation instructions.
     """
     if platform.system() == "Linux":
-        has_vm = _system_call_success("singularity version")
+        has_vm = system_call_success("singularity version")
         name = "Singularity"
         link = (
             "https://docs.sylabs.io/guides/main/user-guide/quick_start.html#quick"
             "-installation-steps"
         )
     else:
-        has_vm = _system_call_success("docker -v")
+        has_vm = system_call_success("docker -v")
         name = "Docker"
         if platform.system() == "Windows":
             link = "https://docs.docker.com/desktop/install/windows-install/"
@@ -67,7 +67,7 @@ def docker_desktop_is_running():
     running. "docker ps" requires docker to be running, which can
     be achieved by opening Docker Desktop.
     """
-    return _system_call_success("docker ps")
+    return system_call_success("docker ps")
 
 
 def check_cuda() -> bool:
@@ -75,7 +75,7 @@ def check_cuda() -> bool:
     Perform a very basic check that NVIDIA drivers are installed. This
     however does not ensure GPU processing will work without error.
     """
-    if _system_call_success("nvidia-smi"):
+    if system_call_success("nvidia-smi"):
         utils.message_user("NVIDIA GPU drivers detected on the system.")
         return True
     else:
@@ -118,7 +118,7 @@ def _check_pip_dependencies() -> None:
         utils.message_user("All python dependencies are installed.")
 
 
-def _system_call_success(command: str) -> bool:
+def system_call_success(command: str) -> bool:
     return (
         subprocess.run(
             command, shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL
