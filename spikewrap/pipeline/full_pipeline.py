@@ -27,7 +27,7 @@ def run_full_pipeline(
     existing_sorting_output: HandleExisting = "fail_if_exists",
     overwrite_postprocessing: bool = False,
     delete_intermediate_files: DeleteIntermediate = ("recording.dat",),
-    slurm_batch: bool = False,
+    slurm_batch: Union[bool, Dict] = False,
 ) -> Tuple[Optional[PreprocessingData], Optional[SortingData]]:
     """
     Run preprocessing, sorting and post-processing on SpikeGLX data.
@@ -113,9 +113,19 @@ def run_full_pipeline(
                     quality metrics. Often, these can be deleted once final quality
                     metrics are computed.
 
-    slurm_batch : bool
+    slurm_batch : Union[bool, Dict]
         If True, the pipeline will be run in a SLURM job. Set False
-        if running on an interactive job, or locally.
+        if running on an interactive job, or locally. By default,
+        slurm is run with the option set in configs/backend/hpc.py.
+        To overwrite, pass a dict of submitit key-value pairs to
+        overwrite the default options. Note that only the passed
+        options will be overwritten, all other defaults will be
+        maintained if not explicitly overwritten.
+
+        Importantly, if the environment you are running the slurm job
+        in is not called `spikewrap`, you will need to pass the name of the
+        conda environment you want to run the job in, as an option
+        in the dictionary e.g. `slurm_batch={"env_name": "my_env_name"}`.
     """
     passed_arguments = locals()
     validate.check_function_arguments(passed_arguments)

@@ -1,10 +1,11 @@
 import datetime
 import subprocess
 from pathlib import Path
-from typing import Callable, Dict, Literal, Union
+from typing import Callable, Dict
 
 import submitit
 
+from ..configs.backend.hpc import default_slurm_options
 from . import utils
 
 
@@ -24,17 +25,27 @@ def run_job(kwargs, command_func: Callable, command_name: str) -> None:
         The name of the command, typically command_func.__name__,
         formatted for logging.
     """
-    slurm_opts = kwargs.pop("slurm_batch")
-    executor = get_executor(kwargs)
+    passed_slurm_opts = kwargs.pop("slurm_batch")
+    func_opts = kwargs
+
+    slurm_opts = default_slurm_options()
+
+    if isinstance(passed_slurm_opts, Dict):
+        slurm_opts.update(passed_slurm_opts)
+
+    should_wait = slurm_opts.pop("wait")
+    env_name = slurm_opts.pop("env_name")
+
+    executor = get_executor(func_opts, slurm_opts)
 
     job = executor.submit(
-        wrap_function_with_env_setup, command_func, slurm_opts, **kwargs
+        wrap_function_with_env_setup, command_func, env_name, func_opts
     )
 
-    if isinstance(slurm_opts, dict) and "wait" in slurm_opts and slurm_opts["wait"]:
+    if should_wait:
         job.wait()
 
-    send_user_start_message(command_name, job, kwargs)
+    send_user_start_message(command_name, job, func_opts)
 
 
 def run_full_pipeline_slurm(**kwargs) -> None:
@@ -85,7 +96,7 @@ def run_preprocessing_slurm(**kwargs) -> None:
 # Utils --------------------------------------------------------------------------------
 
 
-def get_executor(kwargs: Dict) -> submitit.AutoExecutor:
+def get_executor(func_opts: Dict, slurm_opts: Dict) -> submitit.AutoExecutor:
     """
     Return the executor object that defines parameters
     of the SLURM node to request and the path to
@@ -93,9 +104,14 @@ def get_executor(kwargs: Dict) -> submitit.AutoExecutor:
 
     Parameters
     ----------
-    kwargs : Dict
-        Keyword arguments passed to the main running function
-        (e.g. run_full_pipeline, run_sorting).
+    func_opts : Dict
+        All arguments passed to the public function, minus
+        `slurm_batch`
+
+    slurm_opts : Dict
+        The slurm options to run. This includes `spikewarp` default
+        slurm options overwritten where passed by user-defined
+        `slurm_batch`.
 
     Returns
     -------
@@ -103,7 +119,7 @@ def get_executor(kwargs: Dict) -> submitit.AutoExecutor:
         submitit executor object defining requested SLURM
         node parameters.
     """
-    log_path = make_job_log_output_path(kwargs)
+    log_path = make_job_log_output_path(func_opts)
 
     print(f"\nThe SLURM batch output logs will " f"be saved to {log_path}\n")
 
@@ -111,22 +127,13 @@ def get_executor(kwargs: Dict) -> submitit.AutoExecutor:
         folder=log_path,
     )
 
-    executor.update_parameters(
-        nodes=1,
-        mem_gb=40,
-        timeout_min=24 * 60,
-        cpus_per_task=8,
-        tasks_per_node=1,
-        gpus_per_node=1,
-        slurm_gres="gpu:1",
-        slurm_partition="gpu",
-    )
+    executor.update_parameters(**slurm_opts)
 
     return executor
 
 
 def wrap_function_with_env_setup(
-    function: Callable, slurm_opts: Union[Literal[True], Dict], **kwargs
+    function: Callable, env_name: str, func_opts: Dict
 ) -> None:
     """
     Set up the environment from within the SLURM job, prior
@@ -147,27 +154,22 @@ def wrap_function_with_env_setup(
         the SLURM job is run. If a dict, the environment setup
         can be passed in the 'env_name' field.
 
-    kwargs : Dict
-        Keyword arguments passed to the main running function
-        (e.g. run_full_pipeline, run_sorting)
+    func_opts : Dict
+        All arguments passed to the public function, minus
+        `slurm_batch`
     """
-    if isinstance(slurm_opts, dict) and "env_name" in slurm_opts:
-        env_name = slurm_opts["env_name"]
-    else:
-        env_name = "spikewrap"
-
     print(f"\nrunning {function.__name__} with SLURM....\n")
 
     subprocess.run(
-        f"module load miniconda; " f"source activate {env_name};" f"module load cuda",
+        f"module load miniconda; " f"source activate {env_name}; " f"module load cuda",
         executable="/bin/bash",
         shell=True,
     )
 
-    function(**kwargs)
+    function(**func_opts)
 
 
-def make_job_log_output_path(kwargs: Dict) -> Path:
+def make_job_log_output_path(func_opts: Dict) -> Path:
     """
     The SLURM job logs are saved to a folder 'slurm_logs' in the
     base directory in which the processing is being run
@@ -175,7 +177,7 @@ def make_job_log_output_path(kwargs: Dict) -> Path:
 
     Parameters
     ----------
-    kwargs : Dict
+    func_opts : Dict
         Keyword arguments passed to the main running function
         (e.g. run_full_pipeline, run_sorting)
 
@@ -189,10 +191,12 @@ def make_job_log_output_path(kwargs: Dict) -> Path:
 
     log_subpath = Path("slurm_logs") / f"{now.strftime('%Y-%m-%d_%H-%M-%S')}"
 
-    if "base_path" in kwargs:
-        log_path = kwargs["base_path"] / log_subpath
+    if "base_path" in func_opts:
+        log_path = func_opts["base_path"] / log_subpath
     else:
-        log_path = kwargs["preprocess_data"].base_path / log_subpath  # TODO: jenky
+        # in the case of `run_preprocess()`, the
+        # `PreprocessingData` object is passed.
+        log_path = func_opts["preprocess_data"].base_path / log_subpath
 
     log_path.mkdir(exist_ok=True, parents=True)
 
@@ -200,7 +204,7 @@ def make_job_log_output_path(kwargs: Dict) -> Path:
 
 
 def send_user_start_message(
-    processing_function: str, job: submitit.Job, kwargs: Dict
+    processing_function: str, job: submitit.Job, func_opts: Dict
 ) -> None:
     """
     Convenience function to print important information
@@ -214,13 +218,13 @@ def send_user_start_message(
     job : submitit.job
         submitit.job object holding the SLURM job_id
 
-    kwargs : Dict
+    func_opts : Dict
         Keyword arguments passed to the main running function
         (e.g. run_full_pipeline, run_sorting)
     """
     utils.message_user(
         f"{processing_function} submitted to SLURM with job id {job.job_id}\n"
-        f"with arguments{kwargs}"
+        f"with arguments{func_opts}"
     )
 
 

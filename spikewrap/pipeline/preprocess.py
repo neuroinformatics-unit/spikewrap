@@ -14,7 +14,7 @@ def run_preprocess(
     preprocess_data: PreprocessingData,
     pp_steps: Union[Dict, str],
     save_to_file: Union[Literal[False], HandleExisting],
-    slurm_batch: bool = False,
+    slurm_batch: Union[bool, Dict] = False,
     log: bool = True,
 ) -> None:
     """

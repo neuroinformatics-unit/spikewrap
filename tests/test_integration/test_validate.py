@@ -155,11 +155,13 @@ class TestValidate(BaseTest):
             e.value
         )
 
-        # TODO: ADD
-        #        slurm_batch = {"bad_option": False}
-        #        with pytest.raises(ValueError) as e:
-        #            self.run_full_pipeline(*test_info, slurm_batch=slurm_batch)  #
-        #            TODO: check all naming.
+        slurm_batch = {"gpus_per_node_x": 1}
+        with pytest.raises(ValueError) as e:
+            self.run_full_pipeline(*test_info, slurm_batch=slurm_batch)
+        assert (
+            "The `slurm batch key gpus_per_node_x is incorrect. "
+            "Must be one of" in str(e.value)
+        )
 
     def test_validate_run_preprocess(self, test_info):
         self.remove_all_except_first_run_and_sessions(test_info)
