@@ -5,8 +5,13 @@ from typing import Callable, Dict
 
 import submitit
 
-from ..configs.backend.hpc import default_slurm_options
+from ..configs.backend.hpc import (
+    default_cpu_partition,
+    default_gpu_partition,
+    default_slurm_options,
+)
 from . import utils
+from .checks import system_call_success
 
 
 def run_job(kwargs, command_func: Callable, command_name: str) -> None:
@@ -229,5 +234,31 @@ def send_user_start_message(
 
 
 def is_slurm_installed():
-    slurm_installed = subprocess.run("sinfo -v", shell=True).returncode == 0
+    slurm_installed = system_call_success("sinfo -v")
     return slurm_installed
+
+
+def run_interactive_slurm(partition=None, gpu=True, mem_gb="40GB", cpus=16):
+    """
+    A convenience function to start an interactive SLURM session. Gives quick
+    access for some basic settings - the purpose is not to provide a comprehensive
+    wrapper, of course native `srun` can be called. It is only to provide a
+    quick convenience wrapper to get started quick with some sensible defaults.
+    """
+    if not is_slurm_installed():
+        raise RuntimeError(
+            "Cannot setup interactive SLURM because SLURM is not "
+            "installed on this machine."
+        )
+
+    if partition is None:
+        partition = default_gpu_partition() if gpu else default_cpu_partition()
+
+    gpu_opt = "--gres=gpu:1" if gpu else ""
+
+    default_opts = default_slurm_options()
+    exclude = default_opts["exclude"]
+
+    command = f"srun -p {partition} {gpu_opt} -n {cpus} --mem={mem_gb} --exclude {exclude} --pty bash -i"
+
+    subprocess.run(command, shell=True)

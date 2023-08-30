@@ -35,3 +35,11 @@ def default_slurm_options() -> Dict:
         "wait": False,
         "env_name": "spikewrap",
     }
+
+
+def default_gpu_partition():
+    return "gpu"
+
+
+def default_cpu_partition():
+    return "cpu"
