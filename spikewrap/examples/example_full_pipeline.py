@@ -36,7 +36,7 @@ if __name__ == "__main__":
     run_full_pipeline(
         base_path,
         sub_name,
-        sessions_and_runs,
+        sessions_and_runs,  # type: ignore # currently asking on mypy's Gitter
         config_name,
         sorter,
         concat_sessions_for_sorting=True,  # TODO: validate this at the start, in `run_full_pipeline`
