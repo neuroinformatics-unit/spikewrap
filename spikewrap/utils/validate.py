@@ -4,6 +4,7 @@ from typing import Dict, List, Optional
 import typeguard
 from typeguard import CollectionCheckStrategy
 
+from ..configs.backend.hpc import default_slurm_options
 from ..data_classes.preprocessing import PreprocessingData
 from ..utils.custom_types import DeleteIntermediate, HandleExisting
 
@@ -106,6 +107,14 @@ def check_function_arguments(arguments):
                 raise TypeError(
                     "`slurm_batch` must be `True` or a Dict of slurm settings."
                 )
+
+            if typecheck(arg_value, Dict):
+                for key in arg_value.keys():
+                    if key not in default_slurm_options():
+                        raise ValueError(
+                            f"The `slurm batch key {key} is incorrect. "
+                            f"Must be one of {default_slurm_options()}"
+                        )
 
         # Preprocessing ----------------------------------------------------------------
 

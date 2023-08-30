@@ -5,6 +5,7 @@ import shutil
 from pathlib import Path
 from typing import TYPE_CHECKING, Literal, Optional, Tuple, Union
 
+from ..configs.backend.hpc import hpc_sorter_images_path
 from . import checks
 
 if TYPE_CHECKING:
@@ -170,7 +171,7 @@ def get_hpc_sorter_path(sorter: str) -> Path:
     sorter_path : Path
         The base to the sorter image on SWC HCP (ceph).
     """
-    base_path = Path("/ceph/neuroinformatics/neuroinformatics/scratch/sorter_images")
+    base_path = Path(hpc_sorter_images_path())
     sorter_path = base_path / sorter / get_sorter_image_name(sorter)
     return sorter_path
 
