@@ -7,7 +7,7 @@ base_path = Path(
 )
 sub_name = "sub-1119617"
 sessions_and_runs = {
-    "ses-001": "run-001_1119617_LSE1_shank12_g0",
+    "ses-001": ["run-001_1119617_LSE1_shank12_g0"],
 }
 
 

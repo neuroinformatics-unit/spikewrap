@@ -18,7 +18,7 @@ from .sort import run_sorting
 def run_full_pipeline(
     base_path: Union[Path, str],
     sub_name: str,
-    sessions_and_runs: Dict[str, Union[str, List[str]]],
+    sessions_and_runs: Dict[str, List[str]],
     config_name: str = "default",
     sorter: str = "kilosort2_5",
     concat_sessions_for_sorting: bool = False,

@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import os
 from pathlib import Path
-from typing import Dict, Literal, Optional, Union
+from typing import Dict, List, Literal, Optional, Union
 
 import spikeinterface.sorters as ss
 
@@ -23,7 +23,7 @@ from ..utils.managing_images import (
 def run_sorting(
     base_path: Union[str, Path],
     sub_name: str,
-    sessions_and_runs: Dict,
+    sessions_and_runs: Dict[str, List[str]],
     sorter: str,
     concatenate_sessions: bool = False,
     concatenate_runs: bool = False,

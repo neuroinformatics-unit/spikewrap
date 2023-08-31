@@ -24,7 +24,7 @@ class BaseUserDict(UserDict):
 
     base_path: Path
     sub_name: str
-    sessions_and_runs: Dict
+    sessions_and_runs: Dict[str, List[str]]
 
     def __post_init__(self) -> None:
         self.data: Dict = {}
@@ -32,7 +32,15 @@ class BaseUserDict(UserDict):
         self.check_run_names_are_formatted_as_list()
 
     def check_run_names_are_formatted_as_list(self) -> None:
-        """"""
+        """
+        `sessions_and_runs` is typed as `Dict[str, List[str]]` but the
+        class will accept `Dict[str, Union[str, List[str]]]` and
+        cast here. Attempted to type with the latter, or `
+        MutableMapping[str, [str, Union[str, List[str]]]` but had many issues
+        such as https://github.com/python/mypy/issues/8136. The main thing
+        is we can work with `Dict[str, List[str]]` but if `Dict[str, str]` is
+        passed n general use it will not fail.
+        """
         for key, value in self.sessions_and_runs.items():
             if not isinstance(value, List):
                 assert isinstance(
