@@ -3,7 +3,8 @@ from pathlib import Path
 from spikewrap.pipeline.load_data import load_data
 
 base_path = Path(
-    r"/ceph/neuroinformatics/neuroinformatics/scratch/jziminski/ephys/test_data/steve_multi_run/1119617/time-short-multises"
+    # r"/ceph/neuroinformatics/neuroinformatics/scratch/jziminski/ephys/test_data/steve_multi_run/1119617/time-short-multises"
+    "X:\neuroinformatics\scratch\jziminski\ephys\test_data\steve_multi_run\1119617\time-short-multises"
 )
 
 sub_name = "sub-1119617"
