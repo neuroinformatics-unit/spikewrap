@@ -1,7 +1,7 @@
 [project]
-name = "swc_epys"
+name = "spikewrap"
 authors = [{name = "Joe Ziminski", email= "joseph.j.ziminski@gmail.com"}]
-description = "Manage extracellular electrophysiology analysis"
+description = "Run extracellular electrophysiology analysis with SpikeInterface"
 readme = "README.md"
 requires-python = ">=3.8.0"
 dynamic = ["version"]
@@ -19,12 +19,28 @@ classifiers = [
     "License :: OSI Approved :: BSD License",
 ]
 
+dependencies = [
+    "spikeinterface==0.98.2",
+    "spython",  # I think missing from SI?
+    "submitit",
+    "PyYAML",
+    "toml",
+    "typeguard",
+    # sorter-specific
+    "tridesclous",
+    # "spyking-circus", TODO: this is not straightforward, requires mpi4py. TBD if we want to manage this.
+    "mountainsort5",
+    "docker",  # TODO: windows only!
+    "cuda-python",
+]
+
 [project.urls]
-homepage = "https://github.com/JoeZiminski/swc_epys"
-bug_tracker = "https://github.com/JoeZiminski/swc_epys/issues"
-documentation = "https://github.com/JoeZiminski/swc_epys"
-source_code = "https://github.com/JoeZiminski/swc_epys"
-user_support = "https://github.com/JoeZiminski/swc_epys/issues"
+homepage = "https://github.com/JoeZiminski/spikewrap"
+bug_tracker = "https://github.com/JoeZiminski/spikewrap/issues"
+documentation = "https://github.com/JoeZiminski/spikewrap"
+source_code = "https://github.com/JoeZiminski/spikewrap"
+user_support = "https://github.com/JoeZiminski/spikewrap/issues"
+
 
 [project.optional-dependencies]
 dev = [
@@ -37,6 +53,9 @@ dev = [
   "pre-commit",
   "ruff",
   "setuptools_scm",
+  "types-setuptools",
+  "types-PyYAML",
+  "types-toml",
 ]
 
 [build-system]
@@ -51,11 +70,11 @@ build-backend = "setuptools.build_meta"
 include-package-data = true
 
 [tool.setuptools.packages.find]
-include = ["swc_epys*"]
+include = ["spikewrap*"]
 exclude = ["tests*"]
 
 [tool.pytest.ini_options]
-addopts = "--cov=swc_epys"
+addopts = "--cov=spikewrap"
 
 [tool.black]
 target-version = ['py38', 'py39', 'py310']
@@ -75,7 +94,8 @@ ignore = [
 ]
 
 [tool.ruff]
-line-length = 79
+ignore = ["E501"]  # E501: line length violation (let Black handle, ignore strings).
+
 exclude = ["__init__.py","build",".eggs"]
 select = ["I", "E", "F"]
 fix = true
@@ -85,3 +105,6 @@ build = "cp38-* cp39-* cp310-*"
 
 [tool.cibuildwheel.macos]
 archs = ["x86_64", "arm64"]
+
+[project.scripts]
+spikewrap = "spikewrap.command_line_interface:main"
