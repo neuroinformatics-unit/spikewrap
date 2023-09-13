@@ -8,6 +8,9 @@ from typing import Callable, Dict, List, Literal
 
 from ..utils import utils
 
+# --------------------------------------------------------------------------------------
+# Review Start
+# --------------------------------------------------------------------------------------
 
 @dataclass
 class BaseUserDict(UserDict):
@@ -123,6 +126,10 @@ class BaseUserDict(UserDict):
                     f"Gate with index larger than 0 is not supported. This is found "
                     f"in run name {run_name}. "
                 )
+
+# --------------------------------------------------------------------------------------
+# Review Stop
+# --------------------------------------------------------------------------------------
 
     # Rawdata Paths --------------------------------------------------------------
 
