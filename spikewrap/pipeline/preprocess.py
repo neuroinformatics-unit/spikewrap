@@ -1,5 +1,5 @@
 import json
-from typing import Dict, List, Tuple, Union
+from typing import Dict, List, Tuple, Union, Literal, Optional,
 
 import numpy as np
 import spikeinterface.preprocessing as spre
@@ -18,6 +18,7 @@ def run_preprocessing(
     preprocess_data: PreprocessingData,
     pp_steps: str,
     handle_existing_data: HandleExisting,
+    write_binary_options: Dict,
     slurm_batch: Union[bool, Dict] = False,
     log: bool = True,
 ):
@@ -68,12 +69,13 @@ def run_preprocessing(
                 "preprocess_data": preprocess_data,
                 "pp_steps": pp_steps_dict,
                 "handle_existing_data": handle_existing_data,
+                "write_binary_options": write_binary_options,
                 "log": log,
             },
         ),
     else:
         _preprocess_and_save_all_runs(
-            preprocess_data, pp_steps_dict, handle_existing_data, log
+            preprocess_data, pp_steps_dict, handle_existing_data, write_binary_options, log
         )
 
 
@@ -110,6 +112,7 @@ def _preprocess_and_save_all_runs(
     preprocess_data: PreprocessingData,
     pp_steps_dict: Dict,
     handle_existing_data: HandleExisting,
+    write_binary_options: Dict,
     log: bool = True,
 ) -> None:
     """
@@ -141,7 +144,7 @@ def _preprocess_and_save_all_runs(
 
         if to_save:
             _preprocess_and_save_single_run(
-                preprocess_data, ses_name, run_name, pp_steps_dict, overwrite
+                preprocess_data, ses_name, run_name, pp_steps_dict, overwrite, write_binary_options
             )
 
     if log:
@@ -154,6 +157,7 @@ def _preprocess_and_save_single_run(
     run_name: str,
     pp_steps_dict: Dict,
     overwrite: bool,
+    write_binary_options: Dict,
 ) -> None:
     """
     Given a single session and run, fill the entry for this run
@@ -166,7 +170,7 @@ def _preprocess_and_save_single_run(
         pp_steps_dict,
     )
 
-    preprocess_data.save_preprocessed_data(ses_name, run_name, overwrite)
+    preprocess_data.save_preprocessed_data(ses_name, run_name, overwrite, write_binary_options)
 
 
 def _handle_existing_data_options(

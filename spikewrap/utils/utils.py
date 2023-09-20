@@ -7,6 +7,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Callable, Dict, List, Literal, Tuple, Union
 
 import numpy as np
+import psutil
 import yaml
 
 if TYPE_CHECKING:
@@ -286,3 +287,14 @@ def paths_are_in_datetime_order(
     is_in_time_order = list_of_paths == list_of_paths_by_time
 
     return is_in_time_order
+
+
+def get_chunk_size_based_on_available_memory(write_binary_kwargs: Dict) -> str:
+    """ """
+    proportion = int(write_binary_kwargs["memory_percent"]) / 100
+    memory_GB = psutil.virtual_memory().available / 1e09
+
+    memory_to_use = np.floor(memory_GB * proportion)
+    memory_str = str((memory_to_use.astype(np.int16))) + "G"
+
+    return memory_str

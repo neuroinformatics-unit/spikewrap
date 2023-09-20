@@ -80,7 +80,7 @@ def run_postprocess(
 
     # Create / load waveforms
     if waveform_options is None:
-        _, _, waveform_options = get_configs("default")
+        _, _, waveform_options, _ = get_configs("default")
 
     waveforms = run_or_get_waveforms(
         postprocess_data, existing_waveform_data, waveform_options

@@ -11,6 +11,7 @@
   - operator: median
     reference: global
 
+
 'sorting':
   'kilosort2':
     'car': False     # common average referencing
@@ -35,3 +36,7 @@
   'peak_sign': "neg"
   'method': "radius"
   'radius_um': 75
+
+'write_binary_file':
+  'method': "memory_percent"
+  'value': "75"

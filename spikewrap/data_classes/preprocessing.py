@@ -1,6 +1,6 @@
 import shutil
 from dataclasses import dataclass
-from typing import Dict
+from typing import Dict, Optional
 
 import spikeinterface
 
@@ -73,7 +73,11 @@ class PreprocessingData(BaseUserDict):
     # Saving preprocessed data ---------------------------------------------------------
 
     def save_preprocessed_data(
-        self, ses_name: str, run_name: str, overwrite: bool = False
+        self,
+        ses_name: str,
+        run_name: str,
+        overwrite: bool = False,
+        write_binary_kwargs: Optional[Dict] = None,
     ) -> None:
         """
         Save the preprocessed output data to binary, as well
@@ -99,11 +103,31 @@ class PreprocessingData(BaseUserDict):
             if self.get_preprocessing_path(ses_name, run_name).is_dir():
                 shutil.rmtree(self.get_preprocessing_path(ses_name, run_name))
 
-        self._save_preprocessed_binary(ses_name, run_name)
-        self._save_sync_channel(ses_name, run_name)
+        # TODO: own function
+        # TODO: not tested (manually or in code). awaiting SI issue
+        if write_binary_kwargs is None:
+            write_binary_kwargs = {}
+        else:
+            assert len(write_binary_kwargs) == 1, "something"
+            assert write_binary_kwargs.keys() in [""]
+
+            if write_binary_kwargs.keys() == "memory_percent":
+                total_memory = utils.get_chunk_size_based_on_available_memory(
+                    write_binary_kwargs
+                )
+                write_binary_kwargs = {"total_memory": total_memory}
+
+        utils.message_user(
+            f"Preprocess data been written with settings {write_binary_kwargs}"
+        )
+
+        self._save_preprocessed_binary(ses_name, run_name, **write_binary_kwargs)
+        self._save_sync_channel(ses_name, run_name, **write_binary_kwargs)
         self._save_preprocessing_info(ses_name, run_name)
 
-    def _save_preprocessed_binary(self, ses_name: str, run_name: str) -> None:
+    def _save_preprocessed_binary(
+        self, ses_name: str, run_name: str, **write_binary_kwargs
+    ) -> None:
         """
         Save the fully preprocessed data (i.e. last step in the
         preprocessing chain) to binary file. This is required for sorting.
@@ -111,11 +135,15 @@ class PreprocessingData(BaseUserDict):
         recording, __ = utils.get_dict_value_from_step_num(
             self[ses_name][run_name], "last"
         )
+
         recording.save(
-            folder=self._get_pp_binary_data_path(ses_name, run_name), chunk_memory="10M"
+            folder=self._get_pp_binary_data_path(ses_name, run_name),
+            **write_binary_kwargs,
         )
 
-    def _save_sync_channel(self, ses_name: str, run_name: str) -> None:
+    def _save_sync_channel(
+        self, ses_name: str, run_name: str, **write_binary_kwargs
+    ) -> None:
         """
         Save the sync channel separately. In SI, sorting cannot proceed
         if the sync channel is loaded to ensure it does not interfere with
@@ -129,7 +157,7 @@ class PreprocessingData(BaseUserDict):
 
         self.sync[ses_name][run_name].save(  # type: ignore
             folder=self._get_sync_channel_data_path(ses_name, run_name),
-            chunk_memory="10M",
+            **write_binary_kwargs,
         )
 
     def _save_preprocessing_info(self, ses_name: str, run_name: str) -> None:

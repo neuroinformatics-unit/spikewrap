@@ -8,7 +8,7 @@ import yaml
 from spikewrap.utils import utils
 
 
-def get_configs(name: str) -> Tuple[Dict, Dict, Dict]:
+def get_configs(name: str) -> Tuple[Dict, Dict, Dict, Dict]:
     """
     Loads the config yaml file in the same folder
     (spikewrap/configs) containing preprocessing (pp)
@@ -64,7 +64,10 @@ def get_configs(name: str) -> Tuple[Dict, Dict, Dict]:
     pp_steps = config["preprocessing"] if "preprocessing" in config else {}
     sorter_options = config["sorting"] if "sorting" in config else {}
     waveform_options = config["waveforms"] if "waveforms" in config else {}
+    write_binary_options = (
+        config["write_binary_options"] if "write_binary_options" in config else {}
+    )
 
     utils.cast_pp_steps_values(pp_steps, "tuple")
 
-    return pp_steps, sorter_options, waveform_options
+    return pp_steps, sorter_options, waveform_options, write_binary_options

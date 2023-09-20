@@ -189,7 +189,7 @@ def _run_full_pipeline(
     passed_arguments = locals()
     validate.check_function_arguments(passed_arguments)
 
-    pp_steps, sorter_options, waveform_options = get_configs(config_name)
+    pp_steps, sorter_options, waveform_options, write_binary_options = get_configs(config_name)
 
     logs = logging_sw.get_started_logger(
         utils.get_logging_path(base_path, sub_name),
@@ -206,8 +206,9 @@ def _run_full_pipeline(
         config_name,
         existing_preprocessed_data,
         slurm_batch=False,
+        write_binary_options=write_binary_options,
         log=True,
-    )  # TODO: use config_name for all funcs.
+    )  # TODO: use `config_name` for all funcs.
 
     sorting_data = run_sorting(
         base_path,
