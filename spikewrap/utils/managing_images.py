@@ -1,9 +1,14 @@
 from __future__ import annotations
 
+import os
 import platform
 import shutil
 from pathlib import Path
 from typing import TYPE_CHECKING, Literal, Optional, Tuple, Union
+
+import spikeinterface
+from spikeinterface.sorters.runsorter import SORTER_DOCKER_MAP
+from spython.main import Client
 
 from ..configs.backend.hpc import hpc_sorter_images_path
 from . import checks, utils
@@ -27,6 +32,9 @@ def move_singularity_image_if_required(
 
     Parameters
     ----------
+
+    sorting_data: SortingData
+        Spikewrap SortingData object.
 
     singularity_image: Optional[Union[Literal[True], Path]]
         Holds either a path to an existing (stored) sorter, or
@@ -172,7 +180,9 @@ def get_hpc_sorter_path(sorter: str) -> Path:
         The base to the sorter image on SWC HCP (ceph).
     """
     base_path = Path(hpc_sorter_images_path())
-    sorter_path = base_path / sorter / get_sorter_image_name(sorter)
+    sorter_path = (
+        base_path / sorter / spikeinterface.__version__ / get_sorter_image_name(sorter)
+    )
     return sorter_path
 
 
@@ -191,6 +201,8 @@ def get_sorter_image_name(sorter: str) -> str:
     sorter_name : str
         The SpikeInterface filename of the docker image for that sorter.
     """
+    # use spikeinterface sorter SORTER_DOCKER_MAP
+
     if "kilosort" in sorter:
         sorter_name = f"{sorter}-compiled-base.sif"
     else:
@@ -198,3 +210,44 @@ def get_sorter_image_name(sorter: str) -> str:
             sorter = "spyking-circus"
         sorter_name = f"{sorter}-base.sif"
     return sorter_name
+
+
+def download_all_sorters(save_to_config_location: bool = True) -> None:
+    """
+    Convenience function to download all sorters and move them to
+    the HPC path (set in configs/backend/hpc.py). This should be run
+    when upgrading to a new version of spikeinterface, to ensure
+    the latest image versions are used.
+
+    The SI images are stored at:
+        https://github.com/SpikeInterface/spikeinterface-dockerfiles
+
+    Parameters
+    ----------
+
+    save_to_config_location : bool
+        If `True`, the sorters are saved in the default hpc
+        sorter images path specified in configs/backend/hpc.py
+        If `False`, the sorters are downloaded to the current
+        working direction.
+    """
+    spikeinterface_version = spikeinterface.__version__
+
+    if save_to_config_location:
+        save_to_path = Path(hpc_sorter_images_path()) / spikeinterface_version
+    else:
+        save_to_path = Path(os.getcwd()) / spikeinterface_version
+
+    if save_to_path.is_dir():
+        raise FileExistsError(f"Image folder already exists at {save_to_path}")
+
+    save_to_path.mkdir()
+    os.chdir(save_to_path)
+
+    supported_sorters = utils.canonical_settings("supported_sorters")
+    can_run_locally = utils.canonical_settings("sorter_can_run_locally")
+
+    for sorter in supported_sorters:
+        if sorter not in can_run_locally:
+            container_image = SORTER_DOCKER_MAP[sorter]
+            Client.pull(f"docker://{container_image}")
