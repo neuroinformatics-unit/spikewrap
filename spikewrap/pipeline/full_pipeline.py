@@ -23,6 +23,7 @@ def run_full_pipeline(
     sorter: str = "kilosort2_5",
     concat_sessions_for_sorting: bool = False,
     concat_runs_for_sorting: bool = False,
+    preprocess_shanks_separately: bool = False,
     existing_preprocessed_data: HandleExisting = "fail_if_exists",
     existing_sorting_output: HandleExisting = "fail_if_exists",
     overwrite_postprocessing: bool = False,
@@ -147,7 +148,12 @@ def run_full_pipeline(
         base_path, sub_name, sessions_and_runs, data_format="spikeglx"
     )
 
-    run_preprocess(loaded_data, pp_steps, save_to_file=existing_preprocessed_data)
+    run_preprocess(
+        loaded_data,
+        pp_steps,
+        save_to_file=existing_preprocessed_data,
+        preprocess_shanks_separately=preprocess_shanks_separately,
+    )
 
     sorting_data = run_sorting(
         base_path,

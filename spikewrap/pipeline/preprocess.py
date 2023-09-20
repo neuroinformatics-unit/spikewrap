@@ -14,6 +14,7 @@ def run_preprocess(
     preprocess_data: PreprocessingData,
     pp_steps: Union[Dict, str],
     save_to_file: Union[Literal[False], HandleExisting],
+    preprocess_shanks_separately: bool = False,
     slurm_batch: Union[bool, Dict] = False,
     log: bool = True,
 ) -> None:
@@ -45,9 +46,17 @@ def run_preprocess(
         preprocess_path = preprocess_data.get_preprocessing_path(ses_name, run_name)
 
         if save_to_file is False:
-            preprocess_data = preprocess(preprocess_data, ses_name, run_name, pp_steps)
+            preprocess_data = preprocess(
+                preprocess_data,
+                ses_name,
+                run_name,
+                pp_steps,
+                preprocess_shanks_separately,
+            )
         else:
-            if save_to_file == "skip_if_exists":
+            if (
+                save_to_file == "skip_if_exists"
+            ):  # TODO: should do a check, if this was not split and we are asking for split (for vice versa) then restrict.
                 if preprocess_path.is_dir():
                     utils.message_user(
                         f"\nSkipping preprocessing, using file at "
@@ -76,7 +85,13 @@ def run_preprocess(
                     )
                 overwrite = False
 
-            preprocess_data = preprocess(preprocess_data, ses_name, run_name, pp_steps)
+            preprocess_data = preprocess(
+                preprocess_data,
+                ses_name,
+                run_name,
+                pp_steps,
+                preprocess_shanks_separately,
+            )
 
             preprocess_data.save_preprocessed_data(ses_name, run_name, overwrite)
 
@@ -89,6 +104,7 @@ def preprocess(
     ses_name: str,
     run_name: str,
     pp_steps: Union[Dict, str],
+    preprocess_shanks_separately: bool = False,
 ) -> PreprocessingData:
     """
     Returns an updated PreprocessingData dictionary of SpikeInterface
@@ -133,6 +149,11 @@ def preprocess(
     checked_pp_steps, pp_step_names = check_and_sort_pp_steps(pp_steps_to_run, pp_funcs)
 
     preprocess_data.set_pp_steps(pp_steps_to_run)
+
+    if preprocess_shanks_separately:
+        preprocess_data[ses_name][run_name]["0-raw"] = preprocess_data[ses_name][
+            run_name
+        ]["0-raw"].split_by("group")
 
     for step_num, pp_info in checked_pp_steps.items():
         perform_preprocessing_step(
@@ -274,15 +295,15 @@ def perform_preprocessing_step(
 
     confidence_check_pp_func_name(pp_name, pp_funcs)
 
-    #    if isinstance(last_pp_step_output, Dict):
-    #        preprocess_data[ses_name][run_name][new_name] = {
-    #            k: pp_funcs[pp_name](v, **pp_options)
-    #            for k, v in last_pp_step_output.items()
-    #        }
-    #    else:
-    preprocess_data[ses_name][run_name][new_name] = pp_funcs[pp_name](
-        last_pp_step_output, **pp_options
-    )
+    if isinstance(last_pp_step_output, Dict):
+        preprocess_data[ses_name][run_name][new_name] = {
+            key: pp_funcs[pp_name](rec, **pp_options)
+            for key, rec in last_pp_step_output.items()
+        }
+    else:
+        preprocess_data[ses_name][run_name][new_name] = pp_funcs[pp_name](
+            last_pp_step_output, **pp_options
+        )
 
 
 def confidence_check_pp_func_name(pp_name, pp_funcs):

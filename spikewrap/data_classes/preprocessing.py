@@ -107,13 +107,33 @@ class PreprocessingData(BaseUserDict):
         """
         Save the fully preprocessed data (i.e. last step in the
         preprocessing chain) to binary file. This is required for sorting.
+
+        If the recording is a `Dict`, then it was split during `run_preprocess`
+        and each recording in the dictionary is a split shank. Otherwise, it
+        is a single (unsplit) recording object.
         """
         recording, __ = utils.get_dict_value_from_step_num(
             self[ses_name][run_name], "last"
         )
-        recording.save(
-            folder=self._get_pp_binary_data_path(ses_name, run_name), chunk_memory="10M"
-        )
+
+        if isinstance(recording, Dict):
+            for shank, rec in recording.items():
+                utils.message_user(
+                    f"Saving preprocessed data for {ses_name}, {run_name}, shank {shank}."
+                )
+
+                rec.save(
+                    folder=self._get_pp_binary_data_path(ses_name, run_name)
+                    / f"shank_{shank}",
+                    chunk_memory="10M",  # TODO: handle duplication.
+                )
+        else:
+            utils.message_user(f"Saving preprocessed data for {ses_name}, {run_name}.")
+
+            recording.save(
+                folder=self._get_pp_binary_data_path(ses_name, run_name),
+                chunk_memory="10M",
+            )
 
     def _save_sync_channel(self, ses_name: str, run_name: str) -> None:
         """

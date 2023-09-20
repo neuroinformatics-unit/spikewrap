@@ -29,5 +29,6 @@ run_preprocess(
     pp_steps="default",
     save_to_file="overwrite",
     log=True,
-    slurm_batch=True,
+    slurm_batch=False,
+    preprocess_shanks_separately=True,
 )
