@@ -44,6 +44,25 @@ def canonical_names(name: str) -> str:
     return filenames[name]
 
 
+def canonical_settings(setting: str) -> List:
+    """
+    Centralise all key settings around supported sorters
+    and how they should be run.
+    """
+    canonical_settings = {
+        "supported_sorters": [
+            "kilosort2",
+            "kilosort2_5",
+            "kilosort3",
+            "mountainsort5",
+            "spykingcircus",
+            "tridesclous",
+        ],
+        "sorter_can_run_locally": ["spykingcircus", "mountainsort5", "tridesclous"],
+    }
+    return canonical_settings[setting]
+
+
 def get_formatted_datetime() -> str:
     return datetime.now().strftime("%Y-%m-%d_%H%M%S")
 

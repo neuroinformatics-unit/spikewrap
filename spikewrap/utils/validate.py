@@ -6,6 +6,7 @@ from typeguard import CollectionCheckStrategy
 
 from ..configs.backend.hpc import default_slurm_options
 from ..data_classes.preprocessing import PreprocessingData
+from ..utils import utils
 from ..utils.custom_types import DeleteIntermediate, HandleExisting
 
 
@@ -52,14 +53,7 @@ def check_function_arguments(arguments):
             if not typecheck(arg_value, str):
                 raise TypeError("`sorter` must be a str indicating the sorter to use.")
 
-            supported_sorters = [
-                "kilosort2",
-                "kilosort2_5",
-                "kilosort3",
-                "mountainsort5",
-                "spykingcircus",
-                "tridesclous",
-            ]
+            supported_sorters = utils.cannonical_settings("supported_sorters")
 
             if arg_value not in supported_sorters:
                 raise ValueError(f"`sorter` must be one of {supported_sorters}")
