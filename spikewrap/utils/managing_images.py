@@ -6,7 +6,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Literal, Optional, Tuple, Union
 
 from ..configs.backend.hpc import hpc_sorter_images_path
-from . import checks
+from . import checks, utils
 
 if TYPE_CHECKING:
     from ..data_classes.sorting import SortingData
@@ -60,7 +60,7 @@ def get_image_run_settings(
     sorter : str
         Sorter name.
     """
-    can_run_locally = ["spykingcircus", "mountainsort5", "tridesclous"]
+    can_run_locally = utils.canonical_settings("sorter_can_run_locally")
 
     if sorter in can_run_locally:
         singularity_image = docker_image = None
@@ -179,7 +179,7 @@ def get_hpc_sorter_path(sorter: str) -> Path:
 def get_sorter_image_name(sorter: str) -> str:
     """
     Get the sorter image name, as defined by how
-    SpikeInterface names the docker images it provides.
+    SpikeInterface names the images it provides.
 
     Parameters
     ----------
