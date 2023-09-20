@@ -53,7 +53,7 @@ def check_function_arguments(arguments):
             if not typecheck(arg_value, str):
                 raise TypeError("`sorter` must be a str indicating the sorter to use.")
 
-            supported_sorters = utils.cannonical_settings("supported_sorters")
+            supported_sorters = utils.canonical_settings("supported_sorters")
 
             if arg_value not in supported_sorters:
                 raise ValueError(f"`sorter` must be one of {supported_sorters}")
