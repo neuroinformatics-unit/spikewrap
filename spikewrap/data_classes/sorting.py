@@ -11,6 +11,9 @@ from spikeinterface import concatenate_recordings
 
 from ..utils import utils
 from .base import BaseUserDict
+from .preprocessed_run_recording import (
+    PreprocessedRunRecording,
+)
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -105,8 +108,10 @@ class SortingData(BaseUserDict, ABC):
         """"""
         recordings: Dict = {}
         for ses_name, run_name in self.preprocessing_sessions_and_runs():
-            rec = si.load_extractor(self._get_pp_binary_data_path(ses_name, run_name))
-            utils.update(recordings, ses_name, run_name, value=rec)
+            recording = PreprocessedRunRecording(
+                file_path=self._get_pp_binary_data_path(ses_name, run_name)
+            )
+            utils.update(recordings, ses_name, run_name, value=recording)
 
         return recordings
 
@@ -125,6 +130,7 @@ class SortingData(BaseUserDict, ABC):
         concatenated_recording : si.BaseRecording
             A SI recording object holding the concatenated preprocessed data.
         """
+        breakpoint()
         session_run_names, recordings_list = zip(*recordings[ses_name].items())
         concatenated_recording = concatenate_recordings(recordings_list)
 
@@ -403,6 +409,7 @@ class ConcatenateRuns(SortingData):
 
         for ses_name in self.sessions_and_runs.keys():
             concat_recording = self._concatenate_runs(ses_name, recordings)
+
             utils.update(
                 self.data, ses_name, self.concat_run_name(ses_name), concat_recording
             )

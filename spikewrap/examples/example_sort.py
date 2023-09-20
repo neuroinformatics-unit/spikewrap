@@ -21,5 +21,5 @@ if __name__ == "__main__":
         sorter="kilosort2_5",
         concatenate_runs=True,
         concatenate_sessions=False,
-        slurm_batch=True,
+        slurm_batch=False,
     )

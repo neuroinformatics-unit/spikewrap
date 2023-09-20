@@ -30,5 +30,5 @@ run_preprocess(
     save_to_file="overwrite",
     log=True,
     slurm_batch=False,
-    preprocess_shanks_separately=True,
+    preprocess_shanks_separately=False,
 )
