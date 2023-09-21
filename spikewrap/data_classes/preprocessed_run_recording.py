@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import Literal, Optional, Union
+from typing import Dict, List, Literal, Optional, Tuple, Union
 
 import spikeinterface as si
 
@@ -44,16 +44,29 @@ class PreprocessedRunRecording:
                 "Please check the preprocessing step."
             )
 
-    def get_folder_contents_and_shank_type(self) -> Literal["single", "multi"]:
-        """"""
-        folder_contents = list(self.file_path.glob("*"))
-        [path_.stem for path_ in self.folder_contents]
+    def load_binary_data(self, file_path: Path) -> None:
+        folder_contents, shank_type = self.get_folder_contents_and_shank_type(file_path)
 
-        if "shank_0" in self.folder_contents_names:
-            if not all(["shank_" in name for name in self.folder_contents_names]):
+        if shank_type == "single":
+            self.data["0"] = si.load_extractor(file_path)
+        else:
+            # use idx so we are sure we are in order.
+            for idx in range(len(folder_contents)):
+                expected_rec_filepath = file_path / f"shank_{idx}"
+                self.data[str(idx)] = si.load_extractor(expected_rec_filepath)
+
+    def get_folder_contents_and_shank_type(
+        self, file_path: Path
+    ) -> Tuple[List, Literal["single", "multi"]]:
+        """"""
+        folder_contents = list(file_path.glob("*"))
+        folder_contents_names = [path_.stem for path_ in folder_contents]
+
+        if "shank_0" in folder_contents_names:
+            if not all(["shank_" in name for name in folder_contents_names]):
                 raise RuntimeError(
                     f"There is a folder that does not begin with 'shank'"
-                    f"in the preprocessed data folder at {self.file_path}. Please delete"
+                    f"in the preprocessed data folder at {file_path}. Please delete"
                     f"this folder - non-spikewrap files or folders should "
                     f"never be stored here."
                 )
@@ -69,24 +82,13 @@ class PreprocessedRunRecording:
                 "si_folder",
                 "traces_cached_seg0",
             ]:
-                if name not in self.folder_contents_names:
+                if name not in folder_contents_names:
                     raise RuntimeError(
-                        f"The file / folder {name} cannot be found in {self.file_path}.",
+                        f"The file / folder {name} cannot be found in {file_path}.",
                         "There may be a problem when saving the preprocessed file.",
                         "Please contact spikewrap.",
                     )
             return folder_contents, "single"
-
-    def load_binary_data(self, file_path: Path) -> None:
-        folder_contents, shank_type = self.get_folder_contents_and_shank_type(file_path)
-
-        if shank_type == "single":
-            self.data["0"] = si.load_extractor(file_path)
-        else:
-            # use idx so we are sure we are in order.
-            for idx in range(len(folder_contents)):
-                expected_rec_filepath = file_path / f"shank_{idx}"
-                self.data[str(idx)] = si.load_extractor(expected_rec_filepath)
 
 
 def concatenate_preprocessed_run_recordings(
@@ -94,13 +96,13 @@ def concatenate_preprocessed_run_recordings(
 ) -> PreprocessedRunRecording:
     breakpoint()
 
-    expected_shank_idx = recordings[
-        0
-    ].data.keys()  # figure out data # TODO: ensure these are all in the same order? or at least all increasing
+    # figure out data # TODO: ensure these are all in the same order? or at least all
+    #  increasing
+    expected_shank_idx = recordings[0].data.keys()
+
+    # TODO: can we do this equality?
     for recording in recordings:
-        assert (
-            first_recording_keys == recording.keys()
-        )  # TODO: can we do this equality?
+        assert first_recording_keys == recording.keys()
 
     for shank_idx in expected_shank_idx:
         breakpoint()

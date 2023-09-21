@@ -13,6 +13,7 @@ from ..utils import utils
 from .base import BaseUserDict
 from .preprocessed_run_recording import (
     PreprocessedRunRecording,
+    concatenate_preprocessed_run_recordings,
 )
 
 if TYPE_CHECKING:
@@ -130,9 +131,14 @@ class SortingData(BaseUserDict, ABC):
         concatenated_recording : si.BaseRecording
             A SI recording object holding the concatenated preprocessed data.
         """
-        breakpoint()
         session_run_names, recordings_list = zip(*recordings[ses_name].items())
-        concatenated_recording = concatenate_recordings(recordings_list)
+
+        concatenated_recording = concatenate_preprocessed_run_recordings(
+            recordings_list
+        )
+
+        # concatenated_recording = concatenate_recordings(recordings_list)
+        breakpoint()
 
         assert session_run_names == tuple(
             self.sessions_and_runs[ses_name]
