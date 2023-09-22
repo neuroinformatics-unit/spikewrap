@@ -21,7 +21,6 @@ classifiers = [
 
 dependencies = [
     "spikeinterface==0.98.2",
-
     "submitit",
     "PyYAML",
     "toml",
@@ -102,11 +101,6 @@ exclude = ["__init__.py","build",".eggs"]
 select = ["I", "E", "F"]
 fix = true
 
-[tool.cibuildwheel]
-build = "cp38-* cp39-* cp310-*"
-
-[tool.cibuildwheel.macos]
-archs = ["x86_64", "arm64"]
 
 [project.scripts]
 spikewrap = "spikewrap.command_line_interface:main"
