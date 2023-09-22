@@ -18,9 +18,9 @@ jobs:
     name: ${{ matrix.os }} py${{ matrix.python-version }}
     runs-on: ${{ matrix.os }}
 
- #   defaults:
-  #    run:
-   #     shell: bash # -l {0}  # https://stackoverflow.com/questions/69070754/shell-bash-l-0-in-github-actions
+    defaults:
+      run:
+        shell: bash # -l {0}  # https://stackoverflow.com/questions/69070754/shell-bash-l-0-in-github-actions
 
     strategy:
       matrix:
