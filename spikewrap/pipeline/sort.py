@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import os
+import platform
 from pathlib import Path
 from typing import Dict, List, Literal, Optional, Union
 
@@ -108,6 +109,9 @@ def run_sorting(
         slurm.run_sorting_slurm(**passed_arguments)
         return None
     assert slurm_batch is False, "SLURM run has slurm_batch set True"
+
+    if sorter == "mountainsort5" and platform.system() == "Darwin":
+        raise EnvironmentError("Mountainsort is not currently supported on macOS.")
 
     logs = logging_sw.get_started_logger(
         utils.get_logging_path(base_path, sub_name),
