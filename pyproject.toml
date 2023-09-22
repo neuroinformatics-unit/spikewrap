@@ -33,7 +33,6 @@ dependencies = [
     "docker; platform_system=='Windows'",
 	"docker; platform_system=='Darwin'",
     "spython; platform_system=='Linux'",  # I think missing from SI?
-    "cuda-python",
 ]
 
 [project.urls]
