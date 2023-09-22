@@ -1,4 +1,4 @@
-name: linting
+name: lint and install
 
 on:
   push:
@@ -7,7 +7,29 @@ on:
   pull_request:
 
 jobs:
-  linting:
-    runs-on: ubuntu-latest
+#  linting:
+ #   runs-on: ubuntu-latest
+  #  steps:
+   #   - uses: neuroinformatics-unit/actions/lint@main
+
+
+  install:
+
+    name: ${{ matrix.os }} py${{ matrix.python-version }}
+    runs-on: ${{ matrix.os }}
+
+ #   defaults:
+  #    run:
+   #     shell: bash # -l {0}  # https://stackoverflow.com/questions/69070754/shell-bash-l-0-in-github-actions
+
+    strategy:
+      matrix:
+        os: [windows-latest, ubuntu-latest, macos-latest]
+        python-version: ["3.8", "3.9", "3.10", "3.11"]
+
     steps:
-      - uses: neuroinformatics-unit/actions/lint@main
+      - uses: actions/checkout@v4
+      - name: Install dependencies
+        run:
+          python3 -m pip install --upgrade pip
+          pip install .
