@@ -14,7 +14,7 @@ jobs:
 
 
   install:
-
+    needs: [linting]
     name: ${{ matrix.os }} py${{ matrix.python-version }}
     runs-on: ${{ matrix.os }}
 
