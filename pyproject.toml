@@ -28,7 +28,7 @@ dependencies = [
     # sorter-specific
     "tridesclous",
     # "spyking-circus", TODO: this is not straightforward, requires mpi4py. TBD if we want to manage this.
-    "mountainsort5",
+    "mountainsort5; platform_system != 'Darwin'",
     "docker; platform_system=='Windows'",
 	"docker; platform_system=='Darwin'",
     "spython; platform_system=='Linux'",  # I think missing from SI?
