@@ -102,11 +102,20 @@ class SortingData(BaseUserDict, ABC):
     # ----------------------------------------------------------------------------------
 
     def initialise_preprocessed_recordings_dict(self) -> Dict:
-        """"""
+        """
+        Return a dictionary of preprocessed recordings loaded
+        as spikeinterface BinaryFolderRecording.
+        """
         recordings: Dict = {}
-        for ses_name, run_name in self.preprocessing_sessions_and_runs():
-            rec = si.load_extractor(self._get_pp_binary_data_path(ses_name, run_name))
-            utils.update(recordings, ses_name, run_name, value=rec)
+
+        for ses_name in self.sessions_and_runs.keys():
+            recordings[ses_name] = {}
+
+            for run_name in self.sessions_and_runs[ses_name]:
+                rec = si.load_extractor(
+                    self._get_pp_binary_data_path(ses_name, run_name)
+                )
+                recordings[ses_name][run_name] = rec
 
         return recordings
 
