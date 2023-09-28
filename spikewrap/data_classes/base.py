@@ -175,6 +175,17 @@ class BaseUserDict(UserDict):
             "preprocessed_yaml"
         )
 
+    @staticmethod
+    def update_two_layer_dict(dict_, ses_name, run_name, value):
+        """
+        Convenience function to allow updating a two-layer
+        dictionary even if it is empty.
+        """
+        if ses_name in dict_:
+            dict_[ses_name][run_name] = value
+        else:
+            dict_[ses_name] = {run_name: value}
+
     def keys(self) -> KeysView:
         return self.data.keys()
 
