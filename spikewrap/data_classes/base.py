@@ -51,7 +51,7 @@ class BaseUserDict(UserDict):
                 ), "Run names must be string or list of strings"
                 self.sessions_and_runs[key] = [value]
 
-    def preprocessing_sessions_and_runs(self) -> List[Tuple[str, str]]:
+    def flat_sessions_and_runs(self) -> List[Tuple[str, str]]:
         """
         This returns the sessions and runs dictionary flattened so that
         sessions and runs can be iterated over conveniently. `ordered_run_names`

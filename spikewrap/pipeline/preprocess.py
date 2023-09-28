@@ -39,7 +39,7 @@ def run_preprocess(
         )
         utils.show_passed_arguments(passed_arguments, "`run_preprocessing`")
 
-    for ses_name, run_name in preprocess_data.preprocessing_sessions_and_runs():
+    for ses_name, run_name in preprocess_data.flat_sessions_and_runs():
         utils.message_user(f"Preprocessing run {run_name}...")
 
         preprocess_path = preprocess_data.get_preprocessing_path(ses_name, run_name)

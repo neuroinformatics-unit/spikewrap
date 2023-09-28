@@ -74,7 +74,7 @@ def _load_spikeglx_data(preprocess_data: PreprocessingData) -> PreprocessingData
 
     See load_data() for parameters.
     """
-    for ses_name, run_name in preprocess_data.preprocessing_sessions_and_runs():
+    for ses_name, run_name in preprocess_data.flat_sessions_and_runs():
         run_path = preprocess_data.get_rawdata_run_path(ses_name, run_name)
         assert run_name == run_path.name, "TODO"
 
