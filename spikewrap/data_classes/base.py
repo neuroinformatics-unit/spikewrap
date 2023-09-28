@@ -2,9 +2,8 @@ import fnmatch
 from collections import UserDict
 from collections.abc import ItemsView, KeysView, ValuesView
 from dataclasses import dataclass
-from itertools import chain
 from pathlib import Path
-from typing import Callable, Dict, List, Literal
+from typing import Callable, Dict, List, Literal, Tuple
 
 from ..utils import utils
 
@@ -52,14 +51,18 @@ class BaseUserDict(UserDict):
                 ), "Run names must be string or list of strings"
                 self.sessions_and_runs[key] = [value]
 
-    def preprocessing_sessions_and_runs(self):  # TODO: type hint
-        """"""
-        ordered_ses_names = list(
-            chain(*[[ses] * len(runs) for ses, runs in self.sessions_and_runs.items()])
-        )
-        ordered_run_names = list(
-            chain(*[runs for runs in self.sessions_and_runs.values()])
-        )
+    def preprocessing_sessions_and_runs(self) -> List[Tuple[str, str]]:
+        """
+        This returns the sessions and runs dictionary flattened so that
+        sessions and runs can be iterated over conveniently. `ordered_run_names`
+        is flattened to a long list of all runs, while `ordered_ses_name` carries
+        the corresponding session for each run.
+        """
+        ordered_run_names = []
+        ordered_ses_names = []
+        for ses, run in self.sessions_and_runs.items():
+            ordered_run_names += run
+            ordered_ses_names += [ses] * len(run)
 
         return list(zip(ordered_ses_names, ordered_run_names))
 
