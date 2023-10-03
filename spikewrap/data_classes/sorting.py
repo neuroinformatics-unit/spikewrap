@@ -338,9 +338,7 @@ class ConcatenateSessions(SortingData):
         concat_run_recordings = []
         for ses_name in recordings.keys():
             concat_run_recordings.append(self._concatenate_runs(ses_name, recordings))
-        self.data[self.concat_ses_name()] = concatenate_recordings(
-            concat_run_recordings
-        )
+        self[self.concat_ses_name()] = concatenate_recordings(concat_run_recordings)
 
     def get_sorting_sessions_and_runs(self):  # TODO: type
         return [(self.concat_ses_name(), None)]
@@ -404,7 +402,7 @@ class ConcatenateRuns(SortingData):
         for ses_name in self.sessions_and_runs.keys():
             concat_recording = self._concatenate_runs(ses_name, recordings)
             utils.update(
-                self.data, ses_name, self.concat_run_name(ses_name), concat_recording
+                self, ses_name, self.concat_run_name(ses_name), concat_recording
             )
 
     def get_sorting_sessions_and_runs(self):  # TODO: type

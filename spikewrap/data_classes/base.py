@@ -19,15 +19,19 @@ class BaseUserDict(UserDict):
     folder, allowing use of this class for
     preprocessing and sorting.
 
-    Base UserDict that implements the
-    keys(), values() and items() convenience functions."""
+    This class inhereits from UserDict, which allows us to define
+    a dictionary-like object with additional methods. This class can
+    be accessed like a dict e.g. `self[key]`. Under the hood, the
+    dictionary is stored in `self.data`. When inheriting UserDict
+    it is required to implement the `keys()`, `values()` and `items()`
+    convenience functions.
+    """
 
     base_path: Path
     sub_name: str
     sessions_and_runs: Dict[str, List[str]]
 
     def __post_init__(self) -> None:
-        self.data: Dict = {}
         self.base_path = Path(self.base_path)
         self.check_run_names_are_formatted_as_list()
 
