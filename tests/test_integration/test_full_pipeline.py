@@ -34,7 +34,7 @@ class TestFullPipeline(BaseTest):
 
         for ses_name, run_name in preprocess_data.preprocessing_sessions_and_runs():
             preprocess_data = preprocess.preprocess(
-                preprocess_data, ses_name, run_name, pp_steps, verbose=True
+                preprocess_data, ses_name, run_name, pp_steps
             )
             preprocess_data.save_preprocessed_data(ses_name, run_name, overwrite=True)
 
@@ -50,7 +50,7 @@ class TestFullPipeline(BaseTest):
 
         for ses_name, run_name in preprocess_data.preprocessing_sessions_and_runs():
             preprocess_data = preprocess.preprocess(
-                preprocess_data, ses_name, run_name, pp_steps, verbose=True
+                preprocess_data, ses_name, run_name, pp_steps
             )
             preprocess_data.save_preprocessed_data(ses_name, run_name, overwrite=True)
 
@@ -164,7 +164,7 @@ class TestFullPipeline(BaseTest):
     def test_existing_output_settings(self, test_info):
         """
         In spikewrap existing preprocessed and sorting output data is
-        handled with options `fail_if_exists`, `load_if_exists` or
+        handled with options `fail_if_exists`, `skip_if_exists` or
         `overwrite`. Check that the expected behaviour occurs when each of
         these options is set.
 
@@ -202,12 +202,12 @@ class TestFullPipeline(BaseTest):
 
         file_paths = self.write_an_empty_file_in_outputs(test_info, ses_name, run_name)
 
-        # Test outputs are not overwritten if `load_if_exists`.
+        # Test outputs are not overwritten if `skip_if_exists`.
         # Postprocessing is always deleted
         self.run_full_pipeline(
             *test_info,
-            existing_preprocessed_data="load_if_exists",
-            existing_sorting_output="load_if_exists",
+            existing_preprocessed_data="skip_if_exists",
+            existing_sorting_output="skip_if_exists",
             overwrite_postprocessing=True,
             sorter=DEFAULT_SORTER,
         )
@@ -220,7 +220,7 @@ class TestFullPipeline(BaseTest):
             self.run_full_pipeline(
                 *test_info,
                 existing_preprocessed_data="fail_if_exists",
-                existing_sorting_output="load_if_exists",
+                existing_sorting_output="skip_if_exists",
                 overwrite_postprocessing=True,
                 sorter=DEFAULT_SORTER,
             )
@@ -233,7 +233,7 @@ class TestFullPipeline(BaseTest):
         with pytest.raises(BaseException) as e:
             self.run_full_pipeline(
                 *test_info,
-                existing_preprocessed_data="load_if_exists",
+                existing_preprocessed_data="skip_if_exists",
                 existing_sorting_output="fail_if_exists",
                 overwrite_postprocessing=True,
                 sorter=DEFAULT_SORTER,
@@ -245,8 +245,8 @@ class TestFullPipeline(BaseTest):
         with pytest.raises(BaseException) as e:
             self.run_full_pipeline(
                 *test_info,
-                existing_preprocessed_data="load_if_exists",
-                existing_sorting_output="load_if_exists",
+                existing_preprocessed_data="skip_if_exists",
+                existing_sorting_output="skip_if_exists",
                 overwrite_postprocessing=False,
                 sorter=DEFAULT_SORTER,
             )
@@ -617,7 +617,7 @@ class TestFullPipeline(BaseTest):
             )
 
         paths = {
-            "preprocessing": run_path / "preprocessed",
+            "preprocessing": run_path / "preprocessing",
             "sorting_path": run_path / sorter / "sorting",
             "postprocessing": run_path / sorter / "postprocessing",
         }
