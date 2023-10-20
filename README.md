@@ -1,5 +1,5 @@
 > **Warning** 
-> **SWC Ephys is not sufficiently tested to be used in analysis. This release is only for testing. Do not use for your final analyses.**
+> **Spikewrap is not sufficiently tested to be used in analysis. This release is only for testing. Do not use for your final analyses.**
 
 > **Warning** **Limitations**
 > - works only on SpikeGLX recordings with 1 gate, 1 trigger, 1 probe (per run, e.g. g0, t0, imec0)
@@ -9,6 +9,7 @@
 > - no options to remove potentially large intermediate files
 > - installation / running on HPC is a bit clunky. In future this can be simplified with SLURM jobs organised under the hood and setting up a HPC module.
 > - untested!
+> - The documentation is currently outdated.
 
 
 # Features
@@ -23,7 +24,7 @@ Sorting requires a NVIDIA GPU and so is currently only available using the SWC's
 
 To install locally, clone the repository to your local machine using git. 
 
-`git clone git@github.com:neuroinformatics-unit/swc_ephys.git`
+`git clone git@github.com:neuroinformatics-unit/spikewrap.git`
 
 Change directory to the repo and install using
 
@@ -37,7 +38,7 @@ or if using the zsh shell
 
 `pip install -e ".[dev]"` 
 
-After installation, the module can be imported with `import swc_ephys`.
+After installation, the module can be imported with `import spikewrap`.
 
 ## Running on the HPC
 
@@ -49,23 +50,23 @@ To connect and run on the HPC (e.g. from Windows, macOS or Linux terminal):
 
 `ssh hpc-gw1`
 
-The first time using, it is necessary to steup and install `swc_ephys`. It is strongly recommended to make a new conda environment on the HPC, before installing `swc_ephys`.
+The first time using, it is necessary to steup and install `spikewrap`. It is strongly recommended to make a new conda environment on the HPC, before installing `spikewrap`.
 
 `module load miniconda`
 
-`conda create --name swc_ephys python=3.10`
+`conda create --name spikewrap python=3.10`
 
-`conda activate swc_ephys`
+`conda activate spikewrap`
 
-and install swc_ephys and it's dependencies:
+and install spikewrap and it's dependencies:
 
 `mkdir ~/git-repos`
 
 `cd ~/git-repos`
 
-`git clone https://github.com/JoeZiminski/swc_ephys.git`
+`git clone https://github.com/JoeZiminski/spikewrap.git`
 
-`cd swc_ephys`
+`cd spikewrap`
 
 `pip install -e .`
 
@@ -77,13 +78,13 @@ Before running, it is necessary to request use of a GPU node on the HPC to run s
 
 `module load miniconda`
 
-`conda activate swc_ephys`
+`conda activate spikewrap`
 
 `python my_pipeline_script.py`
 
 # Quick Start Guide
 
-SWC Ephys (currently) expects input data to be stored in a `rawdata` folder. A subject (e.g. mouse) data should be stored in the `rawdata` folder and contain SpikeGLX output format (example below). **Currently, only recordings with 1 gate, 1 trigger and 1 probe are supported (i.e. index 0 for all gate, trigger probe, `g0`, `t0` and `imec0`)**.
+Spikewrap (currently) expects input data to be stored in a `rawdata` folder. A subject (e.g. mouse) data should be stored in the `rawdata` folder and contain SpikeGLX output format (example below). **Currently, only recordings with 1 gate, 1 trigger and 1 probe are supported (i.e. index 0 for all gate, trigger probe, `g0`, `t0` and `imec0`)**.
 
 ```
 └── rawdata/
@@ -100,7 +101,7 @@ SWC Ephys (currently) expects input data to be stored in a `rawdata` folder. A s
 Example code to analyse this data in this format is below:
 
 ```
-from swc_ephys.pipeline.full_pipeline import run_full_pipeline
+from spikewrap.pipeline.full_pipeline import run_full_pipeline
 
 base_path = "/ceph/neuroinformatics/neuroinformatics/scratch/ece_ephys_learning"
 
@@ -155,7 +156,7 @@ Output are the saved preprocessed data, spike sorting results as well as a list 
 
 **preprocessed**: 
 
-- Binary-format spikeinterface recording from the final preprocessing step (`si_recording`) 2) `data_class.pkl` swc_ephys internal use.
+- Binary-format spikeinterface recording from the final preprocessing step (`si_recording`) 2) `data_class.pkl` spikewrap internal use.
 
 **-sorting output (e.g. kilosort2_5-sorting, multiple sorters can be run)**: 
 
@@ -203,8 +204,8 @@ Configuration files are structured as a dictionary where keys indicate the order
 Visualising preprocesing output can be run locally to inspect output of preprocessing routines. To visualise preprocessing outputs:
 
 ```
-from swc_ephys.pipeline.preprocess import preprocess
-from swc_ephys.pipeline.visualise import visualise
+from spikewrap.pipeline.preprocess import preprocess
+from spikewrap.pipeline.visualise import visualise
 
 base_path = "/ceph/neuroinformatics/neuroinformatics/scratch/ece_ephys_learning"
 sub_name = "1110925"
