@@ -13,10 +13,25 @@ from ..configs.backend.hpc import (
 from . import utils
 from .checks import system_call_success
 
-# TODO: fix all docs.
-
 
 def run_in_slurm(slurm_opts: Union[bool, Dict], func_to_run: Callable, func_opts: Dict):
+    """
+    Run a function in SLURM using submitit.
+
+    Parameters
+    ----------
+
+    slurm_opts : Union[bool, Dict]
+        Default SLURM options will be loaded from backend/hpc.py. If `True`, defaults
+        are used as-is, otherwise these can be overwritten by including the
+        key-value pairs to overwrite in a Dict. See backend/hpc.py for an example.
+
+    func_to_run : Callable
+        The function to run with SLURM with submitit.
+
+    func_opts : Dict
+        A dictionary of kwargs to run in the `func_to_run`.
+    """
     used_slurm_opts = default_slurm_options()
 
     if isinstance(slurm_opts, Dict):
@@ -50,14 +65,11 @@ def get_executor(log_path: Path, slurm_opts: Dict) -> submitit.AutoExecutor:
 
     Parameters
     ----------
-    func_opts : Dict
-        All arguments passed to the public function, minus
-        `slurm_batch`
+    log_path : Path
+        Path to log the SLURM output to.
 
     slurm_opts : Dict
-        The slurm options to run. This includes `spikewarp` default
-        slurm options overwritten where passed by user-defined
-        `slurm_batch`.
+        The slurm options to run. See backend/hpc.py for an example.
 
     Returns
     -------
@@ -89,18 +101,13 @@ def wrap_function_with_env_setup(
     Parameters
     ----------
     function : Callable
-        The ephys processing function to run in the SLURM job
-        e.g. run_full_pipeline, run_sorting
+        A function to run in the SLURM job.
 
-    slurm_opts : Union[Literal[True], Dict]
-        A kwarg passed to the processing function (e.g. run_full_pipeline)
-        indicating whether to run in the SLURM job. If True or a Dict,
-        the SLURM job is run. If a dict, the environment setup
-        can be passed in the 'env_name' field.
+    env_name : str
+        The name of the conda environment to run the job in
 
     func_opts : Dict
-        All arguments passed to the public function, minus
-        `slurm_batch`
+        All arguments passed to the public function.
     """
     print(f"\nrunning {function.__name__} with SLURM....\n")
 
@@ -116,8 +123,14 @@ def wrap_function_with_env_setup(
 def make_job_log_output_path(func_opts: Dict) -> Path:
     """
     The SLURM job logs are saved to a folder 'slurm_logs' in the
-    base directory in which the processing is being run
-    (i.e. the folder containing rawdata, derivatives). .
+    base directory. In spikewrap, this is taken from the processing
+    function inputs.
+
+    In the case of `preprocess_and_save_all_runs()`, the
+    `PreprocessingData` object is passed, otherwise `base_path` is
+    a passed argument.
+
+    TODO - this is messy.
 
     Parameters
     ----------
@@ -138,8 +151,6 @@ def make_job_log_output_path(func_opts: Dict) -> Path:
     if "base_path" in func_opts:
         log_path = func_opts["base_path"] / log_subpath
     else:
-        # in the case of `run_preprocess()`, the
-        # `PreprocessingData` object is passed.
         log_path = func_opts["preprocess_data"].base_path / log_subpath
 
     log_path.mkdir(exist_ok=True, parents=True)
@@ -159,12 +170,14 @@ def send_user_start_message(
     processing_function : str
         The function being run (i.e. run_full_pipeline, run_sorting)
 
+    log_path : Path
+        The path to the SLURM log output folder for the current job.
+
     job : submitit.job
         submitit.job object holding the SLURM job_id
 
     func_opts : Dict
-        Keyword arguments passed to the main running function
-        (e.g. run_full_pipeline, run_sorting)
+        Keyword arguments passed to the function to run in SLURM.
     """
     utils.message_user(
         f"---------------------- SLURM job submitted ----------------------\n"
