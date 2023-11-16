@@ -1,7 +1,7 @@
 from pathlib import Path
 
 from spikewrap.pipeline.load_data import load_data
-from spikewrap.pipeline.preprocessing import fill_all_runs_with_preprocessed_recording
+from spikewrap.pipeline.preprocess import fill_all_runs_with_preprocessed_recording
 from spikewrap.pipeline.visualise import visualise
 
 base_path = Path(
