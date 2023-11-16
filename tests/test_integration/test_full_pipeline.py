@@ -33,7 +33,7 @@ class TestFullPipeline(BaseTest):
         preprocess_data = load_data(*test_info[:3])
 
         for ses_name, run_name in preprocess_data.flat_sessions_and_runs():
-            preprocess_data = preprocess.preprocess(
+            preprocess._fill_run_data_with_preprocessed_recording(
                 preprocess_data, ses_name, run_name, pp_steps
             )
             preprocess_data.save_preprocessed_data(ses_name, run_name, overwrite=True)
@@ -49,7 +49,7 @@ class TestFullPipeline(BaseTest):
         preprocess_data = load_data(*test_info[:3])
 
         for ses_name, run_name in preprocess_data.flat_sessions_and_runs():
-            preprocess_data = preprocess.preprocess(
+            preprocess._fill_run_data_with_preprocessed_recording(
                 preprocess_data, ses_name, run_name, pp_steps
             )
             preprocess_data.save_preprocessed_data(ses_name, run_name, overwrite=True)

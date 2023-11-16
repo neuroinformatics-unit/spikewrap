@@ -1,7 +1,7 @@
 from pathlib import Path
 
 from spikewrap.pipeline.load_data import load_data
-from spikewrap.pipeline.preprocess import run_preprocess
+from spikewrap.pipeline.preprocessing import fill_all_runs_with_preprocessed_recording
 from spikewrap.pipeline.visualise import visualise
 
 base_path = Path(
@@ -14,7 +14,7 @@ sessions_and_runs = {
 
 loaded_data = load_data(base_path, sub_name, sessions_and_runs, "spikeglx")
 
-run_preprocess(loaded_data, pp_steps="default", save_to_file=False, log=False)
+fill_all_runs_with_preprocessed_recording(loaded_data, pp_steps="default")
 
 visualise(
     loaded_data,

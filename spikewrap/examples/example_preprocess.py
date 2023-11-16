@@ -29,5 +29,5 @@ run_preprocess_wrapper(
     pp_steps="default",
     save_to_file="overwrite",
     log=True,
-    slurm_batch=True,  # {"slurm_partition": "fast"},
+    slurm_batch=False,
 )

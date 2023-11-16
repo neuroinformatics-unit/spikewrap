@@ -32,6 +32,11 @@ def run_sorting_wrapper(
     existing_sorting_output: HandleExisting = "fail_if_exists",
     slurm_batch: Union[bool, Dict] = False,
 ):
+    # TOOD: refactor and handle argument groups separately.
+    # Avoid duplication with logging.
+    passed_arguments = locals()
+    validate.check_function_arguments(passed_arguments)
+
     if slurm_batch:
         slurm.run_in_slurm(
             slurm_batch,

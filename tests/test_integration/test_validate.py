@@ -5,7 +5,7 @@ import pytest
 from spikewrap.pipeline import full_pipeline
 from spikewrap.pipeline.load_data import load_data
 from spikewrap.pipeline.postprocess import run_postprocess
-from spikewrap.pipeline.preprocess import run_preprocess
+from spikewrap.pipeline.preprocess import _preprocess_and_save_all_runs
 from spikewrap.pipeline.sort import run_sorting_wrapper
 
 from .base import BaseTest
@@ -169,7 +169,7 @@ class TestValidate(BaseTest):
         pp_steps, __, __ = full_pipeline.get_configs("test_preprocessing_1")
 
         with pytest.raises(TypeError) as e:
-            run_preprocess(
+            _preprocess_and_save_all_runs(
                 preprocess_data=None, pp_steps=pp_steps, save_to_file="overwrite"
             )
         assert (
@@ -180,7 +180,7 @@ class TestValidate(BaseTest):
         preprocess_data = load_data(*test_info[:3])
 
         with pytest.raises(AssertionError) as e:
-            run_preprocess(
+            _preprocess_and_save_all_runs(
                 preprocess_data=preprocess_data,
                 pp_steps="bad_name",
                 save_to_file="overwrite",
@@ -191,7 +191,7 @@ class TestValidate(BaseTest):
         )
 
         with pytest.raises(TypeError) as e:
-            run_preprocess(
+            _preprocess_and_save_all_runs(
                 preprocess_data=preprocess_data,
                 pp_steps=pp_steps,
                 save_to_file="bad_name",
@@ -199,7 +199,7 @@ class TestValidate(BaseTest):
         assert "`save_to_file` must be `False` or one of" in str(e.value)
 
         with pytest.raises(TypeError) as e:
-            run_preprocess(
+            _preprocess_and_save_all_runs(
                 preprocess_data=preprocess_data,
                 pp_steps=pp_steps,
                 save_to_file="overwrite",
@@ -210,7 +210,7 @@ class TestValidate(BaseTest):
         )
 
         with pytest.raises(TypeError) as e:
-            run_preprocess(
+            _preprocess_and_save_all_runs(
                 preprocess_data=preprocess_data,
                 pp_steps=pp_steps,
                 save_to_file="overwrite",

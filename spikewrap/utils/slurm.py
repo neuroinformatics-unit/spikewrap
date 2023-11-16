@@ -126,7 +126,7 @@ def make_job_log_output_path(func_opts: Dict) -> Path:
     base directory. In spikewrap, this is taken from the processing
     function inputs.
 
-    In the case of `preprocess_and_save_all_runs()`, the
+    In the case of `_preprocess_and_save_all_runs()`, the
     `PreprocessingData` object is passed, otherwise `base_path` is
     a passed argument.
 

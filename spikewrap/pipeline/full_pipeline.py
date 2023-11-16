@@ -11,7 +11,7 @@ from ..utils import logging_sw, slurm, utils, validate
 from ..utils.custom_types import DeleteIntermediate, HandleExisting
 from .load_data import load_data
 from .postprocess import run_postprocess
-from .preprocess import run_preprocess
+from .preprocess import run_preprocess_wrapper
 from .sort import run_sorting_wrapper
 
 
@@ -30,6 +30,11 @@ def run_full_pipeline_wrapper(
     slurm_batch: Union[bool, Dict] = False,
 ):
     """ """
+    # TOOD: refactor and handle argument groups separately.
+    # Avoid duplication with logging.
+    passed_arguments = locals()
+    validate.check_function_arguments(passed_arguments)
+
     if slurm_batch:
         slurm.run_in_slurm(
             slurm_batch,
@@ -193,7 +198,13 @@ def run_full_pipeline(
         base_path, sub_name, sessions_and_runs, data_format="spikeglx"
     )
 
-    run_preprocess(loaded_data, pp_steps, save_to_file=existing_preprocessed_data)
+    run_preprocess_wrapper(
+        loaded_data,
+        config_name,
+        existing_preprocessed_data,
+        slurm_batch=False,
+        log=True,
+    )  # TODO: use config_name for all funcs.
 
     sorting_data = run_sorting_wrapper(
         base_path,
