@@ -58,13 +58,9 @@ class BaseUserDict(UserDict):
         is flattened to a long list of all runs, while `ordered_ses_name` carries
         the corresponding session for each run.
         """
-        ordered_run_names = []
-        ordered_ses_names = []
-        for ses, run in self.sessions_and_runs.items():
-            ordered_run_names += run
-            ordered_ses_names += [ses] * len(run)
-
-        return list(zip(ordered_ses_names, ordered_run_names))
+        return [
+            (ses, run) for ses, runs in self.sessions_and_runs.items() for run in runs
+        ]
 
     def _validate_inputs(
         self,
