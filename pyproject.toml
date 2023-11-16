@@ -21,6 +21,8 @@ classifiers = [
 
 dependencies = [
     "spikeinterface==0.98.2",
+    "probeinterface==0.2.18",
+    "neo==0.12.0",
     "submitit",
     "PyYAML",
     "toml",
