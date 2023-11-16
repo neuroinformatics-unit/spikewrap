@@ -1,0 +1,37 @@
+'preprocessing':
+  '1':
+  - phase_shift
+  - {}
+  '2':
+  - bandpass_filter
+  - freq_min: 300
+    freq_max: 6000
+  '3':
+  - common_reference
+  - operator: median
+    reference: global
+
+'sorting':
+  'kilosort2':
+    'car': False     # common average referencing
+    'freq_min': 150  # highpass filter cutoff, False nor 0 does not work to turn off. (results in KS error)
+  'kilosort2_5':
+    'car': False
+    'freq_min': 150
+  'kilosort3':
+    'car': False
+    'freq_min': 300
+  'mountainsort5':
+    'scheme': '2'
+    'filter': False
+
+'waveforms':
+  'ms_before': 2
+  'ms_after': 2
+  'max_spikes_per_unit': 500
+  'return_scaled': True
+  # Sparsity Options
+  'sparse': True
+  'peak_sign': "neg"
+  'method': "radius"
+  'radius_um': 75
