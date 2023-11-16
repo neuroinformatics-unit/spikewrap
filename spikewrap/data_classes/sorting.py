@@ -404,6 +404,7 @@ class ConcatenateRuns(SortingData):
 
             self.update_two_layer_dict(
                 self, ses_name, self.concat_run_name(ses_name), concat_recording
+            )
 
     def get_sorting_sessions_and_runs(self):  # TODO: type
         """"""
