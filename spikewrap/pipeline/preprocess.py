@@ -1,3 +1,4 @@
+import copy
 import json
 from typing import Dict, List, Literal, Tuple, Union
 
@@ -10,85 +11,114 @@ from ..utils import logging_sw, slurm, utils, validate
 from ..utils.custom_types import HandleExisting
 
 
-def run_preprocess(
-    preprocess_data: PreprocessingData,
-    pp_steps: Union[Dict, str],
-    save_to_file: Union[Literal[False], HandleExisting],
+
+# now always saves to disk.
+
+def run_preprocessing(
+    preprocess_data: PreprocessingData,  # TODO: fix this weird naming
+    pp_steps_name: str,
+    save_to_file: HandleExisting,
     slurm_batch: Union[bool, Dict] = False,
-    log: bool = True,
-) -> None:
+    log: bool = True  # TODO: jsut remove this and always log?
+   ):
     """
-    Handle the loading of existing preprocessed data.
-    See `run_full_pipeline()` for details.
     """
-    passed_arguments = locals()
-    validate.check_function_arguments(passed_arguments)
+    pp_steps_dict, _, _ = configs.get_configs(pp_steps_name)
 
     if slurm_batch:
-        assert (
-            save_to_file is not False
-        ), "`save_to_file` cannot be `False` if running in SLURM"
-        slurm.run_preprocessing_slurm(**passed_arguments)
-        return
-    assert slurm_batch is False, "SLURM run has slurm_batch set True"
+        # run slurm a direct wrapper
+        slurm.run_in_slurm(
+            slurm_batch,
+            preprocess_and_save_all_runs,
+            {"preprocess_data": preprocess_data,
+             "pp_steps_dict": pp_steps_dict,
+             "save_to_file": save_to_file,
+             "log": log
+             }
+        )
+    else:
+        preprocess_and_save_all_runs(preprocess_data, pp_steps_dict, save_to_file, log)
+
+
+def preprocess_and_save_all_runs(preprocess_data, pp_steps, save_to_file, log):
+    """"""
+    passed_arguments = locals()  # TODO: Fix
+    validate.check_function_arguments(passed_arguments)
 
     if log:
         logs = logging_sw.get_started_logger(
-            utils.get_logging_path(preprocess_data.base_path, preprocess_data.sub_name),
+            utils.get_logging_path(preprocess_data.base_path,
+                                   preprocess_data.sub_name),
             "preprocessing",
         )
         utils.show_passed_arguments(passed_arguments, "`run_preprocessing`")
 
+    # ^^ logging
+
     for ses_name, run_name in preprocess_data.preprocessing_sessions_and_runs():
-        utils.message_user(f"Preprocessing run {run_name}...")
 
-        preprocess_path = preprocess_data.get_preprocessing_path(ses_name, run_name)
+        to_save, overwrite = handle_existing_data_options(ses_name, run_name, save_to_file)
 
-        if save_to_file is False:
-            preprocess_data = preprocess(preprocess_data, ses_name, run_name, pp_steps)
-        else:
-            if save_to_file == "skip_if_exists":
-                if preprocess_path.is_dir():
-                    utils.message_user(
-                        f"\nSkipping preprocessing, using file at "
-                        f"{preprocess_path} for sorting.\n"
-                    )
-                    continue  # sorting will automatically use the existing data
-                else:
-                    utils.message_user(
-                        f"No data found at {preprocess_path}, saving preprocessed data."
-                    )
-                    overwrite = False
-
-            elif save_to_file == "overwrite":
-                if preprocess_path.is_dir():
-                    utils.message_user(f"Removing existing file at {preprocess_path}\n")
-
-                utils.message_user(f"Saving preprocessed data to {preprocess_path}")
-                overwrite = True
-
-            elif save_to_file == "fail_if_exists":
-                if preprocess_path.is_dir():
-                    raise FileExistsError(
-                        f"Preprocessed binary already exists at "
-                        f"{preprocess_path}. "
-                        f"To overwrite, set 'existing_preprocessed_data' to 'overwrite'"
-                    )
-                overwrite = False
-
-            preprocess_data = preprocess(preprocess_data, ses_name, run_name, pp_steps)
-
-            preprocess_data.save_preprocessed_data(ses_name, run_name, overwrite)
-
+        if to_save:
+            preprocess_and_save_single_run(ses_name, run_name, pp_steps,
+                                           overwrite)
     if log:
         logs.stop_logging()
 
 
-def preprocess(
+def preprocess_and_save_single_run(ses_name, run_name, pp_steps, overwrite):
+    """"""
+    fill_run_data_with_preprocessed_recording(
+        preprocess_data, ses_name, run_name, pp_steps
+    )
+
+    preprocess_data.save_preprocessed_data(ses_name, run_name,
+                                           overwrite)
+
+
+def handle_existing_data_options(preprocess_data, ses_name, run_name, save_to_file):  # look into signature.
+    """"""
+    preprocess_path = preprocess_data.get_preprocessing_path(ses_name,
+                                                             run_name)
+
+    if save_to_file == "skip_if_exists":
+
+        if preprocess_path.is_dir():
+            to_save = False
+            overwrite = None
+        else:
+            utils.message_user(
+                f"No data found at {preprocess_path}, saving preprocessed data."
+            )
+            to_save = True
+            overwrite = False
+
+    elif save_to_file == "overwrite":
+        if preprocess_path.is_dir():
+            utils.message_user(f"Removing existing file at {preprocess_path}\n")
+
+        utils.message_user(f"Saving preprocessed data to {preprocess_path}")
+        to_save = True
+        overwrite = True
+
+    elif save_to_file == "fail_if_exists":
+        if preprocess_path.is_dir():
+            raise FileExistsError(
+                f"Preprocessed binary already exists at "
+                f"{preprocess_path}. "
+                f"To overwrite, set 'existing_preprocessed_data' to 'overwrite'"
+            )
+        to_save = True
+        overwrite = False
+
+    return to_save, overwrite
+
+
+def fill_run_data_with_preprocessed_recording(
     preprocess_data: PreprocessingData,
     ses_name: str,
     run_name: str,
-    pp_steps: Union[Dict, str],
+    pp_steps_dict: Dict,
 ) -> PreprocessingData:
     """
     Returns an updated PreprocessingData dictionary of SpikeInterface
@@ -110,8 +140,7 @@ def preprocess(
         Name of the run to preprocess. This should correspond to a
         run_name in `preprocess_data.preprocessing_run_names`.
 
-    pp_steps: either a pp_steps dictionary, or name of valid
-              preprocessing .yaml file (without hte yaml extension).
+    pp_steps: either a pp_steps dictionary,
               See configs/configs.py for details.
 
     Returns
@@ -123,16 +152,11 @@ def preprocess(
         associated SpikeInterface recording objects.
 
     """
-    if isinstance(pp_steps, str):
-        pp_steps_to_run, _, _ = configs.get_configs(pp_steps)
-    else:
-        pp_steps_to_run = pp_steps
-
     pp_funcs = get_pp_funcs()
 
-    checked_pp_steps, pp_step_names = check_and_sort_pp_steps(pp_steps_to_run, pp_funcs)
+    checked_pp_steps, pp_step_names = check_and_sort_pp_steps(pp_steps_dict, pp_funcs)
 
-    preprocess_data.set_pp_steps(pp_steps_to_run)
+    preprocess_data.set_pp_steps(pp_steps_dict)
 
     for step_num, pp_info in checked_pp_steps.items():
         perform_preprocessing_step(
