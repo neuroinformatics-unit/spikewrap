@@ -5,6 +5,8 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Callable, Dict, List, Literal, Tuple
 
+from ..utils import utils
+
 
 @dataclass
 class BaseUserDict(UserDict):
@@ -139,6 +141,43 @@ class BaseUserDict(UserDict):
 
     def get_rawdata_run_path(self, ses_name: str, run_name: str) -> Path:
         return self.get_rawdata_ses_path(ses_name) / "ephys" / run_name
+
+    # Derivatives Paths --------------------------------------------------------------
+
+    def get_derivatives_top_level_path(self) -> Path:
+        return self.base_path / "derivatives" / "spikewrap"
+
+    def get_derivatives_sub_path(self) -> Path:
+        return self.get_derivatives_top_level_path() / self.sub_name
+
+    def get_derivatives_ses_path(self, ses_name: str) -> Path:
+        return self.get_derivatives_sub_path() / ses_name
+
+    def get_derivatives_run_path(self, ses_name: str, run_name: str) -> Path:
+        return self.get_derivatives_ses_path(ses_name) / run_name
+
+    # Preprocessing Paths --------------------------------------------------------------
+
+    def get_preprocessing_path(self, ses_name: str, run_name: str) -> Path:
+        """
+        Set the folder tree where preprocessing output will be
+        saved. This is canonical and should not change.
+        """
+        preprocessed_output_path = (
+            self.get_derivatives_run_path(ses_name, run_name) / "preprocessing"
+        )
+        return preprocessed_output_path
+
+    def _get_pp_binary_data_path(self, ses_name: str, run_name: str) -> Path:
+        return self.get_preprocessing_path(ses_name, run_name) / "si_recording"
+
+    def _get_sync_channel_data_path(self, ses_name: str, run_name: str) -> Path:
+        return self.get_preprocessing_path(ses_name, run_name) / "sync_channel"
+
+    def get_preprocessing_info_path(self, ses_name: str, run_name: str) -> Path:
+        return self.get_preprocessing_path(ses_name, run_name) / utils.canonical_names(
+            "preprocessed_yaml"
+        )
 
     @staticmethod
     def update_two_layer_dict(dict_, ses_name, run_name, value):
