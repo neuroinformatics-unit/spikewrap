@@ -1,10 +1,6 @@
-import shutil
 from dataclasses import dataclass
 from typing import Dict
 
-import spikeinterface
-
-from ..utils import utils
 from .base import BaseUserDict
 
 
@@ -44,9 +40,9 @@ class PreprocessingData(BaseUserDict):
 
         self.sync: Dict = {}
 
-        for ses_name, run_name in self.preprocessing_sessions_and_runs():
-            utils.update(self.data, ses_name, run_name, {"0-raw": None})
-            utils.update(self.sync, ses_name, run_name, None)
+        for ses_name, run_name in self.flat_sessions_and_runs():
+            self.update_two_layer_dict(self, ses_name, run_name, {"0-raw": None})
+            self.update_two_layer_dict(self.sync, ses_name, run_name, None)
 
     def _validate_rawdata_inputs(self) -> None:
         self._validate_inputs(

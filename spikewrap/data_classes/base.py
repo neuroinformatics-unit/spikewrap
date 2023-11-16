@@ -2,9 +2,8 @@ import fnmatch
 from collections import UserDict
 from collections.abc import ItemsView, KeysView, ValuesView
 from dataclasses import dataclass
-from itertools import chain
 from pathlib import Path
-from typing import Callable, Dict, List, Literal
+from typing import Callable, Dict, List, Literal, Tuple
 
 
 @dataclass
@@ -17,20 +16,33 @@ class BaseUserDict(UserDict):
     folder, allowing use of this class for
     preprocessing and sorting.
 
-    Base UserDict that implements the
-    keys(), values() and items() convenience functions."""
+    This class inhereits from UserDict, which allows us to define
+    a dictionary-like object with additional methods. This class can
+    be accessed like a dict e.g. `self[key]`. Under the hood, the
+    dictionary is stored in `self.data`. When inheriting UserDict
+    it is required to implement the `keys()`, `values()` and `items()`
+    convenience functions.
+    """
 
     base_path: Path
     sub_name: str
-    sessions_and_runs: Dict
+    sessions_and_runs: Dict[str, List[str]]
 
     def __post_init__(self) -> None:
-        self.data: Dict = {}
+        self.data: Dict = {}  # necessary for UserDict.
         self.base_path = Path(self.base_path)
         self.check_run_names_are_formatted_as_list()
 
     def check_run_names_are_formatted_as_list(self) -> None:
-        """"""
+        """
+        `sessions_and_runs` is typed as `Dict[str, List[str]]` but the
+        class will accept `Dict[str, Union[str, List[str]]]` and
+        cast here. Attempted to type with the latter, or `
+        MutableMapping[str, [str, Union[str, List[str]]]` but had many issues
+        such as https://github.com/python/mypy/issues/8136. The main thing
+        is we can work with `Dict[str, List[str]]` but if `Dict[str, str]` is
+        passed n general use it will not fail.
+        """
         for key, value in self.sessions_and_runs.items():
             if not isinstance(value, List):
                 assert isinstance(
@@ -38,16 +50,16 @@ class BaseUserDict(UserDict):
                 ), "Run names must be string or list of strings"
                 self.sessions_and_runs[key] = [value]
 
-    def preprocessing_sessions_and_runs(self):  # TODO: type hint
-        """"""
-        ordered_ses_names = list(
-            chain(*[[ses] * len(runs) for ses, runs in self.sessions_and_runs.items()])
-        )
-        ordered_run_names = list(
-            chain(*[runs for runs in self.sessions_and_runs.values()])
-        )
-
-        return list(zip(ordered_ses_names, ordered_run_names))
+    def flat_sessions_and_runs(self) -> List[Tuple[str, str]]:
+        """
+        This returns the sessions and runs dictionary flattened so that
+        sessions and runs can be iterated over conveniently. `ordered_run_names`
+        is flattened to a long list of all runs, while `ordered_ses_name` carries
+        the corresponding session for each run.
+        """
+        return [
+            (ses, run) for ses, runs in self.sessions_and_runs.items() for run in runs
+        ]
 
     def _validate_inputs(
         self,
@@ -127,6 +139,17 @@ class BaseUserDict(UserDict):
 
     def get_rawdata_run_path(self, ses_name: str, run_name: str) -> Path:
         return self.get_rawdata_ses_path(ses_name) / "ephys" / run_name
+
+    @staticmethod
+    def update_two_layer_dict(dict_, ses_name, run_name, value):
+        """
+        Convenience function to allow updating a two-layer
+        dictionary even if it is empty.
+        """
+        if ses_name not in dict_:
+            dict_[ses_name] = {}
+
+        dict_[ses_name][run_name] = value
 
     def keys(self) -> KeysView:
         return self.data.keys()
