@@ -130,13 +130,6 @@ def load_dict_from_yaml(filepath: Union[Path, str]) -> Dict:
     return loaded_dict
 
 
-def update(dict_, ses_name, run_name, value):
-    try:
-        dict_[ses_name][run_name] = value
-    except KeyError:
-        dict_[ses_name] = {run_name: value}
-
-
 def cast_pp_steps_values(
     pp_steps: Dict, list_or_tuple: Literal["list", "tuple"]
 ) -> None:

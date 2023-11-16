@@ -106,7 +106,7 @@ class SortingData(BaseUserDict, ABC):
         recordings: Dict = {}
         for ses_name, run_name in self.preprocessing_sessions_and_runs():
             rec = si.load_extractor(self._get_pp_binary_data_path(ses_name, run_name))
-            utils.update(recordings, ses_name, run_name, value=rec)
+            self.update_two_layer_dict(recordings, ses_name, run_name, value=rec)
 
         return recordings
 
@@ -257,7 +257,7 @@ class SortingData(BaseUserDict, ABC):
 
         for load_prepro_path in preprocessing_info_paths:
             pp_dict = utils.load_dict_from_yaml(load_prepro_path)
-            utils.update(
+            self.update_two_layer_dict(
                 sorting_info["preprocessing"],
                 pp_dict["ses_name"],
                 pp_dict["run_name"],
@@ -403,7 +403,7 @@ class ConcatenateRuns(SortingData):
 
         for ses_name in self.sessions_and_runs.keys():
             concat_recording = self._concatenate_runs(ses_name, recordings)
-            utils.update(
+            self.update_two_layer_dict(
                 self.data, ses_name, self.concat_run_name(ses_name), concat_recording
             )
 
