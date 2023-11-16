@@ -21,7 +21,7 @@ from ..utils.managing_images import (
 )
 
 
-def run_sorting_wrapper(
+def run_sorting(
     base_path: Union[str, Path],
     sub_name: str,
     sessions_and_runs: Dict[str, List[str]],
@@ -40,7 +40,7 @@ def run_sorting_wrapper(
     if slurm_batch:
         slurm.run_in_slurm(
             slurm_batch,
-            run_sorting,
+            _run_sorting,
             {
                 "base_path": base_path,
                 "sub_name": sub_name,
@@ -53,7 +53,7 @@ def run_sorting_wrapper(
             },
         ),
     else:
-        return run_sorting(
+        return _run_sorting(
             base_path,
             sub_name,
             sessions_and_runs,
@@ -66,7 +66,7 @@ def run_sorting_wrapper(
         )
 
 
-def run_sorting(
+def _run_sorting(
     base_path: Union[str, Path],
     sub_name: str,
     sessions_and_runs: Dict[str, List[str]],

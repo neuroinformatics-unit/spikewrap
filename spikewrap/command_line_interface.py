@@ -3,7 +3,7 @@ TODO: this is currently out of date. Do not use.
 """
 import argparse
 
-from .pipeline.full_pipeline import run_full_pipeline_wrapper
+from .pipeline.full_pipeline import run_full_pipeline
 
 # figure out how to give nice asserts on SI asserts that
 # are less informative e.g. overwriting sorter output.
@@ -56,7 +56,7 @@ parser.add_argument(
 def main():
     args = parser.parse_args()
 
-    run_full_pipeline_wrapper(
+    run_full_pipeline(
         base_path=args.base_path,
         sub_name=args.sub_name,
         run_name=args.run_name,

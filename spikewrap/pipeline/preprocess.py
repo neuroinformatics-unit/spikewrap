@@ -14,7 +14,7 @@ from ..utils.custom_types import HandleExisting
 # --------------------------------------------------------------------------------------
 
 
-def run_preprocess_wrapper(
+def run_preprocessing(
     preprocess_data: PreprocessingData,
     pp_steps: str,
     save_to_file: HandleExisting,
@@ -112,7 +112,7 @@ def _preprocess_and_save_all_runs(
 ) -> None:
     """
     Handle the loading of existing preprocessed data.
-    See `run_preprocess_wrapper()` for details.
+    See `run_preprocessing()` for details.
 
     This function validates all input arguments and initialises logging.
     Then, it will iterate over every run in `preprocess_data` and

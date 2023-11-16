@@ -1,7 +1,7 @@
 from pathlib import Path
 
 from spikewrap.pipeline.load_data import load_data
-from spikewrap.pipeline.preprocess import run_preprocess_wrapper
+from spikewrap.pipeline.preprocess import run_preprocessing
 
 base_path = Path(
     r"/ceph/neuroinformatics/neuroinformatics/scratch/jziminski/ephys/test_data/steve_multi_run/1119617/time-short-multises"
@@ -24,7 +24,7 @@ sessions_and_runs = {
 
 loaded_data = load_data(base_path, sub_name, sessions_and_runs, data_format="spikeglx")
 
-run_preprocess_wrapper(
+run_preprocessing(
     loaded_data,
     pp_steps="default",
     save_to_file="overwrite",

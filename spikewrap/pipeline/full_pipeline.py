@@ -11,11 +11,11 @@ from ..utils import logging_sw, slurm, utils, validate
 from ..utils.custom_types import DeleteIntermediate, HandleExisting
 from .load_data import load_data
 from .postprocess import run_postprocess
-from .preprocess import run_preprocess_wrapper
-from .sort import run_sorting_wrapper
+from .preprocess import run_preprocessing
+from .sort import run_sorting
 
 
-def run_full_pipeline_wrapper(
+def run_full_pipeline(
     base_path: Union[Path, str],
     sub_name: str,
     sessions_and_runs: Dict[str, List[str]],
@@ -38,7 +38,7 @@ def run_full_pipeline_wrapper(
     if slurm_batch:
         slurm.run_in_slurm(
             slurm_batch,
-            run_full_pipeline,
+            _run_full_pipeline,
             {
                 "base_path": base_path,
                 "sub_name": sub_name,
@@ -55,7 +55,7 @@ def run_full_pipeline_wrapper(
             },
         ),
     else:
-        return run_full_pipeline(
+        return _run_full_pipeline(
             base_path,
             sub_name,
             sessions_and_runs,
@@ -71,7 +71,7 @@ def run_full_pipeline_wrapper(
         )
 
 
-def run_full_pipeline(
+def _run_full_pipeline(
     base_path: Union[Path, str],
     sub_name: str,
     sessions_and_runs: Dict[str, List[str]],
@@ -198,7 +198,7 @@ def run_full_pipeline(
         base_path, sub_name, sessions_and_runs, data_format="spikeglx"
     )
 
-    run_preprocess_wrapper(
+    run_preprocessing(
         loaded_data,
         config_name,
         existing_preprocessed_data,
@@ -206,7 +206,7 @@ def run_full_pipeline(
         log=True,
     )  # TODO: use config_name for all funcs.
 
-    sorting_data = run_sorting_wrapper(
+    sorting_data = run_sorting(
         base_path,
         sub_name,
         sessions_and_runs,

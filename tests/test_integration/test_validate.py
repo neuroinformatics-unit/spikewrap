@@ -6,7 +6,7 @@ from spikewrap.pipeline import full_pipeline
 from spikewrap.pipeline.load_data import load_data
 from spikewrap.pipeline.postprocess import run_postprocess
 from spikewrap.pipeline.preprocess import _preprocess_and_save_all_runs
-from spikewrap.pipeline.sort import run_sorting_wrapper
+from spikewrap.pipeline.sort import run_sorting
 
 from .base import BaseTest
 
@@ -229,9 +229,7 @@ class TestValidate(BaseTest):
         before `sorter_options` is checked.
         """
         with pytest.raises(TypeError) as e:
-            run_sorting_wrapper(
-                *test_info, sorter="mountainsort5", sorter_options="bad_name"
-            )
+            run_sorting(*test_info, sorter="mountainsort5", sorter_options="bad_name")
         assert (
             str(e.value)
             == "`sorter_options` must be a Dict of values to pass to the SpikeInterface sorting function."
