@@ -88,7 +88,7 @@ class SortingData(BaseUserDict, ABC):
                 f"file path {path_.parent}."
             )
 
-        for ses_name, run_name in self.preprocessing_sessions_and_runs():
+        for ses_name, run_name in self.flat_sessions_and_runs():
             assert (
                 prepro_path := self.get_derivatives_run_path(ses_name, run_name)
                 / "preprocessing"
@@ -104,7 +104,7 @@ class SortingData(BaseUserDict, ABC):
     def initialise_preprocessed_recordings_dict(self) -> Dict:
         """"""
         recordings: Dict = {}
-        for ses_name, run_name in self.preprocessing_sessions_and_runs():
+        for ses_name, run_name in self.flat_sessions_and_runs():
             rec = si.load_extractor(self._get_pp_binary_data_path(ses_name, run_name))
             self.update_two_layer_dict(recordings, ses_name, run_name, value=rec)
 
@@ -372,7 +372,7 @@ class ConcatenateSessions(SortingData):
         self.assert_names(ses_name, run_name)
 
         preprocessing_info_paths = []
-        for pp_ses_name, pp_run_name in self.preprocessing_sessions_and_runs():
+        for pp_ses_name, pp_run_name in self.flat_sessions_and_runs():
             preprocessing_info_paths.append(
                 self.get_preprocessing_info_path(pp_ses_name, pp_run_name)
             )
@@ -404,6 +404,7 @@ class ConcatenateRuns(SortingData):
 
             self.update_two_layer_dict(
                 self, ses_name, self.concat_run_name(ses_name), concat_recording
+            )
 
     def get_sorting_sessions_and_runs(self):  # TODO: type
         """"""

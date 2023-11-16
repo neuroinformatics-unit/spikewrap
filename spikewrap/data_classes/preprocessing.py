@@ -44,8 +44,7 @@ class PreprocessingData(BaseUserDict):
 
         self.sync: Dict = {}
 
-        for ses_name, run_name in self.preprocessing_sessions_and_runs():
-
+        for ses_name, run_name in self.flat_sessions_and_runs():
             self.update_two_layer_dict(self, ses_name, run_name, {"0-raw": None})
             self.update_two_layer_dict(self.sync, ses_name, run_name, None)
 

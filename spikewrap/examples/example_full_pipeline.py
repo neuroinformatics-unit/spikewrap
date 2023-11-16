@@ -4,27 +4,24 @@ from pathlib import Path
 from spikewrap.pipeline.full_pipeline import run_full_pipeline
 
 base_path = Path(
-    # "/ceph/neuroinformatics/neuroinformatics/scratch/jziminski/ephys/code/spikewrap/tests/data/steve_multi_run/time-short-multises"
+    "/ceph/neuroinformatics/neuroinformatics/scratch/jziminski/ephys/code/spikewrap/tests/data/steve_multi_run/time-short-multises"
     # "/ceph/neuroinformatics/neuroinformatics/scratch/jziminski/ephys/test_data/steve_multi_run/1119617/time-short-multises"
     # r"C:\data\ephys\test_data\steve_multi_run\1119617\time-miniscule-mutlises"
-    r"C:\data\ephys\test_data\steve_multi_run\1119617\time-short-multises"
+    # r"C:\data\ephys\test_data\steve_multi_run\1119617\time-short-multises"
     # "/ceph/neuroinformatics/neuroinformatics/scratch/jziminski/ephys/test_data/steve_multi_run/1119617/time-short"
 )
 
 sub_name = "sub-1119617"
 sessions_and_runs = {
-    "ses-001": [
-        "run-001_1119617_LSE1_shank12_g0",
-        #        "run-002_made_up_g0"
+    "ses-001": ["run-001_1119617_LSE1_shank12_g0", "run-002_made_up_g0"],
+    "ses-002": [
+        "run-002_1119617_LSE1_shank12_g0",
+        "run-001_1119617_pretest1_shank12_g0",
     ],
-    #    "ses-002": [
-    #         "run-001_1119617_pretest1_shank12_g0",
-    #         "run-002_1119617_LSE1_shank12_g0",
-    #    ],
-    #    "ses-003": [
-    #        "run-001_1119617_posttest1_shank12_g0",
-    #        "run-002_1119617_pretest1_shank12_g0",
-    #    ],
+    "ses-003": [
+        "run-001_1119617_posttest1_shank12_g0",
+        "run-002_1119617_pretest1_shank12_g0",
+    ],
 }
 
 config_name = "test_default"

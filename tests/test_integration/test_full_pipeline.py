@@ -32,7 +32,7 @@ class TestFullPipeline(BaseTest):
 
         preprocess_data = load_data(*test_info[:3])
 
-        for ses_name, run_name in preprocess_data.preprocessing_sessions_and_runs():
+        for ses_name, run_name in preprocess_data.flat_sessions_and_runs():
             preprocess_data = preprocess.preprocess(
                 preprocess_data, ses_name, run_name, pp_steps
             )
@@ -48,7 +48,7 @@ class TestFullPipeline(BaseTest):
 
         preprocess_data = load_data(*test_info[:3])
 
-        for ses_name, run_name in preprocess_data.preprocessing_sessions_and_runs():
+        for ses_name, run_name in preprocess_data.flat_sessions_and_runs():
             preprocess_data = preprocess.preprocess(
                 preprocess_data, ses_name, run_name, pp_steps
             )
