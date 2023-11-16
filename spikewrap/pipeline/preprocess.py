@@ -10,6 +10,29 @@ from ..utils import logging_sw, slurm, utils, validate
 from ..utils.custom_types import HandleExisting
 
 
+def run_preprocess_wrapper(
+    preprocess_data: PreprocessingData,
+    pp_steps: Union[Dict, str],
+    save_to_file: Union[Literal[False], HandleExisting],
+    slurm_batch: Union[bool, Dict] = False,
+    log: bool = True,
+):
+    """ """
+    if slurm_batch:
+        slurm.run_in_slurm(
+            slurm_batch,
+            run_preprocess,
+            {
+                "preprocess_data": preprocess_data,
+                "pp_steps": pp_steps,
+                "save_to_file": save_to_file,
+                "log": log,
+            },
+        ),
+    else:
+        run_preprocess(preprocess_data, pp_steps, save_to_file, log)
+
+
 def run_preprocess(
     preprocess_data: PreprocessingData,
     pp_steps: Union[Dict, str],
@@ -23,14 +46,6 @@ def run_preprocess(
     """
     passed_arguments = locals()
     validate.check_function_arguments(passed_arguments)
-
-    if slurm_batch:
-        assert (
-            save_to_file is not False
-        ), "`save_to_file` cannot be `False` if running in SLURM"
-        slurm.run_preprocessing_slurm(**passed_arguments)
-        return
-    assert slurm_batch is False, "SLURM run has slurm_batch set True"
 
     if log:
         logs = logging_sw.get_started_logger(

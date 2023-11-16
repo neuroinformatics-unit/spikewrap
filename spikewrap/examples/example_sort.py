@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from spikewrap.pipeline.sort import run_sorting
+from spikewrap.pipeline.sort import run_sorting_wrapper
 
 base_path = Path(
     r"/ceph/neuroinformatics/neuroinformatics/scratch/jziminski/ephys/test_data/steve_multi_run/1119617/time-short-multises"
@@ -13,12 +13,12 @@ sessions_and_runs = {
 
 if __name__ == "__main__":
     # sorting uses multiprocessing so must be in __main__
-    run_sorting(
+    run_sorting_wrapper(
         base_path,
         sub_name,
         sessions_and_runs,
         existing_sorting_output="overwrite",
-        sorter="kilosort2_5",
+        sorter="mountainsort5",
         concatenate_runs=True,
         concatenate_sessions=False,
         slurm_batch=True,

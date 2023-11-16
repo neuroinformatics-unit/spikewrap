@@ -12,7 +12,58 @@ from ..utils.custom_types import DeleteIntermediate, HandleExisting
 from .load_data import load_data
 from .postprocess import run_postprocess
 from .preprocess import run_preprocess
-from .sort import run_sorting
+from .sort import run_sorting_wrapper
+
+
+def run_full_pipeline_wrapper(
+    base_path: Union[Path, str],
+    sub_name: str,
+    sessions_and_runs: Dict[str, List[str]],
+    config_name: str = "default",
+    sorter: str = "kilosort2_5",
+    concat_sessions_for_sorting: bool = False,
+    concat_runs_for_sorting: bool = False,
+    existing_preprocessed_data: HandleExisting = "fail_if_exists",
+    existing_sorting_output: HandleExisting = "fail_if_exists",
+    overwrite_postprocessing: bool = False,
+    delete_intermediate_files: DeleteIntermediate = ("recording.dat",),
+    slurm_batch: Union[bool, Dict] = False,
+):
+    """ """
+    if slurm_batch:
+        slurm.run_in_slurm(
+            slurm_batch,
+            run_full_pipeline,
+            {
+                "base_path": base_path,
+                "sub_name": sub_name,
+                "sessions_and_runs": sessions_and_runs,
+                "config_name": config_name,
+                "sorter": sorter,
+                "concat_sessions_for_sorting": concat_sessions_for_sorting,
+                "concat_runs_for_sorting": concat_runs_for_sorting,
+                "existing_preprocessed_data": existing_preprocessed_data,
+                "existing_sorting_output": existing_sorting_output,
+                "overwrite_postprocessing": overwrite_postprocessing,
+                "delete_intermediate_files": delete_intermediate_files,
+                "slurm_batch": slurm_batch,
+            },
+        ),
+    else:
+        return run_full_pipeline(
+            base_path,
+            sub_name,
+            sessions_and_runs,
+            config_name,
+            sorter,
+            concat_sessions_for_sorting,
+            concat_runs_for_sorting,
+            existing_preprocessed_data,
+            existing_sorting_output,
+            overwrite_postprocessing,
+            delete_intermediate_files,
+            slurm_batch,
+        )
 
 
 def run_full_pipeline(
@@ -130,11 +181,6 @@ def run_full_pipeline(
     passed_arguments = locals()
     validate.check_function_arguments(passed_arguments)
 
-    if slurm_batch:
-        slurm.run_full_pipeline_slurm(**passed_arguments)
-        return None, None
-    assert slurm_batch is False, "SLURM run has slurm_batch set True"
-
     pp_steps, sorter_options, waveform_options = get_configs(config_name)
 
     logs = logging_sw.get_started_logger(
@@ -149,7 +195,7 @@ def run_full_pipeline(
 
     run_preprocess(loaded_data, pp_steps, save_to_file=existing_preprocessed_data)
 
-    sorting_data = run_sorting(
+    sorting_data = run_sorting_wrapper(
         base_path,
         sub_name,
         sessions_and_runs,

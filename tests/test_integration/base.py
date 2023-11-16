@@ -69,7 +69,7 @@ class BaseTest:
         delete_intermediate_files=(),
         slurm_batch=False,
     ):
-        return full_pipeline.run_full_pipeline(
+        return full_pipeline.run_full_pipeline_wrapper(
             base_path,
             sub_name,
             sessions_and_runs,

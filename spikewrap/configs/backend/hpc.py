@@ -25,13 +25,13 @@ def default_slurm_options() -> Dict:
     return {
         "nodes": 1,
         "mem_gb": 40,
-        "timeout_min": 24 * 60,
+        #     "timeout_min": 24 * 60,
         "cpus_per_task": 8,
         "tasks_per_node": 1,
-        "gpus_per_node": 1,
-        "slurm_gres": "gpu:1",
-        "slurm_partition": "gpu",
-        "exclude": "gpu-sr670-20,gpu-sr670-21,gpu-sr670-22",
+        #     "gpus_per_node": 1,
+        #    "slurm_gres": "gpu:1",
+        #   "slurm_partition": "gpu",
+        #  "exclude": "gpu-sr670-20,gpu-sr670-21,gpu-sr670-22",
         "wait": False,
         "env_name": "spikewrap",
     }

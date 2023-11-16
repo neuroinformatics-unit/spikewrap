@@ -31,6 +31,7 @@ class BaseUserDict(UserDict):
     sessions_and_runs: Dict[str, List[str]]
 
     def __post_init__(self) -> None:
+        self.data: Dict = {}  # necessary for UserDict.
         self.base_path = Path(self.base_path)
         self.check_run_names_are_formatted_as_list()
 

@@ -1,7 +1,7 @@
 import datetime
 import subprocess
 from pathlib import Path
-from typing import Callable, Dict
+from typing import Callable, Dict, Union
 
 import submitit
 
@@ -13,95 +13,36 @@ from ..configs.backend.hpc import (
 from . import utils
 from .checks import system_call_success
 
+# TODO: fix all docs.
 
-def run_job(kwargs, command_func: Callable, command_name: str) -> None:
-    """
-    Run a job (e.g. run_full_pipeline, run_sorting) on SLURM.
 
-    Parameters
-    ----------
-    kwargs : Dict
-        Keyword arguments passed to run_full_pipeline.
+def run_in_slurm(slurm_opts: Union[bool, Dict], func_to_run: Callable, func_opts: Dict):
+    used_slurm_opts = default_slurm_options()
 
-    command_func : Callable
-        The function to run (e.g. `run_full_pipeline()`.
+    if isinstance(slurm_opts, Dict):
+        used_slurm_opts.update(slurm_opts)
 
-    command_name : str
-        The name of the command, typically command_func.__name__,
-        formatted for logging.
-    """
-    passed_slurm_opts = kwargs.pop("slurm_batch")
-    func_opts = kwargs
+    should_wait = used_slurm_opts.pop("wait")
+    env_name = used_slurm_opts.pop("env_name")
 
-    slurm_opts = default_slurm_options()
+    log_path = make_job_log_output_path(func_opts)
 
-    if isinstance(passed_slurm_opts, Dict):
-        slurm_opts.update(passed_slurm_opts)
-
-    should_wait = slurm_opts.pop("wait")
-    env_name = slurm_opts.pop("env_name")
-
-    executor = get_executor(func_opts, slurm_opts)
+    executor = get_executor(log_path, used_slurm_opts)
 
     job = executor.submit(
-        wrap_function_with_env_setup, command_func, env_name, func_opts
+        wrap_function_with_env_setup, func_to_run, env_name, func_opts
     )
 
     if should_wait:
         job.wait()
 
-    send_user_start_message(command_name, job, func_opts)
-
-
-def run_full_pipeline_slurm(**kwargs) -> None:
-    """
-    Run the entire preprocessing pipeline in a SLURM job.
-
-    This takes the kwargs passed to the original call of the
-    preprocessing function, and feeds them back to the function
-    from within the SLURM job.
-
-    Parameters
-    ----------
-    kwargs : Dict
-        Keyword arguments passed to run_full_pipeline.
-
-    Notes
-    -----
-    The import must occur here to avoid recursive imports.
-    """
-    from ..pipeline.full_pipeline import run_full_pipeline
-
-    run_job(kwargs, run_full_pipeline, "Full pipeline")
-
-
-def run_sorting_slurm(**kwargs) -> None:
-    """
-    Run the sorting pipeline from within a SLURM job.
-
-    See run_full_pipeline_slurm for details, this is identical
-    except it is for run_sorting rather than run_full_pipeline.
-
-    Notes
-    -----
-    The import must occur here to avoid recursive imports.
-    """
-    from ..pipeline.sort import run_sorting
-
-    run_job(kwargs, run_sorting, "Sorting")
-
-
-def run_preprocessing_slurm(**kwargs) -> None:
-    """ """
-    from ..pipeline.preprocess import run_preprocess
-
-    run_job(kwargs, run_preprocess, "Preprocessing")
+    send_user_start_message(func_to_run.__name__, log_path, job, func_opts)
 
 
 # Utils --------------------------------------------------------------------------------
 
 
-def get_executor(func_opts: Dict, slurm_opts: Dict) -> submitit.AutoExecutor:
+def get_executor(log_path: Path, slurm_opts: Dict) -> submitit.AutoExecutor:
     """
     Return the executor object that defines parameters
     of the SLURM node to request and the path to
@@ -124,8 +65,6 @@ def get_executor(func_opts: Dict, slurm_opts: Dict) -> submitit.AutoExecutor:
         submitit executor object defining requested SLURM
         node parameters.
     """
-    log_path = make_job_log_output_path(func_opts)
-
     print(f"\nThe SLURM batch output logs will " f"be saved to {log_path}\n")
 
     executor = submitit.AutoExecutor(
@@ -209,7 +148,7 @@ def make_job_log_output_path(func_opts: Dict) -> Path:
 
 
 def send_user_start_message(
-    processing_function: str, job: submitit.Job, func_opts: Dict
+    processing_function: str, log_path: Path, job: submitit.Job, func_opts: Dict
 ) -> None:
     """
     Convenience function to print important information
@@ -228,8 +167,10 @@ def send_user_start_message(
         (e.g. run_full_pipeline, run_sorting)
     """
     utils.message_user(
-        f"{processing_function} submitted to SLURM with job id {job.job_id}\n"
-        f"with arguments{func_opts}"
+        f"---------------------- SLURM job submitted ----------------------\n"
+        f"The function {processing_function} submitted to SLURM with job id {job.job_id}\n"
+        f"Output will be logged to: {log_path}\n"
+        f"Function called with arguments{func_opts}"
     )
 
 

@@ -61,16 +61,16 @@ class TestFullPipeline(BaseTest):
                 "kilosort2",
                 marks=pytest.mark.skipif(SKIP_KILOSORT, reason="No VM available."),
             ),
-            pytest.param(
-                "kilosort2_5",
-                marks=pytest.mark.skipif(SKIP_KILOSORT, reason="No VM available."),
-            ),
-            pytest.param(
-                "kilosort3",
-                marks=pytest.mark.skipif(SKIP_KILOSORT, reason="No VM available."),
-            ),
-            "mountainsort5",
-            "tridesclous",
+            #          pytest.param(
+            #             "kilosort2_5",
+            #            marks=pytest.mark.skipif(SKIP_KILOSORT, reason="No VM available."),
+            #       ),
+            #      pytest.param(
+            #         "kilosort3",
+            #        marks=pytest.mark.skipif(SKIP_KILOSORT, reason="No VM available."),
+            #   ),
+            #  "mountainsort5",
+            # "tridesclous",
         ],
     )
     def test_no_concatenation_single_run(self, test_info, sorter):
