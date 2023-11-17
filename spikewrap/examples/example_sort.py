@@ -18,7 +18,7 @@ if __name__ == "__main__":
         sub_name,
         sessions_and_runs,
         existing_sorting_output="overwrite",
-        sorter="kilosort2_5",
+        sorter="mountainsort5",
         concatenate_runs=True,
         concatenate_sessions=False,
         slurm_batch=True,

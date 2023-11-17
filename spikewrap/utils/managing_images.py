@@ -8,7 +8,6 @@ from typing import TYPE_CHECKING, Literal, Optional, Tuple, Union
 
 import spikeinterface
 from spikeinterface.sorters.runsorter import SORTER_DOCKER_MAP
-from spython.main import Client
 
 from ..configs.backend.hpc import hpc_sorter_images_path
 from . import checks, utils
@@ -231,6 +230,13 @@ def download_all_sorters(save_to_config_location: bool = True) -> None:
         If `False`, the sorters are downloaded to the current
         working direction.
     """
+
+    assert platform.system() == "Linux", (
+        "Downloading all sorters is only necessary for `singularity`. "
+        "Must be on Linux machine."
+    )
+    from spython.main import Client
+
     spikeinterface_version = spikeinterface.__version__
 
     if save_to_config_location:

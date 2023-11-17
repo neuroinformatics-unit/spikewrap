@@ -16,7 +16,7 @@ class PreprocessingData(BaseUserDict):
     Details on the preprocessing steps are held in the dictionary keys e.g.
     e.g. 0-raw, 1-raw-bandpass_filter, 2-raw_bandpass_filter-common_average
     and recording objects are held in the value. These are generated
-    by the `pipeline.preprocess.run_preprocessing()` function.
+    by the `pipeline.preprocess._preprocess_and_save_all_runs()` function.
 
     The class manages paths to raw data and preprocessing output,
     as defines methods to dump key information and the SpikeInterface
@@ -57,7 +57,7 @@ class PreprocessingData(BaseUserDict):
         ----------
         pp_steps : Dict
             Preprocessing steps to setp as class attribute. These are used
-            when `pipeline.preprocess.preprocess()` function is called.
+            when `pipeline.preprocess._fill_run_data_with_preprocessed_recording()` function is called.
         """
         self.pp_steps = pp_steps
 

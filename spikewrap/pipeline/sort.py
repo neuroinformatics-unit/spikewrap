@@ -31,6 +31,51 @@ def run_sorting(
     sorter_options: Optional[Dict] = None,
     existing_sorting_output: HandleExisting = "fail_if_exists",
     slurm_batch: Union[bool, Dict] = False,
+):
+    # TOOD: refactor and handle argument groups separately.
+    # Avoid duplication with logging.
+    passed_arguments = locals()
+    validate.check_function_arguments(passed_arguments)
+
+    if slurm_batch:
+        slurm.run_in_slurm(
+            slurm_batch,
+            _run_sorting,
+            {
+                "base_path": base_path,
+                "sub_name": sub_name,
+                "sessions_and_runs": sessions_and_runs,
+                "concatenate_sessions": concatenate_sessions,
+                "concatenate_runs": concatenate_runs,
+                "sorter_options": sorter_options,
+                "existing_sorting_output": existing_sorting_output,
+                "slurm_batch": slurm_batch,
+            },
+        ),
+    else:
+        return _run_sorting(
+            base_path,
+            sub_name,
+            sessions_and_runs,
+            sorter,
+            concatenate_sessions,
+            concatenate_runs,
+            sorter_options,
+            existing_sorting_output,
+            slurm_batch,
+        )
+
+
+def _run_sorting(
+    base_path: Union[str, Path],
+    sub_name: str,
+    sessions_and_runs: Dict[str, List[str]],
+    sorter: str,
+    concatenate_sessions: bool = False,
+    concatenate_runs: bool = False,
+    sorter_options: Optional[Dict] = None,
+    existing_sorting_output: HandleExisting = "fail_if_exists",
+    slurm_batch: Union[bool, Dict] = False,
 ) -> Optional[SortingData]:
     """
     Run a sorter on pre-processed data. Takes a PreprocessingData (pipeline.data_class)
@@ -104,11 +149,6 @@ def run_sorting(
     """
     passed_arguments = locals()
     validate.check_function_arguments(passed_arguments)
-
-    if slurm_batch:
-        slurm.run_sorting_slurm(**passed_arguments)
-        return None
-    assert slurm_batch is False, "SLURM run has slurm_batch set True"
 
     if sorter == "mountainsort5" and platform.system() == "Darwin":
         raise EnvironmentError("Mountainsort is not currently supported on macOS.")

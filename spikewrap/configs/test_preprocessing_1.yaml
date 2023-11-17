@@ -54,7 +54,7 @@
   '15':
   - scale
   - gain: 2
-  '16':
-  - remove_channels
-  - bad_channel_ids:
-      - 'imec0.ap#AP1'
+#  '16':
+#  - remove_channels
+#  - bad_channel_ids:
+#      - 'imec0.ap#AP1'
