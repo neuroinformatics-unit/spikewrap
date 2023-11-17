@@ -125,10 +125,10 @@ def check_function_arguments(arguments):
                     "string that matches a config yaml in the configs folder."
                 )
 
-        elif arg_name == "save_to_file":
+        elif arg_name == "handle_existing_data":
             if not (arg_value is False or typecheck(arg_value, HandleExisting)):
                 raise TypeError(
-                    f"`save_to_file` must be `False` or one of {HandleExisting}."
+                    f"`handle_existing_data` must be `False` or one of {HandleExisting}."
                 )
 
         elif arg_name == "log":

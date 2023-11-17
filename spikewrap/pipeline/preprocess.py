@@ -17,7 +17,7 @@ from ..utils.custom_types import HandleExisting
 def run_preprocessing(
     preprocess_data: PreprocessingData,
     pp_steps: str,
-    save_to_file: HandleExisting,
+    handle_existing_data: HandleExisting,
     slurm_batch: Union[bool, Dict] = False,
     log: bool = True,
 ):
@@ -67,12 +67,14 @@ def run_preprocessing(
             {
                 "preprocess_data": preprocess_data,
                 "pp_steps": pp_steps_dict,
-                "save_to_file": save_to_file,
+                "handle_existing_data": handle_existing_data,
                 "log": log,
             },
         ),
     else:
-        _preprocess_and_save_all_runs(preprocess_data, pp_steps_dict, save_to_file, log)
+        _preprocess_and_save_all_runs(
+            preprocess_data, pp_steps_dict, handle_existing_data, log
+        )
 
 
 def fill_all_runs_with_preprocessed_recording(
@@ -107,7 +109,7 @@ def fill_all_runs_with_preprocessed_recording(
 def _preprocess_and_save_all_runs(
     preprocess_data: PreprocessingData,
     pp_steps_dict: Dict,
-    save_to_file: HandleExisting,
+    handle_existing_data: HandleExisting,
     log: bool = True,
 ) -> None:
     """
@@ -117,7 +119,7 @@ def _preprocess_and_save_all_runs(
     This function validates all input arguments and initialises logging.
     Then, it will iterate over every run in `preprocess_data` and
     check whether preprocessing needs to be run and saved based on the
-    `save_to_file` option. If so, it will fill the relevant run
+    `handle_existing_data` option. If so, it will fill the relevant run
     with the preprocessed spikeinterface recording object and save to disk.
     """
     passed_arguments = locals()
@@ -134,7 +136,7 @@ def _preprocess_and_save_all_runs(
         utils.message_user(f"Preprocessing run {run_name}...")
 
         to_save, overwrite = _handle_existing_data_options(
-            preprocess_data, ses_name, run_name, save_to_file
+            preprocess_data, ses_name, run_name, handle_existing_data
         )
 
         if to_save:
@@ -171,13 +173,13 @@ def _handle_existing_data_options(
     preprocess_data: PreprocessingData,
     ses_name: str,
     run_name: str,
-    save_to_file: HandleExisting,
+    handle_existing_data: HandleExisting,
 ) -> Tuple[bool, bool]:
     """
     Determine whether preprocesing for this run needs to be performed based
-    on the `save_to_file setting`. If preprocessing does not exist, preprocessing
+    on the `handle_existing_data setting`. If preprocessing does not exist, preprocessing
     is always run. Otherwise, if it already exists, the behaviour depends on
-    the `save_to_file` setting.
+    the `handle_existing_data` setting.
 
     Returns
     -------
@@ -191,7 +193,7 @@ def _handle_existing_data_options(
     """
     preprocess_path = preprocess_data.get_preprocessing_path(ses_name, run_name)
 
-    if save_to_file == "skip_if_exists":
+    if handle_existing_data == "skip_if_exists":
         if preprocess_path.is_dir():
             utils.message_user(
                 f"\nSkipping preprocessing, using file at "
@@ -206,7 +208,7 @@ def _handle_existing_data_options(
             to_save = True
             overwrite = False
 
-    elif save_to_file == "overwrite":
+    elif handle_existing_data == "overwrite":
         if preprocess_path.is_dir():
             utils.message_user(f"Removing existing file at {preprocess_path}\n")
 
@@ -214,7 +216,7 @@ def _handle_existing_data_options(
         to_save = True
         overwrite = True
 
-    elif save_to_file == "fail_if_exists":
+    elif handle_existing_data == "fail_if_exists":
         if preprocess_path.is_dir():
             raise FileExistsError(
                 f"Preprocessed binary already exists at "

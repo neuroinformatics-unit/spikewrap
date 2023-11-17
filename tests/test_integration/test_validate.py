@@ -170,7 +170,9 @@ class TestValidate(BaseTest):
 
         with pytest.raises(TypeError) as e:
             _preprocess_and_save_all_runs(
-                preprocess_data=None, pp_steps=pp_steps, save_to_file="overwrite"
+                preprocess_data=None,
+                pp_steps=pp_steps,
+                handle_existing_data="overwrite",
             )
         assert (
             str(e.value)
@@ -183,7 +185,7 @@ class TestValidate(BaseTest):
             _preprocess_and_save_all_runs(
                 preprocess_data=preprocess_data,
                 pp_steps="bad_name",
-                save_to_file="overwrite",
+                handle_existing_data="overwrite",
             )
         assert (
             str(e.value)
@@ -194,15 +196,15 @@ class TestValidate(BaseTest):
             _preprocess_and_save_all_runs(
                 preprocess_data=preprocess_data,
                 pp_steps=pp_steps,
-                save_to_file="bad_name",
+                handle_existing_data="bad_name",
             )
-        assert "`save_to_file` must be `False` or one of" in str(e.value)
+        assert "`handle_existing_data` must be `False` or one of" in str(e.value)
 
         with pytest.raises(TypeError) as e:
             _preprocess_and_save_all_runs(
                 preprocess_data=preprocess_data,
                 pp_steps=pp_steps,
-                save_to_file="overwrite",
+                handle_existing_data="overwrite",
                 slurm_batch="bad_type",
             )
         assert (
@@ -213,7 +215,7 @@ class TestValidate(BaseTest):
             _preprocess_and_save_all_runs(
                 preprocess_data=preprocess_data,
                 pp_steps=pp_steps,
-                save_to_file="overwrite",
+                handle_existing_data="overwrite",
                 log="bad_type",
             )
             assert str(e.value) == "`log` must be `bool`."
