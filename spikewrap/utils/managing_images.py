@@ -201,25 +201,19 @@ def download_all_sorters() -> None:
     )
     from spython.main import Client
 
-    #    spikeinterface_version = spikeinterface.__version__
-
-    #   if save_to_config_location:
-    #      save_to_path = Path(hpc_sorter_images_path()) / spikeinterface_version
-    # else:
-    #    save_to_path = Path(os.getcwd()) / spikeinterface_version
-
     supported_sorters = utils.canonical_settings("supported_sorters")
     can_run_locally = utils.canonical_settings("sorter_can_run_locally")
 
     for sorter in supported_sorters:
         if sorter not in can_run_locally:
             save_to_path = get_local_sorter_path(sorter)
+            save_to_path_parent = save_to_path.parent
 
-            if save_to_path.is_dir():
+            if save_to_path.is_file():
                 raise FileExistsError(f"Image folder already exists at {save_to_path}")
 
-            save_to_path.mkdir()
-            os.chdir(save_to_path)
+            save_to_path_parent.mkdir(exist_ok=True, parents=True)
+            os.chdir(save_to_path_parent)
 
             container_image = SORTER_DOCKER_MAP[sorter]
             Client.pull(f"docker://{container_image}")
