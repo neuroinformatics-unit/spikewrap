@@ -4,10 +4,10 @@ from typing import Dict, List, Tuple, Union
 import numpy as np
 import spikeinterface.preprocessing as spre
 
-from ..configs import configs
-from ..data_classes.preprocessing import PreprocessingData
-from ..utils import logging_sw, slurm, utils, validate
-from ..utils.custom_types import HandleExisting
+from spikewrap.configs import configs
+from spikewrap.data_classes.preprocessing import PreprocessingData
+from spikewrap.utils import logging_sw, slurm, utils, validate
+from spikewrap.utils.custom_types import HandleExisting
 
 # --------------------------------------------------------------------------------------
 # Public Functions

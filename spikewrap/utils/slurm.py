@@ -5,13 +5,13 @@ from typing import Callable, Dict, Union
 
 import submitit
 
-from ..configs.backend.hpc import (
+from spikewrap.configs.backend.hpc import (
     default_cpu_partition,
     default_gpu_partition,
     default_slurm_options,
 )
-from . import utils
-from .checks import system_call_success
+from spikewrap.utils import utils
+from spikewrap.utils.checks import system_call_success
 
 
 def run_in_slurm(slurm_opts: Union[bool, Dict], func_to_run: Callable, func_opts: Dict):

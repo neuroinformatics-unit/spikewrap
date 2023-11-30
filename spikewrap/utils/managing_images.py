@@ -9,11 +9,11 @@ from typing import TYPE_CHECKING, Literal, Optional, Tuple, Union
 import spikeinterface
 from spikeinterface.sorters.runsorter import SORTER_DOCKER_MAP
 
-from ..configs.backend.hpc import hpc_sorter_images_path
-from . import checks, utils
+from spikewrap.configs.backend.hpc import hpc_sorter_images_path
+from spikewrap.utils import checks, utils
 
 if TYPE_CHECKING:
-    from ..data_classes.sorting import SortingData
+    from spikewrap.data_classes.sorting import SortingData
 
 
 def move_singularity_image_if_required(

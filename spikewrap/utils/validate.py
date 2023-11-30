@@ -4,10 +4,10 @@ from typing import Dict, List, Optional
 import typeguard
 from typeguard import CollectionCheckStrategy
 
-from ..configs.backend.hpc import default_slurm_options
-from ..data_classes.preprocessing import PreprocessingData
-from ..utils import utils
-from ..utils.custom_types import DeleteIntermediate, HandleExisting
+from spikewrap.configs.backend.hpc import default_slurm_options
+from spikewrap.data_classes.preprocessing import PreprocessingData
+from spikewrap.utils import utils
+from spikewrap.utils.custom_types import DeleteIntermediate, HandleExisting
 
 
 def check_function_arguments(arguments):

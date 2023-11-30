@@ -4,7 +4,7 @@ import pytest
 
 from spikewrap.utils.slurm import is_slurm_installed
 
-from .base import BaseTest
+from .base import BaseTest  # noqa
 
 CAN_SLURM = is_slurm_installed()
 

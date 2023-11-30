@@ -5,7 +5,7 @@ import sys
 from pathlib import Path
 from typing import Literal, Union
 
-from . import utils
+from spikewrap.utils import utils
 
 
 class HandleLogging:

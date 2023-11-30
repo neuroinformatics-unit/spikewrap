@@ -7,8 +7,8 @@ import spikeinterface as si
 from spikeinterface import curation
 from spikeinterface.extractors import NpzSortingExtractor
 
-from ..pipeline.sort import get_sorting_data_class
-from ..utils import utils
+from spikewrap.pipeline.sort import get_sorting_data_class
+from spikewrap.utils import utils
 
 
 # TODO: figure out where to put this function.

@@ -12,8 +12,8 @@ import yaml
 if TYPE_CHECKING:
     from spikeinterface.core import BaseRecording
 
-    from ..data_classes.preprocessing import PreprocessingData
-    from ..data_classes.sorting import SortingData
+    from spikewrap.data_classes.preprocessing import PreprocessingData
+    from spikewrap.data_classes.sorting import SortingData
 
 
 # --------------------------------------------------------------------------------------

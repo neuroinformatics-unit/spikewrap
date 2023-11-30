@@ -1,18 +1,21 @@
 from __future__ import annotations
 
 import shutil
-from pathlib import Path
-from typing import Dict, List, Optional, Tuple, Union
+from typing import TYPE_CHECKING, Dict, List, Optional, Tuple, Union
 
-from ..configs.configs import get_configs
-from ..data_classes.preprocessing import PreprocessingData
-from ..data_classes.sorting import SortingData
-from ..utils import logging_sw, slurm, utils, validate
-from ..utils.custom_types import DeleteIntermediate, HandleExisting
-from .load_data import load_data
-from .postprocess import run_postprocess
-from .preprocess import run_preprocessing
-from .sort import run_sorting
+if TYPE_CHECKING:
+    from pathlib import Path
+
+    from spikewrap.data_classes.preprocessing import PreprocessingData
+    from spikewrap.data_classes.sorting import SortingData
+    from spikewrap.utils.custom_types import DeleteIntermediate, HandleExisting
+
+from spikewrap.configs.configs import get_configs
+from spikewrap.pipeline.load_data import load_data
+from spikewrap.pipeline.postprocess import run_postprocess
+from spikewrap.pipeline.preprocess import run_preprocessing
+from spikewrap.pipeline.sort import run_sorting
+from spikewrap.utils import logging_sw, slurm, utils, validate
 
 
 def run_full_pipeline(

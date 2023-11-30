@@ -7,15 +7,16 @@ import numpy as np
 import spikeinterface.preprocessing as spre
 import spikeinterface.widgets as sw
 
-from ..data_classes.preprocessing import PreprocessingData
-from ..data_classes.sorting import SortingData
-from ..utils import utils
-from .sort import get_sorting_data_class
+from spikewrap.pipeline.sort import get_sorting_data_class
+from spikewrap.utils import utils
 
 if TYPE_CHECKING:
     import matplotlib
     from numpy.typing import NDArray
     from spikeinterface.core import BaseRecording
+
+    from spikewrap.data_classes.preprocessing import PreprocessingData
+    from spikewrap.data_classes.sorting import SortingData
 
 
 def visualise(

@@ -1,16 +1,19 @@
 from __future__ import annotations
 
 import shutil
-from pathlib import Path
 from typing import TYPE_CHECKING, Dict, Optional, Union
+
+if TYPE_CHECKING:
+    from pathlib import Path
+
+    from spikewrap.utils.custom_types import HandleExisting
 
 import pandas as pd
 import spikeinterface as si
 
-from ..configs.configs import get_configs
-from ..data_classes.postprocessing import PostprocessingData
-from ..utils import logging_sw, utils, validate
-from ..utils.custom_types import HandleExisting
+from spikewrap.configs.configs import get_configs
+from spikewrap.data_classes.postprocessing import PostprocessingData
+from spikewrap.utils import logging_sw, utils, validate
 
 if TYPE_CHECKING:
     from spikeinterface import WaveformExtractor
