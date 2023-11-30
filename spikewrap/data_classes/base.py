@@ -151,7 +151,7 @@ class BaseUserDict(UserDict):
         return self.get_derivatives_top_level_path() / self.sub_name
 
     def get_derivatives_ses_path(self, ses_name: str) -> Path:
-        return self.get_derivatives_sub_path() / ses_name
+        return self.get_derivatives_sub_path() / ses_name / "ephys"
 
     def get_derivatives_run_path(self, ses_name: str, run_name: str) -> Path:
         return self.get_derivatives_ses_path(ses_name) / run_name
