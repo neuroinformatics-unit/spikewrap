@@ -5,7 +5,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Callable, Dict, List, Literal, Tuple
 
-from ..utils import utils
+from spikewrap.utils import utils
 
 
 @dataclass

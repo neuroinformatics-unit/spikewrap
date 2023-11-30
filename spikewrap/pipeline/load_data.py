@@ -5,8 +5,8 @@ from typing import Dict, List, Union
 
 import spikeinterface.extractors as se
 
-from ..data_classes.preprocessing import PreprocessingData
-from ..utils import utils
+from spikewrap.data_classes.preprocessing import PreprocessingData
+from spikewrap.utils import utils
 
 
 def load_data(

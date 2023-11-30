@@ -8,7 +8,7 @@ from spikewrap.pipeline.postprocess import run_postprocess
 from spikewrap.pipeline.preprocess import _preprocess_and_save_all_runs
 from spikewrap.pipeline.sort import run_sorting
 
-from .base import BaseTest
+from .base import BaseTest  # noqa
 
 DEFAULT_SORTER = "mountainsort5"
 

@@ -3,19 +3,21 @@ from __future__ import annotations
 import os
 import platform
 from pathlib import Path
-from typing import Dict, List, Literal, Optional, Union
+from typing import TYPE_CHECKING, Dict, List, Literal, Optional, Union
+
+if TYPE_CHECKING:
+    from spikewrap.utils.custom_types import HandleExisting
 
 import spikeinterface.sorters as ss
 
-from ..data_classes.sorting import (
+from spikewrap.data_classes.sorting import (
     ConcatenateRuns,
     ConcatenateSessions,
     NoConcatenation,
     SortingData,
 )
-from ..utils import logging_sw, slurm, utils, validate
-from ..utils.custom_types import HandleExisting
-from ..utils.managing_images import (
+from spikewrap.utils import logging_sw, slurm, utils, validate
+from spikewrap.utils.managing_images import (
     get_image_run_settings,
     move_singularity_image_if_required,
 )

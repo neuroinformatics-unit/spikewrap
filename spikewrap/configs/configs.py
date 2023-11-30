@@ -5,7 +5,7 @@ from typing import Dict, Tuple
 
 import yaml
 
-from ..utils import utils
+from spikewrap.utils import utils
 
 
 def get_configs(name: str) -> Tuple[Dict, Dict, Dict]:

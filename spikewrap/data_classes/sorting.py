@@ -9,8 +9,8 @@ from typing import TYPE_CHECKING, Dict, List, Optional
 import spikeinterface as si
 from spikeinterface import concatenate_recordings
 
-from ..utils import utils
-from .base import BaseUserDict
+from spikewrap.data_classes.base import BaseUserDict
+from spikewrap.utils import utils
 
 if TYPE_CHECKING:
     from pathlib import Path

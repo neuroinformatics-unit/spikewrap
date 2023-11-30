@@ -3,14 +3,18 @@ import pytest
 import spikeinterface as si
 import spikeinterface.extractors as se
 from spikeinterface import concatenate_recordings
-from spikeinterface.preprocessing import bandpass_filter, common_reference, phase_shift
+from spikeinterface.preprocessing import (
+    bandpass_filter,
+    common_reference,
+    phase_shift,
+)
 
 from spikewrap.data_classes.postprocessing import load_saved_sorting_output
 from spikewrap.pipeline import full_pipeline, preprocess
 from spikewrap.pipeline.load_data import load_data
 from spikewrap.utils.checks import check_cuda, check_virtual_machine
 
-from .base import BaseTest
+from .base import BaseTest  # noqa
 
 SKIP_KILOSORT = not (check_virtual_machine() and check_cuda())
 if SKIP_KILOSORT:

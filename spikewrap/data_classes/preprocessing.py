@@ -4,8 +4,8 @@ from typing import Dict
 
 import spikeinterface
 
-from ..utils import utils
-from .base import BaseUserDict
+from spikewrap.data_classes.base import BaseUserDict
+from spikewrap.utils import utils
 
 
 @dataclass
