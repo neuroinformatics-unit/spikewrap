@@ -23,8 +23,7 @@ def move_singularity_image_if_required(
     """
     On Linux, images are cased to the sorting_data base folder
     by default by SpikeInterface. To avoid re-downloading
-    images, these are moved to a pre-determined folder (home
-    for local, pre-set on an HPC). This is only required
+    images, these are moved to home directory. This is only required
     for singularity, as docker-desktop handles all image
     storage.
 
@@ -49,7 +48,11 @@ def move_singularity_image_if_required(
         ), "Docker Desktop should be used on Windows or macOS."
 
         path_to_image = sorting_data.base_path / get_sorter_image_name(sorter)
-        shutil.move(path_to_image, get_local_sorter_path(sorter).parent)
+
+        destination = get_local_sorter_path(sorter).parent
+        destination.mkdir(exist_ok=True, parents=True)
+
+        shutil.move(path_to_image, destination)
 
 
 def get_image_run_settings(
@@ -154,8 +157,6 @@ def get_local_sorter_path(
         / get_sorter_image_name(sorter)
     )
 
-    local_path.parent.mkdir(exist_ok=True, parents=True)
-
     return local_path
 
 
@@ -186,10 +187,8 @@ def get_sorter_image_name(sorter: str) -> str:
 
 def download_all_sorters() -> None:
     """
-    Convenience function to download all sorters and move them to
-    the HPC path (set in configs/backend/hpc.py). This should be run
-    when upgrading to a new version of spikeinterface, to ensure
-    the latest image versions are used.
+    Convenience function to download all sorters in the
+    default homee directory.
 
     The SI images are stored at:
         https://github.com/SpikeInterface/spikeinterface-dockerfiles
@@ -219,5 +218,4 @@ def download_all_sorters() -> None:
             Client.pull(f"docker://{container_image}")
 
 
-# hpc_sorter_images_path
-# download_all_sorters
+# TODO: check all 'hpc' instances in docs
