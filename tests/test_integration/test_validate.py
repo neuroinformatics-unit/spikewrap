@@ -237,7 +237,7 @@ class TestValidate(BaseTest):
             == "`sorter_options` must be a Dict of values to pass to the SpikeInterface sorting function."
         )
 
-    def test_validate_run_postprocessing(self, test_info):
+    def test_validate_run_postprocessing(self):
         """
         Any arguments shared with `run_full_pipeline are not tested here,
         see `test_validate_run_sorting()` docstring.
@@ -270,3 +270,27 @@ class TestValidate(BaseTest):
             "The path is not to the 'sorting' folder. Output was not found at"
             in str(e.value)
         )
+
+    def test_validate_empty_sessions_and_runs(self, test_info):
+        base_path, sub_name, sessions_and_runs = test_info
+
+        sessions_and_runs = {}
+
+        with pytest.raises(ValueError) as e:
+            self.run_full_pipeline(base_path, sub_name, sessions_and_runs)
+        assert str(e.value) == "`sessions_and_runs` cannot be empty."
+
+        sessions_and_runs = {"ses-001": []}
+
+        with pytest.raises(ValueError) as e:
+            self.run_full_pipeline(base_path, sub_name, sessions_and_runs)
+        assert str(e.value) == "`sessions_and_runs` cannot contain empty runs."
+
+        sessions_and_runs = {
+            "ses-001": ["run-001"],
+            "ses-002": [],
+        }
+        with pytest.raises(ValueError) as e:
+            self.run_full_pipeline(base_path, sub_name, sessions_and_runs)
+
+        assert str(e.value) == "`sessions_and_runs` cannot contain empty runs."

@@ -41,7 +41,13 @@ def check_function_arguments(arguments):
                     "`sessions_and_runs` must be a Dict where the keys are session names."
                 )
 
+            if len(arg_value) == 0:
+                raise ValueError("`sessions_and_runs` cannot be empty.")
+
             for run_names in arg_value.values():
+                if len(run_names) == 0:
+                    raise ValueError("`sessions_and_runs` cannot contain empty runs.")
+
                 if not (typecheck(run_names, List) or typecheck(run_names, str)):
                     raise TypeError(
                         "The runs within the session key for the "
