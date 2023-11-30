@@ -10,18 +10,6 @@ class TestManagingImages:
     def test_download_all_sorters(self, tmp_path, monkeypatch):
         """
         Test that `download_all_sorters` downloads the correct sorters.
-        This function will either download to the hpc path set in
-        configs.backend.hpc.hpc_sorter_images_path or to the
-        current working folder.
-
-        If `to_hpc_path` is `True`, the function `hpc_sorter_images_path()`
-        is called to get the path, so we need to monkeypatch it with
-        a pytest temporary test path.
-
-        Otherwise, we can just change the cwd to the `temp_path`.
-
-        Then, simply check that the expected paths are created and
-        expected image files exist.
         """
 
         def new_base_path():

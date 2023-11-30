@@ -216,6 +216,3 @@ def download_all_sorters() -> None:
 
             container_image = SORTER_DOCKER_MAP[sorter]
             Client.pull(f"docker://{container_image}")
-
-
-# TODO: check all 'hpc' instances in docs
