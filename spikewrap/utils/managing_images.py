@@ -9,7 +9,6 @@ from typing import TYPE_CHECKING, Literal, Optional, Tuple, Union
 import spikeinterface
 from spikeinterface.sorters.runsorter import SORTER_DOCKER_MAP
 
-from spikewrap.configs.backend.hpc import hpc_sorter_images_path
 from spikewrap.utils import checks, utils
 
 if TYPE_CHECKING:
@@ -24,8 +23,7 @@ def move_singularity_image_if_required(
     """
     On Linux, images are cased to the sorting_data base folder
     by default by SpikeInterface. To avoid re-downloading
-    images, these are moved to a pre-determined folder (home
-    for local, pre-set on an HPC). This is only required
+    images, these are moved to home directory. This is only required
     for singularity, as docker-desktop handles all image
     storage.
 
@@ -48,7 +46,13 @@ def move_singularity_image_if_required(
         assert (
             platform.system() == "Linux"
         ), "Docker Desktop should be used on Windows or macOS."
-        store_singularity_image(sorting_data.base_path, sorter)
+
+        path_to_image = sorting_data.base_path / get_sorter_image_name(sorter)
+
+        destination = get_local_sorter_path(sorter).parent
+        destination.mkdir(exist_ok=True, parents=True)
+
+        shutil.move(path_to_image, destination)
 
 
 def get_image_run_settings(
@@ -91,25 +95,6 @@ def get_image_run_settings(
     return singularity_image, docker_image  # type: ignore
 
 
-def store_singularity_image(base_path: Path, sorter: str) -> None:
-    """
-    When running locally, SpikeInterface will pull the docker image
-    to the current working directly. Move this to home/.spikewrap
-    so they can be used again in future and are centralised.
-
-    Parameters
-    ----------
-    base_path : Path
-        Base-path on the SortingData object, the path that holds
-        `rawdata` and `derivatives` folders.
-
-    sorter : str
-        Name of the sorter for which to store the image.
-    """
-    path_to_image = base_path / get_sorter_image_name(sorter)
-    shutil.move(path_to_image, get_local_sorter_path(sorter).parent)
-
-
 def get_singularity_image(sorter: str) -> Union[Literal[True], str]:
     """
     Get the path to a pre-installed system singularity image. If none
@@ -131,10 +116,7 @@ def get_singularity_image(sorter: str) -> Union[Literal[True], str]:
     """
     singularity_image: Union[Literal[True], str]
 
-    if get_hpc_sorter_path(sorter).is_file():
-        singularity_image = str(get_hpc_sorter_path(sorter))
-
-    elif get_local_sorter_path(sorter).is_file():
+    if get_local_sorter_path(sorter).is_file():
         singularity_image = str(get_local_sorter_path(sorter))
     else:
         singularity_image = True
@@ -142,7 +124,9 @@ def get_singularity_image(sorter: str) -> Union[Literal[True], str]:
     return singularity_image
 
 
-def get_local_sorter_path(sorter: str) -> Path:
+def get_local_sorter_path(
+    sorter: str, spikeinterface_version: Optional[str] = None
+) -> Path:
     """
     Return the path to a sorter singularity image. The sorters are
     stored by spikewrap in the home folder.
@@ -152,37 +136,28 @@ def get_local_sorter_path(sorter: str) -> Path:
     sorter : str
         The name of the sorter to get the path to (e.g. kilosort2_5).
 
+    spikeinterface_version : Optional[str]
+        The spikeinterface version from which the sorter was stored.
+        Otherwise, use the currently installed version.
+
     Returns
     ---------
     local_path : Path
         The path to the sorter image on the local machine.
     """
+    if spikeinterface_version is None:
+        spikeinterface_version = spikeinterface.__version__
+
     local_path = (
-        Path.home() / ".spikewrap" / "sorter_images" / get_sorter_image_name(sorter)
+        Path.home()
+        / ".spikewrap"
+        / "sorter_images"
+        / sorter
+        / spikeinterface_version
+        / get_sorter_image_name(sorter)
     )
-    local_path.parent.mkdir(exist_ok=True, parents=True)
+
     return local_path
-
-
-def get_hpc_sorter_path(sorter: str) -> Path:
-    """
-    Return the path to the sorter image on the SWC HCP (ceph).
-
-    Parameters
-    ----------
-    sorter : str
-        The name of the sorter to get the path to (e.g. kilosort2_5).
-
-    Returns
-    -------
-    sorter_path : Path
-        The base to the sorter image on SWC HCP (ceph).
-    """
-    base_path = Path(hpc_sorter_images_path())
-    sorter_path = (
-        base_path / sorter / spikeinterface.__version__ / get_sorter_image_name(sorter)
-    )
-    return sorter_path
 
 
 def get_sorter_image_name(sorter: str) -> str:
@@ -201,7 +176,6 @@ def get_sorter_image_name(sorter: str) -> str:
         The SpikeInterface filename of the docker image for that sorter.
     """
     # use spikeinterface sorter SORTER_DOCKER_MAP
-
     if "kilosort" in sorter:
         sorter_name = f"{sorter}-compiled-base.sif"
     else:
@@ -211,24 +185,13 @@ def get_sorter_image_name(sorter: str) -> str:
     return sorter_name
 
 
-def download_all_sorters(save_to_config_location: bool = True) -> None:
+def download_all_sorters() -> None:
     """
-    Convenience function to download all sorters and move them to
-    the HPC path (set in configs/backend/hpc.py). This should be run
-    when upgrading to a new version of spikeinterface, to ensure
-    the latest image versions are used.
+    Convenience function to download all sorters in the
+    default homee directory.
 
     The SI images are stored at:
         https://github.com/SpikeInterface/spikeinterface-dockerfiles
-
-    Parameters
-    ----------
-
-    save_to_config_location : bool
-        If `True`, the sorters are saved in the default hpc
-        sorter images path specified in configs/backend/hpc.py
-        If `False`, the sorters are downloaded to the current
-        working direction.
     """
 
     assert platform.system() == "Linux", (
@@ -237,23 +200,19 @@ def download_all_sorters(save_to_config_location: bool = True) -> None:
     )
     from spython.main import Client
 
-    spikeinterface_version = spikeinterface.__version__
-
-    if save_to_config_location:
-        save_to_path = Path(hpc_sorter_images_path()) / spikeinterface_version
-    else:
-        save_to_path = Path(os.getcwd()) / spikeinterface_version
-
-    if save_to_path.is_dir():
-        raise FileExistsError(f"Image folder already exists at {save_to_path}")
-
-    save_to_path.mkdir()
-    os.chdir(save_to_path)
-
     supported_sorters = utils.canonical_settings("supported_sorters")
     can_run_locally = utils.canonical_settings("sorter_can_run_locally")
 
     for sorter in supported_sorters:
         if sorter not in can_run_locally:
+            save_to_path = get_local_sorter_path(sorter)
+            save_to_path_parent = save_to_path.parent
+
+            if save_to_path.is_file():
+                raise FileExistsError(f"Image folder already exists at {save_to_path}")
+
+            save_to_path_parent.mkdir(exist_ok=True, parents=True)
+            os.chdir(save_to_path_parent)
+
             container_image = SORTER_DOCKER_MAP[sorter]
             Client.pull(f"docker://{container_image}")

@@ -2,23 +2,12 @@
 Here defaults related to the HPC system `spikewrap` is run on
 (if not running locally) are stored.
 
-
-`hpc_sorter_images_path()`
-    This function returns the default path where singularity images are stored.
-    The purpose of this storage path is to avoid users installing multiple copies
-    across the system. This path can be changed based on the HPC system used and
-    populated with SpikeInterface singularity images.
-
 `default_slurm_options()`
     The default options passed to the submitit executor and converted
     to SLURM batch script arguments. If passing new options in `slurm_batch`,
     the passed options are overriden but other defaults are maintained.
 """
 from typing import Dict
-
-
-def hpc_sorter_images_path() -> str:
-    return "/ceph/neuroinformatics/neuroinformatics/scratch/sorter_images"
 
 
 def default_slurm_options() -> Dict:

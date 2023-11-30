@@ -25,7 +25,7 @@ sessions_and_runs = {
 }
 
 config_name = "test_default"
-sorter = "mountainsort5"  #  "kilosort2_5"  # "spykingcircus" # mountainsort5
+sorter = "kilosort2_5"  #  "kilosort2_5"  # "spykingcircus" # mountainsort5
 
 if __name__ == "__main__":
     t = time.time()
@@ -38,8 +38,8 @@ if __name__ == "__main__":
         sorter,
         concat_sessions_for_sorting=True,  # TODO: validate this at the start, in `run_full_pipeline`
         concat_runs_for_sorting=True,
-        existing_preprocessed_data="overwrite",  # this is kind of confusing...
-        existing_sorting_output="skip_if_exists",
+        existing_preprocessed_data="skip_if_exists",  # this is kind of confusing...
+        existing_sorting_output="overwrite",
         overwrite_postprocessing=True,
         delete_intermediate_files=(),
         #        "recording.dat",
