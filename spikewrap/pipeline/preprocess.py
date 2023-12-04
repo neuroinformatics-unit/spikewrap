@@ -1,5 +1,5 @@
 import json
-from typing import Dict, List, Tuple, Union, Literal, Optional,
+from typing import Dict, List, Tuple, Union
 
 import numpy as np
 import spikeinterface.preprocessing as spre
@@ -16,9 +16,8 @@ from spikewrap.utils.custom_types import HandleExisting
 
 def run_preprocessing(
     preprocess_data: PreprocessingData,
-    pp_steps: str,
+    pp_settings: str,
     handle_existing_data: HandleExisting,
-    write_binary_options: Dict,
     slurm_batch: Union[bool, Dict] = False,
     log: bool = True,
 ):
@@ -32,10 +31,10 @@ def run_preprocessing(
 
     preprocess_data : PreprocessingData
         A preprocessing data object that has as attributes the
-        paths to rawdata. The pp_steps attribute is set on
+        paths to rawdata. The pp_settings attribute is set on
         this class during execution of this function.
 
-    pp_steps: The name of valid preprocessing .yaml file (without the yaml extension).
+    pp_settings: The name of valid preprocessing .yaml file (without the yaml extension).
               stored in spikewrap/configs.
 
     existing_preprocessed_data : custom_types.HandleExisting
@@ -59,7 +58,9 @@ def run_preprocessing(
     passed_arguments = locals()
     validate.check_function_arguments(passed_arguments)
 
-    pp_steps_dict, _, _ = configs.get_configs(pp_steps)  # TODO: call 'config_name'
+    pp_steps_dict, _, _, write_binary_options = configs.get_configs(
+        pp_settings
+    )  # TODO: call 'config_name'
 
     if slurm_batch:
         slurm.run_in_slurm(
@@ -75,7 +76,11 @@ def run_preprocessing(
         ),
     else:
         _preprocess_and_save_all_runs(
-            preprocess_data, pp_steps_dict, handle_existing_data, write_binary_options, log
+            preprocess_data,
+            pp_steps_dict,
+            handle_existing_data,
+            write_binary_options,
+            log,
         )
 
 
@@ -95,7 +100,7 @@ def fill_all_runs_with_preprocessed_recording(
     pp_steps: The name of valid preprocessing .yaml file (without the yaml extension).
               stored in spikewrap/configs.
     """
-    pp_steps_dict, _, _ = configs.get_configs(pp_steps)
+    pp_steps_dict, _, _, _ = configs.get_configs(pp_steps)
 
     for ses_name, run_name in preprocess_data.flat_sessions_and_runs():
         _fill_run_data_with_preprocessed_recording(
@@ -144,7 +149,12 @@ def _preprocess_and_save_all_runs(
 
         if to_save:
             _preprocess_and_save_single_run(
-                preprocess_data, ses_name, run_name, pp_steps_dict, overwrite, write_binary_options
+                preprocess_data,
+                ses_name,
+                run_name,
+                pp_steps_dict,
+                overwrite,
+                write_binary_options,
             )
 
     if log:
@@ -170,7 +180,9 @@ def _preprocess_and_save_single_run(
         pp_steps_dict,
     )
 
-    preprocess_data.save_preprocessed_data(ses_name, run_name, overwrite, write_binary_options)
+    preprocess_data.save_preprocessed_data(
+        ses_name, run_name, overwrite, write_binary_options
+    )
 
 
 def _handle_existing_data_options(

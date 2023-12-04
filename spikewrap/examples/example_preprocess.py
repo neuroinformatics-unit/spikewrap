@@ -26,7 +26,7 @@ loaded_data = load_data(base_path, sub_name, sessions_and_runs, data_format="spi
 
 run_preprocessing(
     loaded_data,
-    pp_steps="default",
+    pp_settings="default",
     handle_existing_data="overwrite",
     log=True,
     slurm_batch=False,
