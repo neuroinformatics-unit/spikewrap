@@ -2,6 +2,7 @@ import shutil
 from dataclasses import dataclass
 from typing import Dict
 
+import numpy as np
 import spikeinterface
 
 from spikewrap.data_classes.base import BaseUserDict
@@ -111,9 +112,46 @@ class PreprocessingData(BaseUserDict):
         recording, __ = utils.get_dict_value_from_step_num(
             self[ses_name][run_name], "last"
         )
+
         recording.save(
-            folder=self._get_pp_binary_data_path(ses_name, run_name), chunk_memory="10M"
+            folder=self._get_pp_binary_data_path(ses_name, run_name),
+            chunk_size=self.get_default_chunk_size(recording),
         )
+
+    def get_default_chunk_size(self, recording, sync: bool = False):
+        """
+        Get the fixed default chunk size of 20 minutes of recording.
+        This chunk size was chosen to give a safe memory allocation
+        on nearly all machines (1GB) while giving good data quality (i.e.
+        do not use too many chunks in order to avoid preprocessing
+        filter edge effects)
+
+        The calculation for memory use is:
+        mem_use_bytes = itemsize * sampling_rate * chunk_time_s * error_multiplier
+
+        where
+            max_itemsize : 8 (some preprocessing steps are in float64)
+            chunk_time_s : time of the chunk in seconds - this adjustable parameter
+                           is set to 20 minutes, leading to ~1 GB memory with other
+                           fixed parameters'
+            error_multiplier : preprocessing steps in SI may use 2-3 times as
+                               much memory due to necessary copies. Therefore
+                               increase the memory estimate by this factor.
+        """
+        if sync:
+            max_itemsize = recording.dtype.itemsize
+        else:
+            max_itemsize = np.float64().itemsize
+
+        mem_limit_bytes = 1 * 1e9
+        num_channels = recording.get_num_channels()
+        error_multiplier = 2
+
+        mem_per_sample_bytes = max_itemsize * num_channels * error_multiplier
+
+        chunk_size = np.floor(mem_limit_bytes / mem_per_sample_bytes)
+
+        return chunk_size
 
     def _save_sync_channel(self, ses_name: str, run_name: str) -> None:
         """
@@ -127,9 +165,11 @@ class PreprocessingData(BaseUserDict):
             self.sync[ses_name][run_name] is not None
         ), f"Sync channel on PreprocessData session {ses_name} run {run_name} is None"
 
-        self.sync[ses_name][run_name].save(  # type: ignore
+        sync_recording = self.sync[ses_name][run_name]
+
+        sync_recording.save(  # type: ignore
             folder=self._get_sync_channel_data_path(ses_name, run_name),
-            chunk_memory="10M",
+            chunk_size=self.get_default_chunk_size(sync_recording, sync=True),
         )
 
     def _save_preprocessing_info(self, ses_name: str, run_name: str) -> None:
