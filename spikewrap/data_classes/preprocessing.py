@@ -120,21 +120,24 @@ class PreprocessingData(BaseUserDict):
 
     def get_default_chunk_size(self, recording, sync: bool = False):
         """
-        Get the fixed default chunk size of 20 minutes of recording.
-        This chunk size was chosen to give a safe memory allocation
-        on nearly all machines (1GB) while giving good data quality (i.e.
-        do not use too many chunks in order to avoid preprocessing
-        filter edge effects)
+        Get the fixed default chunk size that will use ~1GB of memory.
+        Ideally, this will be dynamically filled to ~70% of memory
+        but estimating memory across platforms / SLURM is not
+        finalised yet, see #104. 1GB is chosen somewhat arbitrarily
+        as a low amount that is expected any user should have
+        free on their machine. Larger chunk size is better
+        because it reduces filter edge effect and (I guess)
+        will be faster)
 
         The calculation for memory use is:
-        mem_use_bytes = itemsize * sampling_rate * chunk_time_s * error_multiplier
+        mem_use_bytes = max_itemsize * num_channels * * error_multiplier
 
         where
-            max_itemsize : 8 (some preprocessing steps are in float64)
-            chunk_time_s : time of the chunk in seconds - this adjustable parameter
-                           is set to 20 minutes, leading to ~1 GB memory with other
-                           fixed parameters'
-            error_multiplier : preprocessing steps in SI may use 2-3 times as
+            max_itemsize : 8 (some preprocessing steps are in float64) unless
+                           syncing.
+            num_channels : number of channels in the recording (all of which
+                           need to be preprocessed in memory together).
+            error_multiplier : preprocessing steps in SI may use ~2 times as
                                much memory due to necessary copies. Therefore
                                increase the memory estimate by this factor.
         """
