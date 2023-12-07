@@ -6,7 +6,10 @@ from typing import Dict, List, Union
 import numpy as np
 import spikeinterface.extractors as se
 import spikeinterface.preprocessing as spre
+<<<<<<< HEAD
 from spikeinterface import load_extractor
+=======
+>>>>>>> 65b07d1... Adding tests and playing around with casting to float64 on load.
 
 from spikewrap.data_classes.preprocessing import PreprocessingData
 from spikewrap.utils import utils
@@ -101,6 +104,7 @@ def _load_spikeglx_data(preprocess_data: PreprocessingData) -> PreprocessingData
             )
             for sync in [True, False]
         ]
+
         orig_dtype = without_sync.dtype
         without_sync = spre.astype(without_sync, np.float64)
 
@@ -126,7 +130,7 @@ def _load_spikeinterface(preprocess_data):  # TODO: does not handle sync
 
         orig_dtype = recording.dtype
 
-        recording = spre.astype(recording, np.float64)
+        recording = spre.astype(recording, np.float64)  # TODO: centralise this, also think if it can be handled better.
 
         preprocess_data.set_orig_dtype(orig_dtype)  # TODO: move this out of the loop.
 
