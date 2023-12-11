@@ -37,6 +37,60 @@ class BaseUserDict(UserDict):
         self.base_path = Path(self.base_path)
         self.check_run_names_are_formatted_as_list()
 
+    def convert_session_and_run_keywords_to_foldernames(  # TODO: this is called from preprocessing and sorting.
+        self, get_sub_path: Callable, get_ses_path: Callable
+    ) -> None:
+        """ """
+        ses_keyword = ""  # TODO: this is ugly
+        if any(
+            [name.lower() in ["all", "only"] for name in self.sessions_and_runs.keys()]
+        ):
+            if len(self.sessions_and_runs) != 1:
+                raise ValueError(
+                    f"If using keyword '{ses_keyword}' it should be the only provided session name."
+                )
+            ses_keyword = list(self.sessions_and_runs.keys())[0]
+
+        if ses_keyword.lower() in ["all", "only"]:
+            ses_name_filepaths = get_sub_path(self.sub_name).glob("ses-*")
+            all_session_names = [
+                path_.stem for path_ in ses_name_filepaths if path_.is_dir()
+            ]  # TODO: is stem?
+
+            runs = self.sessions_and_runs[ses_keyword]
+
+            self.sessions_and_runs = {name: runs for name in all_session_names}
+
+        for ses_name, runs in self.sessions_and_runs.items():
+            run_keyword = ""
+            if any([run in ["all", "only"] for run in runs]):
+                if len(runs) != 1:
+                    raise ValueError(
+                        "If runs in `sessions_and_runs` contains "
+                        "the keyword 'all' and 'only', they must "
+                        "be the only entries provided."
+                    )
+                run_keyword = runs[0]
+
+            if run_keyword != "":
+                all_run_paths = (
+                    ses_path := get_ses_path(self.sub_name, ses_name)
+                ).glob("*")
+                run_names = [
+                    path_.stem for path_ in all_run_paths if path_.is_dir()
+                ]  # TODO: is stem?
+
+                if (
+                    run_keyword == "only" and len(run_names) != 1
+                ):  # TODO: add only above!
+                    raise RuntimeError(
+                        f"The filepath {ses_path} contains more "
+                        f"than one folder but the run keyword is "
+                        f"set to 'only'."
+                    )
+
+                self.sessions_and_runs[ses_name] = run_names
+
     def check_run_names_are_formatted_as_list(self) -> None:
         """
         `sessions_and_runs` is typed as `Dict[str, List[str]]` but the
