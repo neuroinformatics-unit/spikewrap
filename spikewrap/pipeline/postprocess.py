@@ -167,7 +167,7 @@ def save_quality_metrics(
     waveforms: WaveformExtractor, quality_metrics_path: Path
 ) -> None:
     """"""
-    quality_metrics = si.qualitymetrics.compute_quality_metrics(waveforms)
+    quality_metrics = si.qualitymetrics.compute_quality_metrics(waveforms, chunk_size=1)
     quality_metrics.to_csv(quality_metrics_path)
     utils.message_user(f"Quality metrics saved to {quality_metrics_path}")
 
@@ -177,11 +177,11 @@ def save_unit_locations(
 ) -> None:
     """"""
     unit_locations = si.postprocessing.compute_unit_locations(
-        waveforms, outputs="by_unit"
+        waveforms, outputs="by_unit", method="monopolar_triangulation"
     )
     unit_locations_pandas = pd.DataFrame.from_dict(
-        unit_locations, orient="index", columns=["x", "y"]
-    )
+        unit_locations, orient="index", columns=["x", "y", "z"]
+    )  # TODO: is this z position new?
     unit_locations_pandas.to_csv(unit_locations_path)
 
     utils.message_user(f"Unit locations saved to {unit_locations_path}")
