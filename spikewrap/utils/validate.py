@@ -45,15 +45,15 @@ def check_function_arguments(arguments):
                 raise ValueError("`sessions_and_runs` cannot be empty.")
 
             for run_names in arg_value.values():
-                if len(run_names) == 0:
-                    raise ValueError("`sessions_and_runs` cannot contain empty runs.")
-
                 if not (typecheck(run_names, List) or typecheck(run_names, str)):
                     raise TypeError(
                         "The runs within the session key for the "
                         "`session_and_runs` Dict must be a list of run names "
                         "or a single run name (str)."
                     )
+
+                if typecheck(run_names, List) and len(run_names) == 0:
+                    raise ValueError("`sessions_and_runs` cannot contain empty runs.")
 
         elif arg_name == "sorter":
             if not typecheck(arg_value, str):

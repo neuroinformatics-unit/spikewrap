@@ -360,7 +360,8 @@ class ConcatenateSessions(SortingData):
         base_sorting_path = (
             self.get_derivatives_sub_path()
             / f"{self.sub_name}-sorting-concat"
-            / self.concat_ses_name()
+            / self.concat_ses_name()  # TODO: centralise paths!!  # TODO: centralise
+            / "ephys"
             / self.sorter
         )
         return base_sorting_path
@@ -442,6 +443,7 @@ class ConcatenateRuns(SortingData):
         base_sorting_path = (
             self.get_derivatives_sub_path()
             / ses_name
+            / "ephys"  # TODO: combine with base paths   # TODO: centralise paths!!
             / f"{self.sub_name}-sorting-concat"
             / run_name
             / self.sorter
@@ -490,7 +492,14 @@ class NoConcatenation(SortingData):
 
     def _get_base_sorting_path(self, ses_name: str, run_name: Optional[str]) -> Path:
         assert run_name is not None
-        return self.get_derivatives_sub_path() / ses_name / run_name / self.sorter
+        # TODO: centralise paths!!# TODO: centralise paths!!# TODO: centralise paths!!
+        return (
+            self.get_derivatives_sub_path()
+            / ses_name
+            / "ephys"
+            / run_name
+            / self.sorter
+        )
 
     def preprocessing_info_paths(self, ses_name: str, run_name: str) -> List[Path]:
         return [self.get_preprocessing_info_path(ses_name, run_name)]
