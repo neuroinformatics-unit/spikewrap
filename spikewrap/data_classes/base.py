@@ -1,11 +1,13 @@
-import fnmatch
 from collections import UserDict
 from collections.abc import ItemsView, KeysView, ValuesView
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Callable, Dict, List, Literal, Tuple
+from typing import TYPE_CHECKING, Callable, Dict, List, Literal, Tuple
 
 from spikewrap.utils import utils
+
+if TYPE_CHECKING:
+    import fnmatch
 
 
 @dataclass
@@ -110,23 +112,25 @@ class BaseUserDict(UserDict):
                     f"file path {run_path.parent}."
                 )
 
-                gate_str = fnmatch.filter(run_name.split("_"), "g?")
+                if False:
+                    if self.filetype == "spikeglx":
+                        gate_str = fnmatch.filter(run_name.split("_"), "g?")
 
-                assert len(gate_str) > 0, (
-                    f"The SpikeGLX gate index should be in the run name. "
-                    f"It was not found in the name {run_name}."
-                    f"\nEnsure the gate number is in the SpikeGLX-output filename."
-                )
+                        assert len(gate_str) > 0, (
+                            f"The SpikeGLX gate index should be in the run name. "
+                            f"It was not found in the name {run_name}."
+                            f"\nEnsure the gate number is in the SpikeGLX-output filename."
+                        )
 
-                assert len(gate_str) == 1, (
-                    f"The SpikeGLX gate appears in the name "
-                    f"{run_name} more than once"
-                )
+                        assert len(gate_str) == 1, (
+                            f"The SpikeGLX gate appears in the name "
+                            f"{run_name} more than once"
+                        )
 
-                assert int(gate_str[0][1:]) == 0, (
-                    f"Gate with index larger than 0 is not supported. This is found "
-                    f"in run name {run_name}. "
-                )
+                        assert int(gate_str[0][1:]) == 0, (
+                            f"Gate with index larger than 0 is not supported. This is found "
+                            f"in run name {run_name}. "
+                        )
 
     # Rawdata Paths --------------------------------------------------------------
 

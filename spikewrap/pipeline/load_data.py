@@ -3,7 +3,10 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Dict, List, Union
 
+import numpy as np
 import spikeinterface.extractors as se
+import spikeinterface.preprocessing as spre
+from spikeinterface import load_extractor
 
 from spikewrap.data_classes.preprocessing import PreprocessingData
 from spikewrap.utils import utils
@@ -55,8 +58,15 @@ def load_data(
     """
     empty_data_class = PreprocessingData(Path(base_path), sub_name, sessions_and_runs)
 
+    # TODO: when extending to OpenEphys, will need to carefully centralise
+    # as much logic as possible e.g. casting to float64 with astype.
     if data_format == "spikeglx":
         return _load_spikeglx_data(empty_data_class)
+
+    elif data_format == "spikeinterface":
+        return _load_spikeinterface(
+            empty_data_class
+        )  # TODO: this return isn't needed as preprocess_data is simply filled.
 
     raise RuntimeError("`data_format` not recognised.")
 
@@ -87,9 +97,39 @@ def _load_spikeglx_data(preprocess_data: PreprocessingData) -> PreprocessingData
             )
             for sync in [True, False]
         ]
+        orig_dtype = without_sync.dtype
+        without_sync = spre.astype(without_sync, np.float64)
+
+        preprocess_data.set_orig_dtype(orig_dtype)  # TODO: move this out of the loop.
+
         preprocess_data[ses_name][run_name]["0-raw"] = without_sync
         preprocess_data.sync[ses_name][run_name] = with_sync
 
         utils.message_user(f"Raw session data was loaded from {run_path}")
+
+    return preprocess_data
+
+
+def _load_spikeinterface(preprocess_data):  # TODO: does not handle sync
+    """
+    TODO: centralise
+    """
+    for ses_name, run_name in preprocess_data.flat_sessions_and_runs():
+        run_path = preprocess_data.get_rawdata_run_path(ses_name, run_name)
+        assert run_name == run_path.name, "TODO"
+
+        recording = load_extractor(run_path)
+
+        orig_dtype = recording.dtype
+
+        recording = spre.astype(recording, np.float64)
+
+        preprocess_data.set_orig_dtype(orig_dtype)  # TODO: move this out of the loop.
+
+        preprocess_data[ses_name][run_name]["0-raw"] = recording
+
+        utils.message_user(f"Raw session data was loaded from {run_path}")
+
+    preprocess_data.sync = None
 
     return preprocess_data
