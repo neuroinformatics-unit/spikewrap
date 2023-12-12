@@ -177,10 +177,10 @@ def save_unit_locations(
 ) -> None:
     """"""
     unit_locations = si.postprocessing.compute_unit_locations(
-        waveforms, outputs="by_unit"
+        waveforms, outputs="by_unit", method="monopolar_triangulation"
     )
     unit_locations_pandas = pd.DataFrame.from_dict(
-        unit_locations, orient="index", columns=["x", "y"]
+        unit_locations, orient="index", columns=["x", "y", "z"]
     )
     unit_locations_pandas.to_csv(unit_locations_path)
 
