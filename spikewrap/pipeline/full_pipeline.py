@@ -22,6 +22,7 @@ def run_full_pipeline(
     base_path: Union[Path, str],
     sub_name: str,
     sessions_and_runs: Dict[str, List[str]],
+    data_format,
     config_name: str = "default",
     sorter: str = "kilosort2_5",
     concat_sessions_for_sorting: bool = False,
@@ -46,6 +47,7 @@ def run_full_pipeline(
                 "base_path": base_path,
                 "sub_name": sub_name,
                 "sessions_and_runs": sessions_and_runs,
+                "data_format": data_format,
                 "config_name": config_name,
                 "sorter": sorter,
                 "concat_sessions_for_sorting": concat_sessions_for_sorting,
@@ -62,6 +64,7 @@ def run_full_pipeline(
             base_path,
             sub_name,
             sessions_and_runs,
+            data_format,
             config_name,
             sorter,
             concat_sessions_for_sorting,
@@ -78,6 +81,7 @@ def _run_full_pipeline(
     base_path: Union[Path, str],
     sub_name: str,
     sessions_and_runs: Dict[str, List[str]],
+    data_format: str,
     config_name: str = "default",
     sorter: str = "kilosort2_5",
     concat_sessions_for_sorting: bool = False,
@@ -198,7 +202,10 @@ def _run_full_pipeline(
     utils.show_passed_arguments(passed_arguments, "`run_full pipeline`")
 
     loaded_data = load_data(
-        base_path, sub_name, sessions_and_runs, data_format="spikeglx"
+        base_path,
+        sub_name,
+        sessions_and_runs,
+        data_format=data_format,
     )
 
     run_preprocessing(
