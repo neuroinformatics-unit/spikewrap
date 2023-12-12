@@ -286,3 +286,42 @@ def paths_are_in_datetime_order(
     is_in_time_order = list_of_paths == list_of_paths_by_time
 
     return is_in_time_order
+
+
+def get_default_chunk_size(recording, sync: bool = False):
+    """
+    Get the fixed default chunk size that will use ~1GB of memory.
+    Ideally, this will be dynamically filled to ~70% of memory
+    but estimating memory across platforms / SLURM is not
+    finalised yet, see #104. 1GB is chosen somewhat arbitrarily
+    as a low amount that is expected any user should have
+    free on their machine. Larger chunk size is better
+    because it reduces filter edge effect and (I guess)
+    will be faster)
+
+    The calculation for memory use is:
+    mem_use_bytes = max_itemsize * num_channels * * error_multiplier
+
+    where
+        max_itemsize : 8 (some preprocessing steps are in float64) unless
+                       syncing.
+        num_channels : number of channels in the recording (all of which
+                       need to be preprocessed in memory together).
+        error_multiplier : preprocessing steps in SI may use ~2 times as
+                           much memory due to necessary copies. Therefore
+                           increase the memory estimate by this factor.
+    """
+    if sync:
+        max_itemsize = recording.dtype.itemsize
+    else:
+        max_itemsize = np.float64().itemsize
+
+    mem_limit_bytes = 1 * 1e9
+    num_channels = recording.get_num_channels()
+    error_multiplier = 2
+
+    mem_per_sample_bytes = max_itemsize * num_channels * error_multiplier
+
+    chunk_size = np.floor(mem_limit_bytes / mem_per_sample_bytes)
+
+    return chunk_size
