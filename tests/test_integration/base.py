@@ -12,18 +12,34 @@ class BaseTest:
     def base_path(self):
         script_path = Path(os.path.dirname(os.path.realpath(__file__)))
         data_path = script_path.parent
-        base_path = data_path / "data" / "steve_multi_run"
+        base_path = data_path / "data"
         return base_path
 
     @pytest.fixture(scope="function")
     def test_info(self, base_path, request):
         """ """
-        if not hasattr(request, "param"):
-            mode = "time-short-multises"
-        else:
-            mode = request.param
 
-        base_path = base_path / mode
+        if not hasattr(request, "param") or request.param == "spikeinterface":
+            output_path, test_info = self.generate_fast_spikeinterface_test_data_info(
+                base_path
+            )
+            yield test_info
+
+        elif request.param == "spikeglx":
+            output_path, test_info = self.generate_kilosort_test_data_info(base_path)
+            yield test_info
+
+        else:
+            raise ValueError(
+                "Indirect parameterization must " "be 'spikeglx' or 'spikeinterface'."
+            )
+
+        if output_path.is_dir():
+            shutil.rmtree(output_path)
+
+    def generate_kilosort_test_data_info(self, base_path):
+        """"""
+        base_path = base_path / "steve_multi_run" / "time-short-multises"
 
         sub_name = "sub-1119617"
 
@@ -43,10 +59,25 @@ class BaseTest:
         if output_path.is_dir():
             shutil.rmtree(output_path)
 
-        yield [base_path, sub_name, sessions_and_runs]
+        return output_path, [base_path, sub_name, sessions_and_runs]
 
+    def generate_fast_spikeinterface_test_data_info(self, base_path):
+        """"""
+        base_path = base_path / "small_toy_data"
+
+        sub_name = "sub-001_type-test"
+
+        sessions_and_runs = {
+            "ses-001": ["ses-001_run-001", "ses-001_run-002"],
+            "ses-002": ["ses-002_run-001", "ses-002_run-002"],
+            "ses-003": ["ses-003_run-001", "ses-003_run-002"],
+        }
+
+        output_path = base_path / "derivatives"
         if output_path.is_dir():
             shutil.rmtree(output_path)
+
+        return output_path, [base_path, sub_name, sessions_and_runs]
 
     def remove_all_except_first_run_and_sessions(self, test_info):
         sessions_and_runs = test_info[2]
@@ -59,6 +90,7 @@ class BaseTest:
         base_path,
         sub_name,
         sessions_and_runs,
+        data_format,
         config_name="test_default",
         sorter="kilosort2_5",
         concatenate_sessions=False,
@@ -73,6 +105,7 @@ class BaseTest:
             base_path,
             sub_name,
             sessions_and_runs,
+            data_format=data_format,
             config_name=config_name,
             sorter=sorter,
             concat_sessions_for_sorting=concatenate_sessions,
@@ -110,14 +143,14 @@ class BaseTest:
 
         if concatenate_sessions is True:
             for ses_name in sessions_and_runs.keys():
-                ses_path = sub_path / ses_name
+                ses_path = sub_path / ses_name / "ephys"
 
                 run_level_sorting = list(ses_path.glob(f"*/*/{sorter}"))
                 assert run_level_sorting == []
         else:
             for ses_name in sessions_and_runs.keys():
                 for run_name in sessions_and_runs[ses_name]:
-                    run_path = sub_path / ses_name / run_name
+                    run_path = sub_path / ses_name / "ephys" / run_name
                     run_level_sorting = list(run_path.glob(sorter))
 
                     if concatenate_runs:
@@ -125,7 +158,7 @@ class BaseTest:
                     else:
                         assert len(run_level_sorting) == 1
 
-                ses_path = sub_path / ses_name
+                ses_path = sub_path / ses_name / "ephys"
 
                 concat_all_run_names = "".join(
                     path_.name for path_ in ses_path.glob("*")

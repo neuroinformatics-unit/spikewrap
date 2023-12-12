@@ -18,16 +18,13 @@
   'kilosort2_5':
     'car': False
     'freq_min': 150
-#    'skip_kilosort_preprocessing': True
-#    'scaleproc': 200
-#    'NT': 64
   'kilosort3':
     'car': False
     'freq_min': 300
   'mountainsort5':
     'scheme': '2'
     'filter': False
-    'whiten': False  # TODO: add this back.
+    'whiten': False
 
 'waveforms':
   'ms_before': 2
@@ -39,4 +36,3 @@
   'peak_sign': "neg"
   'method': "radius"
   'radius_um': 75
-  'chunk_size': 1
