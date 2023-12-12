@@ -2,8 +2,8 @@ import shutil
 from dataclasses import dataclass
 from typing import Dict
 
-import numpy as np
 import spikeinterface
+from spikeinterface.preprocessing import astype
 
 from spikewrap.data_classes.base import BaseUserDict
 from spikewrap.utils import utils
@@ -39,6 +39,8 @@ class PreprocessingData(BaseUserDict):
         or list of run names.
     """
 
+    orig_dtype = None
+
     def __post_init__(self) -> None:
         super().__post_init__()
         self._validate_rawdata_inputs()
@@ -48,6 +50,10 @@ class PreprocessingData(BaseUserDict):
         for ses_name, run_name in self.flat_sessions_and_runs():
             self.update_two_layer_dict(self, ses_name, run_name, {"0-raw": None})
             self.update_two_layer_dict(self.sync, ses_name, run_name, None)
+
+    def set_orig_dtype(self, dtype):  # TODO: type dtype!
+        """used for writing data"""
+        self.orig_dtype = dtype
 
     def set_pp_steps(self, pp_steps: Dict) -> None:
         """
@@ -101,7 +107,10 @@ class PreprocessingData(BaseUserDict):
                 shutil.rmtree(self.get_preprocessing_path(ses_name, run_name))
 
         self._save_preprocessed_binary(ses_name, run_name)
-        self._save_sync_channel(ses_name, run_name)
+
+        if self.sync:
+            self._save_sync_channel(ses_name, run_name)
+
         self._save_preprocessing_info(ses_name, run_name)
 
     def _save_preprocessed_binary(self, ses_name: str, run_name: str) -> None:
@@ -113,48 +122,12 @@ class PreprocessingData(BaseUserDict):
             self[ses_name][run_name], "last"
         )
 
+        recording = astype(recording, self.orig_dtype)
+
         recording.save(
             folder=self._get_pp_binary_data_path(ses_name, run_name),
-            chunk_size=self.get_default_chunk_size(recording),
+            chunk_size=utils.get_default_chunk_size(recording),
         )
-
-    def get_default_chunk_size(self, recording, sync: bool = False):
-        """
-        Get the fixed default chunk size that will use ~1GB of memory.
-        Ideally, this will be dynamically filled to ~70% of memory
-        but estimating memory across platforms / SLURM is not
-        finalised yet, see #104. 1GB is chosen somewhat arbitrarily
-        as a low amount that is expected any user should have
-        free on their machine. Larger chunk size is better
-        because it reduces filter edge effect and (I guess)
-        will be faster)
-
-        The calculation for memory use is:
-        mem_use_bytes = max_itemsize * num_channels * * error_multiplier
-
-        where
-            max_itemsize : 8 (some preprocessing steps are in float64) unless
-                           syncing.
-            num_channels : number of channels in the recording (all of which
-                           need to be preprocessed in memory together).
-            error_multiplier : preprocessing steps in SI may use ~2 times as
-                               much memory due to necessary copies. Therefore
-                               increase the memory estimate by this factor.
-        """
-        if sync:
-            max_itemsize = recording.dtype.itemsize
-        else:
-            max_itemsize = np.float64().itemsize
-
-        mem_limit_bytes = 1 * 1e9
-        num_channels = recording.get_num_channels()
-        error_multiplier = 2
-
-        mem_per_sample_bytes = max_itemsize * num_channels * error_multiplier
-
-        chunk_size = np.floor(mem_limit_bytes / mem_per_sample_bytes)
-
-        return chunk_size
 
     def _save_sync_channel(self, ses_name: str, run_name: str) -> None:
         """
@@ -172,7 +145,7 @@ class PreprocessingData(BaseUserDict):
 
         sync_recording.save(  # type: ignore
             folder=self._get_sync_channel_data_path(ses_name, run_name),
-            chunk_size=self.get_default_chunk_size(sync_recording, sync=True),
+            chunk_size=utils.get_default_chunk_size(sync_recording, sync=True),
         )
 
     def _save_preprocessing_info(self, ses_name: str, run_name: str) -> None:
