@@ -56,6 +56,7 @@ class BaseTest:
         }
 
         output_path = base_path / "derivatives"
+
         if output_path.is_dir():
             shutil.rmtree(output_path)
 
@@ -129,17 +130,17 @@ class BaseTest:
         # handlers propagate from root that pytest attaches handlers too.
         # removing the handlers from spikewrap loggers specifically
         # does not help, nor does querying .handlers[:] in spikewrap itself.
-        derivative_ses_names = [path_.name for path_ in derivative_sessions]
+        derivative_ses_names = sorted([path_.name for path_ in derivative_sessions])
         if "logs" in derivative_ses_names:
             derivative_ses_names.pop(derivative_ses_names.index("logs"))
 
         # Here, just testing if the paths exists
         if concatenate_sessions is False:
-            assert list(sessions_and_runs.keys()) == sorted(derivative_ses_names)
+            assert list(sessions_and_runs.keys()) == derivative_ses_names
 
         else:
             assert "sorting-concat" in derivative_ses_names.pop(-1)
-            assert list(sessions_and_runs.keys()) == sorted(derivative_ses_names)
+            assert list(sessions_and_runs.keys()) == derivative_ses_names
 
         if concatenate_sessions is True:
             for ses_name in sessions_and_runs.keys():

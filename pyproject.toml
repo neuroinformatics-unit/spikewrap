@@ -20,8 +20,8 @@ classifiers = [
 ]
 
 dependencies = [
-    "spikeinterface==0.98.2",
-    "probeinterface==0.2.18",
+    "spikeinterface[full] @git+https://github.com/JoeZiminski/spikeinterface.git@random_chunks_chunk_size_to_warning",
+    "probeinterface",
     "neo==0.12.0",
     "submitit",
     "PyYAML",
@@ -30,7 +30,7 @@ dependencies = [
     # sorter-specific
     "tridesclous",
     # "spyking-circus", TODO: this is not straightforward, requires mpi4py. TBD if we want to manage this.
-    "mountainsort5; platform_system != 'Darwin'",
+    "mountainsort5",
     "docker; platform_system=='Windows'",
 	"docker; platform_system=='Darwin'",
     "spython; platform_system=='Linux'",  # I think missing from SI?
