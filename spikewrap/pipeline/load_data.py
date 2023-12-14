@@ -61,14 +61,18 @@ def load_data(
     # TODO: when extending to OpenEphys, will need to carefully centralise
     # as much logic as possible e.g. casting to float64 with astype.
     if data_format == "spikeglx":
-        return _load_spikeglx_data(empty_data_class)
+        _load_spikeglx_data(empty_data_class)
 
     elif data_format == "spikeinterface":
-        return _load_spikeinterface(
+        _load_spikeinterface(
             empty_data_class
         )  # TODO: this return isn't needed as preprocess_data is simply filled.
+    else:
+        raise RuntimeError("`data_format` not recognised.")
 
-    raise RuntimeError("`data_format` not recognised.")
+    empty_data_class.assert_if_multi_segment()  # TODO: change this stupid obj name!
+
+    return empty_data_class  # TODO: change this stupid obj name!
 
 
 # --------------------------------------------------------------------------------------

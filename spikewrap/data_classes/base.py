@@ -132,6 +132,14 @@ class BaseUserDict(UserDict):
                             f"in run name {run_name}. "
                         )
 
+    def assert_if_multi_segment(self):
+        for ses_name, run_name in self.flat_sessions_and_runs():
+            if self[ses_name][run_name]["0-raw"].get_num_segments() != 1:
+                raise ValueError(
+                    "Multi-segment recordings are not currently "
+                    "supported. Please get in contact!"
+                )
+
     # Rawdata Paths --------------------------------------------------------------
 
     def get_rawdata_top_level_path(self) -> Path:
