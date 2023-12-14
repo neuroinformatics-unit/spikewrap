@@ -13,29 +13,6 @@ sessions_and_runs = {
     "ses-003": ["ses-003_run-001", "ses-003_run-002"],
 }
 
-if False:
-    from spikewrap.pipeline.preprocess import run_preprocessing
-
-    sub_name = "sub-001_type-test"
-    base_path = Path(__file__).parent.resolve()
-
-    from spikewrap.pipeline.load_data import load_data
-
-    preprocess_data = load_data(
-        base_path, sub_name, sessions_and_runs, "spikeinterface"
-    )
-
-    run_preprocessing(
-        preprocess_data,
-        "default",
-        handle_existing_data="overwrite",
-        slurm_batch=False,
-        log=False,
-    )  # TODO: use config_name for all funcs.
-
-
-# if False:
-
 sub = "sub-001_type-test"
 base_path = Path(__file__).parent.resolve() / "rawdata"
 

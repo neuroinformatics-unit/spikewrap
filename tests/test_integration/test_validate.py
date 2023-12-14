@@ -202,6 +202,7 @@ class TestValidate(BaseTest):
                 preprocess_data=None,
                 pp_steps=pp_steps,
                 handle_existing_data="overwrite",
+                preprocess_per_shank=False,
             )
         assert (
             str(e.value)
@@ -215,6 +216,7 @@ class TestValidate(BaseTest):
                 preprocess_data=preprocess_data,
                 pp_steps="bad_name",
                 handle_existing_data="overwrite",
+                preprocess_per_shank=False,
             )
         assert (
             str(e.value)
@@ -226,6 +228,7 @@ class TestValidate(BaseTest):
                 preprocess_data=preprocess_data,
                 pp_steps=pp_steps,
                 handle_existing_data="bad_name",
+                preprocess_per_shank=False,
             )
         assert "`handle_existing_data` must be `False` or one of" in str(e.value)
 
@@ -235,6 +238,7 @@ class TestValidate(BaseTest):
                 pp_steps=pp_steps,
                 handle_existing_data="overwrite",
                 slurm_batch="bad_type",
+                preprocess_per_shank=False,
             )
         assert (
             str(e.value) == "`slurm_batch` must be `True` or a Dict of slurm settings."
@@ -246,6 +250,7 @@ class TestValidate(BaseTest):
                 pp_steps=pp_steps,
                 handle_existing_data="overwrite",
                 log="bad_type",
+                preprocess_per_shank=False,
             )
             assert str(e.value) == "`log` must be `bool`."
 
