@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import os
-import platform
 from pathlib import Path
 from typing import TYPE_CHECKING, Dict, List, Literal, Optional, Union
 
@@ -151,9 +150,6 @@ def _run_sorting(
     """
     passed_arguments = locals()
     validate.check_function_arguments(passed_arguments)
-
-    if sorter == "mountainsort5" and platform.system() == "Darwin":
-        raise EnvironmentError("Mountainsort is not currently supported on macOS.")
 
     logs = logging_sw.get_started_logger(
         utils.get_logging_path(base_path, sub_name),

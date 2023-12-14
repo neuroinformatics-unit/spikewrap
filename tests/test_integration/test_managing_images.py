@@ -1,4 +1,11 @@
+import platform
+
+import pytest
 import spikeinterface
+
+from spikewrap.utils import checks
+
+HAS_VM_ON_LINUX = platform.system() == "Linux" and checks.check_virtual_machine()
 
 from spikewrap.utils.managing_images import (
     download_all_sorters,
@@ -6,6 +13,9 @@ from spikewrap.utils.managing_images import (
 )
 
 
+@pytest.mark.skipif(
+    "HAS_VM_ON_LINUX is False", reason="Test requires singularity on Linux."
+)
 class TestManagingImages:
     def test_download_all_sorters(self, tmp_path, monkeypatch):
         """

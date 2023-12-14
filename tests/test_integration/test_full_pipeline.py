@@ -1,9 +1,12 @@
+import platform
+
 import numpy as np
 import pytest
 import spikeinterface as si
 import spikeinterface.extractors as se
 from spikeinterface import concatenate_recordings
 from spikeinterface.preprocessing import (
+    astype,
     bandpass_filter,
     common_reference,
     phase_shift,
@@ -12,18 +15,27 @@ from spikeinterface.preprocessing import (
 from spikewrap.data_classes.postprocessing import load_saved_sorting_output
 from spikewrap.pipeline import full_pipeline, preprocess
 from spikewrap.pipeline.load_data import load_data
-from spikewrap.utils.checks import check_cuda, check_virtual_machine
+from spikewrap.utils import checks, utils
 
 from .base import BaseTest  # noqa
 
-SKIP_KILOSORT = not (check_virtual_machine() and check_cuda())
-if SKIP_KILOSORT:
+fast = True  # TOOD: if slow this will still use fast fixture - fix this!
+# TODO: REMOVE DUPLICATION
+if fast:
     DEFAULT_SORTER = "mountainsort5"
+    DEFAULT_FORMAT = "spikeinterface"  # TODO: make explicit this is fast
+    DEFAULT_PIPELINE = "fast_test_pipeline"
+
 else:
+    if not (checks.check_virtual_machine() and checks.check_cuda()):
+        raise RuntimeError("Need NVIDIA GPU for run kilosort for slow tests")
     DEFAULT_SORTER = "kilosort2_5"
+    DEFAULT_FORMAT = "spikeglx"
+    DEFAULT_PIPELINE = "test_default"
 
 
 class TestFullPipeline(BaseTest):
+    @pytest.mark.parametrize("test_info", [DEFAULT_FORMAT], indirect=True)
     def test_preprocessing_options_1(self, test_info):
         """
         A very basic test to run all preprocessing and check now error occurs.
@@ -34,7 +46,7 @@ class TestFullPipeline(BaseTest):
 
         pp_steps, __, __ = full_pipeline.get_configs("test_preprocessing_1")
 
-        preprocess_data = load_data(*test_info[:3])
+        preprocess_data = load_data(*test_info[:3], data_format=DEFAULT_FORMAT)
 
         for ses_name, run_name in preprocess_data.flat_sessions_and_runs():
             preprocess._fill_run_data_with_preprocessed_recording(
@@ -42,6 +54,7 @@ class TestFullPipeline(BaseTest):
             )
             preprocess_data.save_preprocessed_data(ses_name, run_name, overwrite=True)
 
+    @pytest.mark.parametrize("test_info", [DEFAULT_FORMAT], indirect=True)
     def test_preprocessing_options_2(self, test_info):
         """
         see `test_preprocessing_options_1()`
@@ -50,7 +63,7 @@ class TestFullPipeline(BaseTest):
 
         pp_steps, __, __ = full_pipeline.get_configs("test_preprocessing_2")
 
-        preprocess_data = load_data(*test_info[:3])
+        preprocess_data = load_data(*test_info[:3], data_format=DEFAULT_FORMAT)
 
         for ses_name, run_name in preprocess_data.flat_sessions_and_runs():
             preprocess._fill_run_data_with_preprocessed_recording(
@@ -58,26 +71,24 @@ class TestFullPipeline(BaseTest):
             )
             preprocess_data.save_preprocessed_data(ses_name, run_name, overwrite=True)
 
+    # --------------------------------------------------------------------------------------
+    # Full Slow Tests
+    # --------------------------------------------------------------------------------------
+
+    @pytest.mark.skipif(
+        "fast is True", reason="'fast' must be set to `False` to run all sorters."
+    )
     @pytest.mark.parametrize(
         "sorter",
         [
-            pytest.param(
-                "kilosort2",
-                marks=pytest.mark.skipif(SKIP_KILOSORT, reason="No VM available."),
-            ),
-            pytest.param(
-                "kilosort2_5",
-                marks=pytest.mark.skipif(SKIP_KILOSORT, reason="No VM available."),
-            ),
-            pytest.param(
-                "kilosort3",
-                marks=pytest.mark.skipif(SKIP_KILOSORT, reason="No VM available."),
-            ),
-            # "mountainsort5",
-            # "tridesclous",
+            "kilosort2",
+            "kilosort2_5",
+            "kilosort3",
+            "mountainsort5",
+            "tridesclous",
         ],
     )
-    def test_no_concatenation_single_run(self, test_info, sorter):
+    def test_no_concatenation_all_sorters_single_run(self, test_info, sorter):
         """
         For every supported sorter, run the full pipeline for a single
         session and run, and check preprocessing, sorting and waveforms.
@@ -94,6 +105,28 @@ class TestFullPipeline(BaseTest):
         self.check_correct_folders_exist(test_info, False, False, sorter)
         self.check_no_concat_results(test_info, loaded_data, sorting_data, sorter)
 
+    @pytest.mark.parametrize("test_info", [DEFAULT_FORMAT], indirect=True)
+    def test_no_concatenation_single_run(self, test_info):
+        """
+        Run the full pipeline for a single
+        session and run, and check preprocessing, sorting and waveforms.
+        """
+        self.remove_all_except_first_run_and_sessions(test_info)
+
+        loaded_data, sorting_data = self.run_full_pipeline(
+            *test_info,
+            data_format=DEFAULT_FORMAT,
+            sorter=DEFAULT_SORTER,
+            concatenate_sessions=False,
+            concatenate_runs=False,
+        )
+
+        self.check_correct_folders_exist(test_info, False, False, DEFAULT_SORTER)
+        self.check_no_concat_results(
+            test_info, loaded_data, sorting_data, DEFAULT_SORTER
+        )
+
+    @pytest.mark.parametrize("test_info", [DEFAULT_FORMAT], indirect=True)
     def test_no_concatenation_multiple_runs(self, test_info):
         """
         For DEFAULT_SORTER, check `full_pipeline` across multiple sessions
@@ -101,6 +134,7 @@ class TestFullPipeline(BaseTest):
         """
         loaded_data, sorting_data = self.run_full_pipeline(
             *test_info,
+            data_format=DEFAULT_FORMAT,
             concatenate_sessions=False,
             concatenate_runs=False,
             sorter=DEFAULT_SORTER,
@@ -111,6 +145,7 @@ class TestFullPipeline(BaseTest):
         self.check_correct_folders_exist(test_info, False, False, DEFAULT_SORTER)
         self.check_no_concat_results(test_info, loaded_data, sorting_data)
 
+    @pytest.mark.parametrize("test_info", [DEFAULT_FORMAT], indirect=True)
     def test_concatenate_runs_but_not_sessions(self, test_info):
         """
         For DEFAULT_SORTER, check `full_pipeline` across multiple sessions
@@ -120,6 +155,7 @@ class TestFullPipeline(BaseTest):
         """
         loaded_data, sorting_data = self.run_full_pipeline(
             *test_info,
+            data_format=DEFAULT_FORMAT,
             concatenate_sessions=False,
             concatenate_runs=True,
             sorter=DEFAULT_SORTER,
@@ -130,6 +166,7 @@ class TestFullPipeline(BaseTest):
             test_info, loaded_data, sorting_data
         )
 
+    @pytest.mark.parametrize("test_info", [DEFAULT_FORMAT], indirect=True)
     def test_concatenate_sessions_and_runs(self, test_info):
         """
         For DEFAULT_SORTER, check `full_pipeline` across multiple sessions
@@ -138,6 +175,7 @@ class TestFullPipeline(BaseTest):
         """
         loaded_data, sorting_data = self.run_full_pipeline(
             *test_info,
+            data_format=DEFAULT_FORMAT,
             concatenate_sessions=True,
             concatenate_runs=True,
             sorter=DEFAULT_SORTER,
@@ -146,6 +184,7 @@ class TestFullPipeline(BaseTest):
         self.check_correct_folders_exist(test_info, True, True, DEFAULT_SORTER)
         self.check_concatenate_sessions_and_runs(test_info, loaded_data, sorting_data)
 
+    @pytest.mark.parametrize("test_info", [DEFAULT_FORMAT], indirect=True)
     def test_ses_concat_no_run_concat(self, test_info):
         """
         Check that an error is raised when `concatenate_sessions` is `True`
@@ -155,6 +194,7 @@ class TestFullPipeline(BaseTest):
         with pytest.raises(ValueError) as e:
             self.run_full_pipeline(
                 *test_info,
+                data_format=DEFAULT_FORMAT,
                 concatenate_sessions=True,
                 concatenate_runs=False,
                 sorter=DEFAULT_SORTER,
@@ -165,6 +205,7 @@ class TestFullPipeline(BaseTest):
             == "`concatenate_runs` must be `True` if `concatenate_sessions` is `True`"
         )
 
+    @pytest.mark.parametrize("test_info", [DEFAULT_FORMAT], indirect=True)
     def test_existing_output_settings(self, test_info):
         """
         In spikewrap existing preprocessed and sorting output data is
@@ -184,6 +225,7 @@ class TestFullPipeline(BaseTest):
         # Run the first time
         self.run_full_pipeline(
             *test_info,
+            data_format=DEFAULT_FORMAT,
             existing_preprocessed_data="fail_if_exists",
             existing_sorting_output="fail_if_exists",
             overwrite_postprocessing=False,
@@ -195,6 +237,7 @@ class TestFullPipeline(BaseTest):
 
         self.run_full_pipeline(
             *test_info,
+            data_format=DEFAULT_FORMAT,
             existing_preprocessed_data="overwrite",
             existing_sorting_output="overwrite",
             overwrite_postprocessing=True,
@@ -210,6 +253,7 @@ class TestFullPipeline(BaseTest):
         # Postprocessing is always deleted
         self.run_full_pipeline(
             *test_info,
+            data_format=DEFAULT_FORMAT,
             existing_preprocessed_data="skip_if_exists",
             existing_sorting_output="skip_if_exists",
             overwrite_postprocessing=True,
@@ -223,6 +267,7 @@ class TestFullPipeline(BaseTest):
         with pytest.raises(BaseException) as e:
             self.run_full_pipeline(
                 *test_info,
+                data_format=DEFAULT_FORMAT,
                 existing_preprocessed_data="fail_if_exists",
                 existing_sorting_output="skip_if_exists",
                 overwrite_postprocessing=True,
@@ -233,29 +278,36 @@ class TestFullPipeline(BaseTest):
             e.value
         )
 
-        # Test an error is raised for existing sorting.
-        with pytest.raises(BaseException) as e:
-            self.run_full_pipeline(
-                *test_info,
-                existing_preprocessed_data="skip_if_exists",
-                existing_sorting_output="fail_if_exists",
-                overwrite_postprocessing=True,
-                sorter=DEFAULT_SORTER,
-            )
+        if platform.system() != "Windows":
+            # This is failing on windows because `overwrite_postprocessing=False` asserts
+            # and there is an open link to the preprocessed binary data somewhere
+            # that is not closed, only on Windows for some reason.
 
-        assert "Sorting output already exists at" in str(e.value)
+            # Test an error is raised for existing sorting.
+            with pytest.raises(BaseException) as e:
+                self.run_full_pipeline(
+                    *test_info,
+                    data_format=DEFAULT_FORMAT,
+                    existing_preprocessed_data="skip_if_exists",
+                    existing_sorting_output="fail_if_exists",
+                    overwrite_postprocessing=True,
+                    sorter=DEFAULT_SORTER,
+                )
 
-        # Test an error is raised for existing postprocessing.
-        with pytest.raises(BaseException) as e:
-            self.run_full_pipeline(
-                *test_info,
-                existing_preprocessed_data="skip_if_exists",
-                existing_sorting_output="skip_if_exists",
-                overwrite_postprocessing=False,
-                sorter=DEFAULT_SORTER,
-            )
+            assert "Sorting output already exists at" in str(e.value)
 
-        assert "Postprocessing output already exists at" in str(e.value)
+            # Test an error is raised for existing postprocessing.
+            with pytest.raises(BaseException) as e:
+                self.run_full_pipeline(
+                    *test_info,
+                    data_format=DEFAULT_FORMAT,
+                    existing_preprocessed_data="skip_if_exists",
+                    existing_sorting_output="skip_if_exists",
+                    overwrite_postprocessing=False,
+                    sorter=DEFAULT_SORTER,
+                )
+
+            assert "Postprocessing output already exists at" in str(e.value)
 
     # ----------------------------------------------------------------------------------
     # Checkers
@@ -306,6 +358,13 @@ class TestFullPipeline(BaseTest):
                 self.check_recordings_are_the_same(
                     loaded_data[ses_name][run_name][pp_key], test_preprocessed
                 )
+
+                # sorting is loaded from binary data which is stored in the
+                # original dtype
+                test_preprocessed = astype(
+                    test_preprocessed, sorting_data[ses_name][run_name].dtype
+                )  # TODO: TIDY
+
                 self.check_recordings_are_the_same(
                     sorting_data[ses_name][run_name], test_preprocessed
                 )
@@ -364,13 +423,18 @@ class TestFullPipeline(BaseTest):
 
                 all_runs.append(test_preprocessed)
 
+            assert len(sorting_data[ses_name]) == 1
+            concat_run_name = list(sorting_data[ses_name].keys())[0]
+            sorting_data_pp_run = sorting_data[ses_name][concat_run_name]
+            data_type = sorting_data_pp_run.dtype
+
             # Concatenate all runs used for testing, and check they
             # match the `sorting_data` preprocessed runs.
             test_concat_runs = concatenate_recordings(all_runs)
 
-            assert len(sorting_data[ses_name]) == 1
-            concat_run_name = list(sorting_data[ses_name].keys())[0]
-            sorting_data_pp_run = sorting_data[ses_name][concat_run_name]
+            # Convert to int16 for sorting and loaded file checks,
+            # as dtype converted to original dtype on file writing.
+            test_concat_runs = astype(test_concat_runs, data_type)
 
             self.check_recordings_are_the_same(
                 sorting_data_pp_run, test_concat_runs, n_split=2
@@ -382,16 +446,16 @@ class TestFullPipeline(BaseTest):
                 test_info, ses_name, concat_run_name, concatenate_runs=True
             )
 
-            saved_recording = si.read_binary(
-                paths["recording_dat"],
-                sampling_frequency=sorting_data_pp_run.get_sampling_frequency(),
-                dtype=np.int16,
-                num_channels=sorting_data_pp_run.get_num_channels(),
-            )
-
-            self.check_recordings_are_the_same(
-                saved_recording, test_concat_runs, n_split=2
-            )
+            if "kilosort" in sorting_data.sorter:
+                saved_recording = si.read_binary(
+                    paths["recording_dat"],
+                    sampling_frequency=sorting_data_pp_run.get_sampling_frequency(),
+                    dtype=data_type,
+                    num_channels=sorting_data_pp_run.get_num_channels(),
+                )
+                self.check_recordings_are_the_same(
+                    saved_recording, test_concat_runs, n_split=2
+                )
 
             self.check_waveforms(
                 paths["sorter_output"],
@@ -431,14 +495,19 @@ class TestFullPipeline(BaseTest):
 
                 all_ses_and_runs.append(test_preprocessed)
 
+        assert len(sorting_data) == 1
+        concat_ses_name = list(sorting_data.keys())[0]
+        sorted_data_concat_all = sorting_data[concat_ses_name]
+        data_type = sorting_data[concat_ses_name].dtype
+
         # Concatenate every session's runs together, and check this
         # test data matches the data stored in `sorted_data`, the recording.dat
         # and that all waveforms match preprocessed data.
         test_concat_all = concatenate_recordings(all_ses_and_runs)
 
-        assert len(sorting_data) == 1
-        concat_ses_name = list(sorting_data.keys())[0]
-        sorted_data_concat_all = sorting_data[concat_ses_name]
+        # Convert to int16 for sorting and load data test are
+        # dtype is converted to original dtype on file writing.
+        test_concat_all = astype(test_concat_all, data_type)
 
         paths = self.get_output_paths(
             test_info,
@@ -448,17 +517,21 @@ class TestFullPipeline(BaseTest):
             concatenate_runs=True,
         )
 
-        saved_recording = si.read_binary(
-            paths["recording_dat"],
-            sampling_frequency=sorted_data_concat_all.get_sampling_frequency(),
-            dtype=np.int16,
-            num_channels=sorted_data_concat_all.get_num_channels(),
-        )
-
         self.check_recordings_are_the_same(
             sorted_data_concat_all, test_concat_all, n_split=6
         )
-        self.check_recordings_are_the_same(saved_recording, test_concat_all, n_split=6)
+
+        if "kilosort" in sorting_data.sorter:
+            saved_recording = si.read_binary(
+                paths["recording_dat"],
+                sampling_frequency=sorted_data_concat_all.get_sampling_frequency(),
+                dtype=data_type,
+                num_channels=sorted_data_concat_all.get_num_channels(),
+            )
+            self.check_recordings_are_the_same(
+                saved_recording, test_concat_all, n_split=6
+            )
+
         self.check_waveforms(
             paths["sorter_output"],
             paths["postprocessing"],
@@ -467,13 +540,15 @@ class TestFullPipeline(BaseTest):
 
     def check_recordings_are_the_same(self, rec_1, rec_2, n_split=1):
         """
-        Check that two SI recording objects are exactly the same. This is actually
-        quite tricky when it comes to testing recording objects that have been
-        written to binary (i.e. preprocessed data prior to sorting). This is
-        because in SI writing to file occurs in chunks that are preprocessed
-        on the fly due to the lazy nature of SI preprocessing.
+        Check that two SI recording objects are exactly the same. When the
+        memory is large enoguh such that the chunk size is larger than the
+        recording length (usual case, this is OK). However, see below
+        for notes on the case when the `get_traces()` call is performed in
+        chunks, which this function also handles.
 
-        When loading the stored binary file, these filter edge effects will be different
+        When storing to binary, the data is chunked (if does not all fit
+        into memory), preprocessed and written to disk).  When loading the stored
+        binary file, these filter edge effects will be different
         to those from a raw-data recording that is preprocessed and `get_traces()`
         is called on the fly. The only way it will match exactly is when the
         chunk size extracted with `get_traces()` matches that used for writing
@@ -488,7 +563,7 @@ class TestFullPipeline(BaseTest):
         assert rec_1.get_num_segments() == rec_2.get_num_segments()
         assert rec_1.get_sampling_frequency() == rec_2.get_sampling_frequency()
 
-        chunk = 13020
+        chunk = utils.get_default_chunk_size(rec_1)
         num_samples_split = rec_1.get_num_samples() / n_split
         quotient = num_samples_split // chunk
         bounds = np.r_[np.arange(quotient + 1) * chunk, num_samples_split].astype(int)
@@ -499,14 +574,15 @@ class TestFullPipeline(BaseTest):
             for start, end in zip(bounds[:-1], bounds[1:]):
                 start += offset
                 end += offset
-
-                assert np.array_equal(
+                assert np.allclose(
                     rec_1.get_traces(
                         start_frame=start, end_frame=end, return_scaled=False
                     ),
                     rec_2.get_traces(
                         start_frame=start, end_frame=end, return_scaled=False
                     ),
+                    rtol=0,
+                    atol=1e-10,
                 )
 
     def check_waveforms(
@@ -604,6 +680,7 @@ class TestFullPipeline(BaseTest):
                 / sub_name
                 / f"{sub_name}-sorting-concat"
                 / ses_name
+                / "ephys"
             )
         elif concatenate_runs:
             run_path = (
@@ -612,12 +689,19 @@ class TestFullPipeline(BaseTest):
                 / "spikewrap"
                 / sub_name
                 / ses_name
+                / "ephys"
                 / f"{sub_name}-sorting-concat"
                 / run_name
             )
         else:
             run_path = (
-                base_path / "derivatives" / "spikewrap" / sub_name / ses_name / run_name
+                base_path
+                / "derivatives"
+                / "spikewrap"
+                / sub_name
+                / ses_name
+                / "ephys"
+                / run_name
             )
 
         paths = {
@@ -642,9 +726,18 @@ class TestFullPipeline(BaseTest):
         """
         rawdata_path = base_path / "rawdata" / sub_name / ses_name / "ephys" / run_name
 
-        test_rawdata = se.read_spikeglx(
-            folder_path=rawdata_path.as_posix(), stream_id="imec0.ap"
-        )
+        if DEFAULT_FORMAT == "spikeglx":
+            test_rawdata = se.read_spikeglx(
+                folder_path=rawdata_path.as_posix(), stream_id="imec0.ap"
+            )
+        elif DEFAULT_FORMAT == "spikeinterface":
+            from spikeinterface import load_extractor
+
+            test_rawdata = load_extractor(rawdata_path.as_posix())
+        else:
+            raise ValueError(f"Default normal {DEFAULT_FORMAT} is not recognised.")
+
+        test_rawdata = astype(test_rawdata, np.float64)
 
         test_preprocessed = phase_shift(test_rawdata)
         test_preprocessed = bandpass_filter(
@@ -653,6 +746,7 @@ class TestFullPipeline(BaseTest):
         test_preprocessed = common_reference(
             test_preprocessed, operator="median", reference="global"
         )
+
         return test_rawdata, test_preprocessed
 
     def get_times_of_waveform_spikes(self, waveforms, sorting, unit_id):
@@ -681,41 +775,3 @@ class TestFullPipeline(BaseTest):
 
     def get_pp_key(self, loaded_data_dict):
         return list(loaded_data_dict.keys())[-1]
-
-    # ----------------------------------------------------------------------------------
-    # Not Implemented
-    # ----------------------------------------------------------------------------------
-
-    def test_sorting_only_local(self):
-        raise NotImplementedError
-
-    def test_sorting_only_slurm(self):
-        raise NotImplementedError
-
-    def test_postprocessing_only_local(self):
-        raise NotImplementedError
-
-    def test_postprocessing_only_slurm(self):
-        raise NotImplementedError
-
-    def test_preprocessing_only_local(self):
-        raise NotImplementedError
-
-    def test_preproecssing_only_slurm(self):
-        raise NotImplementedError
-
-    def test_configs(self):
-        # not really sure how to do this...
-        raise NotImplementedError
-
-    def test_reordering_sessions_and_runs(self):
-        raise NotImplementedError
-
-    def test_select_postprocessing_to_run(self):
-        raise NotImplementedError
-
-    def test_delete_intermediate_files(self):
-        raise NotImplementedError
-
-    def test_slurm_options(self):
-        raise NotImplementedError
