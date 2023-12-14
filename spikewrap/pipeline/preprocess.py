@@ -338,42 +338,6 @@ def preprocess_everything_by_shank(
         # On the last round this will not be used.
         split_recording = this_step_preprocessed_per_shank
 
-    # Mutliple aggregations mess everything up. Do not do. Docunmentation this.
-
-    if False:
-        (
-            pp_name,
-            pp_options,
-            last_pp_step_output,
-            new_name,
-        ) = _get_preprocessing_step_information(
-            pp_info, preprocess_data, ses_name, run_name, step_num
-        )
-
-        # TODO: cannot repeatly apply aggregate channels.
-
-        if preprocess_per_shank:
-            if int(step_num) == 1:
-                split_recording = last_pp_step_output.split_by("group")  # TODO: fix.
-            else:
-                split_recording = {
-                    idx: rec for idx, rec in enumerate(last_pp_step_output)
-                }
-
-            if len(split_recording) == 1:
-                raise ValueError(
-                    "`preprocess_per_shank` is set to `True` but this"
-                    "recording only contains 1 shank. Are you sure this"
-                    "is the correct recording?"
-                )
-
-            preprocessed_per_shank = []
-            for rec in split_recording.values():
-                preprocessed_per_shank.append(pp_funcs[pp_name](rec, **pp_options))
-
-            if int(step_num) == num_steps:
-                aggregate_channels(preprocessed_per_shank)
-
 
 def _perform_preprocessing_step(
     step_num: str,
