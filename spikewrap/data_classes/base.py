@@ -145,6 +145,11 @@ class BaseUserDict(UserDict):
 
                 run_names = [path_.stem for path_ in all_run_paths if path_.is_dir()]
 
+                # TODO: not sure if this is the best approach.
+                # but if concatenation of runs is attempted with
+                # this switched on, an error is thrown, so has no real effect
+                run_names = sorted(run_names)
+
                 self.raise_if_only_and_has_more_than_one_folder(
                     run_keyword, ses_path, run_names, "run"
                 )
