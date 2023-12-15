@@ -328,6 +328,27 @@ class TestFullPipeline(BaseTest):
 
             assert "Postprocessing output already exists at" in str(e.value)
 
+    @pytest.mark.parametrize("test_info", [DEFAULT_FORMAT], indirect=True)
+    @pytest.mark.parametrize("specify_chunk_size", [True, False])
+    def test_smoke_supply_chunk_size(self, test_info, capsys, specify_chunk_size):
+        """ """
+        if specify_chunk_size:
+            chunk_size = 1000
+        else:
+            chunk_size = None
+
+        self.run_full_pipeline(
+            *test_info,
+            data_format=DEFAULT_FORMAT,
+            save_preprocessing_chunk_size=chunk_size,
+            sorter=DEFAULT_SORTER,
+        )
+
+        if specify_chunk_size:
+            assert "chunk_size = 1000" in capsys.readouterr().out
+        else:
+            assert "chunk_size = 1000" not in capsys.readouterr().out
+
     # ----------------------------------------------------------------------------------
     # Checkers
     # ----------------------------------------------------------------------------------

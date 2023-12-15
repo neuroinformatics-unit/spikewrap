@@ -29,19 +29,13 @@ class BaseTest:
             output_path, test_info = self.generate_kilosort_test_data_info(base_path)
             yield test_info
 
-        elif request.param == "multi_segment":
-            output_path, test_info = self.generate_mutli_segment_test_data_info(
-                base_path
-            )
-            yield test_info
-
         else:
-            raise ValueError("Indirect parameterization is not recognised.")
+            raise ValueError(
+                "Indirect parameterization must " "be 'spikeglx' or 'spikeinterface'."
+            )
 
         if output_path.is_dir():
             shutil.rmtree(output_path)
-
-    # TODO  centralise this!!!!!!!!! ------------------------------------------------------
 
     def generate_kilosort_test_data_info(self, base_path):
         """"""
@@ -63,19 +57,6 @@ class BaseTest:
 
         output_path = base_path / "derivatives"
 
-        if output_path.is_dir():
-            shutil.rmtree(output_path)
-
-        return output_path, [base_path, sub_name, sessions_and_runs]
-
-    def generate_mutli_segment_test_data_info(self, base_path):
-        """"""
-        base_path = base_path / "toy_multi_segment"
-        sub_name = "sub-001_type-mutliseg"
-        sessions_and_runs = {
-            "ses-001": ["ses-001_run-001", "ses-001_run-002"],
-        }
-        output_path = base_path / "derivatives"
         if output_path.is_dir():
             shutil.rmtree(output_path)
 
@@ -117,6 +98,7 @@ class BaseTest:
         concatenate_runs=False,
         existing_preprocessed_data="fail_if_exists",
         existing_sorting_output="fail_if_exists",
+        save_preprocessing_chunk_size=None,
         overwrite_postprocessing=False,
         delete_intermediate_files=(),
         slurm_batch=False,
@@ -132,6 +114,7 @@ class BaseTest:
             concat_runs_for_sorting=concatenate_runs,
             existing_preprocessed_data=existing_preprocessed_data,
             existing_sorting_output=existing_sorting_output,
+            save_preprocessing_chunk_size=save_preprocessing_chunk_size,
             overwrite_postprocessing=overwrite_postprocessing,
             delete_intermediate_files=delete_intermediate_files,
             slurm_batch=slurm_batch,
