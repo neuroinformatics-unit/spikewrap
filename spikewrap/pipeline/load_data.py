@@ -101,6 +101,7 @@ def _load_spikeglx_data(preprocess_data: PreprocessingData) -> PreprocessingData
             )
             for sync in [True, False]
         ]
+
         orig_dtype = without_sync.dtype
         without_sync = spre.astype(without_sync, np.float64)
 
@@ -126,7 +127,9 @@ def _load_spikeinterface(preprocess_data):  # TODO: does not handle sync
 
         orig_dtype = recording.dtype
 
-        recording = spre.astype(recording, np.float64)
+        recording = spre.astype(
+            recording, np.float64
+        )  # TODO: centralise this, also think if it can be handled better.
 
         preprocess_data.set_orig_dtype(orig_dtype)  # TODO: move this out of the loop.
 

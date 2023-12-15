@@ -3,6 +3,7 @@ from typing import Dict, List, Tuple, Union
 
 import numpy as np
 import spikeinterface.preprocessing as spre
+from spikeinterface import aggregate_channels
 
 from spikewrap.configs import configs
 from spikewrap.data_classes.preprocessing import PreprocessingData
@@ -16,8 +17,9 @@ from spikewrap.utils.custom_types import HandleExisting
 
 def run_preprocessing(
     preprocess_data: PreprocessingData,
-    pp_steps: str,
+    pp_steps: Union[Dict, str],
     handle_existing_data: HandleExisting,
+    preprocess_by_group: bool,
     slurm_batch: Union[bool, Dict] = False,
     log: bool = True,
 ):
@@ -58,7 +60,11 @@ def run_preprocessing(
     passed_arguments = locals()
     validate.check_function_arguments(passed_arguments)
 
-    pp_steps_dict, _, _ = configs.get_configs(pp_steps)  # TODO: call 'config_name'
+    if isinstance(pp_steps, Dict):
+        pp_steps_dict = pp_steps
+    else:
+        # TODO: do some check the name is valid
+        pp_steps_dict, _, _ = configs.get_configs(pp_steps)  # TODO: call 'config_name'
 
     if slurm_batch:
         slurm.run_in_slurm(
@@ -67,18 +73,23 @@ def run_preprocessing(
             {
                 "preprocess_data": preprocess_data,
                 "pp_steps": pp_steps_dict,
+                "preprocess_by_group": preprocess_by_group,
                 "handle_existing_data": handle_existing_data,
                 "log": log,
             },
         ),
     else:
         _preprocess_and_save_all_runs(
-            preprocess_data, pp_steps_dict, handle_existing_data, log
+            preprocess_data,
+            pp_steps_dict,
+            handle_existing_data,
+            preprocess_by_group,
+            log,
         )
 
 
 def fill_all_runs_with_preprocessed_recording(
-    preprocess_data: PreprocessingData, pp_steps: str
+    preprocess_data: PreprocessingData, pp_steps: str, preprocess_by_group: bool
 ) -> None:
     """
     Convenience function to fill all session and run entries in the
@@ -97,7 +108,7 @@ def fill_all_runs_with_preprocessed_recording(
 
     for ses_name, run_name in preprocess_data.flat_sessions_and_runs():
         _fill_run_data_with_preprocessed_recording(
-            preprocess_data, ses_name, run_name, pp_steps_dict
+            preprocess_data, ses_name, run_name, pp_steps_dict, preprocess_by_group
         )
 
 
@@ -110,6 +121,7 @@ def _preprocess_and_save_all_runs(
     preprocess_data: PreprocessingData,
     pp_steps_dict: Dict,
     handle_existing_data: HandleExisting,
+    preprocess_by_group: bool,
     log: bool = True,
 ) -> None:
     """
@@ -141,7 +153,12 @@ def _preprocess_and_save_all_runs(
 
         if to_save:
             _preprocess_and_save_single_run(
-                preprocess_data, ses_name, run_name, pp_steps_dict, overwrite
+                preprocess_data,
+                ses_name,
+                run_name,
+                pp_steps_dict,
+                overwrite,
+                preprocess_by_group,
             )
 
     if log:
@@ -154,6 +171,7 @@ def _preprocess_and_save_single_run(
     run_name: str,
     pp_steps_dict: Dict,
     overwrite: bool,
+    preprocess_by_group: bool,
 ) -> None:
     """
     Given a single session and run, fill the entry for this run
@@ -164,6 +182,7 @@ def _preprocess_and_save_single_run(
         ses_name,
         run_name,
         pp_steps_dict,
+        preprocess_by_group,
     )
 
     preprocess_data.save_preprocessed_data(ses_name, run_name, overwrite)
@@ -234,31 +253,88 @@ def _fill_run_data_with_preprocessed_recording(
     ses_name: str,
     run_name: str,
     pp_steps: Dict,
+    preprocess_by_group: bool,
 ) -> None:
     """
     For a particular run, fill the `preprocess_data` object entry with preprocessed
     spikeinterface recording objects. For each preprocessing step, a separate
     recording object will be stored. The name of the dict entry will be
-    a concatenenation of all preprocessing steps that were performed.
+    a concatenation of all preprocessing steps that were performed.
 
     e.g. "0-raw", "0-raw_1-phase_shift_2-bandpass_filter"
     """
     pp_funcs = _get_pp_funcs()
 
-    checked_pp_steps, pp_step_names = _check_and_sort_pp_steps(pp_steps, pp_funcs)
+    checked_pp_steps, pp_step_names = _check_and_sort_pp_steps(
+        pp_steps, pp_funcs
+    )  # TODO: return num_pp_steps_here
 
     preprocess_data.set_pp_steps(pp_steps)
 
-    for step_num, pp_info in checked_pp_steps.items():
-        _perform_preprocessing_step(
-            step_num,
-            pp_info,
+    if preprocess_by_group:
+        preprocess_everything_by_shank(
+            checked_pp_steps,
             preprocess_data,
             ses_name,
             run_name,
             pp_step_names,
             pp_funcs,
         )
+    else:
+        # own function?
+        for step_num, pp_info in checked_pp_steps.items():
+            _perform_preprocessing_step(  # TODO: can this cut down and tidied..?
+                step_num,
+                pp_info,
+                preprocess_data,
+                ses_name,
+                run_name,
+                pp_step_names,
+                pp_funcs,
+            )
+
+
+def preprocess_everything_by_shank(
+    checked_pp_steps,
+    preprocess_data: PreprocessingData,
+    ses_name: str,
+    run_name: str,
+    pp_step_names: List[str],
+    pp_funcs: Dict,
+):
+    # Split and check the recording
+    split_recording = preprocess_data[ses_name][run_name]["0-raw"].split_by("group")
+    split_recording = list(split_recording.values())
+
+    if len(split_recording) == 1:
+        raise ValueError(
+            "`preprocess_by_group` is set to `True` but this"
+            "recording only contains 1 shank. Are you sure this"
+        )
+
+    for step_num, pp_info in checked_pp_steps.items():
+        # For each preprocessing step, get the step to apply
+        pp_name, pp_options, _, new_name = _get_preprocessing_step_information(
+            pp_info, pp_step_names, preprocess_data, ses_name, run_name, step_num
+        )
+
+        _confidence_check_pp_func_name(pp_name, pp_funcs)  # TODO: remove duplicate
+
+        # Now apply the preprocessing step separately for each shank
+        this_step_preprocessed_by_group = []
+        for rec in split_recording:
+            this_step_preprocessed_by_group.append(pp_funcs[pp_name](rec, **pp_options))
+
+        # Re-aggregate for saving for provenance. however, we don't want
+        # to continually aggregate and split the data because it
+        # causes very slow behaviour / bugs. << TODO
+        preprocess_data[ses_name][run_name][new_name] = aggregate_channels(
+            this_step_preprocessed_by_group
+        )
+
+        # Keep the up-to-date preprocessed list for the next round.
+        # On the last round this will not be used.
+        split_recording = this_step_preprocessed_by_group
 
 
 def _perform_preprocessing_step(
@@ -303,6 +379,29 @@ def _perform_preprocessing_step(
         The canonical SpikeInterface preprocessing functions. The key
         are the function name and value the function object.
     """
+    # last pp step outpiut is not used by above and should be split out.
+    (
+        pp_name,
+        pp_options,
+        last_pp_step_output,
+        new_name,
+    ) = _get_preprocessing_step_information(
+        pp_info, pp_step_names, preprocess_data, ses_name, run_name, step_num
+    )
+
+    _confidence_check_pp_func_name(pp_name, pp_funcs)  # TODO: remove duplicate
+
+    preprocessed_recording = pp_funcs[pp_name](
+        last_pp_step_output, **pp_options
+    )  # TODO: pp_funcs should not be at this level, just uses pp_name...
+
+    preprocess_data[ses_name][run_name][new_name] = preprocessed_recording
+
+
+def _get_preprocessing_step_information(
+    pp_info, pp_step_names, preprocess_data, ses_name, run_name, step_num
+):  # this is getting confusing and needs refactoring.
+    """"""
     pp_name, pp_options = pp_info
 
     utils.message_user(
@@ -315,11 +414,7 @@ def _perform_preprocessing_step(
 
     new_name = f"{step_num}-" + "-".join(["raw"] + pp_step_names[: int(step_num)])
 
-    _confidence_check_pp_func_name(pp_name, pp_funcs)
-
-    preprocess_data[ses_name][run_name][new_name] = pp_funcs[pp_name](
-        last_pp_step_output, **pp_options
-    )
+    return pp_name, pp_options, last_pp_step_output, new_name
 
 
 # Helpers for preprocessing steps dictionary -------------------------------------------
@@ -435,6 +530,7 @@ def _get_pp_funcs() -> Dict:
         "filter": spre.filter,
         "gaussian_bandpass_filter": spre.gaussian_bandpass_filter,
         "highpass_filter": spre.highpass_filter,
+        "highpass_spatial_filter": spre.highpass_spatial_filter,
         "interpolate_bad_channels": spre.interpolate_bad_channels,
         "normalize_by_quantile": spre.normalize_by_quantile,
         "notch_filter": spre.notch_filter,

@@ -28,6 +28,7 @@ run_preprocessing(
     loaded_data,
     pp_steps="default",
     handle_existing_data="overwrite",
+    preprocess_by_group=True,
     log=True,
     slurm_batch=False,
 )

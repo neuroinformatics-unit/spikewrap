@@ -16,7 +16,9 @@ sessions_and_runs = {
 
 loaded_data = load_data(base_path, sub_name, sessions_and_runs, "spikeglx")
 
-fill_all_runs_with_preprocessed_recording(loaded_data, pp_steps="default")
+fill_all_runs_with_preprocessed_recording(
+    loaded_data, pp_steps="default", preprocess_by_group=False
+)
 
 visualise(
     loaded_data,
