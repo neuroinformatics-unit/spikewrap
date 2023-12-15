@@ -1,6 +1,6 @@
 {
     "specification": "probeinterface",
-    "version": "0.2.20",
+    "version": "0.2.19",
     "probes": [
         {
             "ndim": 2,

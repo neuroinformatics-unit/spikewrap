@@ -35,9 +35,8 @@ else:
 
 
 class TestFullPipeline(BaseTest):
-    @pytest.mark.parametrize(
-        "test_info", ["multi_segment"], indirect=True
-    )  # TODO: naming now confusing between test format and SI format
+    # TODO: naming now confusing between test format and SI format
+    @pytest.mark.parametrize("test_info", ["multi_segment"], indirect=True)
     def test_multi_segment(self, test_info):
         with pytest.raises(ValueError) as e:
             load_data(*test_info[:3], data_format="spikeinterface")

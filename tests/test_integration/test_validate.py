@@ -331,3 +331,22 @@ class TestValidate(BaseTest):
             )
 
         assert str(e.value) == "`sessions_and_runs` cannot contain empty runs."
+
+    @pytest.mark.parametrize("test_info", [DEFAULT_FORMAT], indirect=True)
+    def test_run_all_with_concatenate_is_blocked(self, test_info):
+        base_path, sub_name, sessions_and_runs = test_info
+        sessions_and_runs["ses-001"] = ["all"]
+
+        with pytest.raises(ValueError) as e:
+            self.run_full_pipeline(
+                base_path,
+                sub_name,
+                sessions_and_runs,
+                DEFAULT_FORMAT,
+                concatenate_runs=True,
+            )
+
+        assert (
+            "Using the 'all' option for `sessions_and_runs` is currently "
+            "not supported when concatenating runs for sorting." in str(e.value)
+        )

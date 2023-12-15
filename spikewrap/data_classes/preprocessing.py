@@ -43,6 +43,11 @@ class PreprocessingData(BaseUserDict):
 
     def __post_init__(self) -> None:
         super().__post_init__()
+
+        self._convert_session_and_run_keywords_to_foldernames(
+            self.get_rawdata_sub_path,
+            self.get_rawdata_ses_path,
+        )
         self._validate_rawdata_inputs()
 
         self.sync: Dict = {}
@@ -75,7 +80,9 @@ class PreprocessingData(BaseUserDict):
         """
         self.pp_steps = pp_steps
 
-    def _validate_rawdata_inputs(self) -> None:
+    def _validate_rawdata_inputs(
+        self,
+    ) -> None:  # TODO: getting these paths should be handled at BASE!
         self._validate_inputs(
             "rawdata",
             self.get_rawdata_top_level_path,

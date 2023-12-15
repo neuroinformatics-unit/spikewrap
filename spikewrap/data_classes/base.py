@@ -2,12 +2,23 @@ from collections import UserDict
 from collections.abc import ItemsView, KeysView, ValuesView
 from dataclasses import dataclass
 from pathlib import Path
-from typing import TYPE_CHECKING, Callable, Dict, List, Literal, Tuple
+from typing import (
+    TYPE_CHECKING,
+    Callable,
+    Dict,
+    List,
+    Literal,
+    Optional,
+    Tuple,
+)
+
+import numpy as np
 
 from spikewrap.utils import utils
 
 if TYPE_CHECKING:
     import fnmatch
+from datashuttle.utils.utils import get_values_from_bids_formatted_name
 
 
 @dataclass
@@ -36,6 +47,114 @@ class BaseUserDict(UserDict):
         self.data: Dict = {}  # necessary for UserDict.
         self.base_path = Path(self.base_path)
         self.check_run_names_are_formatted_as_list()
+
+    def find_ses_or_sub_keyword(
+        self, session_or_run_names: List[str], session_or_run: Literal["session", "run"]
+    ) -> Tuple[bool, Optional[str]]:
+        """"""
+        has_keyword = False
+        keyword = None
+
+        if any([name.lower() in ["all", "only"] for name in session_or_run_names]):
+            if len(session_or_run_names) != 1:
+                raise ValueError(
+                    f"If using keyword '{keyword}' it should be the only provided {session_or_run} name."
+                )
+            has_keyword = True
+            keyword = session_or_run_names[0]
+
+        return has_keyword, keyword
+
+    def raise_if_only_and_has_more_than_one_folder(
+        self,
+        keyword: Optional[str],
+        base_path: Path,
+        session_or_run_paths: List[str],
+        session_or_run: Literal["session", "run"],
+    ):
+        if keyword == "only" and len(session_or_run_paths) != 1:
+            raise RuntimeError(
+                f"The filepath {base_path} contains more "
+                f"than one folder but the {session_or_run} keyword is "
+                f"set to 'only'."
+            )
+
+    # TODO:
+    def check_and_sort_globbed_names(self, all_names: List[str]) -> List[str]:
+        """"""
+        all_names = sorted(all_names)
+
+        # TODO: rename
+        values = get_values_from_bids_formatted_name(
+            all_names, "ses", return_as_int=True
+        )
+        name_nums = [int(name.split("_")[0].split("-")[1]) for name in all_names]
+        if name_nums[0] != 1 or np.any(np.diff(values) != 1):
+            raise RuntimeError(
+                "Using the 'all' key has made session names go out of order. Please"
+                "get in contact and this can be quickly resolved."
+            )
+        return all_names
+
+    def _convert_session_and_run_keywords_to_foldernames(  # TODO: this is called from preprocessing and sorting.
+        self, get_sub_path: Callable, get_ses_path: Callable
+    ) -> None:
+        """ """
+        # TODO: is this code like datashuttle code?
+
+        # First, check if the session names need replacing
+        session_names = list(self.sessions_and_runs.keys())
+
+        has_ses_keyword, ses_keyword = self.find_ses_or_sub_keyword(
+            session_names, "session"
+        )
+
+        if has_ses_keyword and ses_keyword is not None:
+            ses_name_filepaths = (sub_path := get_sub_path()).glob("ses-*")
+            # TODO: is stem?
+            all_session_names = [
+                path_.stem for path_ in ses_name_filepaths if path_.is_dir()
+            ]
+
+            all_session_names = self.check_and_sort_globbed_names(all_session_names)
+            # TODO: need to sort all session names and then check these names are still in the correct order! If they are not we need to do something....
+
+            self.raise_if_only_and_has_more_than_one_folder(
+                ses_keyword, sub_path, all_session_names, "session"
+            )
+
+            runs = self.sessions_and_runs[ses_keyword]
+
+            print({name: runs for name in all_session_names})
+
+            self.sessions_and_runs = {name: runs for name in all_session_names}
+
+        # Next, check if the runs need replacing.
+        for ses_name in self.sessions_and_runs.keys():
+            this_session_run_names = self.sessions_and_runs[ses_name]
+
+            has_run_keyword, run_keyword = self.find_ses_or_sub_keyword(
+                this_session_run_names, "run"
+            )
+
+            if has_run_keyword:
+                all_run_paths = (
+                    ses_path := get_ses_path(ses_name)
+                    / "ephys"  # TODO: this is going to be everywhere so will need own function
+                ).glob("*")
+
+                run_names = [path_.stem for path_ in all_run_paths if path_.is_dir()]
+
+                # TODO: not sure if this is the best approach.
+                # but if concatenation of runs is attempted with
+                # this switched on, an error is thrown, so has no real effect
+                run_names = sorted(run_names)
+
+                self.raise_if_only_and_has_more_than_one_folder(
+                    run_keyword, ses_path, run_names, "run"
+                )
+
+                self.sessions_and_runs[ses_name] = run_names
 
     def check_run_names_are_formatted_as_list(self) -> None:
         """
