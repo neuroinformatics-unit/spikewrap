@@ -33,9 +33,7 @@ for ses in sessions_and_runs.keys():
         recording.set_property("inter_sample_shift", np.arange(16) * 0.0001)
 
         # for consistency with spikeglx dataset TODO this is a hack
-        recording._main_ids = np.array(
-            [f"imec0.ap#AP{i}" for i in range(num_channels)]
-        )
+        recording._main_ids = np.array([f"imec0.ap#AP{i}" for i in range(num_channels)])
 
         recording = spre.scale(recording, gain=50, offset=20)
 
