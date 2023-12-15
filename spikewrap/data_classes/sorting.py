@@ -73,6 +73,13 @@ class SortingData(BaseUserDict, ABC):
 
         self.load_preprocessed_binary()
 
+    def __repr__(self):
+        """
+        Show the dict not the class.
+        This does not work on base class.
+        """
+        return self.data.__repr__()
+
     # Checkers
     # ----------------------------------------------------------------------------------
 

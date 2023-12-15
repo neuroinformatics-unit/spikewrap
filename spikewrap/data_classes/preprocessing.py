@@ -51,6 +51,13 @@ class PreprocessingData(BaseUserDict):
             self.update_two_layer_dict(self, ses_name, run_name, {"0-raw": None})
             self.update_two_layer_dict(self.sync, ses_name, run_name, None)
 
+    def __repr__(self):
+        """
+        Show the dict not the class.
+        This does not work on base class.
+        """
+        return self.data.__repr__()
+
     def set_orig_dtype(self, dtype):  # TODO: type dtype!
         """used for writing data"""
         self.orig_dtype = dtype
