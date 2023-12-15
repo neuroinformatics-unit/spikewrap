@@ -28,7 +28,7 @@ dependencies = [
     "toml",
     "typeguard",
     "datashuttle",
-    "slurmio",
+    "slurmio @git+https://github.com/neuroinformatics-unit/slurmio.git",
     "psutil",
     # sorter-specific
     "tridesclous",

@@ -314,6 +314,8 @@ def get_default_chunk_size(recording, sync: bool = False):
     else:
         max_itemsize = np.float64().itemsize
 
+    mem_percent_use = 80
+
     try:
         # if in slurm environment
         os.environ["SLURM_JOB_ID"]
@@ -322,7 +324,7 @@ def get_default_chunk_size(recording, sync: bool = False):
     except KeyError:
         total_limit_bytes = psutil.virtual_memory().available
 
-    mem_limit_bytes = int(np.floor(total_limit_bytes * 0.8))
+    mem_limit_bytes = int(np.floor(total_limit_bytes * mem_percent_use / 100))
 
     num_channels = recording.get_num_channels()
     error_multiplier = 2
@@ -332,7 +334,7 @@ def get_default_chunk_size(recording, sync: bool = False):
     chunk_size = int(np.floor(mem_limit_bytes / mem_per_sample_bytes))
 
     message_user(
-        f"Memory available (GB): {mem_limit_bytes / 1e9}, chunk size{chunk_size}"
+        f"Memory available (GB) ({mem_percent_use}%): {mem_limit_bytes / 1e9}, chunk size: {chunk_size}"
     )
 
     return chunk_size
