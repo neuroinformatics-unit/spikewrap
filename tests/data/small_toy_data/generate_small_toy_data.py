@@ -1,3 +1,4 @@
+import shutil
 from pathlib import Path
 
 import numpy as np
@@ -38,6 +39,12 @@ if False:
 sub = "sub-001_type-test"
 base_path = Path(__file__).parent.resolve() / "rawdata"
 
+subfolders = base_path.glob("sub-*")
+for folder in subfolders:
+    shutil.rmtree(folder)
+
+track_recordings = []
+
 for ses in sessions_and_runs.keys():
     for run in sessions_and_runs[ses]:
         num_channels = 16
@@ -54,9 +61,29 @@ for ses in sessions_and_runs.keys():
 
         recording = spre.scale(recording, gain=50, offset=20)
 
+        track_recordings.append(recording)
+
         output_path = base_path / sub / ses / "ephys" / run
 
         recording.save(folder=output_path, chunk_size=1000000)
+
+# It is really important for testing that all saved recordings are different.
+# This is achevied by scaling above. Check here that indeed all recording
+# data is different.  This should always be the case becase toy_example
+# is random.
+all_data = [rec.get_traces() for rec in track_recordings]
+
+for i in range(len(track_recordings)):
+    if i == 0:
+        continue
+
+    assert not np.allclose(
+        track_recordings[i].get_traces(),
+        track_recordings[i - 1].get_traces(),
+        rtol=0,
+        atol=1,
+    )
+
 
 # shifted_recording = spre.phase_shift(recording)
 # filtered_recording = spre.bandpass_filter(recording)

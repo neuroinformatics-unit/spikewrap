@@ -2,7 +2,15 @@ from collections import UserDict
 from collections.abc import ItemsView, KeysView, ValuesView
 from dataclasses import dataclass
 from pathlib import Path
-from typing import TYPE_CHECKING, Callable, Dict, List, Literal, Tuple
+from typing import (
+    TYPE_CHECKING,
+    Callable,
+    Dict,
+    List,
+    Literal,
+    Optional,
+    Tuple,
+)
 
 from spikewrap.utils import utils
 
@@ -37,57 +45,86 @@ class BaseUserDict(UserDict):
         self.base_path = Path(self.base_path)
         self.check_run_names_are_formatted_as_list()
 
-    def convert_session_and_run_keywords_to_foldernames(  # TODO: this is called from preprocessing and sorting.
+    def find_ses_or_sub_keyword(
+        self, session_or_run_names: List[str], session_or_run: Literal["session", "run"]
+    ) -> Tuple[bool, Optional[str]]:
+        """"""
+        has_keyword = False
+        keyword = None
+
+        if any([name.lower() in ["all", "only"] for name in session_or_run_names]):
+            if len(session_or_run_names) != 1:
+                raise ValueError(
+                    f"If using keyword '{keyword}' it should be the only provided {session_or_run} name."
+                )
+            has_keyword = True
+            keyword = session_or_run_names[0]
+
+        return has_keyword, keyword
+
+    def raise_if_only_and_has_more_than_one_folder(
+        self,
+        keyword: Optional[str],
+        base_path: Path,
+        session_or_run_paths: List[str],
+        session_or_run: Literal["session", "run"],
+    ):
+        if keyword == "only" and len(session_or_run_paths) != 1:
+            raise RuntimeError(
+                f"The filepath {base_path} contains more "
+                f"than one folder but the {session_or_run} keyword is "
+                f"set to 'only'."
+            )
+
+    def _convert_session_and_run_keywords_to_foldernames(  # TODO: this is called from preprocessing and sorting.
         self, get_sub_path: Callable, get_ses_path: Callable
     ) -> None:
         """ """
-        ses_keyword = ""  # TODO: this is ugly
-        if any(
-            [name.lower() in ["all", "only"] for name in self.sessions_and_runs.keys()]
-        ):
-            if len(self.sessions_and_runs) != 1:
-                raise ValueError(
-                    f"If using keyword '{ses_keyword}' it should be the only provided session name."
-                )
-            ses_keyword = list(self.sessions_and_runs.keys())[0]
+        # TODO: is this code like datashuttle code?
 
-        if ses_keyword.lower() in ["all", "only"]:
-            ses_name_filepaths = get_sub_path(self.sub_name).glob("ses-*")
+        # First, check if the session names need replacing
+        session_names = list(self.sessions_and_runs.keys())
+
+        has_ses_keyword, ses_keyword = self.find_ses_or_sub_keyword(
+            session_names, "session"
+        )
+
+        if has_ses_keyword and ses_keyword is not None:
+            ses_name_filepaths = (sub_path := get_sub_path()).glob("ses-*")
+            # TODO: is stem?
             all_session_names = [
                 path_.stem for path_ in ses_name_filepaths if path_.is_dir()
-            ]  # TODO: is stem?
+            ]
+
+            self.raise_if_only_and_has_more_than_one_folder(
+                ses_keyword, sub_path, all_session_names, "session"
+            )
 
             runs = self.sessions_and_runs[ses_keyword]
 
+            print({name: runs for name in all_session_names})
+
             self.sessions_and_runs = {name: runs for name in all_session_names}
 
-        for ses_name, runs in self.sessions_and_runs.items():
-            run_keyword = ""
-            if any([run in ["all", "only"] for run in runs]):
-                if len(runs) != 1:
-                    raise ValueError(
-                        "If runs in `sessions_and_runs` contains "
-                        "the keyword 'all' and 'only', they must "
-                        "be the only entries provided."
-                    )
-                run_keyword = runs[0]
+        # Next, check if the runs need replacing.
+        for ses_name in self.sessions_and_runs.keys():
+            this_session_run_names = self.sessions_and_runs[ses_name]
 
-            if run_keyword != "":
+            has_run_keyword, run_keyword = self.find_ses_or_sub_keyword(
+                this_session_run_names, "run"
+            )
+
+            if has_run_keyword:
                 all_run_paths = (
-                    ses_path := get_ses_path(self.sub_name, ses_name)
+                    ses_path := get_ses_path(ses_name)
+                    / "ephys"  # TODO: this is going to be everywhere so will need own function
                 ).glob("*")
-                run_names = [
-                    path_.stem for path_ in all_run_paths if path_.is_dir()
-                ]  # TODO: is stem?
 
-                if (
-                    run_keyword == "only" and len(run_names) != 1
-                ):  # TODO: add only above!
-                    raise RuntimeError(
-                        f"The filepath {ses_path} contains more "
-                        f"than one folder but the run keyword is "
-                        f"set to 'only'."
-                    )
+                run_names = [path_.stem for path_ in all_run_paths if path_.is_dir()]
+
+                self.raise_if_only_and_has_more_than_one_folder(
+                    run_keyword, ses_path, run_names, "run"
+                )
 
                 self.sessions_and_runs[ses_name] = run_names
 
