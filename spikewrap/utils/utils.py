@@ -8,8 +8,8 @@ from typing import TYPE_CHECKING, Callable, Dict, List, Literal, Tuple, Union
 
 import numpy as np
 import psutil
-import slurmio
 import yaml
+from slurmio import SlurmJobParameters
 
 if TYPE_CHECKING:
     from spikeinterface.core import BaseRecording
@@ -318,7 +318,7 @@ def get_default_chunk_size(recording, sync: bool = False):
         # if in slurm environment
         os.environ["SLURM_JOB_ID"]
         # Only allocated memory (not free).
-        total_limit_bytes = slurmio.SlurmJobParameters().allocated_memory
+        total_limit_bytes = SlurmJobParameters().allocated_memory
     except KeyError:
         total_limit_bytes = psutil.virtual_memory().available
 
