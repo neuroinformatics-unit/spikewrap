@@ -29,7 +29,7 @@ else:
 
 class TestPreprocessingPipeline(BaseTest):
     @pytest.mark.parametrize("test_info", [DEFAULT_FORMAT], indirect=True)
-    def test_smoke_preprocess_per_shank(self, test_info):
+    def test_smoke_preprocess_by_group(self, test_info):
         """ """
         self.remove_all_except_first_run_and_sessions(test_info)
 
@@ -44,7 +44,7 @@ class TestPreprocessingPipeline(BaseTest):
                 preprocess_data,
                 pp_steps,
                 handle_existing_data="fail_if_exists",
-                preprocess_per_shank=False,
+                preprocess_by_group=False,
             )
 
         assert "The recording contains multiple groups!" in str(e.value)
@@ -53,7 +53,7 @@ class TestPreprocessingPipeline(BaseTest):
             preprocess_data,
             pp_steps,
             handle_existing_data="fail_if_exists",
-            preprocess_per_shank=True,
+            preprocess_by_group=True,
         )
 
     def overwrite_test_data_with_larger_toy_example(
@@ -89,7 +89,7 @@ class TestPreprocessingPipeline(BaseTest):
             )
 
     @pytest.mark.parametrize("test_info", [DEFAULT_FORMAT], indirect=True)
-    def test_preprocess_per_shank_against_manually(self, test_info):
+    def test_preprocess_by_group_against_manually(self, test_info):
         """
         TODO: needs to be split up into multple tests. Currently it is
         slow so not worth it.
@@ -120,7 +120,7 @@ class TestPreprocessingPipeline(BaseTest):
             preprocess_data,
             pp_steps,
             handle_existing_data="overwrite",
-            preprocess_per_shank=True,
+            preprocess_by_group=True,
         )
 
         # Now, we take the base recording and re-apply all preprocessing steps
@@ -199,7 +199,7 @@ class TestPreprocessingPipeline(BaseTest):
             preprocess_data,
             pp_steps,
             handle_existing_data="overwrite",
-            preprocess_per_shank=True,
+            preprocess_by_group=True,
         )
 
         run_name = list(preprocess_data["ses-001"].keys())[0]

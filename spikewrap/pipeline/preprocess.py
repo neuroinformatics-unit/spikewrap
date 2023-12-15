@@ -19,7 +19,7 @@ def run_preprocessing(
     preprocess_data: PreprocessingData,
     pp_steps: Union[Dict, str],
     handle_existing_data: HandleExisting,
-    preprocess_per_shank: bool,
+    preprocess_by_group: bool,
     slurm_batch: Union[bool, Dict] = False,
     log: bool = True,
 ):
@@ -73,7 +73,7 @@ def run_preprocessing(
             {
                 "preprocess_data": preprocess_data,
                 "pp_steps": pp_steps_dict,
-                "preprocess_per_shank": preprocess_per_shank,
+                "preprocess_by_group": preprocess_by_group,
                 "handle_existing_data": handle_existing_data,
                 "log": log,
             },
@@ -83,13 +83,13 @@ def run_preprocessing(
             preprocess_data,
             pp_steps_dict,
             handle_existing_data,
-            preprocess_per_shank,
+            preprocess_by_group,
             log,
         )
 
 
 def fill_all_runs_with_preprocessed_recording(
-    preprocess_data: PreprocessingData, pp_steps: str, preprocess_per_shank: bool
+    preprocess_data: PreprocessingData, pp_steps: str, preprocess_by_group: bool
 ) -> None:
     """
     Convenience function to fill all session and run entries in the
@@ -108,7 +108,7 @@ def fill_all_runs_with_preprocessed_recording(
 
     for ses_name, run_name in preprocess_data.flat_sessions_and_runs():
         _fill_run_data_with_preprocessed_recording(
-            preprocess_data, ses_name, run_name, pp_steps_dict, preprocess_per_shank
+            preprocess_data, ses_name, run_name, pp_steps_dict, preprocess_by_group
         )
 
 
@@ -121,7 +121,7 @@ def _preprocess_and_save_all_runs(
     preprocess_data: PreprocessingData,
     pp_steps_dict: Dict,
     handle_existing_data: HandleExisting,
-    preprocess_per_shank: bool,
+    preprocess_by_group: bool,
     log: bool = True,
 ) -> None:
     """
@@ -158,7 +158,7 @@ def _preprocess_and_save_all_runs(
                 run_name,
                 pp_steps_dict,
                 overwrite,
-                preprocess_per_shank,
+                preprocess_by_group,
             )
 
     if log:
@@ -171,7 +171,7 @@ def _preprocess_and_save_single_run(
     run_name: str,
     pp_steps_dict: Dict,
     overwrite: bool,
-    preprocess_per_shank: bool,
+    preprocess_by_group: bool,
 ) -> None:
     """
     Given a single session and run, fill the entry for this run
@@ -182,7 +182,7 @@ def _preprocess_and_save_single_run(
         ses_name,
         run_name,
         pp_steps_dict,
-        preprocess_per_shank,
+        preprocess_by_group,
     )
 
     preprocess_data.save_preprocessed_data(ses_name, run_name, overwrite)
@@ -253,7 +253,7 @@ def _fill_run_data_with_preprocessed_recording(
     ses_name: str,
     run_name: str,
     pp_steps: Dict,
-    preprocess_per_shank: bool,
+    preprocess_by_group: bool,
 ) -> None:
     """
     For a particular run, fill the `preprocess_data` object entry with preprocessed
@@ -271,7 +271,7 @@ def _fill_run_data_with_preprocessed_recording(
 
     preprocess_data.set_pp_steps(pp_steps)
 
-    if preprocess_per_shank:
+    if preprocess_by_group:
         preprocess_everything_by_shank(
             checked_pp_steps,
             preprocess_data,
@@ -308,7 +308,7 @@ def preprocess_everything_by_shank(
 
     if len(split_recording) == 1:
         raise ValueError(
-            "`preprocess_per_shank` is set to `True` but this"
+            "`preprocess_by_group` is set to `True` but this"
             "recording only contains 1 shank. Are you sure this"
         )
 
@@ -321,22 +321,20 @@ def preprocess_everything_by_shank(
         _confidence_check_pp_func_name(pp_name, pp_funcs)  # TODO: remove duplicate
 
         # Now apply the preprocessing step separately for each shank
-        this_step_preprocessed_per_shank = []
+        this_step_preprocessed_by_group = []
         for rec in split_recording:
-            this_step_preprocessed_per_shank.append(
-                pp_funcs[pp_name](rec, **pp_options)
-            )
+            this_step_preprocessed_by_group.append(pp_funcs[pp_name](rec, **pp_options))
 
         # Re-aggregate for saving for provenance. however, we don't want
         # to continually aggregate and split the data because it
         # causes very slow behaviour / bugs. << TODO
         preprocess_data[ses_name][run_name][new_name] = aggregate_channels(
-            this_step_preprocessed_per_shank
+            this_step_preprocessed_by_group
         )
 
         # Keep the up-to-date preprocessed list for the next round.
         # On the last round this will not be used.
-        split_recording = this_step_preprocessed_per_shank
+        split_recording = this_step_preprocessed_by_group
 
 
 def _perform_preprocessing_step(
