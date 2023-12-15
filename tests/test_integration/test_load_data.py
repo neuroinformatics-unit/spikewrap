@@ -19,16 +19,17 @@ class TestLoadData(BaseTest):
     @pytest.mark.parametrize("mode", ["all_sessions_and_runs", "all_runs"])
     def test_all_keyword(self, test_info, mode):
         """
-        There are 4 cases to test, sesesions on and off, runs and off.
+        Test the 'all' keyword for the `sessions_and_runs` dictionary which
+        can take "all" in the sessions key or "all" as a run input. The 'only'
+        keyword is not tested here.
 
-        Session on: if run is on, then everything is discovered as below
-                    if run is off, then there is a crash
-
-        session off: if run is on, we are okay (discover per run)
-                     if run is off, then we just have normal use.
+        The two cases that are tested here are when session level is 'all'
+        or when the run level for each session is 'all'. In either case,
+        the data should be loaded as expected from the toy example file data.
         """
         base_path, sub_name, sessions_and_runs = test_info
 
+        # Set the 'all' key on the sessions and runs
         if mode == "all_sessions_and_runs":
             new_sessions_and_runs = {"all": ["all"]}
         else:
@@ -40,6 +41,8 @@ class TestLoadData(BaseTest):
             base_path, sub_name, new_sessions_and_runs, data_format="spikeinterface"
         )
 
+        # Check the preprocess_data dict contains inputs
+        # in the order that is expected
         assert list(preprocess_data.keys()) == ["ses-001", "ses-002", "ses-003"]
 
         for ses_name in preprocess_data.keys():
@@ -51,6 +54,8 @@ class TestLoadData(BaseTest):
             for run in ["run-001", "run-002"]:
                 run_name = f"{ses_name}_{run}"
 
+                # for each run, check the expected run is loaded into
+                # `preprocess_data`.
                 test_run_data = load_extractor(
                     base_path
                     / "rawdata"
@@ -69,7 +74,11 @@ class TestLoadData(BaseTest):
     @pytest.mark.parametrize("test_info", ["spikeinterface"], indirect=True)
     def test_all_keyword_session_all_run_normal(self, test_info):
         """
-        TODO: document, this is stupid
+        This is a bad test in the case that sessions is "all"
+        and runs is not "all". See issue #166 to resolve this.
+        For the time being, on the current test set this will duplicate
+        the runs for ses-001 to ses-002 and ses-003. The run names are
+        different across sessions so this raises and error.
         """
         base_path, sub_name, sessions_and_runs = test_info
 
@@ -88,7 +97,9 @@ class TestLoadData(BaseTest):
     @pytest.mark.parametrize("session_or_run", ["session", "run"])
     def test_only_keyword(self, test_info, session_or_run):
         """
-        That is raises an error
+        Test that when the 'only' keyword is used in sessions and runs,
+        either at the session level, then and error is raised if there is more
+        than one session or run.
         """
         base_path, sub_name, sessions_and_runs = test_info
 

@@ -12,10 +12,13 @@ from typing import (
     Tuple,
 )
 
+import numpy as np
+
 from spikewrap.utils import utils
 
 if TYPE_CHECKING:
     import fnmatch
+from datashuttle.utils.utils import get_values_from_bids_formatted_name
 
 
 @dataclass
@@ -76,6 +79,23 @@ class BaseUserDict(UserDict):
                 f"set to 'only'."
             )
 
+    # TODO:
+    def check_and_sort_globbed_names(self, all_names: List[str]) -> List[str]:
+        """"""
+        all_names = sorted(all_names)
+
+        # TODO: rename
+        values = get_values_from_bids_formatted_name(
+            all_names, "ses", return_as_int=True
+        )
+        name_nums = [int(name.split("_")[0].split("-")[1]) for name in all_names]
+        if name_nums[0] != 1 or np.any(np.diff(values) != 1):
+            raise RuntimeError(
+                "Using the 'all' key has made session names go out of order. Please"
+                "get in contact and this can be quickly resolved."
+            )
+        return all_names
+
     def _convert_session_and_run_keywords_to_foldernames(  # TODO: this is called from preprocessing and sorting.
         self, get_sub_path: Callable, get_ses_path: Callable
     ) -> None:
@@ -95,6 +115,9 @@ class BaseUserDict(UserDict):
             all_session_names = [
                 path_.stem for path_ in ses_name_filepaths if path_.is_dir()
             ]
+
+            all_session_names = self.check_and_sort_globbed_names(all_session_names)
+            # TODO: need to sort all session names and then check these names are still in the correct order! If they are not we need to do something....
 
             self.raise_if_only_and_has_more_than_one_folder(
                 ses_keyword, sub_path, all_session_names, "session"

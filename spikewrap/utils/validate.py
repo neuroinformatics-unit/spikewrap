@@ -76,6 +76,19 @@ def check_function_arguments(arguments):
             if not typecheck(arg_value, bool):
                 raise TypeError(f"`{arg_name}` must be a bool.")
 
+            if (
+                "concat_runs_for_sorting" in arguments
+                and arguments["concat_runs_for_sorting"]
+            ) or ("concatenate_runs" in arguments and arguments["concatenate_runs"]):
+                for ses_name in arguments["sessions_and_runs"].keys():
+                    for run_name in arguments["sessions_and_runs"][ses_name]:
+                        if run_name == "all":
+                            raise ValueError(
+                                "Using the 'all' option for `sessions_and_runs` "
+                                "is currently not supported when concatenating runs for sorting. "
+                                "If you only have one run, use 'only', otherwise please get in contact. "
+                            )
+
         elif arg_name == "existing_preprocessed_data":
             if not typecheck(arg_value, HandleExisting):
                 raise TypeError(
