@@ -68,6 +68,10 @@ class SortingData(BaseUserDict, ABC):
     def __post_init__(self) -> None:
         super().__post_init__()
 
+        self._convert_session_and_run_keywords_to_foldernames(
+            self.get_derivatives_sub_path,
+            self.get_derivatives_ses_path,
+        )
         self._validate_derivatives_inputs()
         self._check_preprocessing_exists()
 

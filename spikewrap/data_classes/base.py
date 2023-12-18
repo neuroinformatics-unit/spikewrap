@@ -111,13 +111,12 @@ class BaseUserDict(UserDict):
 
         if has_ses_keyword and ses_keyword is not None:
             ses_name_filepaths = (sub_path := get_sub_path()).glob("ses-*")
-            # TODO: is stem?
+
             all_session_names = [
-                path_.stem for path_ in ses_name_filepaths if path_.is_dir()
+                path_.name for path_ in ses_name_filepaths if path_.is_dir()
             ]
 
             all_session_names = self.check_and_sort_globbed_names(all_session_names)
-            # TODO: need to sort all session names and then check these names are still in the correct order! If they are not we need to do something....
 
             self.raise_if_only_and_has_more_than_one_folder(
                 ses_keyword, sub_path, all_session_names, "session"
@@ -138,10 +137,7 @@ class BaseUserDict(UserDict):
             )
 
             if has_run_keyword:
-                all_run_paths = (
-                    ses_path := get_ses_path(ses_name)
-                    / "ephys"  # TODO: this is going to be everywhere so will need own function
-                ).glob("*")
+                all_run_paths = (ses_path := get_ses_path(ses_name)).glob("*")
 
                 run_names = [path_.stem for path_ in all_run_paths if path_.is_dir()]
 
@@ -268,10 +264,10 @@ class BaseUserDict(UserDict):
         return self.get_rawdata_top_level_path() / self.sub_name
 
     def get_rawdata_ses_path(self, ses_name: str) -> Path:
-        return self.get_rawdata_sub_path() / ses_name
+        return self.get_rawdata_sub_path() / ses_name / "ephys"
 
     def get_rawdata_run_path(self, ses_name: str, run_name: str) -> Path:
-        return self.get_rawdata_ses_path(ses_name) / "ephys" / run_name
+        return self.get_rawdata_ses_path(ses_name) / run_name
 
     # Derivatives Paths --------------------------------------------------------------
 
