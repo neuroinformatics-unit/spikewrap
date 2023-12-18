@@ -28,6 +28,9 @@ class TestSLURM(BaseTest):
     # TODO: cannot test the actual output.
     # can test recording at least.
 
+    # TODO: this is just a smoke test. Need to test against actual sorting
+    # to ensure matches as expected. Missed case where sorter was not passed
+    # and default was used!
     @pytest.mark.skipif(CAN_SLURM is False, reason="CAN_SLURM is false")
     @pytest.mark.parametrize(
         "concatenation", [(False, False), (False, True), (True, True)]

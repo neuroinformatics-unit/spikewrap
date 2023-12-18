@@ -7,6 +7,7 @@ from typing import TYPE_CHECKING, Dict, List, Literal, Optional, Union
 if TYPE_CHECKING:
     from spikewrap.utils.custom_types import HandleExisting
 
+import numpy as np
 import spikeinterface.sorters as ss
 
 from spikewrap.data_classes.sorting import (
@@ -27,6 +28,7 @@ def run_sorting(
     sub_name: str,
     sessions_and_runs: Dict[str, List[str]],
     sorter: str,
+    sort_per_group: bool = False,
     concatenate_sessions: bool = False,
     concatenate_runs: bool = False,
     sorter_options: Optional[Dict] = None,
@@ -47,6 +49,8 @@ def run_sorting(
                 "sub_name": sub_name,
                 "sessions_and_runs": sessions_and_runs,
                 "concatenate_sessions": concatenate_sessions,
+                "sorter": sorter,
+                "sort_per_group": sort_per_group,
                 "concatenate_runs": concatenate_runs,
                 "sorter_options": sorter_options,
                 "existing_sorting_output": existing_sorting_output,
@@ -59,6 +63,7 @@ def run_sorting(
             sub_name,
             sessions_and_runs,
             sorter,
+            sort_per_group,
             concatenate_sessions,
             concatenate_runs,
             sorter_options,
@@ -72,6 +77,7 @@ def _run_sorting(
     sub_name: str,
     sessions_and_runs: Dict[str, List[str]],
     sorter: str,
+    sort_per_group: bool,
     concatenate_sessions: bool = False,
     concatenate_runs: bool = False,
     sorter_options: Optional[Dict] = None,
@@ -179,6 +185,7 @@ def _run_sorting(
         sorting_data,
         singularity_image,
         docker_image,
+        sort_per_group,
         existing_sorting_output=existing_sorting_output,
         **sorter_options_dict,
     )
@@ -223,6 +230,7 @@ def run_sorting_on_all_runs(
     sorting_data: SortingData,
     singularity_image: Union[Literal[True], None, str],
     docker_image: Optional[Literal[True]],
+    sort_per_group: bool,
     existing_sorting_output: HandleExisting,
     **sorter_options_dict,
 ) -> None:
@@ -256,6 +264,7 @@ def run_sorting_on_all_runs(
 
     for ses_name, run_name in sorting_data.get_sorting_sessions_and_runs():
         sorting_output_path = sorting_data.get_sorting_path(ses_name, run_name)
+
         preprocessed_recording = sorting_data.get_preprocessed_recordings(
             ses_name, run_name
         )
@@ -284,15 +293,39 @@ def run_sorting_on_all_runs(
 
             quick_safety_check(existing_sorting_output, sorting_output_path)
 
-        ss.run_sorter(
-            sorting_data.sorter,
-            preprocessed_recording,
-            output_folder=sorting_output_path,
-            singularity_image=singularity_image,
-            docker_image=docker_image,
-            remove_existing_folder=True,
-            **sorter_options_dict,
-        )
+        if sort_per_group:
+            if np.unqiue(preprocessed_recording.get_property("group")).size == 1:
+                raise RuntimeError(
+                    "`sort_per_group` is `True` but the recording"
+                    "only has one channel group. Set `sort_per_group`"
+                    "to `False` for this recording."
+                )
+
+            split_recordings = preprocessed_recording.split_by("group")
+
+            for group_idx, recording in split_recordings.items():
+                output_folder = sorting_output_path / f"group_{group_idx}"
+
+                ss.run_sorter(
+                    sorting_data.sorter,
+                    preprocessed_recording,
+                    output_folder=output_folder,
+                    singularity_image=singularity_image,
+                    docker_image=docker_image,
+                    remove_existing_folder=True,
+                    **sorter_options_dict,
+                )
+
+        else:
+            ss.run_sorter(
+                sorting_data.sorter,
+                preprocessed_recording,
+                output_folder=sorting_output_path,
+                singularity_image=singularity_image,
+                docker_image=docker_image,
+                remove_existing_folder=True,
+                **sorter_options_dict,
+            )
 
         sorting_data.save_sorting_info(ses_name, run_name)
 
