@@ -1,6 +1,6 @@
 import shutil
 from dataclasses import dataclass
-from typing import Dict
+from typing import Dict, Optional
 
 import spikeinterface
 from spikeinterface.preprocessing import astype
@@ -94,7 +94,13 @@ class PreprocessingData(BaseUserDict):
     # Saving preprocessed data ---------------------------------------------------------
 
     def save_preprocessed_data(
-        self, ses_name: str, run_name: str, overwrite: bool = False
+        self,
+        ses_name: str,
+        run_name: str,
+        overwrite: bool = False,
+        chunk_size: Optional[
+            int
+        ] = None,  # TODO: remove all default arguments from internal calls?
     ) -> None:
         """
         Save the preprocessed output data to binary, as well
@@ -120,14 +126,16 @@ class PreprocessingData(BaseUserDict):
             if self.get_preprocessing_path(ses_name, run_name).is_dir():
                 shutil.rmtree(self.get_preprocessing_path(ses_name, run_name))
 
-        self._save_preprocessed_binary(ses_name, run_name)
+        self._save_preprocessed_binary(ses_name, run_name, chunk_size)
 
         if self.sync:
-            self._save_sync_channel(ses_name, run_name)
+            self._save_sync_channel(ses_name, run_name, chunk_size)
 
         self._save_preprocessing_info(ses_name, run_name)
 
-    def _save_preprocessed_binary(self, ses_name: str, run_name: str) -> None:
+    def _save_preprocessed_binary(
+        self, ses_name: str, run_name: str, chunk_size: Optional[int]
+    ) -> None:
         """
         Save the fully preprocessed data (i.e. last step in the
         preprocessing chain) to binary file. This is required for sorting.
@@ -138,12 +146,17 @@ class PreprocessingData(BaseUserDict):
 
         recording = astype(recording, self.orig_dtype)
 
+        if chunk_size is None:
+            chunk_size = utils.get_default_chunk_size(recording)
+
         recording.save(
             folder=self._get_pp_binary_data_path(ses_name, run_name),
-            chunk_size=utils.get_default_chunk_size(recording),
+            chunk_size=chunk_size,
         )
 
-    def _save_sync_channel(self, ses_name: str, run_name: str) -> None:
+    def _save_sync_channel(
+        self, ses_name: str, run_name: str, chunk_size: Optional[int]
+    ) -> None:
         """
         Save the sync channel separately. In SI, sorting cannot proceed
         if the sync channel is loaded to ensure it does not interfere with
@@ -157,9 +170,12 @@ class PreprocessingData(BaseUserDict):
 
         sync_recording = self.sync[ses_name][run_name]
 
+        if chunk_size is None:
+            chunk_size = utils.get_default_chunk_size(sync_recording, sync=True)
+
         sync_recording.save(  # type: ignore
             folder=self._get_sync_channel_data_path(ses_name, run_name),
-            chunk_size=utils.get_default_chunk_size(sync_recording, sync=True),
+            chunk_size=chunk_size,
         )
 
     def _save_preprocessing_info(self, ses_name: str, run_name: str) -> None:

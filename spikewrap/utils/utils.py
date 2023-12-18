@@ -7,7 +7,9 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Callable, Dict, List, Literal, Tuple, Union
 
 import numpy as np
+import psutil
 import yaml
+from slurmio import SlurmJobParameters
 
 if TYPE_CHECKING:
     from spikeinterface.core import BaseRecording
@@ -290,21 +292,17 @@ def paths_are_in_datetime_order(
 
 def get_default_chunk_size(recording, sync: bool = False):
     """
-    Get the fixed default chunk size that will use ~1GB of memory.
-    Ideally, this will be dynamically filled to ~70% of memory
-    but estimating memory across platforms / SLURM is not
-    finalised yet, see #104. 1GB is chosen somewhat arbitrarily
-    as a low amount that is expected any user should have
-    free on their machine. Larger chunk size is better
+    Get chunk size that uses ~80% of available memory.
+    Larger chunk size is better
     because it reduces filter edge effect and (I guess)
-    will be faster)
+    will be faster.
 
     The calculation for memory use is:
     mem_use_bytes = max_itemsize * num_channels * * error_multiplier
 
     where
-        max_itemsize : 8 (some preprocessing steps are in float64) unless
-                       syncing.
+        max_itemsize : preprocessing steps are in performed in float64 in spikewrap,
+                       sync channel is not preprocessed.
         num_channels : number of channels in the recording (all of which
                        need to be preprocessed in memory together).
         error_multiplier : preprocessing steps in SI may use ~2 times as
@@ -316,12 +314,27 @@ def get_default_chunk_size(recording, sync: bool = False):
     else:
         max_itemsize = np.float64().itemsize
 
-    mem_limit_bytes = 1 * 1e9
+    mem_percent_use = 80
+
+    try:
+        # if in slurm environment
+        os.environ["SLURM_JOB_ID"]
+        # Only allocated memory (not free).
+        total_limit_bytes = SlurmJobParameters().allocated_memory
+    except KeyError:
+        total_limit_bytes = psutil.virtual_memory().available
+
+    mem_limit_bytes = int(np.floor(total_limit_bytes * mem_percent_use / 100))
+
     num_channels = recording.get_num_channels()
     error_multiplier = 2
 
     mem_per_sample_bytes = max_itemsize * num_channels * error_multiplier
 
-    chunk_size = np.floor(mem_limit_bytes / mem_per_sample_bytes)
+    chunk_size = int(np.floor(mem_limit_bytes / mem_per_sample_bytes))
+
+    message_user(
+        f"Memory available (GB) ({mem_percent_use}%): {mem_limit_bytes / 1e9}, chunk size: {chunk_size}"
+    )
 
     return chunk_size

@@ -1,5 +1,5 @@
 import json
-from typing import Dict, List, Tuple, Union
+from typing import Dict, List, Optional, Tuple, Union
 
 import numpy as np
 import spikeinterface.preprocessing as spre
@@ -20,6 +20,7 @@ def run_preprocessing(
     pp_steps: Union[Dict, str],
     handle_existing_data: HandleExisting,
     preprocess_by_group: bool,
+    chunk_size: Optional[int] = None,
     slurm_batch: Union[bool, Dict] = False,
     log: bool = True,
 ):
@@ -74,6 +75,7 @@ def run_preprocessing(
                 "preprocess_data": preprocess_data,
                 "pp_steps": pp_steps_dict,
                 "preprocess_by_group": preprocess_by_group,
+                "chunk_size": chunk_size,
                 "handle_existing_data": handle_existing_data,
                 "log": log,
             },
@@ -84,12 +86,15 @@ def run_preprocessing(
             pp_steps_dict,
             handle_existing_data,
             preprocess_by_group,
+            chunk_size,
             log,
         )
 
 
 def fill_all_runs_with_preprocessed_recording(
-    preprocess_data: PreprocessingData, pp_steps: str, preprocess_by_group: bool
+    preprocess_data: PreprocessingData,
+    pp_steps: str,
+    preprocess_by_group: bool,
 ) -> None:
     """
     Convenience function to fill all session and run entries in the
@@ -108,7 +113,11 @@ def fill_all_runs_with_preprocessed_recording(
 
     for ses_name, run_name in preprocess_data.flat_sessions_and_runs():
         _fill_run_data_with_preprocessed_recording(
-            preprocess_data, ses_name, run_name, pp_steps_dict, preprocess_by_group
+            preprocess_data,
+            ses_name,
+            run_name,
+            pp_steps_dict,
+            preprocess_by_group,
         )
 
 
@@ -122,6 +131,7 @@ def _preprocess_and_save_all_runs(
     pp_steps_dict: Dict,
     handle_existing_data: HandleExisting,
     preprocess_by_group: bool,
+    chunk_size: Optional[int] = None,
     log: bool = True,
 ) -> None:
     """
@@ -159,6 +169,7 @@ def _preprocess_and_save_all_runs(
                 pp_steps_dict,
                 overwrite,
                 preprocess_by_group,
+                chunk_size,
             )
 
     if log:
@@ -172,6 +183,7 @@ def _preprocess_and_save_single_run(
     pp_steps_dict: Dict,
     overwrite: bool,
     preprocess_by_group: bool,
+    chunk_size: Optional[int],
 ) -> None:
     """
     Given a single session and run, fill the entry for this run
@@ -185,7 +197,7 @@ def _preprocess_and_save_single_run(
         preprocess_by_group,
     )
 
-    preprocess_data.save_preprocessed_data(ses_name, run_name, overwrite)
+    preprocess_data.save_preprocessed_data(ses_name, run_name, overwrite, chunk_size)
 
 
 def _handle_existing_data_options(

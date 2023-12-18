@@ -28,6 +28,8 @@ dependencies = [
     "toml",
     "typeguard",
     "datashuttle",
+    "slurmio @git+https://github.com/neuroinformatics-unit/slurmio.git",
+    "psutil",
     # sorter-specific
     "tridesclous",
     # "spyking-circus", TODO: this is not straightforward, requires mpi4py. TBD if we want to manage this.
