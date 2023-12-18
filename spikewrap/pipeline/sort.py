@@ -7,7 +7,6 @@ from typing import TYPE_CHECKING, Dict, List, Literal, Optional, Union
 if TYPE_CHECKING:
     from spikewrap.utils.custom_types import HandleExisting
 
-import numpy as np
 import spikeinterface.sorters as ss
 
 from spikewrap.data_classes.sorting import (
@@ -263,63 +262,56 @@ def run_sorting_on_all_runs(
     utils.message_user(f"Starting {sorting_data.sorter} sorting...")
 
     for ses_name, run_name in sorting_data.get_sorting_sessions_and_runs():
-        sorting_output_path = sorting_data.get_sorting_path(ses_name, run_name)
+        utils.message_user(f"Sorting session: {ses_name} \n" f"run: {run_name}...")
 
-        preprocessed_recording = sorting_data.get_preprocessed_recordings(
+        orig_preprocessed_recording = sorting_data.get_preprocessed_recordings(
             ses_name, run_name
         )
 
-        utils.message_user(
-            f"Sorting session: {ses_name} \n"
-            f"run: {ses_name}..."
-            # TODO: I think can just use run_name now?
-        )
-
-        if sorting_output_path.is_dir():
-            if existing_sorting_output == "fail_if_exists":
-                raise RuntimeError(
-                    f"Sorting output already exists at {sorting_output_path} and"
-                    f"`existing_sorting_output` is set to 'fail_if_exists'."
-                )
-
-            elif existing_sorting_output == "skip_if_exists":
-                utils.message_user(
-                    f"Sorting output already exists at {sorting_output_path}. Nothing "
-                    f"will be done. The existing sorting will be used for "
-                    f"postprocessing "
-                    f"if running with `run_full_pipeline`"
-                )
-                continue
-
-            quick_safety_check(existing_sorting_output, sorting_output_path)
-
         if sort_per_group:
-            if np.unqiue(preprocessed_recording.get_property("group")).size == 1:
+            split_preprocessing = orig_preprocessed_recording.split_by("group")
+
+            if len(split_preprocessing.keys()) == 1:
                 raise RuntimeError(
-                    "`sort_per_group` is `True` but the recording"
-                    "only has one channel group. Set `sort_per_group`"
-                    "to `False` for this recording."
+                    "`sort_per_group` is `True` but the recording only has "
+                    "one channel group. Set `sort_per_group`to `False` "
+                    "for this recording."
                 )
 
-            split_recordings = preprocessed_recording.split_by("group")
-
-            for group_idx, recording in split_recordings.items():
-                output_folder = sorting_output_path / f"group_{group_idx}"
-
-                ss.run_sorter(
-                    sorting_data.sorter,
-                    preprocessed_recording,
-                    output_folder=output_folder,
-                    singularity_image=singularity_image,
-                    docker_image=docker_image,
-                    remove_existing_folder=True,
-                    **sorter_options_dict,
-                )
-
+            group_indexes = list(split_preprocessing.keys())
+            all_preprocessed_recordings = list(split_preprocessing.values())
         else:
+            group_indexes = [None]
+            all_preprocessed_recordings = [orig_preprocessed_recording]
+
+        for group_idx, prepro_recording in zip(
+            group_indexes, all_preprocessed_recordings
+        ):
+            sorting_output_path = sorting_data.get_sorting_path(
+                ses_name, run_name, group_idx
+            )
+
+            if sorting_output_path.is_dir():
+                if existing_sorting_output == "fail_if_exists":
+                    raise RuntimeError(
+                        f"Sorting output already exists at {sorting_output_path} and"
+                        f"`existing_sorting_output` is set to 'fail_if_exists'."
+                    )
+
+                elif existing_sorting_output == "skip_if_exists":
+                    utils.message_user(
+                        f"Sorting output already exists at {sorting_output_path}. Nothing "
+                        f"will be done. The existing sorting will be used for "
+                        f"postprocessing "
+                        f"if running with `run_full_pipeline`"
+                    )
+                    continue
+
+                quick_safety_check(existing_sorting_output, sorting_output_path)
+
             ss.run_sorter(
                 sorting_data.sorter,
-                preprocessed_recording,
+                prepro_recording,
                 output_folder=sorting_output_path,
                 singularity_image=singularity_image,
                 docker_image=docker_image,
@@ -327,7 +319,8 @@ def run_sorting_on_all_runs(
                 **sorter_options_dict,
             )
 
-        sorting_data.save_sorting_info(ses_name, run_name)
+            # TODO: how does this interact with concat sessions and recordings?
+            sorting_data.save_sorting_info(ses_name, run_name, group_idx)
 
 
 def quick_safety_check(

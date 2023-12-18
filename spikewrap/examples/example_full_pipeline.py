@@ -39,10 +39,6 @@ if __name__ == "__main__":
         overwrite_postprocessing=True,
         concat_sessions_for_sorting=False,  # TODO: validate this at the start, in `run_full_pipeline`
         concat_runs_for_sorting=False,
-        #        existing_preprocessed_data="skip_if_exists",  # this is kind of confusing...
-        #       existing_sorting_output="overwrite",
-        #      overwrite_postprocessing=True,
-        #     slurm_batch=False,
     )
 
     print(f"TOOK {time.time() - t}")

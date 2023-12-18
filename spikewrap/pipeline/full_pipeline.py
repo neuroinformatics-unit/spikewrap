@@ -245,20 +245,26 @@ def _run_full_pipeline(
 
     # Run Postprocessing
     for ses_name, run_name in sorting_data.get_sorting_sessions_and_runs():
-        sorting_path = sorting_data.get_sorting_path(ses_name, run_name)
-
-        postprocess_data = run_postprocess(
-            sorting_path,
-            overwrite_postprocessing=overwrite_postprocessing,
-            existing_waveform_data="fail_if_exists",
-            waveform_options=waveform_options,
-        )
+        for sorting_path in _get_sorting_paths(
+            sorting_data, ses_name, run_name, sort_by_group
+        ):
+            postprocess_data = run_postprocess(
+                sorting_path,
+                overwrite_postprocessing=overwrite_postprocessing,
+                existing_waveform_data="fail_if_exists",
+                waveform_options=waveform_options,
+            )
 
     # Delete intermediate files
     for ses_name, run_name in sorting_data.get_sorting_sessions_and_runs():
-        handle_delete_intermediate_files(
-            ses_name, run_name, sorting_data, delete_intermediate_files
-        )
+        for sorting_path in _get_sorting_paths(
+            sorting_data, ses_name, run_name, sort_by_group
+        ):
+            postprocessing_path = utils.make_postprocessing_path(sorting_path)
+
+            handle_delete_intermediate_files(
+                sorting_path, postprocessing_path, delete_intermediate_files
+            )
     logs.stop_logging()
 
     return (
@@ -267,15 +273,37 @@ def _run_full_pipeline(
     )
 
 
+def _get_sorting_paths(
+    sorting_data: SortingData, ses_name: str, run_name: str, sort_by_group: bool
+) -> List[Path]:
+    """ """
+    if sort_by_group:
+        all_group_paths = sorting_data.get_base_sorting_path(ses_name, run_name).glob(
+            "group-*"
+        )
+        group_indexes = [
+            int(group.name.split("group-")[1])
+            for group in all_group_paths
+            if group.is_dir()
+        ]  # TODO: kind of hacky
+        all_sorting_paths = [
+            sorting_data.get_sorting_path(ses_name, run_name, idx)
+            for idx in group_indexes
+        ]
+    else:
+        all_sorting_paths = [sorting_data.get_sorting_path(ses_name, run_name)]
+
+    return all_sorting_paths
+
+
 # --------------------------------------------------------------------------------------
 # Remove Intermediate Files
 # --------------------------------------------------------------------------------------
 
 
 def handle_delete_intermediate_files(
-    ses_name: str,
-    run_name: Optional[str],
-    sorting_data: SortingData,
+    sorting_path: Path,
+    postprocessing_path: Path,
     delete_intermediate_files: DeleteIntermediate,
 ):
     """
@@ -284,22 +312,13 @@ def handle_delete_intermediate_files(
     for Kilosort). See `run_full_pipeline` for inputs
     """
     if "recording.dat" in delete_intermediate_files:
-        if (
-            recording_file := sorting_data.get_sorter_output_path(ses_name, run_name)
-            / "recording.dat"
-        ).is_file():
+        if (recording_file := sorting_path / "recording.dat").is_file():
             recording_file.unlink()
 
     if "temp_wh.dat" in delete_intermediate_files:
-        if (
-            recording_file := sorting_data.get_sorter_output_path(ses_name, run_name)
-            / "temp_wh.dat"
-        ).is_file():
+        if (recording_file := sorting_path / "temp_wh.dat").is_file():
             recording_file.unlink()
 
     if "waveforms" in delete_intermediate_files:
-        if (
-            waveforms_path := sorting_data.get_postprocessing_path(ses_name, run_name)
-            / "waveforms"
-        ).is_dir():
+        if (waveforms_path := postprocessing_path / "waveforms").is_dir():
             shutil.rmtree(waveforms_path)

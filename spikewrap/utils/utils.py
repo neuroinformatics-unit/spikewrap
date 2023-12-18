@@ -166,6 +166,11 @@ def cast_pp_steps_values(
 # --------------------------------------------------------------------------------------
 
 
+# TODO: move
+def make_postprocessing_path(sorting_path: Path):
+    return sorting_path.parent / "postprocessing"
+
+
 def get_keys_first_char(
     data: Union[PreprocessingData, SortingData], as_int: bool = False
 ) -> Union[List[str], List[int]]:

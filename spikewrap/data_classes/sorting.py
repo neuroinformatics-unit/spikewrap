@@ -186,19 +186,31 @@ class SortingData(BaseUserDict, ABC):
     # Paths
     # ----------------------------------------------------------------------------------
 
-    def get_sorting_path(self, ses_name: str, run_name: Optional[str]) -> Path:
-        return self._get_base_sorting_path(ses_name, run_name) / "sorting"
+    def get_sorting_path(
+        self, ses_name: str, run_name: Optional[str], group_idx: Optional[int] = None
+    ) -> Path:
+        if group_idx is None:
+            format_group_name = ""
+        else:
+            format_group_name = f"group-{group_idx}"
 
-    def get_sorter_output_path(self, ses_name: str, run_name: Optional[str]) -> Path:
-        return self.get_sorting_path(ses_name, run_name) / "sorter_output"
-
-    def _get_sorting_info_path(self, ses_name: str, run_name: Optional[str]) -> Path:
-        return self.get_sorting_path(ses_name, run_name) / utils.canonical_names(
-            "sorting_yaml"
+        return (
+            self.get_base_sorting_path(ses_name, run_name)
+            / format_group_name
+            / "sorting"
         )
 
-    def get_postprocessing_path(self, ses_name: str, run_name: Optional[str]) -> Path:
-        return self._get_base_sorting_path(ses_name, run_name) / "postprocessing"
+    def get_sorter_output_path(
+        self, ses_name: str, run_name: Optional[str], group_idx: Optional[int] = None
+    ) -> Path:
+        return self.get_sorting_path(ses_name, run_name, group_idx) / "sorter_output"
+
+    def _get_sorting_info_path(
+        self, ses_name: str, run_name: Optional[str], group_idx: Optional[int] = None
+    ) -> Path:
+        return self.get_sorting_path(
+            ses_name, run_name, group_idx
+        ) / utils.canonical_names("sorting_yaml")
 
     def _validate_derivatives_inputs(self):
         self._validate_inputs(
@@ -247,7 +259,9 @@ class SortingData(BaseUserDict, ABC):
     # Sorting info
     # ----------------------------------------------------------------------------------
 
-    def save_sorting_info(self, ses_name: str, run_name: str) -> None:
+    def save_sorting_info(
+        self, ses_name: str, run_name: str, group_idx: Optional[int] = None
+    ) -> None:
         """
         Save a sorting_info.yaml file containing a dictionary holding
         important information on the sorting. This is for provenance.
@@ -289,7 +303,7 @@ class SortingData(BaseUserDict, ABC):
         sorting_info["datetime_created"] = utils.get_formatted_datetime()
 
         utils.dump_dict_to_yaml(
-            self._get_sorting_info_path(ses_name, run_name), sorting_info
+            self._get_sorting_info_path(ses_name, run_name, group_idx), sorting_info
         )
 
     @property
@@ -325,7 +339,7 @@ class SortingData(BaseUserDict, ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def _get_base_sorting_path(self, ses_name: str, run_name: Optional[str]) -> Path:
+    def get_base_sorting_path(self, ses_name: str, run_name: Optional[str]) -> Path:
         raise NotImplementedError
 
 
@@ -364,7 +378,7 @@ class ConcatenateSessions(SortingData):
         self.assert_names(ses_name, run_name)
         return self[self.concat_ses_name()]
 
-    def _get_base_sorting_path(self, ses_name: str, run_name: Optional[str]) -> Path:
+    def get_base_sorting_path(self, ses_name: str, run_name: Optional[str]) -> Path:
         """"""
         self.assert_names(ses_name, run_name)
 
@@ -447,7 +461,7 @@ class ConcatenateRuns(SortingData):
 
         return self[ses_name][run_name]
 
-    def _get_base_sorting_path(self, ses_name: str, run_name: Optional[str]) -> Path:
+    def get_base_sorting_path(self, ses_name: str, run_name: Optional[str]) -> Path:
         assert run_name == self.concat_run_name(ses_name)
         assert run_name is not None
 
@@ -501,7 +515,7 @@ class NoConcatenation(SortingData):
         assert run_name is not None
         return self[ses_name][run_name]
 
-    def _get_base_sorting_path(self, ses_name: str, run_name: Optional[str]) -> Path:
+    def get_base_sorting_path(self, ses_name: str, run_name: Optional[str]) -> Path:
         assert run_name is not None
         # TODO: centralise paths!!# TODO: centralise paths!!# TODO: centralise paths!!
         return (
