@@ -144,7 +144,12 @@ class BaseTest:
         )
 
     def check_correct_folders_exist(
-        self, test_info, concatenate_sessions, concatenate_runs, sorter="kilosort2_5"
+        self,
+        test_info,
+        concatenate_sessions,
+        concatenate_runs,
+        sorter="kilosort2_5",
+        sort_by_group=False,
     ):
         sub_path = test_info[0] / "derivatives" / "spikewrap" / test_info[1]
         sessions_and_runs = test_info[2]
@@ -183,6 +188,14 @@ class BaseTest:
                         assert run_level_sorting == []
                     else:
                         assert len(run_level_sorting) == 1
+
+                        if sort_by_group:
+                            sorted_groups = list(run_level_sorting[0].glob("group-*"))
+                            assert len(sorted_groups) > 1
+
+                            for sorting_output_path in sorted_groups:
+                                assert (sorting_output_path / "sorting").is_dir()
+                                assert (sorting_output_path / "postprocessing").is_dir()
 
                 ses_path = sub_path / ses_name / "ephys"
 
