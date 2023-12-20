@@ -27,6 +27,7 @@ def run_sorting(
     sub_name: str,
     sessions_and_runs: Dict[str, List[str]],
     sorter: str,
+    sort_by_group: bool = False,
     concatenate_sessions: bool = False,
     concatenate_runs: bool = False,
     sorter_options: Optional[Dict] = None,
@@ -47,6 +48,8 @@ def run_sorting(
                 "sub_name": sub_name,
                 "sessions_and_runs": sessions_and_runs,
                 "concatenate_sessions": concatenate_sessions,
+                "sorter": sorter,
+                "sort_by_group": sort_by_group,
                 "concatenate_runs": concatenate_runs,
                 "sorter_options": sorter_options,
                 "existing_sorting_output": existing_sorting_output,
@@ -59,6 +62,7 @@ def run_sorting(
             sub_name,
             sessions_and_runs,
             sorter,
+            sort_by_group,
             concatenate_sessions,
             concatenate_runs,
             sorter_options,
@@ -72,6 +76,7 @@ def _run_sorting(
     sub_name: str,
     sessions_and_runs: Dict[str, List[str]],
     sorter: str,
+    sort_by_group: bool,
     concatenate_sessions: bool = False,
     concatenate_runs: bool = False,
     sorter_options: Optional[Dict] = None,
@@ -179,6 +184,7 @@ def _run_sorting(
         sorting_data,
         singularity_image,
         docker_image,
+        sort_by_group,
         existing_sorting_output=existing_sorting_output,
         **sorter_options_dict,
     )
@@ -223,6 +229,7 @@ def run_sorting_on_all_runs(
     sorting_data: SortingData,
     singularity_image: Union[Literal[True], None, str],
     docker_image: Optional[Literal[True]],
+    sort_by_group: bool,
     existing_sorting_output: HandleExisting,
     **sorter_options_dict,
 ) -> None:
@@ -255,46 +262,65 @@ def run_sorting_on_all_runs(
     utils.message_user(f"Starting {sorting_data.sorter} sorting...")
 
     for ses_name, run_name in sorting_data.get_sorting_sessions_and_runs():
-        sorting_output_path = sorting_data.get_sorting_path(ses_name, run_name)
-        preprocessed_recording = sorting_data.get_preprocessed_recordings(
+        utils.message_user(f"Sorting session: {ses_name} \n" f"run: {run_name}...")
+
+        orig_preprocessed_recording = sorting_data.get_preprocessed_recordings(
             ses_name, run_name
         )
 
-        utils.message_user(
-            f"Sorting session: {ses_name} \n"
-            f"run: {ses_name}..."
-            # TODO: I think can just use run_name now?
-        )
+        if sort_by_group:
+            split_preprocessing = orig_preprocessed_recording.split_by("group")
 
-        if sorting_output_path.is_dir():
-            if existing_sorting_output == "fail_if_exists":
+            if len(split_preprocessing.keys()) == 1:
                 raise RuntimeError(
-                    f"Sorting output already exists at {sorting_output_path} and"
-                    f"`existing_sorting_output` is set to 'fail_if_exists'."
+                    "`sort_by_group` is `True` but the recording only has "
+                    "one channel group. Set `sort_by_group`to `False` "
+                    "for this recording."
                 )
 
-            elif existing_sorting_output == "skip_if_exists":
-                utils.message_user(
-                    f"Sorting output already exists at {sorting_output_path}. Nothing "
-                    f"will be done. The existing sorting will be used for "
-                    f"postprocessing "
-                    f"if running with `run_full_pipeline`"
-                )
-                continue
+            group_indexes = list(split_preprocessing.keys())
+            all_preprocessed_recordings = list(split_preprocessing.values())
+        else:
+            group_indexes = [None]
+            all_preprocessed_recordings = [orig_preprocessed_recording]
 
-            quick_safety_check(existing_sorting_output, sorting_output_path)
+        for group_idx, prepro_recording in zip(
+            group_indexes, all_preprocessed_recordings
+        ):
+            sorting_output_path = sorting_data.get_sorting_path(
+                ses_name, run_name, group_idx
+            )
 
-        ss.run_sorter(
-            sorting_data.sorter,
-            preprocessed_recording,
-            output_folder=sorting_output_path,
-            singularity_image=singularity_image,
-            docker_image=docker_image,
-            remove_existing_folder=True,
-            **sorter_options_dict,
-        )
+            if sorting_output_path.is_dir():
+                if existing_sorting_output == "fail_if_exists":
+                    raise RuntimeError(
+                        f"Sorting output already exists at {sorting_output_path} and"
+                        f"`existing_sorting_output` is set to 'fail_if_exists'."
+                    )
 
-        sorting_data.save_sorting_info(ses_name, run_name)
+                elif existing_sorting_output == "skip_if_exists":
+                    utils.message_user(
+                        f"Sorting output already exists at {sorting_output_path}. Nothing "
+                        f"will be done. The existing sorting will be used for "
+                        f"postprocessing "
+                        f"if running with `run_full_pipeline`"
+                    )
+                    continue
+
+                quick_safety_check(existing_sorting_output, sorting_output_path)
+
+            ss.run_sorter(
+                sorting_data.sorter,
+                prepro_recording,
+                output_folder=sorting_output_path,
+                singularity_image=singularity_image,
+                docker_image=docker_image,
+                remove_existing_folder=True,
+                **sorter_options_dict,
+            )
+
+            # TODO: how does this interact with concat sessions and recordings?
+            sorting_data.save_sorting_info(ses_name, run_name, group_idx)
 
 
 def quick_safety_check(

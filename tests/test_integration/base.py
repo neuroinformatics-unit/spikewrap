@@ -113,6 +113,8 @@ class BaseTest:
         data_format,
         config_name="test_default",
         sorter="kilosort2_5",
+        preprocess_by_group=False,
+        sort_by_group=False,
         concatenate_sessions=False,
         concatenate_runs=False,
         existing_preprocessed_data="fail_if_exists",
@@ -129,6 +131,8 @@ class BaseTest:
             data_format=data_format,
             config_name=config_name,
             sorter=sorter,
+            preprocess_by_group=preprocess_by_group,
+            sort_by_group=sort_by_group,
             concat_sessions_for_sorting=concatenate_sessions,
             concat_runs_for_sorting=concatenate_runs,
             existing_preprocessed_data=existing_preprocessed_data,
@@ -140,7 +144,12 @@ class BaseTest:
         )
 
     def check_correct_folders_exist(
-        self, test_info, concatenate_sessions, concatenate_runs, sorter="kilosort2_5"
+        self,
+        test_info,
+        concatenate_sessions,
+        concatenate_runs,
+        sorter="kilosort2_5",
+        sort_by_group=False,
     ):
         sub_path = test_info[0] / "derivatives" / "spikewrap" / test_info[1]
         sessions_and_runs = test_info[2]
@@ -179,6 +188,14 @@ class BaseTest:
                         assert run_level_sorting == []
                     else:
                         assert len(run_level_sorting) == 1
+
+                        if sort_by_group:
+                            sorted_groups = list(run_level_sorting[0].glob("group-*"))
+                            assert len(sorted_groups) > 1
+
+                            for sorting_output_path in sorted_groups:
+                                assert (sorting_output_path / "sorting").is_dir()
+                                assert (sorting_output_path / "postprocessing").is_dir()
 
                 ses_path = sub_path / ses_name / "ephys"
 

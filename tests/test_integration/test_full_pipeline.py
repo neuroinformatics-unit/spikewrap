@@ -4,7 +4,7 @@ import numpy as np
 import pytest
 import spikeinterface as si
 import spikeinterface.extractors as se
-from spikeinterface import concatenate_recordings
+from spikeinterface import concatenate_recordings, sorters
 from spikeinterface.preprocessing import (
     astype,
     bandpass_filter,
@@ -12,7 +12,9 @@ from spikeinterface.preprocessing import (
     phase_shift,
 )
 
-from spikewrap.data_classes.postprocessing import load_saved_sorting_output
+from spikewrap.data_classes.postprocessing import (
+    load_saved_sorting_output,
+)
 from spikewrap.pipeline import full_pipeline, preprocess
 from spikewrap.pipeline.load_data import load_data
 from spikewrap.utils import checks, utils
@@ -125,7 +127,8 @@ class TestFullPipeline(BaseTest):
         self.check_no_concat_results(test_info, loaded_data, sorting_data, sorter)
 
     @pytest.mark.parametrize("test_info", [DEFAULT_FORMAT], indirect=True)
-    def test_no_concatenation_single_run(self, test_info):
+    @pytest.mark.parametrize("sort_by_group", [True, False])
+    def test_no_concatenation_single_run(self, test_info, sort_by_group):
         """
         Run the full pipeline for a single
         session and run, and check preprocessing, sorting and waveforms.
@@ -135,18 +138,22 @@ class TestFullPipeline(BaseTest):
         loaded_data, sorting_data = self.run_full_pipeline(
             *test_info,
             data_format=DEFAULT_FORMAT,
+            sort_by_group=sort_by_group,
             sorter=DEFAULT_SORTER,
             concatenate_sessions=False,
             concatenate_runs=False,
         )
 
-        self.check_correct_folders_exist(test_info, False, False, DEFAULT_SORTER)
+        self.check_correct_folders_exist(
+            test_info, False, False, DEFAULT_SORTER, sort_by_group=sort_by_group
+        )
         self.check_no_concat_results(
-            test_info, loaded_data, sorting_data, DEFAULT_SORTER
+            test_info, loaded_data, sorting_data, DEFAULT_SORTER, sort_by_group
         )
 
     @pytest.mark.parametrize("test_info", [DEFAULT_FORMAT], indirect=True)
-    def test_no_concatenation_multiple_runs(self, test_info):
+    @pytest.mark.parametrize("sort_by_group", [True, False])
+    def test_no_concatenation_multiple_runs(self, test_info, sort_by_group):
         """
         For DEFAULT_SORTER, check `full_pipeline` across multiple sessions
         and runs without concatenation.
@@ -156,16 +163,20 @@ class TestFullPipeline(BaseTest):
             data_format=DEFAULT_FORMAT,
             concatenate_sessions=False,
             concatenate_runs=False,
+            sort_by_group=sort_by_group,
             sorter=DEFAULT_SORTER,
         )
 
-        self.check_correct_folders_exist(test_info, False, False, DEFAULT_SORTER)
-
-        self.check_correct_folders_exist(test_info, False, False, DEFAULT_SORTER)
-        self.check_no_concat_results(test_info, loaded_data, sorting_data)
+        self.check_correct_folders_exist(
+            test_info, False, False, DEFAULT_SORTER, sort_by_group=sort_by_group
+        )
+        self.check_no_concat_results(
+            test_info, loaded_data, sorting_data, DEFAULT_SORTER, sort_by_group
+        )
 
     @pytest.mark.parametrize("test_info", [DEFAULT_FORMAT], indirect=True)
-    def test_concatenate_runs_but_not_sessions(self, test_info):
+    @pytest.mark.parametrize("sort_by_group", [True, False])
+    def test_concatenate_runs_but_not_sessions(self, test_info, sort_by_group):
         """
         For DEFAULT_SORTER, check `full_pipeline` across multiple sessions
         concatenating runs, but not sessions. This results in a single
@@ -177,16 +188,24 @@ class TestFullPipeline(BaseTest):
             data_format=DEFAULT_FORMAT,
             concatenate_sessions=False,
             concatenate_runs=True,
+            sort_by_group=sort_by_group,
             sorter=DEFAULT_SORTER,
         )
 
-        self.check_correct_folders_exist(test_info, False, True, DEFAULT_SORTER)
+        self.check_correct_folders_exist(
+            test_info,
+            False,
+            True,
+            DEFAULT_SORTER,
+            sort_by_group=sort_by_group,
+        )
         self.check_concatenate_runs_but_not_sessions(
-            test_info, loaded_data, sorting_data
+            test_info, loaded_data, sorting_data, sort_by_group
         )
 
     @pytest.mark.parametrize("test_info", [DEFAULT_FORMAT], indirect=True)
-    def test_concatenate_sessions_and_runs(self, test_info):
+    @pytest.mark.parametrize("sort_by_group", [True, False])
+    def test_concatenate_sessions_and_runs(self, test_info, sort_by_group):
         """
         For DEFAULT_SORTER, check `full_pipeline` across multiple sessions
         concatenating runs and sessions. This will lead to a single
@@ -198,10 +217,15 @@ class TestFullPipeline(BaseTest):
             concatenate_sessions=True,
             concatenate_runs=True,
             sorter=DEFAULT_SORTER,
+            sort_by_group=sort_by_group,
         )
 
-        self.check_correct_folders_exist(test_info, True, True, DEFAULT_SORTER)
-        self.check_concatenate_sessions_and_runs(test_info, loaded_data, sorting_data)
+        self.check_correct_folders_exist(
+            test_info, True, True, DEFAULT_SORTER, sort_by_group
+        )
+        self.check_concatenate_sessions_and_runs(
+            test_info, loaded_data, sorting_data, sort_by_group=sort_by_group
+        )
 
     @pytest.mark.parametrize("test_info", [DEFAULT_FORMAT], indirect=True)
     def test_ses_concat_no_run_concat(self, test_info):
@@ -225,7 +249,8 @@ class TestFullPipeline(BaseTest):
         )
 
     @pytest.mark.parametrize("test_info", [DEFAULT_FORMAT], indirect=True)
-    def test_existing_output_settings(self, test_info):
+    @pytest.mark.parametrize("sort_by_group", [True, False])
+    def test_existing_output_settings(self, test_info, sort_by_group):
         """
         In spikewrap existing preprocessed and sorting output data is
         handled with options `fail_if_exists`, `skip_if_exists` or
@@ -245,6 +270,7 @@ class TestFullPipeline(BaseTest):
         self.run_full_pipeline(
             *test_info,
             data_format=DEFAULT_FORMAT,
+            sort_by_group=sort_by_group,
             existing_preprocessed_data="fail_if_exists",
             existing_sorting_output="fail_if_exists",
             overwrite_postprocessing=False,
@@ -252,11 +278,14 @@ class TestFullPipeline(BaseTest):
         )
 
         # Test outputs are overwritten if `overwrite` set.
-        file_paths = self.write_an_empty_file_in_outputs(test_info, ses_name, run_name)
+        file_paths = self.write_an_empty_file_in_outputs(
+            test_info, ses_name, run_name, sort_by_group
+        )
 
         self.run_full_pipeline(
             *test_info,
             data_format=DEFAULT_FORMAT,
+            sort_by_group=sort_by_group,
             existing_preprocessed_data="overwrite",
             existing_sorting_output="overwrite",
             overwrite_postprocessing=True,
@@ -266,13 +295,16 @@ class TestFullPipeline(BaseTest):
         for path_ in file_paths:
             assert not path_.is_file()
 
-        file_paths = self.write_an_empty_file_in_outputs(test_info, ses_name, run_name)
+        file_paths = self.write_an_empty_file_in_outputs(
+            test_info, ses_name, run_name, sort_by_group
+        )
 
         # Test outputs are not overwritten if `skip_if_exists`.
         # Postprocessing is always deleted
         self.run_full_pipeline(
             *test_info,
             data_format=DEFAULT_FORMAT,
+            sort_by_group=sort_by_group,
             existing_preprocessed_data="skip_if_exists",
             existing_sorting_output="skip_if_exists",
             overwrite_postprocessing=True,
@@ -287,6 +319,7 @@ class TestFullPipeline(BaseTest):
             self.run_full_pipeline(
                 *test_info,
                 data_format=DEFAULT_FORMAT,
+                sort_by_group=sort_by_group,
                 existing_preprocessed_data="fail_if_exists",
                 existing_sorting_output="skip_if_exists",
                 overwrite_postprocessing=True,
@@ -307,6 +340,7 @@ class TestFullPipeline(BaseTest):
                 self.run_full_pipeline(
                     *test_info,
                     data_format=DEFAULT_FORMAT,
+                    sort_by_group=sort_by_group,
                     existing_preprocessed_data="skip_if_exists",
                     existing_sorting_output="fail_if_exists",
                     overwrite_postprocessing=True,
@@ -320,6 +354,7 @@ class TestFullPipeline(BaseTest):
                 self.run_full_pipeline(
                     *test_info,
                     data_format=DEFAULT_FORMAT,
+                    sort_by_group=sort_by_group,
                     existing_preprocessed_data="skip_if_exists",
                     existing_sorting_output="skip_if_exists",
                     overwrite_postprocessing=False,
@@ -354,7 +389,12 @@ class TestFullPipeline(BaseTest):
     # ----------------------------------------------------------------------------------
 
     def check_no_concat_results(
-        self, test_info, loaded_data, sorting_data, sorter=DEFAULT_SORTER
+        self,
+        test_info,
+        loaded_data,
+        sorting_data,
+        sorter=DEFAULT_SORTER,
+        sort_by_group=False,
     ):
         """
         After `full_pipeline` is run, check the preprocessing, sorting and postprocessing
@@ -410,20 +450,23 @@ class TestFullPipeline(BaseTest):
                 )
 
                 paths = self.get_output_paths(
-                    test_info, ses_name, run_name, sorter=sorter
+                    test_info, ses_name, run_name, sort_by_group, sorter=sorter
                 )
 
-                self.check_waveforms(
-                    paths["sorter_output"],
-                    paths["postprocessing"],
-                    recs_to_test=[
-                        sorting_data[ses_name][run_name],
-                    ],
-                    sorter=sorter,
-                )
+                for sorter_output_path, postprocessing_path in zip(
+                    paths["sorter_output"], paths["postprocessing"]
+                ):
+                    self.check_waveforms(
+                        sorter_output_path,
+                        postprocessing_path,
+                        recs_to_test=[
+                            sorting_data[ses_name][run_name],
+                        ],
+                        sorter=sorter,
+                    )
 
     def check_concatenate_runs_but_not_sessions(
-        self, test_info, loaded_data, sorting_data
+        self, test_info, loaded_data, sorting_data, sort_by_group
     ):
         """
         Similar to `check_no_concat_results()`, however now test with
@@ -483,27 +526,35 @@ class TestFullPipeline(BaseTest):
             # Load the recording.dat and check it matches the expected data.
             # Finally, check the waveforms match the preprocessed data.
             paths = self.get_output_paths(
-                test_info, ses_name, concat_run_name, concatenate_runs=True
+                test_info,
+                ses_name,
+                concat_run_name,
+                concatenate_runs=True,
+                sort_by_group=sort_by_group,
             )
+            for sorter_output_path, postprocessing_path, recording_dat_path in zip(
+                paths["sorter_output"], paths["postprocessing"], paths["recording_dat"]
+            ):
+                if "kilosort" in sorting_data.sorter:
+                    saved_recording = si.read_binary(
+                        recording_dat_path,
+                        sampling_frequency=sorting_data_pp_run.get_sampling_frequency(),
+                        dtype=data_type,
+                        num_channels=sorting_data_pp_run.get_num_channels(),
+                    )
+                    self.check_recordings_are_the_same(
+                        saved_recording, test_concat_runs, n_split=2
+                    )
 
-            if "kilosort" in sorting_data.sorter:
-                saved_recording = si.read_binary(
-                    paths["recording_dat"],
-                    sampling_frequency=sorting_data_pp_run.get_sampling_frequency(),
-                    dtype=data_type,
-                    num_channels=sorting_data_pp_run.get_num_channels(),
+                self.check_waveforms(
+                    sorter_output_path,
+                    postprocessing_path,
+                    recs_to_test=[sorting_data[ses_name][concat_run_name]],
                 )
-                self.check_recordings_are_the_same(
-                    saved_recording, test_concat_runs, n_split=2
-                )
 
-            self.check_waveforms(
-                paths["sorter_output"],
-                paths["postprocessing"],
-                recs_to_test=[sorting_data[ses_name][concat_run_name]],
-            )
-
-    def check_concatenate_sessions_and_runs(self, test_info, loaded_data, sorting_data):
+    def check_concatenate_sessions_and_runs(
+        self, test_info, loaded_data, sorting_data, sort_by_group
+    ):
         """
         Similar to `check_no_concat_results()` and `check_concatenate_runs_but_not_sessions()`,
         but now we are checking when `concatenate_sessions=True` and `concatenate_runs=`True`.
@@ -549,34 +600,37 @@ class TestFullPipeline(BaseTest):
         # dtype is converted to original dtype on file writing.
         test_concat_all = astype(test_concat_all, data_type)
 
+        self.check_recordings_are_the_same(
+            sorted_data_concat_all, test_concat_all, n_split=6
+        )
+
         paths = self.get_output_paths(
             test_info,
+            sort_by_group=sort_by_group,
             ses_name=concat_ses_name,
             run_name=None,
             concatenate_sessions=True,
             concatenate_runs=True,
         )
+        for sorter_output_path, postprocessing_path, recording_dat_path in zip(
+            paths["sorter_output"], paths["postprocessing"], paths["recording_dat"]
+        ):
+            if "kilosort" in sorting_data.sorter:
+                saved_recording = si.read_binary(
+                    recording_dat_path,
+                    sampling_frequency=sorted_data_concat_all.get_sampling_frequency(),
+                    dtype=data_type,
+                    num_channels=sorted_data_concat_all.get_num_channels(),
+                )
+                self.check_recordings_are_the_same(
+                    saved_recording, test_concat_all, n_split=6
+                )
 
-        self.check_recordings_are_the_same(
-            sorted_data_concat_all, test_concat_all, n_split=6
-        )
-
-        if "kilosort" in sorting_data.sorter:
-            saved_recording = si.read_binary(
-                paths["recording_dat"],
-                sampling_frequency=sorted_data_concat_all.get_sampling_frequency(),
-                dtype=data_type,
-                num_channels=sorted_data_concat_all.get_num_channels(),
+            self.check_waveforms(
+                sorter_output_path,
+                postprocessing_path,
+                recs_to_test=[sorting_data[concat_ses_name]],
             )
-            self.check_recordings_are_the_same(
-                saved_recording, test_concat_all, n_split=6
-            )
-
-        self.check_waveforms(
-            paths["sorter_output"],
-            paths["postprocessing"],
-            recs_to_test=[sorting_data[concat_ses_name]],
-        )
 
     def check_recordings_are_the_same(self, rec_1, rec_2, n_split=1):
         """
@@ -678,23 +732,26 @@ class TestFullPipeline(BaseTest):
                 assert np.array_equal(data, first_unit_waveforms[0])
 
     def write_an_empty_file_in_outputs(
-        self, test_info, ses_name, run_name, sorter=DEFAULT_SORTER
+        self, test_info, ses_name, run_name, sort_by_group, sorter=DEFAULT_SORTER
     ):
         """
         Write a file called `test_file.txt` with contents `test_file` in
         the preprocessed, sorting and postprocessing output path for this
         session / run.
         """
-        paths = self.get_output_paths(test_info, ses_name, run_name, sorter=sorter)
+        paths = self.get_output_paths(
+            test_info, ses_name, run_name, sorter=sorter, sort_by_group=sort_by_group
+        )
 
-        paths_to_write = []
-        for output in ["preprocessing", "sorting_path", "postprocessing"]:
-            paths_to_write.append(paths[output] / "test_file.txt")
+        paths_to_write = [paths["preprocessing"] / "test_file.txt"]
+
+        for output in ["sorting_path", "postprocessing"]:
+            for group_path in paths[output]:
+                paths_to_write.append(group_path / "test_file.txt")
 
         for path_ in paths_to_write:
-            with open(path_, "w") as file:
+            with open(path_.as_posix(), "w") as file:
                 file.write("test file.")
-
         return paths_to_write
 
     def get_output_paths(
@@ -702,6 +759,7 @@ class TestFullPipeline(BaseTest):
         test_info,
         ses_name,
         run_name,
+        sort_by_group=False,
         sorter=DEFAULT_SORTER,
         concatenate_sessions=False,
         concatenate_runs=False,
@@ -746,13 +804,184 @@ class TestFullPipeline(BaseTest):
 
         paths = {
             "preprocessing": run_path / "preprocessing",
-            "sorting_path": run_path / sorter / "sorting",
-            "postprocessing": run_path / sorter / "postprocessing",
+            "postprocessing": [],
+            "sorting_path": [],
+            "sorter_output": [],
+            "recording_dat": [],
         }
-        paths["sorter_output"] = paths["sorting_path"] / "sorter_output"
-        paths["recording_dat"] = paths["sorter_output"] / "recording.dat"
+
+        if sort_by_group:
+            all_groups = sorted((run_path / sorter).glob("group-*"))
+            assert any(all_groups), "Groups output not found."
+
+            for group in all_groups:
+                sorting_path = group / "sorting"
+                paths["sorting_path"].append(sorting_path)
+                paths["postprocessing"].append(group / "postprocessing")
+                paths["sorter_output"].append(sorting_path / "sorter_output")
+                paths["recording_dat"].append(
+                    sorting_path / "sorter_output" / "recording.dat"
+                )  # TODO: this is only for kilosort!
+        else:
+            sorting_path = run_path / sorter / "sorting"
+            paths["sorting_path"] = [sorting_path]
+            paths["postprocessing"] = [run_path / sorter / "postprocessing"]
+            paths["sorter_output"] = [sorting_path / "sorter_output"]
+            paths["recording_dat"] = [sorting_path / "sorter_output" / "recording.dat"]
 
         return paths
+
+    @pytest.mark.parametrize("test_info", [DEFAULT_FORMAT], indirect=True)
+    def test_sort_by_group_concat_sessions(self, test_info):
+        preprocess_data, sorting_data = self.run_full_pipeline(
+            *test_info,
+            data_format=DEFAULT_FORMAT,
+            concatenate_runs=True,
+            concatenate_sessions=True,
+            sort_by_group=True,
+            existing_preprocessed_data="overwrite",
+            existing_sorting_output="overwrite",
+            overwrite_postprocessing=True,
+            sorter=DEFAULT_SORTER,
+        )
+
+        concat_ses_name = list(sorting_data.keys())[0]
+
+        prepo_recordings = [
+            val["3-raw-phase_shift-bandpass_filter-common_reference"]
+            for ses_name in preprocess_data.keys()
+            for val in preprocess_data[ses_name].values()
+        ]
+
+        test_preprocessed = concatenate_recordings(prepo_recordings)
+
+        sorting_output_paths = self.get_output_paths(
+            test_info,
+            concat_ses_name,
+            run_name=None,
+            sorter=DEFAULT_SORTER,
+            concatenate_sessions=True,
+            concatenate_runs=True,
+            sort_by_group=True,
+        )["sorting_path"]
+
+        self.check_sorting_is_correct(test_preprocessed, sorting_output_paths)
+
+    @pytest.mark.parametrize("test_info", [DEFAULT_FORMAT], indirect=True)
+    def test_sort_by_group_concat_runs_not_sessions(self, test_info):
+        preprocess_data, sorting_data = self.run_full_pipeline(
+            *test_info,
+            data_format=DEFAULT_FORMAT,
+            concatenate_runs=True,
+            concatenate_sessions=False,
+            sort_by_group=True,
+            existing_preprocessed_data="overwrite",
+            existing_sorting_output="overwrite",
+            overwrite_postprocessing=True,
+            sorter=DEFAULT_SORTER,
+        )
+
+        base_path, sub_name, sessions_and_runs = test_info
+
+        for ses_name in sessions_and_runs.keys():
+            concat_run_name = list(sorting_data[ses_name].keys())[0]
+
+            prepo_recordings = [
+                val["3-raw-phase_shift-bandpass_filter-common_reference"]
+                for val in preprocess_data[ses_name].values()
+            ]
+            test_preprocessed = concatenate_recordings(prepo_recordings)
+
+            sorting_output_paths = self.get_output_paths(
+                test_info,
+                ses_name,
+                run_name=concat_run_name,
+                sorter=DEFAULT_SORTER,
+                concatenate_sessions=False,
+                concatenate_runs=True,
+                sort_by_group=True,
+            )["sorting_path"]
+
+            self.check_sorting_is_correct(test_preprocessed, sorting_output_paths)
+
+    @pytest.mark.parametrize("test_info", [DEFAULT_FORMAT], indirect=True)
+    def test_sort_by_group_no_concat(self, test_info):
+        self.run_full_pipeline(
+            *test_info,
+            data_format=DEFAULT_FORMAT,
+            concatenate_runs=False,
+            concatenate_sessions=False,
+            sort_by_group=True,
+            existing_preprocessed_data="overwrite",
+            existing_sorting_output="overwrite",
+            overwrite_postprocessing=True,
+            sorter=DEFAULT_SORTER,
+        )
+
+        base_path, sub_name, sessions_and_runs = test_info
+
+        for ses_name in sessions_and_runs.keys():
+            for run_name in sessions_and_runs[ses_name]:
+                sorting_output_paths = self.get_output_paths(
+                    test_info,
+                    ses_name,
+                    run_name=run_name,
+                    sorter=DEFAULT_SORTER,
+                    sort_by_group=True,
+                )["sorting_path"]
+
+                _, test_preprocessed = self.get_test_rawdata_and_preprocessed_data(
+                    base_path, sub_name, ses_name, run_name
+                )
+                self.check_sorting_is_correct(test_preprocessed, sorting_output_paths)
+
+    def check_sorting_is_correct(self, test_preprocessed, sorting_output_paths):
+        """"""
+        split_recording = test_preprocessed.split_by("group")
+
+        if "kilosort" in DEFAULT_SORTER:
+            singularity_image = True if platform.system() == "Linux" else False
+            docker_image = not singularity_image
+        else:
+            singularity_image = docker_image = False
+
+        sortings = {}
+        for group, sub_recording in split_recording.items():
+            sorting = sorters.run_sorter(
+                sorter_name=DEFAULT_SORTER,
+                recording=sub_recording,
+                output_folder=None,
+                docker_image=docker_image,
+                singularity_image=singularity_image,
+                remove_existing_folder=True,
+                **{
+                    "scheme": "2",
+                    "filter": False,
+                    "whiten": False,
+                    "verbose": True,
+                },
+            )
+
+            sortings[group] = sorting
+
+        assert len(sorting_output_paths) > 1, "Groups output not found."
+
+        for idx, path_ in enumerate(sorting_output_paths):
+            group_sorting = load_saved_sorting_output(
+                path_ / "sorter_output", DEFAULT_SORTER
+            )
+
+            assert np.array_equal(
+                group_sorting.get_unit_ids(), sortings[idx].get_unit_ids()
+            )
+
+            for unit in group_sorting.get_unit_ids():
+                assert np.allclose(
+                    group_sorting.get_unit_spike_train(unit),
+                    sortings[idx].get_unit_spike_train(unit),
+                    rtol=0,
+                    atol=1e-10,
+                ), f"{idx}, {group_sorting}, {sortings}"
 
     # ----------------------------------------------------------------------------------
     # Getters

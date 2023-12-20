@@ -42,6 +42,7 @@ class PostprocessingData:
 
     def __init__(self, sorting_path: Union[str, Path]) -> None:
         self.sorting_path = Path(sorting_path)
+
         self.sorter_output_path = self.sorting_path / "sorter_output"
         self.sorting_info_path = self.sorting_path / utils.canonical_names(
             "sorting_yaml"
@@ -151,9 +152,7 @@ class PostprocessingData:
         return sorting_without_excess_spikes
 
     def get_postprocessing_path(self) -> Path:
-        return self.sorting_data.get_postprocessing_path(
-            self.sorted_ses_name, self.sorted_run_name
-        )
+        return utils.make_postprocessing_path(self.sorting_path)
 
     def get_quality_metrics_path(self) -> Path:
         return self.get_postprocessing_path() / "quality_metrics.csv"
