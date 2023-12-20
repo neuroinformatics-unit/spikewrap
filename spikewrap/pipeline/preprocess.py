@@ -1,5 +1,4 @@
 import json
-from types import MappingProxyType
 from typing import Dict, List, Optional, Tuple, Union
 
 import numpy as np
@@ -33,19 +32,19 @@ class PreprocessPipeline:
             pp_steps_dict = pp_steps
         else:
             pp_steps_dict, _, _ = configs.get_configs(pp_steps)
-        pp_steps_dict = MappingProxyType(pp_steps_dict)
+        # pp_steps_dict = MappingProxyType(pp_steps_dict)
 
-        self.passed_arguments = MappingProxyType(
-            {
-                "preprocess_data": preprocess_data,
-                "pp_steps_dict": pp_steps_dict,
-                "handle_existing_data": handle_existing_data,
-                "preprocess_by_group": preprocess_by_group,
-                "chunk_size": chunk_size,
-                #            "slurm_batch": slurm_batch,
-                "log": log,
-            }
-        )
+        self.passed_arguments = {  # MappingProxyType(
+            #     {
+            "preprocess_data": preprocess_data,
+            "pp_steps_dict": pp_steps_dict,
+            "handle_existing_data": handle_existing_data,
+            "preprocess_by_group": preprocess_by_group,
+            "chunk_size": chunk_size,
+            #            "slurm_batch": slurm_batch,
+            "log": log,
+        }
+        #   )
         validate.check_function_arguments(self.passed_arguments)
 
     # TODO: do some check the name is valid
@@ -55,7 +54,7 @@ class PreprocessPipeline:
             slurm.run_in_slurm(
                 slurm_batch,
                 self._preprocess_and_save_all_runs,
-                **self.passed_arguments,
+                self.passed_arguments,
             ),
         else:
             self._preprocess_and_save_all_runs(**self.passed_arguments)
@@ -98,12 +97,12 @@ class PreprocessPipeline:
         for ses_name, run_name in preprocess_data.flat_sessions_and_runs():
             utils.message_user(f"Preprocessing run {run_name}...")
 
-            to_save, overwrite = _handle_existing_data_options(
+            to_save, overwrite = self._handle_existing_data_options(
                 preprocess_data, ses_name, run_name, handle_existing_data
             )
 
             if to_save:
-                _preprocess_and_save_single_run(
+                self._preprocess_and_save_single_run(
                     preprocess_data,
                     ses_name,
                     run_name,

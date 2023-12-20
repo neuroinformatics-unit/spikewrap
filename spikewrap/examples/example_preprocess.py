@@ -4,7 +4,8 @@ from spikewrap.pipeline.load_data import load_data
 from spikewrap.pipeline.preprocess import PreprocessPipeline
 
 base_path = Path(
-    r"C:\fMRIData\git-repo\spikewrap\tests\data\small_toy_data"
+    "/ceph/neuroinformatics/neuroinformatics/scratch/jziminski/ephys/code/spikewrap/tests/data/small_toy_data"
+    # r"C:\fMRIData\git-repo\spikewrap\tests\data\small_toy_data"
     # r"/ceph/neuroinformatics/neuroinformatics/scratch/jziminski/ephys/test_data/steve_multi_run/1119617/time-short-multises"
     # r"C:\data\ephys\test_data\steve_multi_run\1119617\time-miniscule-multises"
 )
@@ -42,4 +43,4 @@ preprocess_pipeline = PreprocessPipeline(
     preprocess_by_group=True,
     log=True,
 )
-preprocess_pipeline.run(slurm_batch=False)
+preprocess_pipeline.run(slurm_batch=True)
