@@ -1,4 +1,5 @@
 import json
+from types import MappingProxyType
 from typing import Dict, List, Optional, Tuple, Union
 
 import numpy as np
@@ -15,80 +16,197 @@ from spikewrap.utils.custom_types import HandleExisting
 # --------------------------------------------------------------------------------------
 
 
-def run_preprocessing(
-    preprocess_data: PreprocessingData,
-    pp_steps: Union[Dict, str],
-    handle_existing_data: HandleExisting,
-    preprocess_by_group: bool,
-    chunk_size: Optional[int] = None,
-    slurm_batch: Union[bool, Dict] = False,
-    log: bool = True,
-):
-    """
-    Main entry function to run preprocessing and write to file. Preprocessed
-    lazy spikeinterface recordings will be added to all sessions / runs in
-    `preprocess_data` and written to file.
+class PreprocessPipeline:
+    """ """
 
-    Parameters
-    ----------
+    def __init__(
+        self,
+        preprocess_data: PreprocessingData,
+        pp_steps: Union[Dict, str],
+        handle_existing_data: HandleExisting,
+        preprocess_by_group: bool,
+        chunk_size: Optional[int] = None,
+        #                 slurm_batch: Union[bool, Dict] = False,
+        log: bool = True,
+    ):
+        if isinstance(pp_steps, Dict):
+            pp_steps_dict = pp_steps
+        else:
+            pp_steps_dict, _, _ = configs.get_configs(pp_steps)
+        pp_steps_dict = MappingProxyType(pp_steps_dict)
 
-    preprocess_data : PreprocessingData
-        A preprocessing data object that has as attributes the
-        paths to rawdata. The pp_steps attribute is set on
-        this class during execution of this function.
-
-    pp_steps: The name of valid preprocessing .yaml file (without the yaml extension).
-              stored in spikewrap/configs.
-
-    existing_preprocessed_data : custom_types.HandleExisting
-        Determines how existing preprocessed data (e.g. from a prior pipeline run)
-        is handled.
-            "overwrite" : Will overwrite any existing preprocessed data output.
-                          This will delete the 'preprocessed' folder. Therefore,
-                          never save derivative work there.
-            "skip_if_exists" : will search for existing data and skip preprocesing
-                               if it exists (sorting will run on existing
-                               preprocessed data).
-                               Otherwise, will preprocess and save the current run.
-            "fail_if_exists" : If existing preprocessed data is found, an error
-                               will be raised.
-
-    slurm_batch : Union[bool, Dict]
-        see `run_full_pipeline()` for details.
-    """
-    # TOOD: refactor and handle argument groups separately.
-    # Avoid duplication with logging.
-    passed_arguments = locals()
-    validate.check_function_arguments(passed_arguments)
-
-    if isinstance(pp_steps, Dict):
-        pp_steps_dict = pp_steps
-    else:
-        # TODO: do some check the name is valid
-        pp_steps_dict, _, _ = configs.get_configs(pp_steps)  # TODO: call 'config_name'
-
-    if slurm_batch:
-        slurm.run_in_slurm(
-            slurm_batch,
-            _preprocess_and_save_all_runs,
+        self.passed_arguments = MappingProxyType(
             {
                 "preprocess_data": preprocess_data,
-                "pp_steps": pp_steps_dict,
+                "pp_steps_dict": pp_steps_dict,
+                "handle_existing_data": handle_existing_data,
                 "preprocess_by_group": preprocess_by_group,
                 "chunk_size": chunk_size,
-                "handle_existing_data": handle_existing_data,
+                #            "slurm_batch": slurm_batch,
                 "log": log,
-            },
-        ),
-    else:
-        _preprocess_and_save_all_runs(
-            preprocess_data,
-            pp_steps_dict,
-            handle_existing_data,
-            preprocess_by_group,
-            chunk_size,
-            log,
+            }
         )
+        validate.check_function_arguments(self.passed_arguments)
+
+    # TODO: do some check the name is valid
+    def run(self, slurm_batch: Union[bool, Dict] = False):
+        """ """
+        if slurm_batch:
+            slurm.run_in_slurm(
+                slurm_batch,
+                self._preprocess_and_save_all_runs,
+                **self.passed_arguments,
+            ),
+        else:
+            self._preprocess_and_save_all_runs(**self.passed_arguments)
+
+    # --------------------------------------------------------------------------------------
+    # Private Functions
+    # --------------------------------------------------------------------------------------
+
+    def _preprocess_and_save_all_runs(
+        self,
+        preprocess_data: PreprocessingData,
+        pp_steps_dict: Dict,
+        handle_existing_data: HandleExisting,
+        preprocess_by_group: bool,
+        chunk_size: Optional[int] = None,
+        log: bool = True,
+    ) -> None:
+        """
+        Handle the loading of existing preprocessed data.
+        See `run_preprocessing()` for details.
+
+        This function validates all input arguments and initialises logging.
+        Then, it will iterate over every run in `preprocess_data` and
+        check whether preprocessing needs to be run and saved based on the
+        `handle_existing_data` option. If so, it will fill the relevant run
+        with the preprocessed spikeinterface recording object and save to disk.
+        """
+        passed_arguments = locals()
+        validate.check_function_arguments(passed_arguments)
+
+        if log:
+            logs = logging_sw.get_started_logger(
+                utils.get_logging_path(
+                    preprocess_data.base_path, preprocess_data.sub_name
+                ),
+                "preprocessing",
+            )
+            utils.show_passed_arguments(passed_arguments, "`run_preprocessing`")
+
+        for ses_name, run_name in preprocess_data.flat_sessions_and_runs():
+            utils.message_user(f"Preprocessing run {run_name}...")
+
+            to_save, overwrite = _handle_existing_data_options(
+                preprocess_data, ses_name, run_name, handle_existing_data
+            )
+
+            if to_save:
+                _preprocess_and_save_single_run(
+                    preprocess_data,
+                    ses_name,
+                    run_name,
+                    pp_steps_dict,
+                    overwrite,
+                    preprocess_by_group,
+                    chunk_size,
+                )
+
+        if log:
+            logs.stop_logging()
+
+    def _preprocess_and_save_single_run(
+        self,
+        preprocess_data: PreprocessingData,
+        ses_name: str,
+        run_name: str,
+        pp_steps_dict: Dict,
+        overwrite: bool,
+        preprocess_by_group: bool,
+        chunk_size: Optional[int],
+    ) -> None:
+        """
+        Given a single session and run, fill the entry for this run
+        on the `preprocess_data` object and write to disk.
+        """
+        _fill_run_data_with_preprocessed_recording(
+            preprocess_data,
+            ses_name,
+            run_name,
+            pp_steps_dict,
+            preprocess_by_group,
+        )
+
+        preprocess_data.save_preprocessed_data(
+            ses_name, run_name, overwrite, chunk_size
+        )
+
+    def _handle_existing_data_options(
+        self,
+        preprocess_data: PreprocessingData,
+        ses_name: str,
+        run_name: str,
+        handle_existing_data: HandleExisting,
+    ) -> Tuple[bool, bool]:
+        """
+        Determine whether preprocesing for this run needs to be performed based
+        on the `handle_existing_data setting`. If preprocessing does not exist,
+        preprocessing
+        is always run. Otherwise, if it already exists, the behaviour depends on
+        the `handle_existing_data` setting.
+
+        Returns
+        -------
+
+        to_save : bool
+            Whether the preprocessing needs to be run and saved.
+
+        to_overwrite : bool
+            If saving, set the `overwrite` flag to confirm existing data should
+            be overwritten.
+        """
+        preprocess_path = preprocess_data.get_preprocessing_path(ses_name, run_name)
+
+        if handle_existing_data == "skip_if_exists":
+            if preprocess_path.is_dir():
+                utils.message_user(
+                    f"\nSkipping preprocessing, using file at "
+                    f"{preprocess_path} for sorting.\n"
+                )
+                to_save = False
+                overwrite = False
+            else:
+                utils.message_user(
+                    f"No data found at {preprocess_path}, saving preprocessed data."
+                )
+                to_save = True
+                overwrite = False
+
+        elif handle_existing_data == "overwrite":
+            if preprocess_path.is_dir():
+                utils.message_user(f"Removing existing file at {preprocess_path}\n")
+
+            utils.message_user(f"Saving preprocessed data to {preprocess_path}")
+            to_save = True
+            overwrite = True
+
+        elif handle_existing_data == "fail_if_exists":
+            if preprocess_path.is_dir():
+                raise FileExistsError(
+                    f"Preprocessed binary already exists at "
+                    f"{preprocess_path}. "
+                    f"To overwrite, set 'existing_preprocessed_data' to 'overwrite'"
+                )
+            to_save = True
+            overwrite = False
+
+        return to_save, overwrite
+
+
+# --------------------------------------------------------------------------------------
+# Preprocessing Functions
+# --------------------------------------------------------------------------------------
 
 
 def fill_all_runs_with_preprocessed_recording(
@@ -119,145 +237,6 @@ def fill_all_runs_with_preprocessed_recording(
             pp_steps_dict,
             preprocess_by_group,
         )
-
-
-# --------------------------------------------------------------------------------------
-# Private Functions
-# --------------------------------------------------------------------------------------
-
-
-def _preprocess_and_save_all_runs(
-    preprocess_data: PreprocessingData,
-    pp_steps_dict: Dict,
-    handle_existing_data: HandleExisting,
-    preprocess_by_group: bool,
-    chunk_size: Optional[int] = None,
-    log: bool = True,
-) -> None:
-    """
-    Handle the loading of existing preprocessed data.
-    See `run_preprocessing()` for details.
-
-    This function validates all input arguments and initialises logging.
-    Then, it will iterate over every run in `preprocess_data` and
-    check whether preprocessing needs to be run and saved based on the
-    `handle_existing_data` option. If so, it will fill the relevant run
-    with the preprocessed spikeinterface recording object and save to disk.
-    """
-    passed_arguments = locals()
-    validate.check_function_arguments(passed_arguments)
-
-    if log:
-        logs = logging_sw.get_started_logger(
-            utils.get_logging_path(preprocess_data.base_path, preprocess_data.sub_name),
-            "preprocessing",
-        )
-        utils.show_passed_arguments(passed_arguments, "`run_preprocessing`")
-
-    for ses_name, run_name in preprocess_data.flat_sessions_and_runs():
-        utils.message_user(f"Preprocessing run {run_name}...")
-
-        to_save, overwrite = _handle_existing_data_options(
-            preprocess_data, ses_name, run_name, handle_existing_data
-        )
-
-        if to_save:
-            _preprocess_and_save_single_run(
-                preprocess_data,
-                ses_name,
-                run_name,
-                pp_steps_dict,
-                overwrite,
-                preprocess_by_group,
-                chunk_size,
-            )
-
-    if log:
-        logs.stop_logging()
-
-
-def _preprocess_and_save_single_run(
-    preprocess_data: PreprocessingData,
-    ses_name: str,
-    run_name: str,
-    pp_steps_dict: Dict,
-    overwrite: bool,
-    preprocess_by_group: bool,
-    chunk_size: Optional[int],
-) -> None:
-    """
-    Given a single session and run, fill the entry for this run
-    on the `preprocess_data` object and write to disk.
-    """
-    _fill_run_data_with_preprocessed_recording(
-        preprocess_data,
-        ses_name,
-        run_name,
-        pp_steps_dict,
-        preprocess_by_group,
-    )
-
-    preprocess_data.save_preprocessed_data(ses_name, run_name, overwrite, chunk_size)
-
-
-def _handle_existing_data_options(
-    preprocess_data: PreprocessingData,
-    ses_name: str,
-    run_name: str,
-    handle_existing_data: HandleExisting,
-) -> Tuple[bool, bool]:
-    """
-    Determine whether preprocesing for this run needs to be performed based
-    on the `handle_existing_data setting`. If preprocessing does not exist, preprocessing
-    is always run. Otherwise, if it already exists, the behaviour depends on
-    the `handle_existing_data` setting.
-
-    Returns
-    -------
-
-    to_save : bool
-        Whether the preprocessing needs to be run and saved.
-
-    to_overwrite : bool
-        If saving, set the `overwrite` flag to confirm existing data should
-        be overwritten.
-    """
-    preprocess_path = preprocess_data.get_preprocessing_path(ses_name, run_name)
-
-    if handle_existing_data == "skip_if_exists":
-        if preprocess_path.is_dir():
-            utils.message_user(
-                f"\nSkipping preprocessing, using file at "
-                f"{preprocess_path} for sorting.\n"
-            )
-            to_save = False
-            overwrite = False
-        else:
-            utils.message_user(
-                f"No data found at {preprocess_path}, saving preprocessed data."
-            )
-            to_save = True
-            overwrite = False
-
-    elif handle_existing_data == "overwrite":
-        if preprocess_path.is_dir():
-            utils.message_user(f"Removing existing file at {preprocess_path}\n")
-
-        utils.message_user(f"Saving preprocessed data to {preprocess_path}")
-        to_save = True
-        overwrite = True
-
-    elif handle_existing_data == "fail_if_exists":
-        if preprocess_path.is_dir():
-            raise FileExistsError(
-                f"Preprocessed binary already exists at "
-                f"{preprocess_path}. "
-                f"To overwrite, set 'existing_preprocessed_data' to 'overwrite'"
-            )
-        to_save = True
-        overwrite = False
-
-    return to_save, overwrite
 
 
 def _fill_run_data_with_preprocessed_recording(

@@ -7,7 +7,8 @@ except PackageNotFoundError:
     pass
 
 from .pipeline.full_pipeline import run_full_pipeline
-from .pipeline.preprocess import _preprocess_and_save_all_runs
+
+# from .pipeline.preprocess import _preprocess_and_save_all_runs
 from .pipeline.sort import run_sorting
 from .pipeline.postprocess import run_postprocess
 
