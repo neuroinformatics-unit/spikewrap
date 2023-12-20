@@ -27,7 +27,7 @@ def run_sorting(
     sub_name: str,
     sessions_and_runs: Dict[str, List[str]],
     sorter: str,
-    sort_per_group: bool = False,
+    sort_by_group: bool = False,
     concatenate_sessions: bool = False,
     concatenate_runs: bool = False,
     sorter_options: Optional[Dict] = None,
@@ -49,7 +49,7 @@ def run_sorting(
                 "sessions_and_runs": sessions_and_runs,
                 "concatenate_sessions": concatenate_sessions,
                 "sorter": sorter,
-                "sort_per_group": sort_per_group,
+                "sort_by_group": sort_by_group,
                 "concatenate_runs": concatenate_runs,
                 "sorter_options": sorter_options,
                 "existing_sorting_output": existing_sorting_output,
@@ -62,7 +62,7 @@ def run_sorting(
             sub_name,
             sessions_and_runs,
             sorter,
-            sort_per_group,
+            sort_by_group,
             concatenate_sessions,
             concatenate_runs,
             sorter_options,
@@ -76,7 +76,7 @@ def _run_sorting(
     sub_name: str,
     sessions_and_runs: Dict[str, List[str]],
     sorter: str,
-    sort_per_group: bool,
+    sort_by_group: bool,
     concatenate_sessions: bool = False,
     concatenate_runs: bool = False,
     sorter_options: Optional[Dict] = None,
@@ -184,7 +184,7 @@ def _run_sorting(
         sorting_data,
         singularity_image,
         docker_image,
-        sort_per_group,
+        sort_by_group,
         existing_sorting_output=existing_sorting_output,
         **sorter_options_dict,
     )
@@ -229,7 +229,7 @@ def run_sorting_on_all_runs(
     sorting_data: SortingData,
     singularity_image: Union[Literal[True], None, str],
     docker_image: Optional[Literal[True]],
-    sort_per_group: bool,
+    sort_by_group: bool,
     existing_sorting_output: HandleExisting,
     **sorter_options_dict,
 ) -> None:
@@ -268,13 +268,13 @@ def run_sorting_on_all_runs(
             ses_name, run_name
         )
 
-        if sort_per_group:
+        if sort_by_group:
             split_preprocessing = orig_preprocessed_recording.split_by("group")
 
             if len(split_preprocessing.keys()) == 1:
                 raise RuntimeError(
-                    "`sort_per_group` is `True` but the recording only has "
-                    "one channel group. Set `sort_per_group`to `False` "
+                    "`sort_by_group` is `True` but the recording only has "
+                    "one channel group. Set `sort_by_group`to `False` "
                     "for this recording."
                 )
 
