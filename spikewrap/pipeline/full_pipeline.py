@@ -13,7 +13,8 @@ if TYPE_CHECKING:
 from spikewrap.configs.configs import get_configs
 from spikewrap.pipeline.load_data import load_data
 from spikewrap.pipeline.postprocess import run_postprocess
-from spikewrap.pipeline.preprocess import run_preprocessing
+
+# from spikewrap.pipeline.preprocess import run_preprocessing
 from spikewrap.pipeline.sort import run_sorting
 from spikewrap.utils import logging_sw, slurm, utils, validate
 
