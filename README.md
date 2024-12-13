@@ -109,8 +109,8 @@ if __name__ == "__main__":
 
     run_full_pipeline(
         base_path=base_path,
-        sub_name="1110925",
-        run_name="1110925_test_shank1",
+        sub_name="sub-001",
+        run_name="ses-001_condition-lse",
         config_name="test",
         sorter="kilosort2_5",
     )
