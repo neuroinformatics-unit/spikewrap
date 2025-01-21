@@ -20,6 +20,12 @@ classifiers = [
 ]
 
 dependencies = [
+    "spikeinterface[full]", # Do i need to pin to version? YES but what one
+    "submitit",
+    "slurmio",
+    "psutil",
+    "toml",
+    "PyYAML",
 ]
 
 [project.urls]
