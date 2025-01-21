@@ -1,0 +1,6 @@
+include LICENSE
+include README.md
+include *.png
+
+recursive-exclude * __pycache__
+recursive-exclude * *.py[co]
