@@ -6,6 +6,7 @@ from typing import Dict, Tuple
 import yaml
 
 from spikewrap.utils import _utils
+import json
 
 
 def get_configs(name: str) -> Tuple[Dict, Dict, Dict]:
@@ -64,3 +65,11 @@ def get_configs(name: str) -> Tuple[Dict, Dict, Dict]:
     _utils.cast_pp_steps_values(pp_steps, "tuple")
 
     return pp_steps
+
+
+def show_configs(name: str):
+    """
+    """
+    pp_steps = get_configs(name)
+
+    _utils.show_preprocessing_dict(pp_steps)

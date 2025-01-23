@@ -3,6 +3,8 @@ from spikewrap.structure._run import Run, ConcatRun
 from spikewrap.utils import _utils
 from spikewrap.configs import config_utils
 from spikewrap.process import _loading
+import numpy as np
+
 
 class Session:
     """
@@ -26,24 +28,27 @@ class Session:
         self._check_input_path(parent_input_path)
         self._check_file_format(file_format)
 
+        self._passed_run_names = run_names
         self._file_format = file_format
 
         self._parent_input_path = parent_input_path
         self._ses_name = session_name
         self._output_path = Path(output_path) if output_path else self._output_from_parent_input_path()
 
-        run_paths = self._process_run_names(run_names)
-
         self._runs = {}
-        self._create_run_objects(run_paths)
+        self._create_run_objects()
 
     # ---------------------------------------------------------------------------
     # Public Functions
     # ---------------------------------------------------------------------------
 
+    def load_raw_data(self):
+        for run in self._runs:
+            run.load_raw_data()
+
     def preprocess(
             self,
-            config,
+            pp_steps,
             concat_runs=False,
             per_shank=False,
     ):
@@ -51,14 +56,16 @@ class Session:
         This must refresh everything.
         TODO: try and guess n_jobs? "estimate" as default?
         """
-        if not isinstance(config, dict):
-            pp_steps = config_utils.get_configs(config)
-        else:
-            pp_steps = config
+        if not isinstance(pp_steps, dict):
+            pp_steps = config_utils.get_configs(pp_steps)
+
+        _utils.show_preprocessing_dict(pp_steps)
+
+        # Refresh everything
+        self._create_run_objects(internal_overwrite=True)
 
         for run in self._runs:
-            if not run.raw_is_loaded():
-                run.load_raw_data()
+            run.load_raw_data()
 
         if concat_runs:
             self._concat_runs()
@@ -74,14 +81,16 @@ class Session:
         for run in self._runs:
             run.save_preprocessed(overwrite, chunk_size, n_jobs, slurm)
 
-    def plot_preprocessed(self, run_idx="all", mode="map", time_range=(0, 1), show=False):
+    def plot_preprocessed(self, run_idx="all", mode="map", time_range=(0, 1), show_channel_ids=True, show=False):
+
+        time_range = np.array(time_range, dtype=np.float64)
 
         all_runs = self._runs if run_idx == "all" else self._runs[run_idx]
 
         all_figs = {}
 
         for run in all_runs:
-            fig = run.plot_preprocessed(show, mode=mode, time_range=time_range)
+            fig = run.plot_preprocessed(show, mode=mode, time_range=time_range, show_channel_ids=show_channel_ids)
 
             all_figs[run._run_name] = fig
 
@@ -90,7 +99,7 @@ class Session:
     # Helpers -----------------------------------------------------------------
 
     def get_run_names(self):
-        return (run._run_name for run in self._runs)
+        return [run._run_name for run in self._runs]
 
     # ---------------------------------------------------------------------------
     # Private Functions
@@ -98,15 +107,20 @@ class Session:
 
     # Manage `Runs` -------------------------------------------------------------
 
-    def _create_run_objects(self, all_run_paths, overwrite_internal=False):
+    def _create_run_objects(self, internal_overwrite=False):
         """
         """
-        if self._runs and not overwrite_internal:
+        if self._runs and not internal_overwrite:
             raise RuntimeError(f"Cannot overwrite _runs for session {self._ses_name}")
 
-        runs = []
+        run_paths = _loading.get_run_paths(
+            self._file_format,
+            self._parent_input_path / self._ses_name,
+            self._passed_run_names
+        )
 
-        for run_path in all_run_paths:
+        runs = []
+        for run_path in run_paths:
             runs.append(
                 Run(parent_input_path=run_path.parent,
                     run_name=run_path.name,
@@ -149,22 +163,9 @@ class Session:
                 f"in path {self._parent_input_path}\n"
                 f"Pass the session output folder explicitly as `output_path`."
             )
-        return rawdata_path.parent / "derivatives" / sub_name / self._ses_name
+        return rawdata_path.parent / "derivatives" / sub_name / self._ses_name / "ephys"
 
     # Checks ------------------------------------------------------------------
-
-    def _process_run_names(self, run_names):
-        """
-        # TODO: more checks for all folders
-        # TODO: this is very bad, expect exact runs...
-        # If the datatype was passed we could do more validation here.
-        """
-        run_paths = _loading.get_run_paths(
-            self._file_format,
-            self._parent_input_path / self._ses_name,
-            run_names)
-
-        return run_paths
 
     def _check_input_path(self, parent_input_path):
         """

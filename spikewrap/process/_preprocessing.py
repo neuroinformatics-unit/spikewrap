@@ -100,10 +100,6 @@ def _get_preprocessing_step_information(
     """"""
     pp_name, pp_options = pp_info
 
-    _utils.message_user(
-        f"Running preprocessing step: {pp_name} with options {pp_options}"
-    )
-
     last_pp_step_output, __ = _utils.get_dict_value_from_step_num(
         preprocess_data, step_num=str(int(step_num) - 1)
     )
@@ -151,11 +147,6 @@ def _check_and_sort_pp_steps(pp_steps: Dict, pp_funcs: Dict) -> Tuple[Dict, List
         assert (
             user_passed_name in canonical_step_names
         ), f"{user_passed_name} not in allowed names: ({canonical_step_names}"
-
-    _utils.message_user(
-        f"\nThe preprocessing options dictionary is "
-        f"{json.dumps(pp_steps, indent=4, sort_keys=True)}"
-    )
 
     return pp_steps, pp_step_names
 

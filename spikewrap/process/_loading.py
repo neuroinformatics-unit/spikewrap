@@ -74,6 +74,11 @@ def get_run_paths(file_format, ses_path, passed_run_names):
     # TEST THIS!
     # DOC THIS!
 
+    # TODO: this is basically a hack for neuroblueprint...?
+    ephys_path = list(ses_path.glob("ephys"))
+    if len(ephys_path) == 1:
+        ses_path = ses_path / "ephys"
+
     if file_format == "spikeglx":
 
         detected_run_paths = [path_ for path_ in ses_path.glob("*g*_imec*") if path_.is_dir()]
@@ -131,9 +136,9 @@ def get_run_paths(file_format, ses_path, passed_run_names):
 
         for passed_name in passed_run_names:
             if not passed_name in detected_run_names:
-                raise ValueError(f"{passed_run_name} not found in folder: {ses_path}")
+                raise ValueError(f"{passed_name} not found in folder: {ses_path}")
 
-        run_paths = [path_ for path_ in detected_run_paths if path_.name in run_names]
+        run_paths = [path_ for path_ in detected_run_paths if path_.name in detected_run_names]
 
     if not _utils.paths_are_in_datetime_order(run_paths, "creation"):
         warnings.warn(

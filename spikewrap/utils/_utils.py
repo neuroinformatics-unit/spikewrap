@@ -6,6 +6,7 @@ import numpy as np
 
 from slurmio import SlurmJobParameters
 import copy
+import json
 
 
 def message_user(message: str) -> None:
@@ -222,3 +223,12 @@ def paths_are_in_datetime_order(
     is_in_time_order = list_of_paths == list_of_paths_by_time
 
     return is_in_time_order
+
+
+def show_preprocessing_dict(pp_steps: dict) -> None:
+    """
+    """
+    message_user(
+        f"\nThe preprocessing options dictionary is "
+        f"{json.dumps(pp_steps, indent=4, sort_keys=True)}"
+    )

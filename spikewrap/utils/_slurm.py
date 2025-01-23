@@ -32,6 +32,9 @@ def run_in_slurm(slurm_opts: Union[bool, Dict], func_to_run: Callable, func_opts
     func_opts : Dict
         A dictionary of kwargs to run in the `func_to_run`.
     """
+    if not is_slurm_installed():
+        raise RuntimeError("Cannot run with slurm, slurm is not found on this system.")
+
     used_slurm_opts = default_slurm_options()
 
     if isinstance(slurm_opts, Dict):

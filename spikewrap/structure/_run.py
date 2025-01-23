@@ -24,26 +24,30 @@ class Run:
     """
     def __init__(self, parent_input_path, run_name, session_output_path, file_format):
 
+        # these are fixed, must never be changed in the lifetime of the class
         self._parent_input_path = parent_input_path
         self._run_name = run_name
         self._output_path = session_output_path / self._run_name
         self._file_format = file_format
 
-        # data holders
+        # data holders, expose as properties.
         self._raw = {}
         self._preprocessed = {}
         self._sync = None
 
+    # TODO: make it explicit with getter / setter these attributes are const!?
+    #
     # ---------------------------------------------------------------------------
     # Public Functions
     # ---------------------------------------------------------------------------
 
-    def load_raw_data(self):
+    def load_raw_data(self, internal_overwrite=False):
         """
+        TODO: again, figure out lifetime!
+        I think its okay....
         """
-        if self.raw_is_loaded():
-            raise RuntimeError("Run() class can only be used once. "
-                               "To re-run processing, instantiate a new class.")
+        if self.raw_is_loaded() and not internal_overwrite:
+            raise RuntimeError("Cannot overwrite Run().")
 
         without_sync, with_sync = _loading.load_data(
             self._parent_input_path / self._run_name,
@@ -52,6 +56,13 @@ class Run:
 
         self._raw = {canon.grouped_shankname(): without_sync}
         self._sync = with_sync
+
+    def refresh_data(self):
+        """
+        """
+        self._preprocessed = {}
+        self._sync = None
+        self.load_raw_data(internal_overwrite=True)
 
     def preprocess(self, pp_steps, per_shank):
         """
@@ -69,22 +80,24 @@ class Run:
             rec_name = f"shank_{key}" if key != canon.grouped_shankname() else key
 
             self._preprocessed[key] = Preprocessed(
-                raw_rec, pp_steps, self._output_path / self._run_name, rec_name
+                raw_rec, pp_steps, self._output_path, rec_name
             )
 
     def save_preprocessed(self, overwrite, chunk_size, n_jobs, slurm):
         """
         """
         if slurm:
-            self._save_preprocessed_slurm(overwrite, chunk_size)
+            self._save_preprocessed_slurm(overwrite, chunk_size, n_jobs, slurm)
             return
 
-        if n_jobs != 1:
-            si.set_global_kwargs("n_jobs", n_jobs)
+        _utils.message_user(f"Saving data for: {self._run_name}...")
 
-        if (run_path := self._output_path / self._run_name).is_dir():  # getter func?
+        if n_jobs != 1:
+            si.set_global_job_kwargs(n_jobs=n_jobs)
+
+        if self._output_path.is_dir():  # getter func?
             if overwrite:
-                shutil.rmtree(run_path)
+                shutil.rmtree(self._output_path)
             else:
                 raise RuntimeError(f"`overwrite` is `False` but data already exists at the run path: {run_path}.")
 
@@ -93,7 +106,7 @@ class Run:
         for preprocessed in self._preprocessed.values():
             preprocessed.save_binary(chunk_size)
 
-    def plot_preprocessed(self, show, mode, time_range):
+    def plot_preprocessed(self, show, mode, time_range, show_channel_ids):
 
         if not self._preprocessing_is_run():
             raise RuntimeError("Preprocessing has not been run.")
@@ -103,7 +116,8 @@ class Run:
             show,
             self._preprocessed,
             mode=mode,
-            time_range=time_range
+            time_range=time_range,
+            show_channel_ids=show_channel_ids
         )
 
         return fig
@@ -130,12 +144,17 @@ class Run:
         self._raw = recording.split_by("group")
         self._raw = {str(key): value for key, value in self._raw.items()}
 
-    def _save_preprocessed_slurm(self, overwrite, chunk_size):
+        _utils.message_user(f"Split run: {self._run_name} by shank. There are {len(self._raw)} shanks. ")
+
+
+    def _save_preprocessed_slurm(self, overwrite, chunk_size, n_jobs, slurm):
         """
         """
-        slurm.run_in_slurm(
-            slurm,
-            lambda: self.save_preprocessed(overwrite, chunk_size, False),
+        slurm_ops = slurm if isinstance(slurm, dict) else None
+
+        _slurm.run_in_slurm(
+            slurm_ops,
+            lambda: self.save_preprocessed(overwrite, chunk_size, n_jobs, False),
             {},
             log_base_path=self._output_path
         )
@@ -148,9 +167,9 @@ class Run:
         if the sync channel is loaded to ensure it does not interfere with
         sorting. As such, the sync channel is handled separately here.
         """
-        sync_output_path = self._output_path / self._run_name / canon.sync_folder()
+        sync_output_path = self._output_path / canon.sync_folder()
 
-        _utils.message_user(f"Saving sync channel for run {self._run_name}")
+        _utils.message_user(f"Saving sync channel for: {self._run_name}...")
 
         if self._sync:
             _saving.save_sync_channel(self._sync, sync_output_path, self._file_format)
@@ -200,7 +219,7 @@ class ConcatRun(Run):
                     "Cannot concatenate runs that have already been split by shank.\n"
                     "Something unexpected has happened. Please contact the spikewrap team.")
 
-            assert run._preprocessed == {}, "Preprocessing already run, this is not expected. Contact spikewrap team."
+            assert run._preprocessed == {}, f"{run._preprocessed}: Preprocessing already run, this is not expected. Contact spikewrap team."
 
             raw_data.append(run._raw)
             sync_data.append(run._sync)

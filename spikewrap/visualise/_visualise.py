@@ -13,6 +13,7 @@ def visualise_run_preprocessed(
     all_preprocessed,
     mode,
     time_range,
+    show_channel_ids,
 ):
     """
 
@@ -40,7 +41,7 @@ def visualise_run_preprocessed(
             order_channel_by_depth=True,
             time_range=time_range,
             return_scaled=True,
-            show_channel_ids=True,
+            show_channel_ids=show_channel_ids,
             mode=mode,
             ax=ax,
             segment_index=0,
