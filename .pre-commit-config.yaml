@@ -1,4 +1,4 @@
-exclude: 'README.md'
+exclude: 'README.md|docs'
 
 repos:
     - repo: https://github.com/pre-commit/pre-commit-hooks

@@ -20,6 +20,12 @@ classifiers = [
 ]
 
 dependencies = [
+    "spikeinterface[full]", # Do i need to pin to version? YES but what one
+    "submitit",
+    "slurmio",
+    "psutil",
+    "toml",
+    "PyYAML",
 ]
 
 [project.urls]
@@ -59,7 +65,7 @@ include-package-data = true
 
 [tool.setuptools.packages.find]
 include = ["spikewrap*"]
-exclude = ["tests*"]
+exclude = ["tests*", "docs*"]
 
 [tool.pytest.ini_options]
 addopts = "--cov=spikewrap"
@@ -96,3 +102,6 @@ max-complexity = 18
 
 [tool.ruff.flake8-tidy-imports]
 ban-relative-imports = "all"
+
+[tool.mypy]
+exclude = "^docs/.*"

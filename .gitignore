@@ -2,7 +2,8 @@
 .obsidian
 slurm_logs/
 derivatives/
-tests/data/steve_multi_run
+gallery_builds
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]

@@ -1,0 +1,18 @@
+'preprocessing':
+  '1':
+  - bandpass_filter
+  - freq_min: 300
+    freq_max: 6000
+  '2':
+  - common_reference
+  - operator: median
+    reference: global
+
+
+# Turn off Kilosort filtering and common referencing. This allows data
+# visualisation and quality metrics on the SpikeInterface side while
+# leaving drift-correction and whitening to Kilosort.
+'sorting':
+  'kilosort2_5':
+    'car': False     # common average referencing
+    'freq_min': 150  # highpass filter cutoff, False nor 0 does not work to turn off. (results in KS error)
