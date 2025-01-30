@@ -19,16 +19,16 @@ class Session:
     """
     Represents an electrophysiological recording session, consisting of a single or multiple runs.
 
-    Exposes `preprocess()`, `plot_preprocessed()`, and `save_preprocessed()` functions to handle preprocessing of all runs.
+    Exposes ``preprocess()``, ``plot_preprocessed()`, and ``save_preprocessed()`` functions to handle preprocessing of all runs.
 
     Parameters
     ----------
     subject_path :
-        The path to the subject's directory. This should contain the `session_name` directory.
+        The path to the subject's directory. This should contain the ``session_name`` directory.
     session_name :
         The name of this session. Must match the session folder name in the `subject_path`.
     file_format :
-        Acquisition software used for recording, either `"spikeglx"` or `"openephys"`.
+        Acquisition software used for recording, either ``"spikeglx"`` or ``"openephys"``.
         Determines how a session's runs are discovered.
     run_names :
         Specifies which runs within the session to include. If ``"all"`` (default), includes all
@@ -42,7 +42,7 @@ class Session:
     The responsibility of this class is to manage the processing of runs
     contained within the session. Runs are held in ``self._runs``, a list of
     ``SeparateRun`` or ``ConcatRun`` classes. Runs are loaded from raw data
-    as separate runs, and will be converted to a `ConcatRun` if concatenated.
+    as separate runs, and will be converted to a ``ConcatRun`` if concatenated.
 
     The attributes on this class (except for ``self._runs``) are to be treated
     as constant for the lifetime of the class. For example, the output path
@@ -119,7 +119,7 @@ class Session:
         recording objects.
 
         This function can be used to check data is loading successfully,
-        but can be skipped, with `preprocess()` run directly.
+        but can be skipped, with ``preprocess()`` run directly.
 
         Data is loaded lazily at this stage (recording objects are created
         but no data is actually loaded from disk).
@@ -141,7 +141,7 @@ class Session:
         """
         Preprocess recordings for all runs for this session.
 
-        This step is lazy, under the hood running the preprocessing steps from `configs`
+        This step is lazy, under the hood running the preprocessing steps from ``configs``
         on SpikeInterface recording objects. Preprocessing of data is performed on the
         fly when required (e.g. plotting, saving or sorting).
 
@@ -149,26 +149,16 @@ class Session:
         ----------
         configs :
             Configurations that determine the preprocessing steps to run.
-
-            - If a `str` is provided, expects the name of a stored configuration file.
-              See show_available_configs() and save_config_dict() for details.
-
-            - If a `Path` is provided, expects the path to a valid spikewrap config YAML file.
-
-            - A spikewrap configs dictionary, either including the "preprocessing" level
-              or the "preprocessing" level itself. This should contain str keys indicating
-              the preprocessing order, and list value in which the first element is
-              the SpikeInterface preprocessing function name, and second a dictionary of kwargs.
-
-              e.g. {
-                    "0": ["phase_shift", {}],
-                    "1": ["bandpass_filter", {"freq_min" : 100, "freq_max": 6000}]
-                    }
+            - If a ``str`` is provided, expects the name of a stored configuration file.
+              See ``show_available_configs()`` and ``save_config_dict()`` for details.
+            - If a ``Path`` is provided, expects the path to a valid spikewrap config YAML file.
+            - A spikewrap configs dictionary, either including the ``"preprocessing"`` level
+              or the ``"preprocessing"`` level itself. See documentation for details.
         concat_runs :
-            If `True`, all runs will be concatenated together before preprocessing.
-            Use `session.get_run_names()` to check the order of concatenation.
+            If ``True``, all runs will be concatenated together before preprocessing.
+            Use ``session.get_run_names()`` to check the order of concatenation.
         per_shank :
-            If `True`, perform preprocessing on each shank separately.
+            If ``True``, perform preprocessing on each shank separately.
         """
         pp_steps = self._infer_pp_steps_from_configs_argument(configs)
 
@@ -235,29 +225,29 @@ class Session:
 
         One plot will be generated for each run. For preprocessing
         per-shank, each shank will appear in a subplot. Under the hood,
-        calls SpikeInterface's `plot_traces()` function.
+        calls SpikeInterface's ``plot_traces()`` function.
 
         Parameters
         ----------
         run_idx :
-            - If `"all"`, plots preprocessed data for all runs in the session.
-            - If an integer, plots preprocessed data for the run at the specified index in `self._runs`.
+            - If ``"all"``, plots preprocessed data for all runs in the session.
+            - If an integer, plots preprocessed data for the run at the specified index in ``self._runs``.
         mode :
             Determines the plotting style, a heatmap-style or line plot.
         time_range :
             Time range (start, end), in seconds, to plot. e.g. (0.0, 1.0)
         show_channel_ids :
-            If `True`, displays the channel identifiers on the plots.
+            If ``True``, displays the channel identifiers on the plots.
         show :
-            If `True`, displays the plots immediately. If `False`, the
+            If ``True``, displays the plots immediately. If ``False``, the
             plots are generated and returned without being displayed.
         figsize :
-            Specifies the size of the figure in inches as `(width, height)`.
+            Specifies the size of the figure in inches as ``(width, height)``.
 
         Returns
         -------
         dict of {str: matplotlib.Figure}
-            A dictionary mapping each run's name to its corresponding `matplotlib.Figure` object.
+            A dictionary mapping each run's name to its corresponding ``matplotlib.Figure`` object.
         """
         time_range = np.array(time_range, dtype=np.float64)
 
