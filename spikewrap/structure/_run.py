@@ -50,25 +50,7 @@ class BaseRun:
         # the lifetime of the class, by this class only.
         self._raw: dict = {}
         self._preprocessed: dict = {}
-
         self._sync = None
-
-    # TODO: I think just remove these...? this is not a public class, very confusing..
-    @property
-    def parent_input_path(self) -> Path | None:
-        return self._parent_input_path
-
-    @property
-    def run_name(self) -> str:
-        return self._run_name
-
-    @property
-    def output_path(self) -> Path:
-        return self._output_path
-
-    @property
-    def file_format(self) -> Literal["spikeglx", "openephys"]:
-        return self._file_format
 
     # ---------------------------------------------------------------------------
     # Public Functions
@@ -107,7 +89,7 @@ class BaseRun:
             rec_name = f"shank_{key}" if key != canon.grouped_shankname() else key
 
             self._preprocessed[key] = Preprocessed(
-                raw_rec, pp_steps, self.output_path, rec_name
+                raw_rec, pp_steps, self._output_path, rec_name
             )
 
     def save_preprocessed(
@@ -118,17 +100,17 @@ class BaseRun:
             self._save_preprocessed_slurm(overwrite, chunk_size, n_jobs, slurm)
             return
 
-        _utils.message_user(f"Saving data for: {self.run_name}...")
+        _utils.message_user(f"Saving data for: {self._run_name}...")
 
         if n_jobs != 1:
             si.set_global_job_kwargs(n_jobs=n_jobs)
 
-        if self.output_path.is_dir():  # getter func?
+        if self._output_path.is_dir():  # getter func?
             if overwrite:
-                self._delete_existing_run_except_slurm_logs(self.output_path)
+                self._delete_existing_run_except_slurm_logs(self._output_path)
             else:
                 raise RuntimeError(
-                    f"`overwrite` is `False` but data already exists at the run path: {self.output_path}."
+                    f"`overwrite` is `False` but data already exists at the run path: {self._output_path}."
                 )
 
         self._save_sync_channel()
@@ -165,7 +147,7 @@ class BaseRun:
             raise RuntimeError("Preprocessing has not been run.")
 
         fig = visualise_run_preprocessed(
-            self.run_name,
+            self._run_name,
             show,
             self._preprocessed,
             mode=mode,
@@ -189,7 +171,7 @@ class BaseRun:
         """ """
         assert not self._is_split_by_shank(), (
             f"Attempting to split by shank, but the recording"
-            f"in run: {self.run_name} has already been split."
+            f"in run: {self._run_name} has already been split."
             f"This should not happen. Please contact the spikewrap team."
         )
 
@@ -197,14 +179,14 @@ class BaseRun:
             "group"
         ) is None:
             raise ValueError(
-                f"Cannot split run {self.run_name} by shank as there is no 'group' property."
+                f"Cannot split run {self._run_name} by shank as there is no 'group' property."
             )
 
         self._raw = recording.split_by("group")
         self._raw = {str(key): value for key, value in self._raw.items()}
 
         _utils.message_user(
-            f"Split run: {self.run_name} by shank. There are {len(self._raw)} shanks. "
+            f"Split run: {self._run_name} by shank. There are {len(self._raw)} shanks. "
         )
 
     def _save_preprocessed_slurm(
@@ -222,7 +204,7 @@ class BaseRun:
                 "n_jobs": n_jobs,
                 "slurm": False,
             },
-            log_base_path=self.output_path,
+            log_base_path=self._output_path,
         )
 
     def _save_sync_channel(self) -> None:
@@ -231,9 +213,9 @@ class BaseRun:
         if the sync channel is loaded to ensure it does not interfere with
         sorting. As such, the sync channel is handled separately here.
         """
-        sync_output_path = self.output_path / canon.sync_folder()
+        sync_output_path = self._output_path / canon.sync_folder()
 
-        _utils.message_user(f"Saving sync channel for: {self.run_name}...")
+        _utils.message_user(f"Saving sync channel for: {self._run_name}...")
 
         if self._sync:
             _saving.save_sync_channel(self._sync, sync_output_path, self._file_format)
@@ -280,7 +262,7 @@ class SeparateRun(BaseRun):
             raise RuntimeError("Cannot overwrite Run().")
 
         without_sync, with_sync = _loading.load_data(
-            self.parent_input_path / self.run_name, self._file_format
+            self._parent_input_path / self._run_name, self._file_format
         )
 
         self._raw = {canon.grouped_shankname(): without_sync}
@@ -356,7 +338,7 @@ class ConcatRun(BaseRun):
         """
         super().save_preprocessed(overwrite, chunk_size, n_jobs, slurm)
 
-        with open(self.output_path / "orig_run_names.txt", "w") as f:
+        with open(self._output_path / "orig_run_names.txt", "w") as f:
             f.write("\n".join(self.orig_run_names))
 
     def _check_and_format_recordings_to_concat(
@@ -386,7 +368,7 @@ class ConcatRun(BaseRun):
 
             raw_data.append(run._raw)
             sync_data.append(run._sync)
-            orig_run_names.append(run.run_name)
+            orig_run_names.append(run._run_name)
 
         assert all(
             list(dict_.keys()) == [canon.grouped_shankname()] for dict_ in raw_data
@@ -404,13 +386,13 @@ class ConcatRun(BaseRun):
         ):
             raise RuntimeError(
                 f"Cannot concatenate recordings with different channel organisation."
-                f"This occurred for runs in folder: {self.parent_input_path}"
+                f"This occurred for runs in folder: {self._parent_input_path}"
             )
 
         if not np.unique(all_sampling_frequency).size == 1:
             raise RuntimeError(
                 f"Cannot concatenate recordings with different sampling frequencies."
-                f"This occurred for runs in folder: {self.parent_input_path}"
+                f"This occurred for runs in folder: {self._parent_input_path}"
             )
 
         return raw_data, sync_data, orig_run_names

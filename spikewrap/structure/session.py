@@ -84,31 +84,6 @@ class Session:
         self._runs: list[SeparateRun | ConcatRun] = []
         self._create_run_objects()
 
-    @property
-    def passed_run_names(self) -> Literal["all"] | list[str]:
-        """ """
-        return self._passed_run_names
-
-    @property
-    def file_format(self) -> Literal["spikeglx", "openephys"]:
-        """ """
-        return self._file_format
-
-    @property
-    def parent_input_path(self) -> Path:
-        """ """
-        return self._parent_input_path
-
-    @property
-    def ses_name(self) -> str:
-        """ """
-        return self._ses_name
-
-    @property
-    def output_path(self) -> Path:
-        """ """
-        return self._output_path
-
     # ---------------------------------------------------------------------------
     # Public Functions
     # ---------------------------------------------------------------------------
@@ -264,11 +239,11 @@ class Session:
                 figsize=figsize,
             )
 
-            all_figs[run.run_name] = fig
+            all_figs[run._run_name] = fig
 
         return all_figs
 
-    # Helpers -----------------------------------------------------------------
+    # Getters -----------------------------------------------------------------
 
     def get_run_names(self) -> list[str]:
         """
@@ -278,7 +253,16 @@ class Session:
         list will be the order of concatenation. If concatenation
         was already performed, the run name will be ``"concat_run"``.
         """
-        return [run.run_name for run in self._runs]
+        return [run._run_name for run in self._runs]
+
+    def parent_input_path(self) -> Path:  # TODO: add docs
+        return self._parent_input_path
+
+    def get_passed_run_names(self) -> Literal["all"] | list[str]:
+        return self._passed_run_names
+
+    def get_output_path(self):
+        return self._output_path
 
     # ---------------------------------------------------------------------------
     # Private Functions
@@ -300,16 +284,16 @@ class Session:
             Safety flag to ensure overwriting existing runs is intended.
         """
         if self._runs and not internal_overwrite:
-            raise RuntimeError(f"Cannot overwrite _runs for session {self.ses_name}")
+            raise RuntimeError(f"Cannot overwrite _runs for session {self._ses_name}")
 
         session_path = (
-            self.parent_input_path / self.ses_name
+            self._parent_input_path / self._ses_name
         )  # will not include "ephys"
 
         run_paths = _loading.get_run_paths(
-            self.file_format,
+            self._file_format,
             session_path,
-            self.passed_run_names,
+            self._passed_run_names,
         )
 
         runs: list[SeparateRun] = []
@@ -319,7 +303,7 @@ class Session:
                 SeparateRun(
                     parent_input_path=run_path.parent,  # may include "ephys" if NeuroBlueprint
                     run_name=run_path.name,
-                    session_output_path=self.output_path,
+                    session_output_path=self._output_path,
                     file_format=self._file_format,
                 )
             )
@@ -350,8 +334,8 @@ class Session:
         self._runs = [
             ConcatRun(
                 self._runs,  # type: ignore
-                self.parent_input_path,
-                self.output_path,
+                self._parent_input_path,
+                self._output_path,
                 self._file_format,
             )
         ]
@@ -381,11 +365,11 @@ class Session:
             raise ValueError(
                 f"Cannot infer `output_path` from non-NeuroBlueprint "
                 f"folder structure (expected 'rawdata'->subject->session\n"
-                f"in path {self.parent_input_path}\n"
+                f"in path {self._parent_input_path}\n"
                 f"Pass the session output folder explicitly as `output_path`."
             )
 
-        return rawdata_path.parent / "derivatives" / sub_name / self.ses_name / "ephys"
+        return rawdata_path.parent / "derivatives" / sub_name / self._ses_name / "ephys"
 
     # Checkers ------------------------------------------------------------------
 
@@ -397,7 +381,7 @@ class Session:
         This is true whether in NeuroBlueprint or other accepted
         folder formats found in the documentation.
         """
-        sub_path = self.parent_input_path
+        sub_path = self._parent_input_path
         sub_name = sub_path.name
 
         return sub_path, sub_name

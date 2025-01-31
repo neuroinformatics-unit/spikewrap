@@ -6,7 +6,7 @@
 
 Computation times
 =================
-**00:22.634** total execution time for 7 files **from all galleries**:
+**00:21.500** total execution time for 7 files **from all galleries**:
 
 .. container::
 
@@ -33,23 +33,23 @@ Computation times
      - Time
      - Mem (MB)
    * - :ref:`sphx_glr_gallery_builds_how_to_01_preprocess_a_session.py` (``galleries\how_to\01_preprocess_a_session.py``)
-     - 00:09.089
-     - 0.0
-   * - :ref:`sphx_glr_gallery_builds_get_started_package_overview.py` (``galleries\get_started\package_overview.py``)
-     - 00:07.144
+     - 00:08.829
      - 0.0
    * - :ref:`sphx_glr_gallery_builds_tutorials_01_preprocessing_sessions.py` (``galleries\tutorials\01_preprocessing_sessions.py``)
-     - 00:06.383
+     - 00:06.401
      - 0.0
-   * - :ref:`sphx_glr_gallery_builds_how_to_02_manage_configs.py` (``galleries\how_to\02_manage_configs.py``)
-     - 00:00.011
+   * - :ref:`sphx_glr_gallery_builds_get_started_package_overview.py` (``galleries\get_started\package_overview.py``)
+     - 00:06.244
      - 0.0
    * - :ref:`sphx_glr_gallery_builds_tutorials_02_managing_configs.py` (``galleries\tutorials\02_managing_configs.py``)
-     - 00:00.008
+     - 00:00.019
      - 0.0
-   * - :ref:`sphx_glr_gallery_builds_how_to_03_run_in_slurm.py` (``galleries\how_to\03_run_in_slurm.py``)
-     - 00:00.000
+   * - :ref:`sphx_glr_gallery_builds_how_to_02_manage_configs.py` (``galleries\how_to\02_manage_configs.py``)
+     - 00:00.005
      - 0.0
    * - :ref:`sphx_glr_gallery_builds_tutorials_03_running_with_slurm.py` (``galleries\tutorials\03_running_with_slurm.py``)
-     - 00:00.000
+     - 00:00.001
+     - 0.0
+   * - :ref:`sphx_glr_gallery_builds_how_to_03_run_in_slurm.py` (``galleries\how_to\03_run_in_slurm.py``)
+     - 00:00.001
      - 0.0
