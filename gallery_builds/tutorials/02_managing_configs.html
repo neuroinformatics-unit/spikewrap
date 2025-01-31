@@ -1,0 +1,764 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Managing configs &#8212; spikewrap</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../_static/styles/theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+<link href="../../_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sg_gallery.css?v=d2d258e8" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sg_gallery-binder.css?v=f4aeca0c" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sg_gallery-dataframe.css?v=2082cf3c" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sg_gallery-rendered-html.css?v=1277b6f3" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sphinx-design.min.css?v=95c83b7e" />
+    <link rel="stylesheet" type="text/css" href="../../_static/css/custom.css?v=de3717dc" />
+  
+  <!-- So that users can add custom icons -->
+  <script src="../../_static/scripts/fontawesome.js?digest=8878045cc6db502f8baf"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
+<link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
+
+    <script src="../../_static/documentation_options.js?v=d45e8c67"></script>
+    <script src="../../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/design-tabs.js?v=f930bc37"></script>
+    <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'gallery_builds/tutorials/02_managing_configs';</script>
+    <link rel="canonical" href="https://spikewrap.neuroinformatics.dev/gallery_builds/tutorials/02_managing_configs.html" />
+    <link rel="icon" href="../../_static/light-logo-niu.png"/>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="Running with SLURM" href="03_running_with_slurm.html" />
+    <link rel="prev" title="Preprocessing Sessions" href="01_preprocessing_sessions.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="" />
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../../index.html">
+  
+  
+  
+  
+  
+  
+    <p class="title logo__title">spikewrap v0.0.1</p>
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../get_started/index.html">
+    Get Started
+  </a>
+</li>
+
+
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="index.html">
+    Tutorials
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../how_to/index.html">
+    How To
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../community/index.html">
+    Community
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../api_index.html">
+    API Reference
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item">
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
+      
+        <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/neuroinformatics-unit/spikewrap" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-github fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://neuroinformatics.zulipchat.com/#narrow/stream/406002-Spikewrap" title="Zulip (chat)" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-solid fa-comments fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">Zulip (chat)</span></a>
+        </li>
+</ul></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+    <button class="pst-navbar-icon sidebar-toggle secondary-toggle" aria-label="On this page">
+      <span class="fa-solid fa-outdent"></span>
+    </button>
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          
+          
+            <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../get_started/index.html">
+    Get Started
+  </a>
+</li>
+
+
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="index.html">
+    Tutorials
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../how_to/index.html">
+    How To
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../community/index.html">
+    Community
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../api_index.html">
+    API Reference
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+          
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
+        
+          <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/neuroinformatics-unit/spikewrap" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-github fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://neuroinformatics.zulipchat.com/#narrow/stream/406002-Spikewrap" title="Zulip (chat)" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-solid fa-comments fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">Zulip (chat)</span></a>
+        </li>
+</ul></div>
+        
+      </div>
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+<nav class="bd-docs-nav bd-links"
+     aria-label="Section Navigation">
+  <p class="bd-links__title" role="heading" aria-level="1">Section Navigation</p>
+  <div class="bd-toc-item navbar-nav"><ul class="current nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="01_preprocessing_sessions.html">Preprocessing Sessions</a></li>
+<li class="toctree-l1 current active"><a class="current reference internal" href="#">Managing <code class="docutils literal notranslate"><span class="pre">configs</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="03_running_with_slurm.html">Running with SLURM</a></li>
+</ul>
+</div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    
+    <li class="breadcrumb-item"><a href="index.html" class="nav-link">Tutorials</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">Managing <code class="docutils literal notranslate"><span class="pre">configs</span></code></span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <div class="sphx-glr-download-link-note admonition note">
+<p class="admonition-title">Note</p>
+<p><a class="reference internal" href="#sphx-glr-download-gallery-builds-tutorials-02-managing-configs-py"><span class="std std-ref">Go to the end</span></a>
+to download the full example code. or to run this example in your browser via Binder</p>
+</div>
+<section class="sphx-glr-example-title" id="managing-configs">
+<span id="configs-tutorial"></span><span id="sphx-glr-gallery-builds-tutorials-02-managing-configs-py"></span><h1>Managing <code class="docutils literal notranslate"><span class="pre">configs</span></code><a class="headerlink" href="#managing-configs" title="Link to this heading">#</a></h1>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>This is a long-form tutorial on <code class="docutils literal notranslate"><span class="pre">config</span></code> management. See <a class="reference internal" href="../how_to/02_manage_configs.html#configs-howto"><span class="std std-ref">here</span></a> for a quick how-to.</p>
+</div>
+<p>In <code class="docutils literal notranslate"><span class="pre">spikewrap</span></code>, <code class="docutils literal notranslate"><span class="pre">configs</span></code> encode the preprocessing and sorting settings for a pipeline.
+The emphasis is on convenient sharing of pipelines, while allowing flexibility for prototyping.</p>
+<p>All <code class="docutils literal notranslate"><span class="pre">configs</span></code> in <code class="docutils literal notranslate"><span class="pre">spikewrap</span></code> map directly to underlying
+<a class="reference external" href="https://spikeinterface.readthedocs.io/en/stable/api.html">SpikeInterface functions</a>.</p>
+<p>To use the <code class="docutils literal notranslate"><span class="pre">configs</span></code>, they are passed to processing functions (e.g. <a class="reference internal" href="../../api_index.html#spikewrap.Session.preprocess" title="spikewrap.Session.preprocess"><code class="xref py py-class docutils literal notranslate"><span class="pre">spikewrap.Session.preprocess</span></code></a>),
+in one of three ways:</p>
+<dl class="simple">
+<dt><strong>config name</strong>:</dt><dd><p>A keyword to a saved confgiuration e.g. <code class="docutils literal notranslate"><span class="pre">&quot;neuropixels+kilosort2_5&quot;</span></code> (this comes with <code class="docutils literal notranslate"><span class="pre">spikewrap</span></code>).</p>
+</dd>
+<dt><strong>dictionary</strong>:</dt><dd><p>A <code class="docutils literal notranslate"><span class="pre">dict</span></code> with <code class="docutils literal notranslate"><span class="pre">&quot;preprocessing&quot;</span></code> and <code class="docutils literal notranslate"><span class="pre">&quot;sorting&quot;</span></code> keys (more details below).</p>
+</dd>
+<dt><strong>.yaml</strong>:</dt><dd><p>A YAML file, which is the <code class="docutils literal notranslate"><span class="pre">configs</span></code> dictionary dumped to file.</p>
+</dd>
+</dl>
+<p>In this tutorial we will cover how to run processing steps with configs,
+as well as how to make, share and save your own pipelines.</p>
+<section id="configs-as-a-name">
+<h2><code class="docutils literal notranslate"><span class="pre">configs</span></code> as a name<a class="headerlink" href="#configs-as-a-name" title="Link to this heading">#</a></h2>
+<p>The easiest way to manage already-established <code class="docutils literal notranslate"><span class="pre">configs</span></code> is to
+pass a keyword that refers to a previously saved pipeline.</p>
+<p>For example, we can use the <code class="docutils literal notranslate"><span class="pre">&quot;neuropixels+kilosort2_5&quot;</span></code>  in <a class="reference internal" href="../../api_index.html#spikewrap.Session.preprocess" title="spikewrap.Session.preprocess"><code class="xref py py-class docutils literal notranslate"><span class="pre">spikewrap.Session.preprocess</span></code></a>:</p>
+<p>and print the underlying steps with:</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">spikewrap</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">sw</span>
+
+<a href="../../api_index.html#spikewrap.show_configs" title="spikewrap.show_configs" class="sphx-glr-backref-module-spikewrap sphx-glr-backref-type-py-function"><span class="n">sw</span><span class="o">.</span><span class="n">show_configs</span></a><span class="p">(</span><span class="s2">&quot;neuropixels+kilosort2_5&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>The preprocessing options are: {
+    &quot;1&quot;: [
+        &quot;bandpass_filter&quot;,
+        {
+            &quot;freq_max&quot;: 6000,
+            &quot;freq_min&quot;: 300
+        }
+    ],
+    &quot;2&quot;: [
+        &quot;common_reference&quot;,
+        {
+            &quot;operator&quot;: &quot;median&quot;,
+            &quot;reference&quot;: &quot;global&quot;
+        }
+    ]
+}
+
+
+The sorting options are: {
+  &quot;kilosort2_5&quot;: {
+    &quot;car&quot;: false,
+    &quot;freq_min&quot;: 150
+  }
+}
+</pre></div>
+</div>
+<p>It is possible to create and share your own keyword configs. Under the hood,
+these are <code class="docutils literal notranslate"><span class="pre">.yaml</span></code> files that hold a python dictionary representation of the steps.
+These are stored in a dedicated path, (<code class="docutils literal notranslate"><span class="pre">.spikewrap</span></code> in your user directory), which
+you can find with:</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><a href="../../api_index.html#spikewrap.get_configs_path" title="spikewrap.get_configs_path" class="sphx-glr-backref-module-spikewrap sphx-glr-backref-type-py-function"><span class="n">sw</span><span class="o">.</span><span class="n">get_configs_path</span></a><span class="p">()</span>
+</pre></div>
+</div>
+<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>PosixPath(&#39;/home/runner/.spikewrap/configs&#39;)
+</pre></div>
+</div>
+<p>and see what configs you have available at this path:</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><a href="../../api_index.html#spikewrap.show_available_configs" title="spikewrap.show_available_configs" class="sphx-glr-backref-module-spikewrap sphx-glr-backref-type-py-function"><span class="n">sw</span><span class="o">.</span><span class="n">show_available_configs</span></a><span class="p">()</span>
+</pre></div>
+</div>
+<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>The available configs are:
+[&#39;neuropixels+kilosort2_5.yaml&#39;, &#39;my_config.yaml&#39;]
+</pre></div>
+</div>
+<p>Continue reading below to create and save your own pipeline configs.</p>
+</section>
+<section id="configs-as-a-dictionary">
+<h2><code class="docutils literal notranslate"><span class="pre">configs</span></code> as a dictionary<a class="headerlink" href="#configs-as-a-dictionary" title="Link to this heading">#</a></h2>
+<p>Custom preprocessing and sorting settings can be defined in a dictionary,
+with the keys <code class="docutils literal notranslate"><span class="pre">preprocessing</span></code> and <code class="docutils literal notranslate"><span class="pre">sorting</span></code>.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">config_dict</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">&quot;preprocessing&quot;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">&quot;1&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;phase_shift&quot;</span><span class="p">,</span> <span class="p">{}],</span>
+        <span class="s2">&quot;2&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;bandpass_filter&quot;</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;freq_min&quot;</span><span class="p">:</span> <span class="mi">300</span><span class="p">,</span> <span class="s2">&quot;freq_max&quot;</span><span class="p">:</span> <span class="mi">6000</span><span class="p">}],</span>
+        <span class="s2">&quot;3&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;common_reference&quot;</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;operator&quot;</span><span class="p">:</span> <span class="s2">&quot;median&quot;</span><span class="p">}]</span>
+    <span class="p">},</span>
+    <span class="s2">&quot;sorting&quot;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">&quot;kilosort2_5&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;car&#39;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span> <span class="s1">&#39;freq_min&#39;</span><span class="p">:</span> <span class="mi">150</span><span class="p">}}</span>
+<span class="p">}</span>
+
+<span class="c1"># use like:</span>
+<span class="c1"># session.preprocess(configs=config_dict, ...)</span>
+</pre></div>
+</div>
+<details class="sd-sphinx-override sd-dropdown sd-card sd-mb-3">
+<summary class="sd-summary-title sd-card-header">
+<span class="sd-summary-text"><code class="docutils literal notranslate"><span class="pre">configs</span></code> dictionary structure</span><span class="sd-summary-state-marker sd-summary-chevron-right"><svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-right" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.72 18.78a.75.75 0 0 1 0-1.06L14.44 12 8.72 6.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018l6.25 6.25a.75.75 0 0 1 0 1.06l-6.25 6.25a.75.75 0 0 1-1.06 0Z"></path></svg></span></summary><div class="sd-summary-content sd-card-body docutils">
+<dl class="simple">
+<dt>The structure of a <code class="docutils literal notranslate"><span class="pre">configs</span></code> dictionary is :</dt><dd><ol class="arabic simple">
+<li><p class="sd-card-text">The first level is keys <code class="docutils literal notranslate"><span class="pre">&quot;preprocessing&quot;</span></code> and <code class="docutils literal notranslate"><span class="pre">&quot;sorting&quot;</span></code></p></li>
+<li><p class="sd-card-text">The <code class="docutils literal notranslate"><span class="pre">&quot;preprocessing&quot;</span></code> value is a dictionary with string keys,
+with each a number (starting at <code class="docutils literal notranslate"><span class="pre">&quot;1&quot;</span></code> and increasing by 1) indicating the order of the preprocessing step.</p></li>
+<li><p class="sd-card-text">The value of each preprocessing step is a list, in which the first entry is
+he preprocessing step to run, and the second a dictionary of keyword arguments
+to pass to the function. The preprocessing step name must refer to a
+<a class="reference external" href="https://spikeinterface.readthedocs.io/en/stable/api.html">SpikeInterface</a>. preprocessing function.</p></li>
+</ol>
+</dd>
+</dl>
+</div>
+</details><p>Each preprocessing step and arguments map directly onto the underlying
+<a class="reference external" href="https://spikeinterface.readthedocs.io/en/stable/api.html">SpikeInterface functions</a>.</p>
+<p>To see the currently available preproecssing steps supported by <code class="docutils literal notranslate"><span class="pre">spikewrap</span></code>, run:</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><a href="../../api_index.html#spikewrap.show_supported_preprocessing_steps" title="spikewrap.show_supported_preprocessing_steps" class="sphx-glr-backref-module-spikewrap sphx-glr-backref-type-py-function"><span class="n">sw</span><span class="o">.</span><span class="n">show_supported_preprocessing_steps</span></a><span class="p">()</span>
+</pre></div>
+</div>
+<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>Currently supported preprocessing steps are:
+[&#39;phase_shift&#39;, &#39;bandpass_filter&#39;, &#39;common_reference&#39;]
+</pre></div>
+</div>
+<p>This configs dict can be saved by <code class="docutils literal notranslate"><span class="pre">spikewrap</span></code> along with
+a name. Then, this name can be used for in future processing steps.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><a href="../../api_index.html#spikewrap.save_config_dict" title="spikewrap.save_config_dict" class="sphx-glr-backref-module-spikewrap sphx-glr-backref-type-py-function"><span class="n">sw</span><span class="o">.</span><span class="n">save_config_dict</span></a><span class="p">(</span><span class="n">config_dict</span><span class="p">,</span> <span class="s2">&quot;my_config&quot;</span><span class="p">)</span>
+
+<span class="c1"># and then:</span>
+<span class="c1"># session.preprocess(configs=&quot;my_config&quot;, ...)</span>
+</pre></div>
+</div>
+</section>
+<section id="configs-as-a-yaml-file">
+<h2><code class="docutils literal notranslate"><span class="pre">configs</span></code> as a YAML file<a class="headerlink" href="#configs-as-a-yaml-file" title="Link to this heading">#</a></h2>
+<p>When the <cite>configs`</cite> dictionary is saved, it is saved as a <cite>.yaml</cite> file.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><a href="../../api_index.html#spikewrap.save_config_dict" title="spikewrap.save_config_dict" class="sphx-glr-backref-module-spikewrap sphx-glr-backref-type-py-function"><span class="n">sw</span><span class="o">.</span><span class="n">save_config_dict</span></a><span class="p">(</span><span class="n">config_dict</span><span class="p">,</span> <span class="s2">&quot;my_config&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>By default, this will be written to the <code class="docutils literal notranslate"><span class="pre">spikewrap</span></code> storage path so
+<code class="docutils literal notranslate"><span class="pre">&quot;my_config&quot;</span></code> can be used in <code class="docutils literal notranslate"><span class="pre">spikewrap</span></code> processing steps, as above.</p>
+<p>Use <a class="reference internal" href="../../api_index.html#spikewrap.get_configs_path" title="spikewrap.get_configs_path"><code class="xref py py-func docutils literal notranslate"><span class="pre">spikewrap.get_configs_path()</span></code></a> to get the path where these are stored.</p>
+<p>Alternatively, this can be output to a path of your choice:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><a href="../../api_index.html#spikewrap.save_config_dict" title="spikewrap.save_config_dict" class="sphx-glr-backref-module-spikewrap sphx-glr-backref-type-py-function"><span class="n">sw</span><span class="o">.</span><span class="n">save_config_dict</span></a><span class="p">(</span><span class="n">config_dict</span><span class="p">,</span> <span class="s2">&quot;my_config&quot;</span><span class="p">,</span> <span class="n">folder</span><span class="o">=</span><span class="s2">&quot;...path_to_folder&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>If you have received a pipeline you would like to use, you can load the dictionary, and
+then save it the <code class="docutils literal notranslate"><span class="pre">spikewrap</span></code> config store for easy use:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">config_dict</span> <span class="o">=</span> <a href="../../api_index.html#spikewrap.load_config_dict" title="spikewrap.load_config_dict" class="sphx-glr-backref-module-spikewrap sphx-glr-backref-type-py-function"><span class="n">sw</span><span class="o">.</span><span class="n">load_config_dict</span></a><span class="p">(</span><span class="s2">&quot;...path_to_colleagues_config.yaml&quot;</span><span class="p">)</span>
+<a href="../../api_index.html#spikewrap.save_config_dict" title="spikewrap.save_config_dict" class="sphx-glr-backref-module-spikewrap sphx-glr-backref-type-py-function"><span class="n">sw</span><span class="o">.</span><span class="n">save_config_dict</span></a><span class="p">(</span><span class="n">config_dict</span><span class="p">,</span> <span class="s2">&quot;colleague_xs_pipeline&quot;</span><span class="p">)</span>
+
+<span class="c1"># Can now run:</span>
+<span class="c1"># session.preprocess(configs=&quot;colleague_xs_pipeline&quot;)</span>
+</pre></div>
+</div>
+<section id="passing-a-yaml-as-a-file-path">
+<h3>Passing a YAML as a file path<a class="headerlink" href="#passing-a-yaml-as-a-file-path" title="Link to this heading">#</a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">spikewrap</span></code> functions will take a path to any valid <code class="docutils literal notranslate"><span class="pre">configs</span></code> <code class="docutils literal notranslate"><span class="pre">.yaml</span></code> file</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">session</span><span class="o">.</span><span class="n">preprocess</span><span class="p">(</span><span class="n">config</span><span class="o">=</span><span class="s2">&quot;.../my_config.yaml&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>and we can load <code class="docutils literal notranslate"><span class="pre">configs</span></code> from file:</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">config_dict</span> <span class="o">=</span> <a href="../../api_index.html#spikewrap.load_config_dict" title="spikewrap.load_config_dict" class="sphx-glr-backref-module-spikewrap sphx-glr-backref-type-py-function"><span class="n">sw</span><span class="o">.</span><span class="n">load_config_dict</span></a><span class="p">(</span>
+    <a href="../../api_index.html#spikewrap.get_configs_path" title="spikewrap.get_configs_path" class="sphx-glr-backref-module-spikewrap sphx-glr-backref-type-py-function"><span class="n">sw</span><span class="o">.</span><span class="n">get_configs_path</span></a><span class="p">()</span> <span class="o">/</span> <span class="s2">&quot;neuropixels+kilosort2_5.yaml&quot;</span>
+<span class="p">)</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">json</span>  <span class="c1"># use for printing dicts</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">config_dict</span><span class="p">,</span> <span class="n">indent</span><span class="o">=</span><span class="mi">4</span><span class="p">))</span>
+</pre></div>
+</div>
+<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>{
+    &quot;preprocessing&quot;: {
+        &quot;1&quot;: [
+            &quot;bandpass_filter&quot;,
+            {
+                &quot;freq_min&quot;: 300,
+                &quot;freq_max&quot;: 6000
+            }
+        ],
+        &quot;2&quot;: [
+            &quot;common_reference&quot;,
+            {
+                &quot;operator&quot;: &quot;median&quot;,
+                &quot;reference&quot;: &quot;global&quot;
+            }
+        ]
+    },
+    &quot;sorting&quot;: {
+        &quot;kilosort2_5&quot;: {
+            &quot;car&quot;: false,
+            &quot;freq_min&quot;: 150
+        }
+    }
+}
+</pre></div>
+</div>
+<p class="sphx-glr-timing"><strong>Total running time of the script:</strong> (0 minutes 0.007 seconds)</p>
+<div class="sphx-glr-footer sphx-glr-footer-example docutils container" id="sphx-glr-download-gallery-builds-tutorials-02-managing-configs-py">
+<div class="binder-badge docutils container">
+<a class="reference external image-reference" href="https://mybinder.org/v2/gh/neuroinformatics-unit/spikewrap/gh-pages?filepath=notebooks/gallery_builds/tutorials/02_managing_configs.ipynb"><img alt="Launch binder" src="../../_images/binder_badge_logo2.svg" style="width: 150px;" />
+</a>
+</div>
+<div class="sphx-glr-download sphx-glr-download-jupyter docutils container">
+<p><a class="reference download internal" download="" href="../../_downloads/46a58970111e1fbe4baf488bc26547ea/02_managing_configs.ipynb"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">Jupyter</span> <span class="pre">notebook:</span> <span class="pre">02_managing_configs.ipynb</span></code></a></p>
+</div>
+<div class="sphx-glr-download sphx-glr-download-python docutils container">
+<p><a class="reference download internal" download="" href="../../_downloads/e7c3b83382ad0e2fcb3670c0331533ee/02_managing_configs.py"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">Python</span> <span class="pre">source</span> <span class="pre">code:</span> <span class="pre">02_managing_configs.py</span></code></a></p>
+</div>
+<div class="sphx-glr-download sphx-glr-download-zip docutils container">
+<p><a class="reference download internal" download="" href="../../_downloads/39ea981c25035a6088ab58c1d0685090/02_managing_configs.zip"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">zipped:</span> <span class="pre">02_managing_configs.zip</span></code></a></p>
+</div>
+</div>
+<p class="sphx-glr-signature"><a class="reference external" href="https://sphinx-gallery.github.io">Gallery generated by Sphinx-Gallery</a></p>
+</section>
+</section>
+</section>
+
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="01_preprocessing_sessions.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">Preprocessing Sessions</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="03_running_with_slurm.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Running with SLURM</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <dialog id="pst-secondary-sidebar-modal"></dialog>
+                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+<div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> On this page
+  </div>
+  <nav class="bd-toc-nav page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#configs-as-a-name"><code class="docutils literal notranslate"><span class="pre">configs</span></code> as a name</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#configs-as-a-dictionary"><code class="docutils literal notranslate"><span class="pre">configs</span></code> as a dictionary</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#configs-as-a-yaml-file"><code class="docutils literal notranslate"><span class="pre">configs</span></code> as a YAML file</a><ul class="visible nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#passing-a-yaml-as-a-file-path">Passing a YAML as a file path</a></li>
+</ul>
+</li>
+</ul>
+  </nav></div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf"></script>
+<script defer src="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item"><p class="sphinx-version">
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.1.3.
+    <br/>
+    </p>
+    <p class="theme-version">
+    Built with the
+    <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a>
+    0.16.1.
+    </p></div>
+      
+    </div>
+  
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item"><div class="things-in-a-row">
+    <a href="https://neuroinformatics.dev/">
+        <img src="../../_static/light-logo-niu.png" alt="Sponsors" class="only-light img-sponsor"/>
+        <img src="../../_static/dark-logo-niu.png" alt="Sponsors" class="only-dark img-sponsor"/>
+    </a>
+    <a href="https://www.sainsburywellcome.org/web/">
+        <img src="../../_static/light-logo-swc.png" alt="Sponsors" class="only-light img-sponsor"/>
+        <img src="../../_static/dark-logo-swc.png" alt="Sponsors" class="only-dark img-sponsor"/>
+    </a>
+    <a href="https://www.ucl.ac.uk/gatsby/gatsby-computational-neuroscience-unit">
+        <img src="../../_static/light-logo-gatsby.png" alt="Sponsors" class="only-light img-sponsor"/>
+        <img src="../../_static/dark-logo-gatsby.png" alt="Sponsors" class="only-dark img-sponsor"/>
+    </a>
+    <a href="https://www.ucl.ac.uk/">
+        <img src="../../_static/light-logo-ucl.png" alt="Sponsors" class="only-light img-sponsor"/>
+        <img src="../../_static/dark-logo-ucl.png" alt="Sponsors" class="only-dark img-sponsor"/>
+    </a>
+</div></div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>
