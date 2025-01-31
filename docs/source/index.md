@@ -22,21 +22,32 @@ h1 { font-size: 0rem; }
 :::{grid-item-card} {fas}`rocket;sd-text-primary` Get Started
 :link: get_started/index
 :link-type: doc
+
+Get going with ``spikewrap``
 :::
 
 :::{grid-item-card} {fas}`book-open;sd-text-primary` Tutorials
 :link: gallery_builds/tutorials/index
 :link-type: doc
+
+Long-form guides on key features.
 :::
 
 :::{grid-item-card} {fas}`book-open;sd-text-primary` How To
 :link: gallery_builds/how_to/index
 :link-type: doc
+
+Quick guides for the key points.
+
 :::
 
 :::{grid-item-card} {fas}`code;sd-text-primary` API Reference
 :link: api_index
 :link-type: doc
+:class: align-left
+
+Full Python reference.
+
 :::
 
 ::::
