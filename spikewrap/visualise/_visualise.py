@@ -14,6 +14,7 @@ def visualise_run_preprocessed(
     run_name: str,
     show: bool,
     all_preprocessed: dict,
+    ses_name: str,
     mode: Literal["map", "line"],
     time_range: tuple[float, float],
     show_channel_ids: bool,
@@ -33,6 +34,8 @@ def visualise_run_preprocessed(
         If True, display the plot immediately.
     all_preprocessed
         Preprocessed._data dict of preprocessed recording objects.
+    ses_name
+        Name of the parent session for this run.
     mode
         Visualization mode for traces, as supported by SpikeInterface.
     time_range
@@ -79,11 +82,9 @@ def visualise_run_preprocessed(
             segment_index=0,
         )
         if key == canon.grouped_shankname():
-            ax.set_title(f"Run: {run_name}")  # Session: {ses_name}
+            ax.set_title(f"Session: {ses_name}, Run: {run_name}")
         else:
-            ax.set_title(
-                f"Run: {run_name} Shank: {int(key) + 1}"
-            )  # Session: {ses_name}
+            ax.set_title(f"Session: {ses_name}, Run: {run_name} Shank: {int(key) + 1}")
 
     plt.tight_layout()
 

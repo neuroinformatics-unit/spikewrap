@@ -12,7 +12,7 @@ Currently, only data from
 :::{admonition} Contact Us
 :class: note
 
-If you would like to see more formats supported, please don't hesitate to [get in contact](community)
+If you would like to see more formats supported, please don't hesitate to [get in contact](community).
 
 :::
 

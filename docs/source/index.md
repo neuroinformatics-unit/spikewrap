@@ -23,28 +23,27 @@ h1 { font-size: 0rem; }
 :link: get_started/index
 :link-type: doc
 
-Get going with ``spikewrap``
+Setup ``spikewrap`` for your data.
 :::
 
 :::{grid-item-card} {fas}`book-open;sd-text-primary` Tutorials
 :link: gallery_builds/tutorials/index
 :link-type: doc
 
-Long-form guides on key features.
+Long-form guides.
 :::
 
 :::{grid-item-card} {fas}`book-open;sd-text-primary` How To
 :link: gallery_builds/how_to/index
 :link-type: doc
 
-Quick guides for the key points.
+Quick reference pages.
 
 :::
 
 :::{grid-item-card} {fas}`code;sd-text-primary` API Reference
 :link: api_index
 :link-type: doc
-:class: align-left
 
 Full Python reference.
 

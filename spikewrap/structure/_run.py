@@ -51,7 +51,8 @@ class BaseRun:
 
     def __init__(
         self,
-        parent_input_path: Path | None,
+        parent_input_path: Path,
+        parent_ses_name: str,
         run_name: str,
         session_output_path: Path,
         file_format: Literal["spikeglx", "openephys"],
@@ -60,6 +61,7 @@ class BaseRun:
         # during the lifetime of the class. Use the properties (which do not
         # expose a setter) for both internal and external calls.
         self._parent_input_path = parent_input_path
+        self._parent_ses_name = parent_ses_name
         self._run_name = run_name
         self._output_path = session_output_path / run_name
         self._file_format = file_format
@@ -204,6 +206,7 @@ class BaseRun:
             self._run_name,
             show,
             self._preprocessed,
+            ses_name=self._parent_ses_name,
             mode=mode,
             time_range=time_range,
             show_channel_ids=show_channel_ids,
@@ -335,6 +338,7 @@ class SeparateRun(BaseRun):
     def __init__(
         self,
         parent_input_path: Path,
+        parent_ses_name: str,
         run_name: str,
         session_output_path: Path,
         file_format: Literal["spikeglx", "openephys"],
@@ -342,7 +346,11 @@ class SeparateRun(BaseRun):
         self._parent_input_path: Path
 
         super(SeparateRun, self).__init__(
-            parent_input_path, run_name, session_output_path, file_format
+            parent_input_path,
+            parent_ses_name,
+            run_name,
+            session_output_path,
+            file_format,
         )
 
     def load_raw_data(self, internal_overwrite: bool = False) -> None:
@@ -390,13 +398,13 @@ class ConcatRun(BaseRun):
         self,
         runs_list: list[SeparateRun],
         parent_input_path: Path,
+        parent_ses_name: str,
         session_output_path: Path,
         file_format: Literal["spikeglx", "openephys"],
     ):
-        self._parent_input_path: None
-
         super(ConcatRun, self).__init__(
             parent_input_path=parent_input_path,
+            parent_ses_name=parent_ses_name,
             run_name="concat_run",
             session_output_path=session_output_path,
             file_format=file_format,
@@ -499,19 +507,27 @@ class ConcatRun(BaseRun):
         ), "We should not be multi-shank at this stage."
         assert self._preprocessed == {}, "Something has gone wrong in the inheritance."
 
-        # Check key features of the recordings match before concatenation
-        all_contacts = [rec["grouped"].get_channel_locations() for rec in raw_data]
+        # Check channel locations match, if probe is set. Otherwise, we must
+        # assume channel ordering is the same across recordings...?
+        has_contacts = True
+        try:
+            all_contacts = [rec["grouped"].get_channel_locations() for rec in raw_data]
+        except:
+            has_contacts = False
+
+        if has_contacts:
+            if not all(
+                [np.array_equal(contact, all_contacts[0]) for contact in all_contacts]
+            ):
+                raise RuntimeError(
+                    f"Cannot concatenate recordings with different channel organisation."
+                    f"This occurred for runs in folder: {self._parent_input_path}"
+                )
+
+        # Check sampling frequencies match.
         all_sampling_frequency = [
             rec["grouped"].get_sampling_frequency() for rec in raw_data
         ]
-        if not all(
-            [np.array_equal(contact, all_contacts[0]) for contact in all_contacts]
-        ):
-            raise RuntimeError(
-                f"Cannot concatenate recordings with different channel organisation."
-                f"This occurred for runs in folder: {self._parent_input_path}"
-            )
-
         if not np.unique(all_sampling_frequency).size == 1:
             raise RuntimeError(
                 f"Cannot concatenate recordings with different sampling frequencies."

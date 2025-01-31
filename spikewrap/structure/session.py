@@ -299,6 +299,7 @@ class Session:
             runs.append(
                 SeparateRun(
                     parent_input_path=run_path.parent,  # may include "ephys" if NeuroBlueprint
+                    parent_ses_name=self._ses_name,
                     run_name=run_path.name,
                     session_output_path=self._output_path,
                     file_format=self._file_format,
@@ -332,6 +333,7 @@ class Session:
             ConcatRun(
                 self._runs,  # type: ignore
                 self._parent_input_path,
+                self._ses_name,
                 self._output_path,
                 self._file_format,
             )

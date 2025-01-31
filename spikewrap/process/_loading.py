@@ -22,6 +22,8 @@ def load_data(
     explain (e.g. without sync needed for sorting, otherwise store sync for
     storing the sync array!
     """
+    _utils.message_user(f"Loading data from path: {run_path}")
+
     if file_format == "spikeglx":
         without_sync, with_sync = [
             si.read_spikeglx(
