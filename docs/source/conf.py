@@ -187,7 +187,7 @@ html_favicon = "_static/light-logo-niu.png"
 # The linkcheck builder will skip verifying that anchors exist when checking
 # these URLs
 linkcheck_anchors_ignore_for_url = [
-    "https://neuroinformatics.zulipchat.com/#narrow/channel/406002-Spikewrap"
+    "https://neuroinformatics.zulipchat.com"
 ]
 # A list of regular expressions that match URIs that should not be checked
 linkcheck_ignore = [

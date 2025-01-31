@@ -103,6 +103,7 @@ or in custom formats with subject, session and recording folder levels as below:
 systems with `Neuropixels <https://www.neuropixels.org/>`_ probes are currently supported
 (see :ref:`Supported Formats <supported-formats>` for details).
 
+We can preprocess, visualise and save a recording session with a few function calls:
 """
 
 import spikewrap as sw
@@ -142,7 +143,9 @@ session.save_preprocessed(
 )
 
 # %%
-# with data output in the structure:
+# with data output to the standardised
+# `NeuroBlueprint <https://neuroblueprint.neuroinformatics.dev/latest/index.html>`_
+# structure:
 #
 # .. code-block::
 #

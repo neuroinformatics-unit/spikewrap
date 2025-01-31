@@ -2,11 +2,11 @@
 """
 .. _configs-howto:
 
-How to manage configs
-=====================
+How to manage ``configs``
+=========================
 
 .. note::
-    This is a quick how-to on config management. See :ref:`here <configs-tutorial>` for a long-form tutorial.
+    This is a quick how-to on ``config`` management. See :ref:`here <configs-tutorial>` for a long-form tutorial.
 
 """
 

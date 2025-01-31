@@ -2,11 +2,11 @@
 """
 .. _configs-tutorial:
 
-Managing Configs
-================
+Managing ``configs``
+====================
 
 .. note::
-    This is a long-form tutorial on config management. See :ref:`here <configs-howto>` for a quick how-to.
+    This is a long-form tutorial on ``config`` management. See :ref:`here <configs-howto>` for a quick how-to.
 
 In ``spikewrap``, ``configs`` encode the preprocessing and sorting settings for a pipeline.
 The emphasis is on convenient sharing of pipelines, while allowing flexibility for prototyping.
