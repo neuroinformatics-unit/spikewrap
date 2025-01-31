@@ -60,5 +60,5 @@ class Preprocessed:
 
         recording.save(
             folder=self._preprocessed_path / canon.preprocessed_bin_folder(),
-            chunk_duration=chunk_duration_s,
+            chunk_duration=f"{chunk_duration_s}s",
         )

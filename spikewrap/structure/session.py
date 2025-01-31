@@ -123,7 +123,6 @@ class Session:
         Parameters
         ----------
         configs
-            Configurations that determine the preprocessing steps to run.
             - If a ``str`` is provided, expects the name of a stored configuration file.
               See ``show_available_configs()`` and ``save_config_dict()`` for details.
             - If a ``Path`` is provided, expects the path to a valid spikewrap config YAML file.

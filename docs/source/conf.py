@@ -80,6 +80,7 @@ templates_path = ["_templates"]
 # Automatically generate stub pages for API
 autosummary_generate = True
 # autodoc_default_flags = ["members", "inherited-members"]
+autodoc_member_order = 'bysource'
 
 autodoc_default_options = {
     'members': True,             # Include all members (functions, methods, etc.)
@@ -163,6 +164,7 @@ html_theme_options = {
     "footer_start": ["footer_start"],
     "footer_end": ["footer_end"],
     "external_links": [],
+    "show_toc_level": 2,  # sidebar levels that are expanded before scrolling, needed for API docs
 }
 
 # Redirect the webpage to another URL
