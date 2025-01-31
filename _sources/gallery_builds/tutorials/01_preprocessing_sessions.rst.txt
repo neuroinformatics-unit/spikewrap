@@ -521,7 +521,7 @@ chosen settings, you can run:
     Saving sync channel for: run-001_g0_imec0...
     write_binary_recording 
     n_jobs=4 - samples_per_chunk=60,000 - chunk_memory=43.95 MiB - total_memory=175.78 MiB - chunk_duration=2.00s
-    write_binary_recording:   0%|          | 0/1 [00:00<?, ?it/s]    write_binary_recording: 100%|██████████| 1/1 [00:00<00:00,  3.43it/s]    write_binary_recording: 100%|██████████| 1/1 [00:00<00:00,  3.43it/s]
+    write_binary_recording:   0%|          | 0/1 [00:00<?, ?it/s]    write_binary_recording: 100%|██████████| 1/1 [00:00<00:00,  3.51it/s]    write_binary_recording: 100%|██████████| 1/1 [00:00<00:00,  3.51it/s]
 
     Saving data for: run-002_g0_imec0...
 
@@ -531,7 +531,7 @@ chosen settings, you can run:
     Saving sync channel for: run-002_g0_imec0...
     write_binary_recording 
     n_jobs=4 - samples_per_chunk=60,000 - chunk_memory=43.95 MiB - total_memory=175.78 MiB - chunk_duration=2.00s
-    write_binary_recording:   0%|          | 0/1 [00:00<?, ?it/s]    write_binary_recording: 100%|██████████| 1/1 [00:00<00:00,  3.52it/s]    write_binary_recording: 100%|██████████| 1/1 [00:00<00:00,  3.51it/s]
+    write_binary_recording:   0%|          | 0/1 [00:00<?, ?it/s]    write_binary_recording: 100%|██████████| 1/1 [00:00<00:00,  3.88it/s]    write_binary_recording: 100%|██████████| 1/1 [00:00<00:00,  3.88it/s]
 
 
 
@@ -581,7 +581,7 @@ See the
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** (0 minutes 3.540 seconds)
+   **Total running time of the script:** (0 minutes 3.753 seconds)
 
 
 .. _sphx_glr_download_gallery_builds_tutorials_01_preprocessing_sessions.py:

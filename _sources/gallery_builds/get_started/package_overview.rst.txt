@@ -212,10 +212,10 @@ We can preprocess, visualise and save a recording session with a few function ca
     Saving sync channel for: run-001_g0_imec0...
     write_binary_recording 
     n_jobs=4 - samples_per_chunk=60,000 - chunk_memory=21.97 MiB - total_memory=87.89 MiB - chunk_duration=2.00s
-    write_binary_recording:   0%|          | 0/1 [00:00<?, ?it/s]    write_binary_recording: 100%|██████████| 1/1 [00:00<00:00,  4.83it/s]    write_binary_recording: 100%|██████████| 1/1 [00:00<00:00,  4.83it/s]
+    write_binary_recording:   0%|          | 0/1 [00:00<?, ?it/s]    write_binary_recording: 100%|██████████| 1/1 [00:00<00:00,  4.68it/s]    write_binary_recording: 100%|██████████| 1/1 [00:00<00:00,  4.67it/s]
     write_binary_recording 
     n_jobs=4 - samples_per_chunk=60,000 - chunk_memory=21.97 MiB - total_memory=87.89 MiB - chunk_duration=2.00s
-    write_binary_recording:   0%|          | 0/1 [00:00<?, ?it/s]    write_binary_recording: 100%|██████████| 1/1 [00:00<00:00,  4.57it/s]    write_binary_recording: 100%|██████████| 1/1 [00:00<00:00,  4.57it/s]
+    write_binary_recording:   0%|          | 0/1 [00:00<?, ?it/s]    write_binary_recording: 100%|██████████| 1/1 [00:00<00:00,  4.38it/s]    write_binary_recording: 100%|██████████| 1/1 [00:00<00:00,  4.37it/s]
 
     Saving data for: run-002_g0_imec0...
 
@@ -225,10 +225,10 @@ We can preprocess, visualise and save a recording session with a few function ca
     Saving sync channel for: run-002_g0_imec0...
     write_binary_recording 
     n_jobs=4 - samples_per_chunk=60,000 - chunk_memory=21.97 MiB - total_memory=87.89 MiB - chunk_duration=2.00s
-    write_binary_recording:   0%|          | 0/1 [00:00<?, ?it/s]    write_binary_recording: 100%|██████████| 1/1 [00:00<00:00,  3.87it/s]    write_binary_recording: 100%|██████████| 1/1 [00:00<00:00,  3.87it/s]
+    write_binary_recording:   0%|          | 0/1 [00:00<?, ?it/s]    write_binary_recording: 100%|██████████| 1/1 [00:00<00:00,  5.47it/s]    write_binary_recording: 100%|██████████| 1/1 [00:00<00:00,  5.47it/s]
     write_binary_recording 
     n_jobs=4 - samples_per_chunk=60,000 - chunk_memory=21.97 MiB - total_memory=87.89 MiB - chunk_duration=2.00s
-    write_binary_recording:   0%|          | 0/1 [00:00<?, ?it/s]    write_binary_recording: 100%|██████████| 1/1 [00:00<00:00,  3.92it/s]    write_binary_recording: 100%|██████████| 1/1 [00:00<00:00,  3.91it/s]
+    write_binary_recording:   0%|          | 0/1 [00:00<?, ?it/s]    write_binary_recording: 100%|██████████| 1/1 [00:00<00:00,  4.40it/s]    write_binary_recording: 100%|██████████| 1/1 [00:00<00:00,  4.40it/s]
 
 
 
@@ -264,7 +264,7 @@ Next, visit :ref:`get-started` and :ref:`tutorials_index` to try out ``spikewrap
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** (0 minutes 1.955 seconds)
+   **Total running time of the script:** (0 minutes 1.974 seconds)
 
 
 .. _sphx_glr_download_gallery_builds_get_started_package_overview.py:
