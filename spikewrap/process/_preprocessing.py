@@ -1,9 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Callable
-
-if TYPE_CHECKING:
-    from spikeinterface.core import BaseRecording
+from typing import Callable
 
 import numpy as np
 import spikeinterface.full as si
@@ -25,9 +22,9 @@ def _fill_with_preprocessed_recordings(
 
     Parameters
     ----------
-    preprocess_data :
+    preprocess_data
         Dictionary to store the newly created recording objects, updated in-place.
-    pp_steps :
+    pp_steps
         "preprocessing" entry of a "configs" dictionary. Formatted as
         {step_num_str : [preprocessing_func_name, {pp_func_args}]
     """
@@ -36,70 +33,20 @@ def _fill_with_preprocessed_recordings(
     checked_pp_steps, pp_step_names = _check_and_sort_pp_steps(pp_steps, pp_funcs)
 
     for step_num, pp_info in checked_pp_steps.items():
-        (
-            pp_name,
-            pp_options,
-            last_pp_step_output,
-            new_name,
-        ) = _get_preprocessing_step_information(
-            pp_info, pp_step_names, preprocess_data, step_num
+        pp_name, pp_options = pp_info
+
+        last_pp_step_output, __ = _utils._get_dict_value_from_step_num(
+            preprocess_data, step_num=str(int(step_num) - 1)
         )
 
         preprocessed_recording = pp_funcs[pp_name](last_pp_step_output, **pp_options)
+
+        new_name = f"{step_num}-" + "-".join(["raw"] + pp_step_names[: int(step_num)])
 
         preprocess_data[new_name] = preprocessed_recording
 
 
 # Helpers for preprocessing steps dictionary -------------------------------------------
-
-
-def _get_preprocessing_step_information(
-    pp_info: list,
-    pp_step_names: list[str],
-    preprocess_data: dict,
-    step_num: str,
-) -> tuple[str, dict, BaseRecording, str]:
-    """
-    Retrieve recording and details needed to apply a preprocessing step.
-
-    Extracts the name and options for the current step, determines
-    the output of the previous step, and constructs a descriptive name for the new
-    recording.
-
-    Parameters
-    ----------
-    pp_info :
-        A list containing the preprocessing step name and a dictionary of options.
-        For example: ["common_reference", {"operator": "median"}].
-    pp_step_names :
-        A list of ordered preprocessing step names.
-    preprocess_data :
-        The Preprocessed._data dictionary to be filled.
-    step_num :
-        The current step number as a string.
-
-    Returns
-    -------
-    pp_name :
-        The name of the current preprocessing step.
-    pp_options :
-        The dictionary of parameters for the current step.
-    last_pp_step_output
-        The preprocessed SpikeInterface recording from the immediately
-        preceding step, usually a recording from the previous pipeline stage.
-    new_name :
-        A concatenated string representing the current preprocessing
-        step name in sequence, used as a key in `preprocess_data`.
-    """
-    pp_name, pp_options = pp_info
-
-    last_pp_step_output, __ = _utils._get_dict_value_from_step_num(
-        preprocess_data, step_num=str(int(step_num) - 1)
-    )
-
-    new_name = f"{step_num}-" + "-".join(["raw"] + pp_step_names[: int(step_num)])
-
-    return pp_name, pp_options, last_pp_step_output, new_name
 
 
 def _check_and_sort_pp_steps(pp_steps: dict, pp_funcs: dict) -> tuple[dict, list[str]]:
@@ -109,18 +56,18 @@ def _check_and_sort_pp_steps(pp_steps: dict, pp_funcs: dict) -> tuple[dict, list
 
     Parameters
     ----------
-    pp_steps : dict
+    pp_steps dict
         "preprocessing" entry of a "configs" dictionary. Formatted as
         {step_num_str : [preprocessing_func_name, {pp_func_args}]
-    pp_funcs :
+    pp_funcs
         A dictionary linking preprocessing step names to the underlying
         SpikeInterface preprocessing functions.
 
     Returns
     -------
-    pp_steps :
+    pp_steps
         The checked pp_steps dictionary.
-    pp_step_names :
+    pp_step_names
         List of ordered preprocessing step names (e.g. "bandpass_filter").
     """
     _validate_pp_steps(pp_steps)
@@ -144,7 +91,7 @@ def _validate_pp_steps(pp_steps: dict) -> None:
 
     Parameters
     ----------
-    pp_steps : dict
+    pp_steps
         "preprocessing" entry of a "configs" dictionary. Formatted as
         {step_num_str : [preprocessing_func_name, {pp_func_args}]
     """

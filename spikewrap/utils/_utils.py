@@ -24,7 +24,7 @@ def message_user(message: str) -> None:
 
     Parameters
     ----------
-    message :
+    message
         Message to print.
     """
     print(f"\n{message}")
@@ -44,18 +44,18 @@ def _get_dict_value_from_step_num(
 
     Parameters
     ----------
-    data :
+    data
         The `Preprocessed._data` dict containing preprocessing steps and recordings.
 
-    step_num :
+    step_num
         The preprocessing step number (or "last" for the final step) to retrieve.
 
     Returns
     -------
-    dict_value :
+    dict_value
         The recording object corresponding to the given step number.
 
-    pp_key :
+    pp_key
         The key of the preprocessing dict associated with the step number.
     """
     if step_num == "last":
@@ -85,15 +85,15 @@ def _get_keys_first_char(data: dict, as_int: bool = False) -> list[str] | list[i
 
     Parameters
     ----------
-    data :
+    data
         The `Preprocessed._data` dict containing preprocessing steps and recordings.
 
-    as_int :
+    as_int
         If True, the first character of the keys are cast to integer type.
 
     Returns
     -------
-    list_of_numbers :
+    list_of_numbers
         A list of numbers of string or integer type, that are
         the first numbers of the data dictionary keys.
     """
@@ -113,17 +113,17 @@ def _paths_are_in_datetime_order(
 
     Parameters
     ----------
-    list_of_paths :
+    list_of_paths
         A list of paths to folders / files to check are in datetime order.
 
-    creation_or_modification :
+    creation_or_modification
         If "creation", check the list of paths are ordered by creation datetime.
         Otherwise, if "modification", check they are sorted by modification
         datetime.
 
     Returns
     -------
-    is_in_time_order : bool
+    is_in_time_order
         Indicates whether `list_of_paths` was in creation or modification time
         order depending on the value of `creation_or_modification`.
     """

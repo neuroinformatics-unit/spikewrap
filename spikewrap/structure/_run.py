@@ -22,13 +22,31 @@ from spikewrap.visualise._visualise import visualise_run_preprocessed
 
 class BaseRun:
     """
-    # Responsibilities:
-        - hold raw data of the run (either split per shank or grouped)
-        - hold preprocessed data of the run (either split per shank or grouped)
-        - save sync channel when is saved across all runs
-        - handle overwriting (at the run level)
+    Base class for an electrophysiology 'run'. Manages loading data,
+    preprocessing and saving of the run.
 
-    Note the inheritence...
+    Parameters
+    ----------
+    parent_input_path
+        Path to the raw-data session folder (e.g. ses-001 or ses-001/ephys)
+        in which this run is contained.
+    run_name
+        Folder name of this run.
+    session_output_path
+        Path to the output (processed) parent session-level data.
+    file_format
+        "spikeglx" or "openephys", acquisition software used.
+
+    Notes
+    -----
+    This class instance should manage data for the same run
+    throughout its lifetimes, the format, paths and run name
+    should not change.
+
+    The _raw, _preprocessed, _sync attributes may be loaded
+    repeatedly from the passed paths in order to 'refresh'
+    their state (for example, preprocessed with different options,
+    or reset to grouped recordings instead of separate shank).
     """
 
     def __init__(
@@ -58,21 +76,35 @@ class BaseRun:
 
     def load_raw_data(self, internal_overwrite: bool = False) -> None:
         """
-        TODO: again, figure out lifetime!
-        I think its okay....
+        IF applicable, this function should load
+        SpikeInterface recording objects.
         """
-        raise NotImplementedError
+        raise NotImplementedError("Implement in base class.")
 
     def refresh_data(self) -> None:
-        """ """
+        """
+        Completely refresh all raw and preprocessed data.
+        This completely destroys all associated SpikeInterface
+        recording objects.
+
+        New raw SpikeInterface recordings are instantiated.
+        This overwrites all shank splitting etc.
+        """
         self._preprocessed = {}
         self._sync = None
         self.load_raw_data(internal_overwrite=True)
 
     def preprocess(self, pp_steps: dict, per_shank: bool) -> None:
         """
-        Note because this class is fresh, we can assume only run once.
-        IMMUTABLE CLASS! ONE-SHOT CLASS!
+        Preprocess the run. If ``per_shank``, the ``self._raw``
+        recording is split into separate shank groups before preprocessing.
+
+        Preprocessed recordings are saved in the same format as
+        ``self._raw`` to the ``self._preprocessed`` attribute.
+
+        Parameters
+        ----------
+        see session.preprocess()
         """
         assert (
             not self._preprocessing_is_run()
@@ -93,11 +125,15 @@ class BaseRun:
             )
 
     def save_preprocessed(
-        self, overwrite: bool, chunk_size: dict | None, n_jobs: int, slurm: dict | bool
+        self, overwrite: bool, chunk_duration_s: float, n_jobs: int, slurm: dict | bool
     ) -> None:
-        """ """
+        """
+        Save the fully preprocessed run to binary.
+
+        see the public session.save_preprocessed()
+        """
         if slurm:
-            self._save_preprocessed_slurm(overwrite, chunk_size, n_jobs, slurm)
+            self._save_preprocessed_slurm(overwrite, chunk_duration_s, n_jobs, slurm)
             return
 
         _utils.message_user(f"Saving data for: {self._run_name}...")
@@ -105,7 +141,7 @@ class BaseRun:
         if n_jobs != 1:
             si.set_global_job_kwargs(n_jobs=n_jobs)
 
-        if self._output_path.is_dir():  # getter func?
+        if self._output_path.is_dir():
             if overwrite:
                 self._delete_existing_run_except_slurm_logs(self._output_path)
             else:
@@ -116,12 +152,14 @@ class BaseRun:
         self._save_sync_channel()
 
         for preprocessed in self._preprocessed.values():
-            preprocessed.save_binary(chunk_size)
+            preprocessed.save_binary(chunk_duration_s)
 
     @staticmethod
     def _delete_existing_run_except_slurm_logs(output_path):
-        # TODO: move
-        # Do not delete slurm logs for a run, keep these forever for provennance.
+        """
+        When overwriting the data for this run, delete
+        everything except the ``"slurm_logs"`` folder.
+        """
         _utils.message_user(
             f"`overwrite=True`, so deleting all files and folders "
             f"(except for slurm_logs) at the path:\n"
@@ -143,6 +181,22 @@ class BaseRun:
         show: bool,
         figsize: tuple[int, int],
     ) -> matplotlib.Figure:
+        """
+        Plot the fully preprocessed data for this run.
+
+        Parameters
+        ----------
+        mode
+            The type of plot to generate. ``"map"`` for a heatmap and ``"line"`` for a line plot.
+        time_range
+            The time range (start, end) to plot the data within, in seconds.
+        show_channel_ids
+            If True, the plot will display channel IDs.
+        show
+              If True, the plot will be displayed immediately (``plt.show()`` call).
+        figsize
+            The dimensions (width, height) of the figure in inches.
+        """
         if not self._preprocessing_is_run():
             raise RuntimeError("Preprocessing has not been run.")
 
@@ -161,6 +215,9 @@ class BaseRun:
     # Helpers -----------------------------------------------------------------
 
     def raw_is_loaded(self) -> bool:
+        """
+        Return `True` if data has been loaded as SpikeInterface recordings.
+        """
         return self._raw != {}
 
     # ---------------------------------------------------------------------------
@@ -168,7 +225,14 @@ class BaseRun:
     # ---------------------------------------------------------------------------
 
     def _split_by_shank(self) -> None:
-        """ """
+        """
+        Split ``self._raw`` recording my shank. By default, the ``self._raw``
+        is a dictionary with one key:value pair, the recording with
+        all shanks grouped.
+
+        If split, this becomes a dict with key:value are the shank
+        names and split recordings respectively.
+        """
         assert not self._is_split_by_shank(), (
             f"Attempting to split by shank, but the recording"
             f"in run: {self._run_name} has already been split."
@@ -190,9 +254,27 @@ class BaseRun:
         )
 
     def _save_preprocessed_slurm(
-        self, overwrite: bool, chunk_size: dict | None, n_jobs: int, slurm: dict | bool
+        self, overwrite: bool, chunk_duration_s: float, n_jobs: int, slurm: dict | bool
     ) -> None:
-        """ """
+        """
+        Use ``submitit`` to run the ``save_preprocessed``
+        function for this run in a SLURM job.
+
+        Parameters
+        ----------
+        see ``save_preprocessed``
+
+        Notes
+        -----
+        This function is a little confusing because it is recursive. ``submitit``
+        works by pickling the class / method to run, requesting a job and running
+        the pickled method from within the SLURM job.
+
+        Therefore, we need to tell ``submitit`` to run ``save_preprocessed`` with
+        the passed kwargs from within the SLURM job, but we do not want to run it
+        from within a SLURM job again because we will spawn infinite SLURM jobs!
+        So when we run the function from within the SLURM job, we must set ``slurm=False``.
+        """
         slurm_ops: dict | bool = slurm if isinstance(slurm, dict) else False
 
         _slurm.run_in_slurm(
@@ -200,7 +282,7 @@ class BaseRun:
             func_to_run=self.save_preprocessed,
             func_opts={
                 "overwrite": overwrite,
-                "chunk_size": chunk_size,
+                "chunk_duration_s": chunk_duration_s,
                 "n_jobs": n_jobs,
                 "slurm": False,
             },
@@ -209,9 +291,11 @@ class BaseRun:
 
     def _save_sync_channel(self) -> None:
         """
-        Save the sync channel separately. In SI, sorting cannot proceed
-        if the sync channel is loaded to ensure it does not interfere with
-        sorting. As such, the sync channel is handled separately here.
+        Save the sync channel as a ``.npy`` file.
+
+        In SI, sorting cannot proceed if the sync channel is loaded to ensure
+        it does not interfere with sorting. As such, a separate recording with the
+        sync channel present is maintained and handled separately here.
         """
         sync_output_path = self._output_path / canon.sync_folder()
 
@@ -223,11 +307,15 @@ class BaseRun:
     # Helpers -----------------------------------------------------------------
 
     def _is_split_by_shank(self) -> bool:
-        """ """
+        """
+        Returns ``True`` if this run recording has been split into separate shanks.
+        """
         return len(self._raw) > 1
 
     def _preprocessing_is_run(self) -> bool:
-        """ """
+        """
+        Returns ``True`` if this run has been preprocesed.
+        """
         return any(self._preprocessed)
 
 
@@ -237,7 +325,12 @@ class BaseRun:
 
 
 class SeparateRun(BaseRun):
-    """ """
+    """
+    Represents a single electrophysiological run. Exposes Run functionality
+    and ability to load the SpikeInterface recording for this run into the class.
+
+    If concatenated, a list of `SeparateRuns` are converted to a `ConcatRun`.
+    """
 
     def __init__(
         self,
@@ -252,12 +345,19 @@ class SeparateRun(BaseRun):
             parent_input_path, run_name, session_output_path, file_format
         )
 
-    @property
-    def parent_input_path(self) -> Path:
-        return self._parent_input_path
-
     def load_raw_data(self, internal_overwrite: bool = False) -> None:
-        """ """
+        """
+        Fill the run with SpikeInterface recording objects.
+
+        For multi-shank recordings, all shanks are currently grouped
+        and may be split later.
+
+        Parameter
+        --------
+        internal_overwrite
+            Flag used to confirm overwriting the class data attributes is intended.
+
+        """
         if self.raw_is_loaded() and not internal_overwrite:
             raise RuntimeError("Cannot overwrite Run().")
 
@@ -275,7 +375,16 @@ class SeparateRun(BaseRun):
 
 
 class ConcatRun(BaseRun):
-    """ """
+    """
+    Subclass of `Run` used for concatenating `SeparateRun`s and
+    processing the concatenated recording.
+
+    Differences from `SeparateRun`:
+    1) ``load_run_data`` will raise, as it is assumed raw data has
+       already been loaded as separate runs and concatenated.
+    2) ``_orig_run_names`` holds the names of original, separate
+       recordings in the order they were concatenated.
+    """
 
     def __init__(
         self,
@@ -314,37 +423,52 @@ class ConcatRun(BaseRun):
 
         self._orig_run_names = orig_run_names
 
-    @property
-    def parent_input_path(self) -> None:
-        return self._parent_input_path
+    def save_preprocessed(
+        self, overwrite: bool, chunk_duration_s: float, n_jobs: int, slurm: dict | bool
+    ) -> None:
+        """
+        Overloads the base ``save_preprocessed`` function to also write
+        the original run names to disk to the concatenated run output folder.
 
-    @property
-    def orig_run_names(self) -> list[str]:
-        """ """
-        return self._orig_run_names
+        Parameters
+        ----------
+        See base class.
+        """
+        super().save_preprocessed(overwrite, chunk_duration_s, n_jobs, slurm)
+
+        with open(self._output_path / "orig_run_names.txt", "w") as f:
+            f.write("\n".join(self._orig_run_names))
 
     def load_raw_data(self, internal_overwrite: bool = False) -> None:
-        """ """
+        """
+        Overload the base class ``load_raw_data``. This should not
+        be called on this subclass, because raw-data is already loaded
+        (and concatenated, to form this recording).
+
+        `ConcatRun` should only be preprocessed and saved.
+
+        Parameters
+        ----------
+        See base class.
+        """
         raise NotImplementedError(
             "Cannot load data on a concatenated recording."
             "It is already run, and the input path does not exist."
         )
 
-    def save_preprocessed(
-        self, overwrite: bool, chunk_size: dict | None, n_jobs: int, slurm: dict | bool
-    ) -> None:
-        """
-        This way of handling run concat provenance is basic and will be superseded.
-        """
-        super().save_preprocessed(overwrite, chunk_size, n_jobs, slurm)
-
-        with open(self._output_path / "orig_run_names.txt", "w") as f:
-            f.write("\n".join(self.orig_run_names))
-
     def _check_and_format_recordings_to_concat(
         self, runs_list: list[SeparateRun]
     ) -> tuple[list[BaseRecording], list[BaseRecording], list[str]]:
-        """ """
+        """
+        Extracts raw data, sync data, and run names from a list of SeparateRun
+        objects, checks if they can be concatenated, and returns the relevant data.
+
+        Parameters
+        ----------
+        runs_list
+            List of runs to be concatenated. Must not contain
+            already-concatenated `ConcatRun` objects.
+        """
         raw_data: list[BaseRecording] = []
         sync_data: list[BaseRecording] = []
         orig_run_names: list[str] = []
@@ -376,7 +500,6 @@ class ConcatRun(BaseRun):
         assert self._preprocessed == {}, "Something has gone wrong in the inheritance."
 
         # Check key features of the recordings match before concatenation
-
         all_contacts = [rec["grouped"].get_channel_locations() for rec in raw_data]
         all_sampling_frequency = [
             rec["grouped"].get_sampling_frequency() for rec in raw_data

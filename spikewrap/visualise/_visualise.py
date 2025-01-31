@@ -27,24 +27,24 @@ def visualise_run_preprocessed(
 
     Parameters
     ----------
-    run_name :
+    run_name
         The name of the runs.
-    show :
+    show
         If True, display the plot immediately.
-    all_preprocessed :
+    all_preprocessed
         Preprocessed._data dict of preprocessed recording objects.
-    mode :
+    mode
         Visualization mode for traces, as supported by SpikeInterface.
-    time_range :
+    time_range
         Time range (start, end) to visualise in seconds.
-    show_channel_ids :
+    show_channel_ids
         If True, display channel IDs on the plots.
-    figsize :
+    figsize
         Size of each subplot in inches (width, height).
 
     Returns
     -------
-    fig :
+    fig
         The matplotlib Figure object containing the grid of plots.
 
     """

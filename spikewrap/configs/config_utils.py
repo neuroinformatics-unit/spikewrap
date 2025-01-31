@@ -22,14 +22,16 @@ def get_configs(name: str) -> tuple[dict, dict]:
     Returns
     -------
 
-    pp_steps : a dictionary containing the preprocessing
-               step order (keys) and a [pp_name, kwargs]
-               list containing the spikeinterface preprocessing
-               step and keyword options.
+    pp_steps
+        a dictionary containing the preprocessing
+       step order (keys) and a [pp_name, kwargs]
+       list containing the spikeinterface preprocessing
+       step and keyword options.
 
-    sorter_options : a dictionary with sorter name (key) and
-                     a dictionary of kwargs to pass to the
-                     spikeinterface sorter class.
+    sorter_options
+        a dictionary with sorter name (key) and
+        a dictionary of kwargs to pass to the
+        spikeinterface sorter class.
     """
     config_dir = get_configs_path()
 
@@ -126,11 +128,11 @@ def save_config_dict(config_dict: dict, name: str, folder: Path | None = None):
 
     Parameters
     ----------
-    config_dict :
+    config_dict
         The configs dictionary to save.
-    name :
+    name
         The name of the YAML file (with or without the `.yaml` extension).
-    folder :
+    folder
         If None (default), the config is saved in the spikewrap-managed
         user configs folder. Otherwise, save in `folder`.
     """
@@ -151,7 +153,7 @@ def load_config_dict(filepath: Path) -> dict:
 
     Parameters
     ----------
-    filepath :
+    filepath
         The full path to the YAML file, including the file name and extension.
 
     Returns

@@ -3,6 +3,7 @@
 slurm_logs/
 derivatives/
 gallery_builds
+sg_execution_times.rst
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

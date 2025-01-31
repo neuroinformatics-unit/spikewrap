@@ -10,20 +10,22 @@ def default_slurm_options(partition: Literal["cpu", "gpu"] = "cpu") -> dict:
 
     All arguments correspond to sbatch arguments except for:
 
-    `wait` : Whether to block the execution of the calling process until the job completes.
+    ``wait``
+        Whether to block the execution of the calling process until the job completes.
 
-    `env_name` : The name of the Conda environment to run the job in. Defaults to the
-                 active Conda environment of the calling process, or "spikewrap" if none is detected.
-                 To modify this, update the returned dictionary directly.
+    ``env_name``
+        The name of the Conda environment to run the job in. Defaults to the
+        active Conda environment of the calling process, or "spikewrap" if none is detected.
+        To modify this, update the returned dictionary directly.
 
     Parameters
     ----------
-    partition :
+    partition
         The SLURM partition to use.
 
     Returns
     -------
-    options :
+    options
         Dictionary of SLURM job settings.
     """
     env_name = os.environ.get("CONDA_DEFAULT_ENV")

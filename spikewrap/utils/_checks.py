@@ -7,7 +7,7 @@ def _system_call_success(command: str) -> bool:
 
     Parameters
     ----------
-    command :
+    command
         The system command to execute.
 
     Returns

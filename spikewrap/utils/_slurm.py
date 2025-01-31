@@ -24,14 +24,14 @@ def run_in_slurm(
     Parameters
     ----------
 
-    slurm_opts :
+    slurm_opts
         If `True`, default options are used. If a dict, options
         are used directly from the dict.
 
-    func_to_run :
+    func_to_run
         The function to run in a SLURM job.
 
-    func_opts :
+    func_opts
         A dictionary of kwargs to run in `func_to_run`.
     """
     if not is_slurm_installed():
@@ -69,15 +69,15 @@ def get_executor(log_path: Path, slurm_opts: dict) -> submitit.AutoExecutor:
 
     Parameters
     ----------
-    log_path :
+    log_path
         Path to log the SLURM output to.
 
-    slurm_opts :
+    slurm_opts
         The slurm options to run.
 
     Returns
     -------
-    executor : submitit.AutoExecutor
+    executor
         submitit executor object defining requested SLURM node parameters.
     """
     print(f"\nThe SLURM batch output logs will " f"be saved to {log_path}\n")
@@ -103,13 +103,13 @@ def wrap_function_with_env_setup(
 
     Parameters
     ----------
-    function : Callable
+    function
         A function to run in the SLURM job.
 
-    env_name : str
+    env_name
         The name of the conda environment to run the job in
 
-    func_opts : dict
+    func_opts
         All arguments passed to the public function.
     """
     print(f"\nrunning {function.__name__} with SLURM....\n")
@@ -129,12 +129,12 @@ def make_job_log_output_path(log_base_path: Path) -> Path:
 
     Parameters
     ----------
-    log_base_path : dict
+    log_base_path
         Path to the folder that will contain the folder 'slurm_logs'
 
     Returns
     -------
-    log_path : Path
+    log_path
         The path to the SLURM log output folder for the current job.
         The logs are saved to a folder with the machine datetime as name.
     """
@@ -158,16 +158,16 @@ def send_user_start_message(
 
     Parameters
     ----------
-    processing_function : str
+    processing_function
         The function being run (i.e. run_full_pipeline, run_sorting)
 
-    log_path : Path
+    log_path
         The path to the SLURM log output folder for the current job.
 
-    job : submitit.job
+    job
         submitit.job object holding the SLURM job_id
 
-    func_opts : dict
+    func_opts
         Keyword arguments passed to the function to run in SLURM.
     """
     _utils.message_user(

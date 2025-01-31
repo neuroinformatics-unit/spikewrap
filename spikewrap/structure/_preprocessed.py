@@ -14,30 +14,25 @@ from spikewrap.utils import _utils
 
 class Preprocessed:
     """
-    This class represents a single recording and its full preprocessing chain.
-    This is a class used internally by spikewrap.
-
-    This class should be treated as immutable after initialisation.
-
-    Preprocessed recordings are held in self._data, a dict with
-    keys as a str representing the current step in the preprocessing chain,
-    e.g. "0-raw", "0-raw_1-phase_shift_2-bandpass_filter"
-    and value the corresponding preprocessed recording.
+    Class for holding and managing the preprocessing
+    of a SpikeInterface recording.
 
     Parameters
     ----------
-        recording :
-            The raw SpikeInterface recording (prior to preprocessing).
-        pp_steps :
-            Preprocessing configuration dictionary (see configs documentation).
-        output_path :
-            Path to output the saved fully preprocessed (i.e. last step in the chain)
-            recording to, with `save_binary()`.
+    recording
+        SpikeInterface raw recording object to be preprocessed.
+    pp_steps
+        Dictionary specifying preprocessing steps, see ``configs`` documentation.
+    output_path
+        Path where preprocessed recording is to be saved (i.e. run folder).
     """
 
     def __init__(
         self, recording: BaseRecording, pp_steps: dict, output_path: Path, name: str
     ):
+        # These parameters should be treated as constant and never changed
+        # during the lifetime of the class. Use the properties (which do not
+        # expose a setter) for both internal and external calls.
         if name == canon.grouped_shankname():
             self._preprocessed_path = output_path / canon.preprocessed_folder()
         else:
@@ -53,12 +48,12 @@ class Preprocessed:
 
     def save_binary(self, chunk_duration_s: float = 2.0) -> None:
         """
-        Save the fully preprocessed data (i.e. last step in the
-        preprocessing chain) to binary file.
+        Save the fully preprocessed data (i.e. last step in
+        the preprocessing chain) to binary file.
 
         Parameters
         ----------
-        chunk_duration_s :
+        chunk_duration_s
             Writing chunk size in seconds.
         """
         recording, __ = _utils._get_dict_value_from_step_num(self._data, "last")

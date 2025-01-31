@@ -23,11 +23,11 @@ def save_sync_channel(
 
     Parameters
     ----------
-    recording : BaseRecording
+    recording
         The recording object from which to extract the sync channel data.
-    output_path : Path
+    output_path
         The directory where the sync channel file will be saved.
-    file_format : {"spikeglx", "openephys"}
+    file_format
         The format of the recording file. Determines how the sync channel is extracted.
 
     Raises

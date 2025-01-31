@@ -79,11 +79,11 @@ def get_run_paths(
 
     Parameters
     ----------
-    file_format :
+    file_format
         The data format of the electrophysiology recordings.
-    ses_path :
+    ses_path
         The path to the session for which to detect the runs.
-    passed_run_names :
+    passed_run_names
         The ordered names of the runs to retrieve. If "all", all detected runs are returned.
         Otherwise, each run name in the list must match a detected run in the folders.
 
@@ -138,7 +138,7 @@ def get_spikeglx_runs(ses_path: Path) -> list[Path]:
 
     Parameters
     ----------
-    ses_path :
+    ses_path
         The path to the session for which to detect the runs.
 
     Returns
@@ -190,7 +190,7 @@ def get_openephys_runs(ses_path: Path) -> list[Path]:
 
     Parameters
     ----------
-    ses_path :
+    ses_path
         The path to the session for which to detect the runs.
 
     Returns

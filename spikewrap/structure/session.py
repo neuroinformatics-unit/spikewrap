@@ -23,18 +23,18 @@ class Session:
 
     Parameters
     ----------
-    subject_path :
+    subject_path
         The path to the subject's directory. This should contain the ``session_name`` directory.
-    session_name :
+    session_name
         The name of this session. Must match the session folder name in the `subject_path`.
-    file_format :
+    file_format
         Acquisition software used for recording, either ``"spikeglx"`` or ``"openephys"``.
         Determines how a session's runs are discovered.
-    run_names :
+    run_names
         Specifies which runs within the session to include. If ``"all"`` (default), includes all
         runs detected within the session. Otherwise, a ``list of str``, a list of specific run names.
         Each name must correspond to a run folder within the session. Order passed will be the concentration order.
-    output_path :
+    output_path
         The path where preprocessed data will be saved (in NeuroBlueprint style).
 
     Notes
@@ -122,17 +122,17 @@ class Session:
 
         Parameters
         ----------
-        configs :
+        configs
             Configurations that determine the preprocessing steps to run.
             - If a ``str`` is provided, expects the name of a stored configuration file.
               See ``show_available_configs()`` and ``save_config_dict()`` for details.
             - If a ``Path`` is provided, expects the path to a valid spikewrap config YAML file.
             - A spikewrap configs dictionary, either including the ``"preprocessing"`` level
               or the ``"preprocessing"`` level itself. See documentation for details.
-        concat_runs :
+        concat_runs
             If ``True``, all runs will be concatenated together before preprocessing.
             Use ``session.get_run_names()`` to check the order of concatenation.
-        per_shank :
+        per_shank
             If ``True``, perform preprocessing on each shank separately.
         """
         pp_steps = self._infer_pp_steps_from_configs_argument(configs)
@@ -153,10 +153,10 @@ class Session:
     def save_preprocessed(  # TODO: document, each run is in a separate SLURM job! keep like this for now
         self,
         overwrite: bool = False,
-        chunk_size: dict | None = None,
+        chunk_duration_s: float = 2,
         n_jobs: int = 1,
         slurm: dict | bool = False,
-    ) -> None:  # TODO: check preferred size for `chunk_size`
+    ) -> None:
         """
         Save preprocessed data for all runs in the current session.
 
@@ -167,24 +167,22 @@ class Session:
 
         Parameters
         ----------
-        overwrite :
+        overwrite
             If `True`, existing preprocessed run data will be overwritten.
             Otherwise, an error will be raised.
-        chunk_size :
-            Size of data chunk to be rewritten. If `None` (default), a predefined chunk size  TODO: CHECK THIS AND GIVE EXAMPLE!!! ! !!
-            will be used based on available memory. Otherwise, a dictionary of kwargs to
-            be passed to SpikeInterface's `save` function.
-        n_jobs :
+        chunk_duration_s
+            Size of chunks which are separately to preprocessed and written.
+        n_jobs
             Number of parallel jobs to run for saving preprocessed data.
             Sets SpikeInterface's `set_global_job_kwargs`.
-        slurm :
+        slurm
             Configuration for submitting the save jobs to a SLURM workload manager.
             If `False` (default), jobs will be run locally. If `True`, job will be run in SLURM
             with default arguments. If a `dict` is provided, it should contain SLURM arguments.
             See `tutorials` in the documentation for details.
         """
         for run in self._runs:
-            run.save_preprocessed(overwrite, chunk_size, n_jobs, slurm)
+            run.save_preprocessed(overwrite, chunk_duration_s, n_jobs, slurm)
 
     def plot_preprocessed(
         self,
@@ -204,19 +202,19 @@ class Session:
 
         Parameters
         ----------
-        run_idx :
+        run_idx
             - If ``"all"``, plots preprocessed data for all runs in the session.
             - If an integer, plots preprocessed data for the run at the specified index in ``self._runs``.
-        mode :
+        mode
             Determines the plotting style, a heatmap-style or line plot.
-        time_range :
+        time_range
             Time range (start, end), in seconds, to plot. e.g. (0.0, 1.0)
-        show_channel_ids :
+        show_channel_ids
             If ``True``, displays the channel identifiers on the plots.
-        show :
+        show
             If ``True``, displays the plots immediately. If ``False``, the
             plots are generated and returned without being displayed.
-        figsize :
+        figsize
             Specifies the size of the figure in inches as ``(width, height)``.
 
         Returns
@@ -280,7 +278,7 @@ class Session:
 
         Parameters
         ----------
-        internal_overwrite :
+        internal_overwrite
             Safety flag to ensure overwriting existing runs is intended.
         """
         if self._runs and not internal_overwrite:
