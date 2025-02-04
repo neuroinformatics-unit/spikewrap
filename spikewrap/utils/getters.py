@@ -5,7 +5,7 @@ from typing import Literal
 
 
 def get_example_data_path(
-    file_format: Literal["spikeglx", "openephys"] = "spikeglx"
+    file_format: Literal["spikeglx", "openephys"] = "spikeglx",
 ) -> Path:
     """
     Get the path to the example data directory. This contains a
