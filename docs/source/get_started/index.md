@@ -15,7 +15,7 @@ How to install ``spikewrap``.
 :::
 
 :::{grid-item-card} {fas}`sitemap;sd-text-primary` Feature Overview
-:link: sphx_glr_gallery_builds_get_started_package_overview.py
+:link: sphx_glr_gallery_builds_get_started_feature_overview.py
 :link-type: ref
 
 Key features of the package.
@@ -47,6 +47,6 @@ How ``spikewrap`` outputs processed data.
 install
 supported_formats
 output_folder_formats
-../gallery_builds/get_started/package_overview
+../gallery_builds/get_started/feature_overview
 ```
 

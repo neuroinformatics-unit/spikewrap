@@ -1,7 +1,7 @@
 # ruff: noqa: E402
-""" Overview
-============
-`(1 minute read)`
+""" Feature Overview
+====================
+`(2 minute read)`
 
 
 ``spikewrap`` provides a Python interface for managing and
