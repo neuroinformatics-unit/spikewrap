@@ -86,6 +86,9 @@ class TestSetProbe:
         )
 
     def get_mock_probe(self):
+        """
+        Get an arbitrary probe to use on the test recording (16 channels).
+        """
         mock_probe = pi.get_probe("neuropixels", "NP2014")
         mock_probe = mock_probe.get_slice(np.arange(16))
         return mock_probe
