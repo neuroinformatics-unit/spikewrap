@@ -174,7 +174,7 @@ def get_spikeglx_runs(ses_path: Path) -> list[Path]:
             raise RuntimeError(
                 f"The run folder {path_} contains more than one recording.\n"
                 f"Currently multi-trigger recordings are not supported.\n"
-                f"Plese contact the spikerwap team."
+                f"Please contact the spikerwap team."
             )
 
         if len(rec_paths) == 0:
@@ -187,7 +187,7 @@ def get_openephys_runs(ses_path: Path) -> list[Path]:
     """
     Detect and validate runs from OpenEphys recordings.
 
-    Muliple Record Node's and `experiments` are not supported.
+    Multiple Record Node's and `experiments` are not supported.
     `recordings` within the `experiments1` folder are treated as runs.
 
     Parameters
