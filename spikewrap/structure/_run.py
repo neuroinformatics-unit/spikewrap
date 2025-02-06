@@ -6,6 +6,7 @@ if TYPE_CHECKING:
     from pathlib import Path
 
     import matplotlib
+    from probeinterface import Probe
     from spikeinterface.core import BaseRecording
 
 import shutil
@@ -341,7 +342,7 @@ class SeparateRun(BaseRun):
         run_name: str,
         session_output_path: Path,
         file_format: Literal["spikeglx", "openephys"],
-        probe=None,  # TODO: TYPE
+        probe: Probe | None,
     ):
         self._parent_input_path: Path
         self._probe = probe
@@ -472,7 +473,7 @@ class ConcatRun(BaseRun):
         Extracts raw data, sync data, and run names from a list of SeparateRun
         objects and returns the relevant data.
 
-        No checks of whether it is suitable to concatenate the recordings
+        No checks on whether it is suitable to concatenate the recordings
         is performed here, as this is done in the SpikeInterface function.
 
         Parameters

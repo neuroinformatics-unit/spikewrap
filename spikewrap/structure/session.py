@@ -4,6 +4,7 @@ from typing import TYPE_CHECKING, Literal
 
 if TYPE_CHECKING:
     import matplotlib
+    from probeinterface import Probe
 
 from pathlib import Path
 
@@ -27,13 +28,13 @@ class Session:
         The path to the subject's directory. This should contain the ``session_name`` directory.
     session_name
         The name of this session. Must match the session folder name in the `subject_path`.
+    file_format
+        Acquisition software used for recording, either ``"spikeglx"`` or ``"openephys"``.
+        Determines how a session's runs are discovered.
     run_names
         Specifies which runs within the session to include. If ``"all"`` (default), includes all
         runs detected within the session. Otherwise, a ``list of str``, a list of specific run names.
         Each name must correspond to a run folder within the session. Order passed will be the concentration order.
-    file_format
-        Acquisition software used for recording, either ``"spikeglx"`` or ``"openephys"``.
-        Determines how a session's runs are discovered.
     output_path
         The path where preprocessed data will be saved (in NeuroBlueprint style).
     probe
@@ -64,7 +65,7 @@ class Session:
         file_format: Literal["spikeglx", "openephys"],
         run_names: Literal["all"] | list[str] = "all",
         output_path: Path | None = None,
-        probe=None,  # TODO: TYPE
+        probe: Probe | None = None,
     ):
         """ """
         parent_input_path = Path(subject_path)
