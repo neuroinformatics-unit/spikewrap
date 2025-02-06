@@ -45,19 +45,13 @@ def save_sync_channel(
       `output_path` directory.
     - If the output directory does not exist, it is created automatically.
     """
-    if file_format == "spikeglx":
+    if file_format in ["spikeglx", "openephys"]:
         select_sync_recording = recording.select_channels(
             [recording.get_channel_ids()[-1]]
         )
         sync_data = select_sync_recording.get_traces()[:, 0]
 
         assert sync_data.size == select_sync_recording.get_num_samples()
-
-    elif file_format == "openephys":
-        raise NotImplementedError(
-            "No test case has been found for sync channel with open ephys. Please get in contact."
-        )
-
     else:
         raise ValueError("File format type not recognised.")
 

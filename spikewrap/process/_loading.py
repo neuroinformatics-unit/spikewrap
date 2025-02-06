@@ -16,7 +16,7 @@ from spikewrap.utils import _utils
 
 
 def load_data(
-    run_path: Path, file_format: Literal["spikeglx", "openephys"]
+    run_path: Path, file_format: Literal["spikeglx", "openephys"], probe  # TODO: TYPE!
 ) -> tuple[BaseRecording, BaseRecording]:
     """
     explain (e.g. without sync needed for sorting, otherwise store sync for
@@ -58,6 +58,20 @@ def load_data(
             f"Data at\n{run_path}\nhas multiple segments. "
             f"This should nto be the case. "
             f"Each run must contain only 1 recording."
+        )
+
+    if probe is not None:
+        if without_sync.has_probe():
+            raise RuntimeError(
+                "A probe was already auto-detected. Cannot manually set probe. "
+                "Please contact spikewrap if required."
+            )
+        without_sync = without_sync.set_probe(probe)
+
+    if not without_sync.has_probe():
+        raise RuntimeError(
+            "No probe is attached to this recording. Pass a `probe` object to set."
+            "See ProbeInterface for available probes."
         )
 
     return without_sync, with_sync

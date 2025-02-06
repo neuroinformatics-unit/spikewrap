@@ -36,6 +36,9 @@ class Session:
         Each name must correspond to a run folder within the session. Order passed will be the concentration order.
     output_path
         The path where preprocessed data will be saved (in NeuroBlueprint style).
+    probe
+        A ProbeInterface probe object to set on the recordings. If `None`,
+        auto-detection of probe is attempted.
 
     Notes
     -----
@@ -61,6 +64,7 @@ class Session:
         file_format: Literal["spikeglx", "openephys"],
         run_names: Literal["all"] | list[str] = "all",
         output_path: Path | None = None,
+        probe=None,  # TODO: TYPE
     ):
         """ """
         parent_input_path = Path(subject_path)
@@ -72,6 +76,7 @@ class Session:
         # expose a setter) for both internal and external calls.
         self._passed_run_names = run_names
         self._file_format = file_format
+        self._probe = probe  # TODO - this is the same object on all classes right?
 
         self._parent_input_path = parent_input_path
         self._ses_name = session_name
@@ -303,6 +308,7 @@ class Session:
                     run_name=run_path.name,
                     session_output_path=self._output_path,
                     file_format=self._file_format,
+                    probe=self._probe,
                 )
             )
         self._runs = runs  # type: ignore

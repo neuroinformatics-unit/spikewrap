@@ -342,8 +342,10 @@ class SeparateRun(BaseRun):
         run_name: str,
         session_output_path: Path,
         file_format: Literal["spikeglx", "openephys"],
+        probe=None,  # TODO: TYPE
     ):
         self._parent_input_path: Path
+        self._probe = probe
 
         super(SeparateRun, self).__init__(
             parent_input_path,
@@ -370,7 +372,7 @@ class SeparateRun(BaseRun):
             raise RuntimeError("Cannot overwrite Run().")
 
         without_sync, with_sync = _loading.load_data(
-            self._parent_input_path / self._run_name, self._file_format
+            self._parent_input_path / self._run_name, self._file_format, self._probe
         )
 
         self._raw = {canon.grouped_shankname(): without_sync}
