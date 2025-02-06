@@ -6,8 +6,6 @@ import pytest
 
 import spikewrap as sw
 
-# TODO: FIX ORDER IN DOCS!
-
 
 class TestSetProbe:
 

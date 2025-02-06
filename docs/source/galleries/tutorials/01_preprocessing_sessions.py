@@ -83,7 +83,10 @@ We will cover:
 #    ``"spikeglx"`` or ``"openephys"``, the acquisition software used.
 # ``run_names``:
 #    (optional) Default "``all"`` or a list of run folder names to process.
-#
+# ``probe``:
+#    (optional) Default ``None``. Neuropixels are auto-detected from recording output.
+#    Otherwise, a `ProbeInterface <https://probeinterface.readthedocs.io/en/main/>`_
+#    object.
 
 import spikewrap as sw
 
