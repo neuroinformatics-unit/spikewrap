@@ -369,8 +369,8 @@ class Session:
         if rawdata_path.name != "rawdata":
             raise ValueError(
                 f"Cannot infer `output_path` from non-NeuroBlueprint "
-                f"folder structure (expected 'rawdata'->subject->session\n"
-                f"in path {self._parent_input_path}\n"
+                f"folder structure (expected 'rawdata'->subject->session "
+                f"in path {self._parent_input_path}. "
                 f"Pass the session output folder explicitly as `output_path`."
             )
 
