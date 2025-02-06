@@ -86,7 +86,7 @@ We will cover:
 # ``probe``:
 #    (optional) Default ``None``. Neuropixels are auto-detected from recording output.
 #    Otherwise, a `ProbeInterface <https://probeinterface.readthedocs.io/en/main/>`_
-#    object.
+#    object. This probe will be set on all runs.
 
 import spikewrap as sw
 

@@ -15,8 +15,7 @@ materials for convenient data quality checks.
 
    ``spikewrap`` is currently in a consultation stage, where feedback on the
    workflow is being actively solicited. New features—such as sorting,
-   subject-level analysis, quality checks and additional preprocessing steps—
-   are planned for implementation soon.
+   subject-level analysis, quality checks and additional preprocessing steps—are planned for implementation soon.
 
    Please :ref:`get in contact <community>` with feedback and suggestions!
 
