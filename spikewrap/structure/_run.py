@@ -6,11 +6,11 @@ if TYPE_CHECKING:
     from pathlib import Path
 
     import matplotlib
+    from probeinterface import Probe
     from spikeinterface.core import BaseRecording
 
 import shutil
 
-import numpy as np
 import spikeinterface.full as si
 
 from spikewrap.configs._backend import canon
@@ -342,8 +342,10 @@ class SeparateRun(BaseRun):
         run_name: str,
         session_output_path: Path,
         file_format: Literal["spikeglx", "openephys"],
+        probe: Probe | None,
     ):
         self._parent_input_path: Path
+        self._probe = probe
 
         super(SeparateRun, self).__init__(
             parent_input_path,
@@ -370,7 +372,7 @@ class SeparateRun(BaseRun):
             raise RuntimeError("Cannot overwrite Run().")
 
         without_sync, with_sync = _loading.load_data(
-            self._parent_input_path / self._run_name, self._file_format
+            self._parent_input_path / self._run_name, self._file_format, self._probe
         )
 
         self._raw = {canon.grouped_shankname(): without_sync}
@@ -415,7 +417,7 @@ class ConcatRun(BaseRun):
             raw_data,
             sync_data,
             orig_run_names,
-        ) = self._check_and_format_recordings_to_concat(runs_list)
+        ) = self._format_recordings_to_concat(runs_list)
 
         # Concatenate and store the recordings, assumes data is not
         # per-shank at this stage.
@@ -464,12 +466,15 @@ class ConcatRun(BaseRun):
             "It is already run, and the input path does not exist."
         )
 
-    def _check_and_format_recordings_to_concat(
+    def _format_recordings_to_concat(
         self, runs_list: list[SeparateRun]
     ) -> tuple[list[BaseRecording], list[BaseRecording], list[str]]:
         """
         Extracts raw data, sync data, and run names from a list of SeparateRun
-        objects, checks if they can be concatenated, and returns the relevant data.
+        objects and returns the relevant data.
+
+        No checks on whether it is suitable to concatenate the recordings
+        is performed here, as this is done in the SpikeInterface function.
 
         Parameters
         ----------
@@ -506,32 +511,5 @@ class ConcatRun(BaseRun):
             list(dict_.keys()) == [canon.grouped_shankname()] for dict_ in raw_data
         ), "We should not be multi-shank at this stage."
         assert self._preprocessed == {}, "Something has gone wrong in the inheritance."
-
-        # Check channel locations match, if probe is set. Otherwise, we must
-        # assume channel ordering is the same across recordings...?
-        has_contacts = True
-        try:
-            all_contacts = [rec["grouped"].get_channel_locations() for rec in raw_data]
-        except:
-            has_contacts = False
-
-        if has_contacts:
-            if not all(
-                [np.array_equal(contact, all_contacts[0]) for contact in all_contacts]
-            ):
-                raise RuntimeError(
-                    f"Cannot concatenate recordings with different channel organisation."
-                    f"This occurred for runs in folder: {self._parent_input_path}"
-                )
-
-        # Check sampling frequencies match.
-        all_sampling_frequency = [
-            rec["grouped"].get_sampling_frequency() for rec in raw_data
-        ]
-        if not np.unique(all_sampling_frequency).size == 1:
-            raise RuntimeError(
-                f"Cannot concatenate recordings with different sampling frequencies."
-                f"This occurred for runs in folder: {self._parent_input_path}"
-            )
 
         return raw_data, sync_data, orig_run_names
