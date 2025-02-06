@@ -29,7 +29,7 @@ class TestSetProbe:
             probe=mock_probe,
         )
 
-        session.preprocess("neuropixels+kilosort2_5", per_shank, concat_runs)
+        session.preprocess(self.get_pp_steps(), per_shank, concat_runs)
 
         all_run_data = []
         for run in session._runs:
@@ -47,9 +47,7 @@ class TestSetProbe:
         )
 
         with pytest.raises(RuntimeError) as e:
-            session.preprocess(
-                "neuropixels+kilosort2_5", per_shank=False, concat_runs=False
-            )
+            session.preprocess(self.get_pp_steps(), per_shank=False, concat_runs=False)
 
         assert "No probe is attached to this recording." in str(e.value)
 
@@ -69,14 +67,15 @@ class TestSetProbe:
         )
 
         with pytest.raises(RuntimeError) as e:
-            session.preprocess(
-                "neuropixels+kilosort2_5", per_shank=False, concat_runs=False
-            )
+            session.preprocess(self.get_pp_steps(), per_shank=False, concat_runs=False)
 
         assert "A probe was already auto-detected." in str(e.value)
 
     # Getters
     # ----------------------------------------------------------------------------------
+
+    def get_pp_steps(self):
+        return {"1": ["bandpass_filter", {"freq_min": 300, "freq_max": 6000}]}
 
     def get_no_probe_sub_path(self):
         return (
