@@ -6,12 +6,12 @@ if __name__ == "__main__":
     session = sw.Session(
         subject_path=sw.get_example_data_path("openephys") / "rawdata" / "sub-001",
         session_name="ses-001",
-        file_format="openephys",  # "spikeglx" or "openephys"
+        file_format="openephys",
     )
 
     session.preprocess(
         configs="neuropixels+kilosort2_5",
-        per_shank=True,
+        per_shank=False,
         concat_runs=True,
     )
 
