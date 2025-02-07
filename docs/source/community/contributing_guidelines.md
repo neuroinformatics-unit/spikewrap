@@ -1,7 +1,7 @@
 # Contributing Guide
 
-IMRPOVE
-**Contributors to `spikewrap`` are absolutely encouraged**, whether to fix a bug or develop a new feature.
+**Contributions to `spikewrap`` are very welcome and appreciated. This could be
+fixing a bug, improving the documentation or developing a new feature.
 
 If you're unsure about any part of the contributing process or have any questions, please
 get in touch through our [Zulip chat](https://neuroinformatics.zulipchat.com/#narrow/stream/406002-Spikewrap).
@@ -9,15 +9,12 @@ Otherwise, feel free to dive right in and start contributing by
 [creating a development environment](#creating-a-development-environment)
 and [opening a pull request](#pull-requests).
 
-The core development team will support you in contributing code, regardless of your experience!
-
 ## Creating a development environment
 
 To install ``spikewrap`` for development, first the
 [GitHub repository](https://github.com/neuroinformatics-unit/spikewrap)
 should be cloned. Then, you can change-directory
 to the cloned repository and run pip install with the developer tag:
-
 
 ```sh
 pip install -e .[dev]
@@ -46,7 +43,6 @@ to the following conventions:
 - One approval of a PR (by a repo maintainer) is sufficient for it to be merged.
 - If the PR receives approval without additional comments, it will be merged immediately by the approving reviewer.
 
-
 A typical PR workflow would be as follows:
 * Create a new branch, make your changes, and add them with `git add`.
 * When you attempt to commit, the [pre-commit hooks](#formatting-and-pre-commit-hooks) will be triggered.
@@ -56,20 +52,14 @@ A typical PR workflow would be as follows:
 * If all checks run successfully, mark the pull request as ready for review.
 * Respond to review comments and implement any requested changes.
 * One of the maintainers will approve the PR.
-* Your PR will be (squash-)merged into the *main* branch!
-
-When submitting a PR, it is helpful to consider how the new
-features will be tested. If you are familiar with testing, please
-try to add tests for new functionality. However if you're not, no problem!
-We're happy to help with both the design and implementation of tests so please
-don't let this discourage you from opening a PR. We take a similar approach to
-[documenting new features](#contributing-documentation), which is discussed further below.
+* Your PR will be merged into the *main* branch!
 
 ## Formatting and pre-commit hooks
 
 Running `pre-commit install` will set up [pre-commit hooks](https://pre-commit.com/) to ensure a consistent formatting style. Currently, these include:
 * [ruff](https://github.com/astral-sh/ruff), which does a number of jobs including code linting and auto-formatting.
 * [mypy](https://mypy.readthedocs.io/en/stable/index.html), a static type checker.
+* [black](https://github.com/psf/black), an auto-formatter.
 * [check-manifest](https://github.com/mgedmin/check-manifest), to ensure that the right files are included in the pip package.
 * [codespell](https://github.com/codespell-project/codespell), to check for common misspellings.
 
@@ -125,7 +115,7 @@ To install these, change directory to the `docs` folder in your terminal and typ
 pip install -r requirements.txt
 ```
 
-The command to build the documentation is then:
+The command to build the documentation is:
 
 ```
 make clean html
