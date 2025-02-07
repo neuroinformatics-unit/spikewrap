@@ -3,6 +3,13 @@
 
 We are very keen to get feedback on ``spikewrap``. Does this interface for running electrophysiology analysis will work for you?
 
+
+
+WE WANT FEEDBACK! X_)X)X)X)X)X)X)X)
+
+
+
+
 Please get in contact with feedback and suggestions, either by joining our 
 [Zulip Chat](https://neuroinformatics.zulipchat.com/#narrow/channel/406002-Spikewrap)
 or opening a
@@ -16,5 +23,7 @@ see our [Roadmap](roadmap) for details.
 :maxdepth: 2
 :hidden:
 
+contributing_guidelines
 feature_roadmap
+
 ```

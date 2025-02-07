@@ -5,8 +5,8 @@
 :gutter: 4
 
 
-:::{grid-item-card} {fas}`download;sd-text-primary` Install
-:link: install
+:::{grid-item-card} {fas}`download;sd-text-primary` Installation
+:link: installation
 :link-type: doc
 :class-card: gallery-card
 
@@ -44,9 +44,9 @@ How ``spikewrap`` outputs processed data.
 :maxdepth: 2
 :hidden:
 
-install
+installation
+../gallery_builds/get_started/feature_overview
 supported_formats
 output_folder_formats
-../gallery_builds/get_started/feature_overview
 ```
 

@@ -3,9 +3,8 @@
 
 :::{attention}
 
-Currently, the interface of ``spikewrap`` is under review. Most features described
-are available under a [development branch](https://github.com/neuroinformatics-unit/spikewrap/tree/dev),
-and will be quickly ported over to the main package when the interface is agreed.
+Currently, the interface of ``spikewrap`` is under review. The features described
+below will be added with high priority once the review is complete.
 
 ::::
 

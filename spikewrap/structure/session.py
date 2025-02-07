@@ -77,7 +77,7 @@ class Session:
         # expose a setter) for both internal and external calls.
         self._passed_run_names = run_names
         self._file_format = file_format
-        self._probe = probe  # TODO - this is the same object on all classes right?
+        self._probe = probe
 
         self._parent_input_path = parent_input_path
         self._ses_name = session_name
