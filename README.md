@@ -16,7 +16,7 @@ to run sorting pipelines. It aims to facilitate the sharing of electrophysiology
 
 For example, all runs for a recording session can be preprocessed with:
 
-```
+```python
 import spikewrap as sw
 
 subject_path = sw.get_example_data_path() / "rawdata" / "sub-001"
