@@ -44,7 +44,7 @@
   <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="_static/documentation_options.js?v=d45e8c67"></script>
+    <script src="_static/documentation_options.js?v=01f34227"></script>
     <script src="_static/doctools.js?v=9bcbadda"></script>
     <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="_static/design-tabs.js?v=f930bc37"></script>
@@ -119,7 +119,7 @@
   
   
   
-    <p class="title logo__title">spikewrap v0.0.1</p>
+    <p class="title logo__title">spikewrap v0.1.0</p>
   
 </a></div>
     
@@ -417,7 +417,7 @@
 <span id="api-reference"></span><h1>API Reference<a class="headerlink" href="#module-spikewrap" title="Link to this heading">#</a></h1>
 <dl class="py class">
 <dt class="sig sig-object py" id="spikewrap.Session">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">spikewrap.</span></span><span class="sig-name descname"><span class="pre">Session</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">subject_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">session_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">file_format</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">run_names</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'all'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/spikewrap/structure/session.html#Session"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spikewrap.Session" title="Link to this definition">#</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">spikewrap.</span></span><span class="sig-name descname"><span class="pre">Session</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">subject_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">session_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">file_format</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">run_names</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'all'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">probe</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/spikewrap/structure/session.html#Session"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spikewrap.Session" title="Link to this definition">#</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
 <p>Represents an electrophysiological recording session, consisting of a single or multiple runs.</p>
 <p>Exposes <code class="docutils literal notranslate"><span class="pre">preprocess()</span></code>, <code class="docutils literal notranslate"><span class="pre">plot_preprocessed()`,</span> <span class="pre">and</span> <span class="pre">``save_preprocessed()</span></code> functions to handle preprocessing of all runs.</p>
@@ -432,6 +432,8 @@ Determines how a session’s runs are discovered.</p></li>
 runs detected within the session. Otherwise, a <code class="docutils literal notranslate"><span class="pre">list</span> <span class="pre">of</span> <span class="pre">str</span></code>, a list of specific run names.
 Each name must correspond to a run folder within the session. Order passed will be the concentration order.</p></li>
 <li><p><strong>output_path</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">Path</span></code> | <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></span>) – The path where preprocessed data will be saved (in NeuroBlueprint style).</p></li>
+<li><p><strong>probe</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">Probe</span></code> | <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></span>) – A ProbeInterface probe object to set on the recordings. If <cite>None</cite>,
+auto-detection of probe is attempted.</p></li>
 </ul>
 </dd>
 </dl>

@@ -4,10 +4,11 @@
 To manage project analysis, spikewrap must make some assumptions
 on how the data is organised. 
 
-Currently, only data from 
-[Neuropixels](https://www.neuropixels.org/) probes acquired in 
+Currently, only recordings acquired with 
 [SpikeGLX](https://billkarsh.github.io/SpikeGLX/) or 
-[OpenEphys](https://open-ephys.org/) are supported.
+[OpenEphys](https://open-ephys.org/) are supported. [Neuropixels](https://www.neuropixels.org/) probes 
+are automatically detected from recordings, while other probes are supported
+through setting [ProbeInterface](https://probeinterface.readthedocs.io/en/main/) objects.
 
 :::{admonition} Contact Us
 :class: note

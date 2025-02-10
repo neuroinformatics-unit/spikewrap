@@ -1,5 +1,5 @@
 (how-to-install)=
-# How to Install
+# Installation
 
 The simplest way to install spikewrap is with `pip`, a package manager that is 
 automatically included with Python.

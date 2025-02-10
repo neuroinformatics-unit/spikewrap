@@ -1,7 +1,7 @@
 # ruff: noqa: E402
-""" Overview
-============
-`(1 minute read)`
+""" Feature Overview
+====================
+`(2 minute read)`
 
 
 ``spikewrap`` provides a Python interface for managing and
@@ -15,8 +15,7 @@ materials for convenient data quality checks.
 
    ``spikewrap`` is currently in a consultation stage, where feedback on the
    workflow is being actively solicited. New features—such as sorting,
-   subject-level analysis, quality checks, support for more probes,
-   and additional preprocessing steps—are planned for implementation soon.
+   subject-level analysis, quality checks and additional preprocessing steps—are planned for implementation soon.
 
    Please :ref:`get in contact <community>` with feedback and suggestions!
 
@@ -99,9 +98,10 @@ or in custom formats with subject, session and recording folder levels as below:
                                     │   └── ...
                                     └── ...
 
-`SpikeGlx <https://billkarsh.github.io/SpikeGLX/>`_ or `OpenEphys <https://open-ephys.org/>`_
-systems with `Neuropixels <https://www.neuropixels.org/>`_ probes are currently supported
-(see :ref:`Supported Formats <supported-formats>` for details).
+Recordings acquired with `SpikeGlx <https://billkarsh.github.io/SpikeGLX/>`_ or `OpenEphys <https://open-ephys.org/>`_
+are currently supported (see :ref:`Supported Formats <supported-formats>` for details).
+`Neuropixels <https://www.neuropixels.org/>`_ probes are automatically detected, otherwise a ``probe``
+argument can be used to set `ProbeInterface <https://probeinterface.readthedocs.io/en/main/>`_ objects.
 
 We can preprocess, visualise and save a recording session with a few function calls:
 """
@@ -110,12 +110,15 @@ import spikewrap as sw
 
 subject_path = sw.get_example_data_path() / "rawdata" / "sub-001"
 
+
 session = sw.Session(
     subject_path=subject_path,
     session_name="ses-001",
+    file_format="spikeglx",  # or "openephys"
     run_names="all",
-    file_format="spikeglx"  # or "openephys"
+    probe=None,  # optional argument to set probe
 )
+
 
 # Run (lazy) preprocessing, for fast plotting
 # and prototyping of preprocessing steps

@@ -22,7 +22,8 @@ if __name__ == "__main__":  # for multiprocessing
         subject_path=sw.get_example_data_path() / "rawdata" / "sub-001",
         session_name="ses-001",
         file_format="spikeglx",  # or "openephys"
-        run_names="all"
+        run_names="all",
+        probe=None  # (optional argument), auto-detected for Neuropixels, but can set ProbeInterface probes here
     )
 
     session.load_raw_data()

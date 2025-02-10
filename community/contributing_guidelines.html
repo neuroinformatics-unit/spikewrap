@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Get Started &#8212; spikewrap</title>
+    <title>Contributing Guide &#8212; spikewrap</title>
   
   
   
@@ -49,13 +49,13 @@
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/design-tabs.js?v=f930bc37"></script>
     <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
-    <script>DOCUMENTATION_OPTIONS.pagename = 'get_started/index';</script>
-    <link rel="canonical" href="https://spikewrap.neuroinformatics.dev/get_started/index.html" />
+    <script>DOCUMENTATION_OPTIONS.pagename = 'community/contributing_guidelines';</script>
+    <link rel="canonical" href="https://spikewrap.neuroinformatics.dev/community/contributing_guidelines.html" />
     <link rel="icon" href="../_static/light-logo-niu.png"/>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="Installation" href="installation.html" />
-    <link rel="prev" title="spikewrap" href="../index.html" />
+    <link rel="next" title="Feature Roadmap" href="feature_roadmap.html" />
+    <link rel="prev" title="Community" href="index.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
   <meta name="docsearch:version" content="" />
@@ -134,8 +134,8 @@
 <nav>
   <ul class="bd-navbar-elements navbar-nav">
     
-<li class="nav-item current active">
-  <a class="nav-link nav-internal" href="#">
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../get_started/index.html">
     Get Started
   </a>
 </li>
@@ -155,8 +155,8 @@
 </li>
 
 
-<li class="nav-item ">
-  <a class="nav-link nav-internal" href="../community/index.html">
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="index.html">
     Community
   </a>
 </li>
@@ -239,6 +239,10 @@
   
 
   
+    <button class="pst-navbar-icon sidebar-toggle secondary-toggle" aria-label="On this page">
+      <span class="fa-solid fa-outdent"></span>
+    </button>
+  
 </div>
 
     </header>
@@ -265,8 +269,8 @@
 <nav>
   <ul class="bd-navbar-elements navbar-nav">
     
-<li class="nav-item current active">
-  <a class="nav-link nav-internal" href="#">
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../get_started/index.html">
     Get Started
   </a>
 </li>
@@ -286,8 +290,8 @@
 </li>
 
 
-<li class="nav-item ">
-  <a class="nav-link nav-internal" href="../community/index.html">
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="index.html">
     Community
   </a>
 </li>
@@ -354,11 +358,9 @@
 <nav class="bd-docs-nav bd-links"
      aria-label="Section Navigation">
   <p class="bd-links__title" role="heading" aria-level="1">Section Navigation</p>
-  <div class="bd-toc-item navbar-nav"><ul class="nav bd-sidenav">
-<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../gallery_builds/get_started/feature_overview.html">Feature Overview</a></li>
-<li class="toctree-l1"><a class="reference internal" href="supported_formats.html">Supported Formats</a></li>
-<li class="toctree-l1"><a class="reference internal" href="output_folder_formats.html">Output Folder Structure</a></li>
+  <div class="bd-toc-item navbar-nav"><ul class="current nav bd-sidenav">
+<li class="toctree-l1 current active"><a class="current reference internal" href="#">Contributing Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="feature_roadmap.html">Feature Roadmap</a></li>
 </ul>
 </div>
 </nav></div>
@@ -399,7 +401,10 @@
         <i class="fa-solid fa-home"></i>
       </a>
     </li>
-    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">Get Started</span></li>
+    
+    <li class="breadcrumb-item"><a href="index.html" class="nav-link">Community</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">Contributing Guide</span></li>
   </ul>
 </nav>
 </div>
@@ -416,50 +421,129 @@
 <div id="searchbox"></div>
                 <article class="bd-article">
                   
-  <section class="tex2jax_ignore mathjax_ignore" id="get-started">
-<span id="id1"></span><h1>Get Started<a class="headerlink" href="#get-started" title="Link to this heading">#</a></h1>
-<div class="sd-container-fluid sd-sphinx-override sd-mb-4 docutils">
-<div class="sd-row sd-row-cols-2 sd-row-cols-xs-2 sd-row-cols-sm-2 sd-row-cols-md-2 sd-row-cols-lg-2 sd-g-4 sd-g-xs-4 sd-g-sm-4 sd-g-md-4 sd-g-lg-4 docutils">
-<div class="sd-col sd-d-flex-row docutils">
-<div class="sd-card sd-sphinx-override sd-w-100 sd-shadow-sm sd-card-hover gallery-card docutils">
-<div class="sd-card-body docutils">
-<div class="sd-card-title sd-font-weight-bold docutils">
-<span class="fas fa-download sd-text-primary"></span> Installation</div>
-<p class="sd-card-text">How to install <code class="docutils literal notranslate"><span class="pre">spikewrap</span></code>.</p>
+  <section class="tex2jax_ignore mathjax_ignore" id="contributing-guide">
+<h1>Contributing Guide<a class="headerlink" href="#contributing-guide" title="Link to this heading">#</a></h1>
+<p>**Contributions to `spikewrap`` are very welcome and appreciated. This could be
+fixing a bug, improving the documentation or developing a new feature.</p>
+<p>If you’re unsure about any part of the contributing process or have any questions, please
+get in touch through our <a class="reference external" href="https://neuroinformatics.zulipchat.com/#narrow/stream/406002-Spikewrap">Zulip chat</a>.
+Otherwise, feel free to dive right in and start contributing by
+<a class="reference internal" href="#creating-a-development-environment"><span class="std std-ref">creating a development environment</span></a>
+and <a class="reference internal" href="#pull-requests"><span class="std std-ref">opening a pull request</span></a>.</p>
+<section id="creating-a-development-environment">
+<h2>Creating a development environment<a class="headerlink" href="#creating-a-development-environment" title="Link to this heading">#</a></h2>
+<p>To install <code class="docutils literal notranslate"><span class="pre">spikewrap</span></code> for development, first the
+<a class="reference external" href="https://github.com/neuroinformatics-unit/spikewrap">GitHub repository</a>
+should be cloned. Then, you can change-directory
+to the cloned repository and run pip install with the developer tag:</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>pip<span class="w"> </span>install<span class="w"> </span>-e<span class="w"> </span>.<span class="o">[</span>dev<span class="o">]</span>
+</pre></div>
 </div>
-<a class="sd-stretched-link sd-hide-link-text reference internal" href="installation.html"><span class="doc">Installation</span></a></div>
+<p>or if using <code class="docutils literal notranslate"><span class="pre">zsh</span></code>:</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>pip<span class="w"> </span>install<span class="w"> </span>-e<span class="w"> </span><span class="s1">&#39;.[dev]&#39;</span>
+</pre></div>
 </div>
-<div class="sd-col sd-d-flex-row docutils">
-<div class="sd-card sd-sphinx-override sd-w-100 sd-shadow-sm sd-card-hover docutils">
-<div class="sd-card-body docutils">
-<div class="sd-card-title sd-font-weight-bold docutils">
-<span class="fas fa-sitemap sd-text-primary"></span> Feature Overview</div>
-<p class="sd-card-text">Key features of the package.</p>
+<p>Finally, initialise the <a class="reference internal" href="#formatting-and-pre-commit-hooks"><span class="std std-ref">pre-commit hooks</span></a>:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pre-commit<span class="w"> </span>install
+</pre></div>
 </div>
-<a class="sd-stretched-link sd-hide-link-text reference internal" href="../gallery_builds/get_started/feature_overview.html#sphx-glr-gallery-builds-get-started-feature-overview-py"><span class="std std-ref">Feature Overview</span></a></div>
+</section>
+<section id="pull-requests">
+<h2>Pull requests<a class="headerlink" href="#pull-requests" title="Link to this heading">#</a></h2>
+<p>In all cases, please submit code to the main repository via a pull request. The developers recommend and adhere
+to the following conventions:</p>
+<ul class="simple">
+<li><p>Please submit <em>draft</em> pull requests as early as possible (you can still push to the branch once submitted) to
+allow for discussion.</p></li>
+<li><p>One approval of a PR (by a repo maintainer) is sufficient for it to be merged.</p></li>
+<li><p>If the PR receives approval without additional comments, it will be merged immediately by the approving reviewer.</p></li>
+</ul>
+<p>A typical PR workflow would be as follows:</p>
+<ul class="simple">
+<li><p>Create a new branch, make your changes, and add them with <code class="docutils literal notranslate"><span class="pre">git</span> <span class="pre">add</span></code>.</p></li>
+<li><p>When you attempt to commit, the <a class="reference internal" href="#formatting-and-pre-commit-hooks"><span class="std std-ref">pre-commit hooks</span></a> will be triggered.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">git</span> <span class="pre">add</span></code> any changes made by the hooks, and commit. More information on dealing with the <a class="reference internal" href="#formatting-and-pre-commit-hooks"><span class="std std-ref">pre-commit hooks</span></a> is available below.</p></li>
+<li><p>Push your changes to GitHub and open a draft pull request.</p></li>
+<li><p>Please don’t hesitate to ask any developer for help on draft pull requests at our <a class="reference external" href="https://neuroinformatics.zulipchat.com/#narrow/stream/406002-Spikewrap">Zulip chat</a>.</p></li>
+<li><p>If all checks run successfully, mark the pull request as ready for review.</p></li>
+<li><p>Respond to review comments and implement any requested changes.</p></li>
+<li><p>One of the maintainers will approve the PR.</p></li>
+<li><p>Your PR will be merged into the <em>main</em> branch!</p></li>
+</ul>
+</section>
+<section id="formatting-and-pre-commit-hooks">
+<h2>Formatting and pre-commit hooks<a class="headerlink" href="#formatting-and-pre-commit-hooks" title="Link to this heading">#</a></h2>
+<p>Running <code class="docutils literal notranslate"><span class="pre">pre-commit</span> <span class="pre">install</span></code> will set up <a class="reference external" href="https://pre-commit.com/">pre-commit hooks</a> to ensure a consistent formatting style. Currently, these include:</p>
+<ul class="simple">
+<li><p><a class="reference external" href="https://github.com/astral-sh/ruff">ruff</a>, which does a number of jobs including code linting and auto-formatting.</p></li>
+<li><p><a class="reference external" href="https://mypy.readthedocs.io/en/stable/index.html">mypy</a>, a static type checker.</p></li>
+<li><p><a class="reference external" href="https://github.com/psf/black">black</a>, an auto-formatter.</p></li>
+<li><p><a class="reference external" href="https://github.com/mgedmin/check-manifest">check-manifest</a>, to ensure that the right files are included in the pip package.</p></li>
+<li><p><a class="reference external" href="https://github.com/codespell-project/codespell">codespell</a>, to check for common misspellings.</p></li>
+</ul>
+<p>Pre-commit hooks will automatically run when a commit is made.
+To manually run all the hooks before committing:</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>pre-commit<span class="w"> </span>run<span class="w">     </span><span class="c1"># for staged files</span>
+pre-commit<span class="w"> </span>run<span class="w"> </span>-a<span class="w">  </span><span class="c1"># for all files in the repository</span>
+</pre></div>
 </div>
-<div class="sd-col sd-d-flex-row docutils">
-<div class="sd-card sd-sphinx-override sd-w-100 sd-shadow-sm sd-card-hover docutils">
-<div class="sd-card-body docutils">
-<div class="sd-card-title sd-font-weight-bold docutils">
-<span class="fas fa-folder-open sd-text-primary"></span> Supported Formats</div>
-<p class="sd-card-text">Folder structures and file formats.</p>
+<p>Some problems will be automatically fixed by the hooks. In this case, you should
+stage the auto-fixed changes and run the hooks again:</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>git<span class="w"> </span>add<span class="w"> </span>.
+pre-commit<span class="w"> </span>run
+</pre></div>
 </div>
-<a class="sd-stretched-link sd-hide-link-text reference internal" href="supported_formats.html"><span class="doc">Supported Formats</span></a></div>
+<p>If a problem cannot be auto-fixed, the corresponding tool will provide
+information on what the issue is and how to fix it. For example, <code class="docutils literal notranslate"><span class="pre">ruff</span></code> might
+output something like:</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>session.py:551:80:<span class="w"> </span>E501<span class="w"> </span>Line<span class="w"> </span>too<span class="w"> </span>long<span class="w"> </span><span class="o">(</span><span class="m">90</span><span class="w"> </span>&gt;<span class="w"> </span><span class="m">79</span><span class="o">)</span>
+</pre></div>
 </div>
-<div class="sd-col sd-d-flex-row docutils">
-<div class="sd-card sd-sphinx-override sd-w-100 sd-shadow-sm sd-card-hover docutils">
-<div class="sd-card-body docutils">
-<div class="sd-card-title sd-font-weight-bold docutils">
-<span class="fas fa-sitemap sd-text-primary"></span> Output Folder Structure</div>
-<p class="sd-card-text">How <code class="docutils literal notranslate"><span class="pre">spikewrap</span></code> outputs processed data.</p>
+<p>This pinpoints the problem to a single line of code and a specific <a class="reference external" href="https://docs.astral.sh/ruff/rules/">ruff rule</a> violation.
+Sometimes you may have good reasons to ignore a particular rule for a specific line.
+You can do this by adding an inline comment, e.g. <code class="docutils literal notranslate"><span class="pre">#</span> <span class="pre">noqa:</span> <span class="pre">E501</span></code>. Replace <code class="docutils literal notranslate"><span class="pre">E501</span></code> with the code of the rule you want to ignore.</p>
+<p>Don’t worry if you are stuck and are not sure how to fix linting
+issues. Feel free to commit with the <code class="docutils literal notranslate"><span class="pre">--no-verify</span></code> option which will
+skip pre-commit checks, and ask for help in your PR.</p>
+<p>For docstrings, we adhere to the <a class="reference external" href="https://numpydoc.readthedocs.io/en/latest/format.html">numpydoc</a> style.
+Make sure to provide docstrings for all public functions, classes, and methods.</p>
+</section>
+<section id="contributing-documentation">
+<h2>Contributing documentation<a class="headerlink" href="#contributing-documentation" title="Link to this heading">#</a></h2>
+<p>If you notice any areas where the documentation can be improved,
+please don’t hesitate to make a contribution.</p>
+<section id="working-with-the-documentation">
+<h3>Working with the documentation<a class="headerlink" href="#working-with-the-documentation" title="Link to this heading">#</a></h3>
+<p>The documentation is found in the <code class="docutils literal notranslate"><span class="pre">docs/source</span></code> folder, where the structure mirrors the rendered website.</p>
+<p>Dependencies for building the documentation locally can be found at <code class="docutils literal notranslate"><span class="pre">docs/requirements.txt</span></code>.
+To install these, change directory to the <code class="docutils literal notranslate"><span class="pre">docs</span></code> folder in your terminal and type:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">pip</span> <span class="n">install</span> <span class="o">-</span><span class="n">r</span> <span class="n">requirements</span><span class="o">.</span><span class="n">txt</span>
+</pre></div>
 </div>
-<a class="sd-stretched-link sd-hide-link-text reference internal" href="output_folder_formats.html"><span class="doc">Output Folder Structure</span></a></div>
+<p>The command to build the documentation is:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">make</span> <span class="n">clean</span> <span class="n">html</span>
+</pre></div>
 </div>
-</div>
-</div>
-<div class="toctree-wrapper compound">
-</div>
+<p>Any existing builds will be removed, and documentation will be built and output
+to the <code class="docutils literal notranslate"><span class="pre">build</span></code> folder. To read the built documentation in a browser, navigate to the <code class="docutils literal notranslate"><span class="pre">build</span></code>
+folder and open the <code class="docutils literal notranslate"><span class="pre">index.html</span></code> file.</p>
+</section>
+<section id="editing-the-documentation">
+<h3>Editing the documentation<a class="headerlink" href="#editing-the-documentation" title="Link to this heading">#</a></h3>
+<p>The documentation is hosted using <a class="reference external" href="https://pages.github.com/">GitHub Pages</a>, and the source can be found at
+<a class="reference external" href="https://github.com/neuroinformatics-unit/spikewrap/tree/main/docs">GitHub</a>.
+Most content is found under <code class="docutils literal notranslate"><span class="pre">docs/source</span></code>, where the structure mirrors the rendered website.</p>
+<p>To edit a page, please:</p>
+<ul class="simple">
+<li><p>Fork the repository</p></li>
+<li><p>Make edits to the relevant pages</p></li>
+<li><p>Build the pages as above to inspect your changes</p></li>
+<li><p>Create a pull request outlining the changes made</p></li>
+</ul>
+<p>If you aren’t sure where the changes should be made, please
+<a class="reference external" href="https://neuroinformatics.zulipchat.com/#narrow/stream/406002-Spikewrap">get in touch!</a></p>
+</section>
+</section>
 </section>
 
 
@@ -473,20 +557,20 @@
                   
 <div class="prev-next-area">
     <a class="left-prev"
-       href="../index.html"
+       href="index.html"
        title="previous page">
       <i class="fa-solid fa-angle-left"></i>
       <div class="prev-next-info">
         <p class="prev-next-subtitle">previous</p>
-        <p class="prev-next-title">spikewrap</p>
+        <p class="prev-next-title">Community</p>
       </div>
     </a>
     <a class="right-next"
-       href="installation.html"
+       href="feature_roadmap.html"
        title="next page">
       <div class="prev-next-info">
         <p class="prev-next-subtitle">next</p>
-        <p class="prev-next-title">Installation</p>
+        <p class="prev-next-title">Feature Roadmap</p>
       </div>
       <i class="fa-solid fa-angle-right"></i>
     </a>
@@ -496,6 +580,31 @@
             </div>
             
             
+              
+                <dialog id="pst-secondary-sidebar-modal"></dialog>
+                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+<div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> On this page
+  </div>
+  <nav class="bd-toc-nav page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#creating-a-development-environment">Creating a development environment</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#pull-requests">Pull requests</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#formatting-and-pre-commit-hooks">Formatting and pre-commit hooks</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#contributing-documentation">Contributing documentation</a><ul class="visible nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#working-with-the-documentation">Working with the documentation</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#editing-the-documentation">Editing the documentation</a></li>
+</ul>
+</li>
+</ul>
+  </nav></div>
+
+</div></div>
               
             
           </div>

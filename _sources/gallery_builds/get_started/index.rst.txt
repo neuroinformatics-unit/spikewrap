@@ -15,14 +15,14 @@
 
 .. only:: html
 
-  .. image:: /gallery_builds/get_started/images/thumb/sphx_glr_package_overview_thumb.png
+  .. image:: /gallery_builds/get_started/images/thumb/sphx_glr_feature_overview_thumb.png
     :alt:
 
-  :ref:`sphx_glr_gallery_builds_get_started_package_overview.py`
+  :ref:`sphx_glr_gallery_builds_get_started_feature_overview.py`
 
 .. raw:: html
 
-      <div class="sphx-glr-thumbnail-title">Overview</div>
+      <div class="sphx-glr-thumbnail-title">Feature Overview</div>
     </div>
 
 
@@ -36,7 +36,7 @@
 .. toctree::
    :hidden:
 
-   /gallery_builds/get_started/package_overview
+   /gallery_builds/get_started/feature_overview
 
 
 .. only:: html

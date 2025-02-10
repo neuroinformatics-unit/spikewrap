@@ -51,13 +51,17 @@ Show available ``configs``
 
     The preprocessing options are: {
         "1": [
+            "phase_shift",
+            {}
+        ],
+        "2": [
             "bandpass_filter",
             {
                 "freq_max": 6000,
                 "freq_min": 300
             }
         ],
-        "2": [
+        "3": [
             "common_reference",
             {
                 "operator": "median",

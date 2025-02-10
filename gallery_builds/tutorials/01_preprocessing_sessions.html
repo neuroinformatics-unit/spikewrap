@@ -44,7 +44,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../../_static/documentation_options.js?v=d45e8c67"></script>
+    <script src="../../_static/documentation_options.js?v=01f34227"></script>
     <script src="../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/design-tabs.js?v=f930bc37"></script>
@@ -120,7 +120,7 @@
   
   
   
-    <p class="title logo__title">spikewrap v0.0.1</p>
+    <p class="title logo__title">spikewrap v0.1.0</p>
   
 </a></div>
     
@@ -501,6 +501,10 @@ OpenEphys</label><div class="sd-tab-content docutils">
 </dd>
 <dt><code class="docutils literal notranslate"><span class="pre">run_names</span></code>:</dt><dd><p>(optional) Default “<code class="docutils literal notranslate"><span class="pre">all&quot;</span></code> or a list of run folder names to process.</p>
 </dd>
+<dt><code class="docutils literal notranslate"><span class="pre">probe</span></code>:</dt><dd><p>(optional) Default <code class="docutils literal notranslate"><span class="pre">None</span></code>. Neuropixels are auto-detected from recording output.
+Otherwise, a <a class="reference external" href="https://probeinterface.readthedocs.io/en/main/">ProbeInterface</a>
+object. This probe will be set on all runs.</p>
+</dd>
 </dl>
 <div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">spikewrap</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">sw</span>
 
@@ -529,13 +533,17 @@ Loading data from path: /home/runner/work/spikewrap/spikewrap/spikewrap/examples
 
 The preprocessing options are: {
     &quot;1&quot;: [
+        &quot;phase_shift&quot;,
+        {}
+    ],
+    &quot;2&quot;: [
         &quot;bandpass_filter&quot;,
         {
             &quot;freq_max&quot;: 6000,
             &quot;freq_min&quot;: 300
         }
     ],
-    &quot;2&quot;: [
+    &quot;3&quot;: [
         &quot;common_reference&quot;,
         {
             &quot;operator&quot;: &quot;median&quot;,
@@ -570,13 +578,17 @@ configuration file or a python dictionar (see <a class="reference internal" href
 </div>
 <div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>The preprocessing options are: {
     &quot;1&quot;: [
+        &quot;phase_shift&quot;,
+        {}
+    ],
+    &quot;2&quot;: [
         &quot;bandpass_filter&quot;,
         {
             &quot;freq_max&quot;: 6000,
             &quot;freq_min&quot;: 300
         }
     ],
-    &quot;2&quot;: [
+    &quot;3&quot;: [
         &quot;common_reference&quot;,
         {
             &quot;operator&quot;: &quot;median&quot;,
@@ -718,6 +730,10 @@ configurations and arguments, then re-plotting. This can be performed in a
 Loading data from path: /home/runner/work/spikewrap/spikewrap/spikewrap/examples/example_tiny_data/spikeglx/rawdata/sub-001/ses-001/ephys/run-001_g0_imec0
 
 Loading data from path: /home/runner/work/spikewrap/spikewrap/spikewrap/examples/example_tiny_data/spikeglx/rawdata/sub-001/ses-001/ephys/run-002_g0_imec0
+/opt/hostedtoolcache/Python/3.11.11/x64/lib/python3.11/site-packages/spikeinterface/widgets/traces.py:150: UserWarning: You have selected a time after the end of the segment. The range will be clipped to 0.4999999999999989
+  warnings.warn(
+/opt/hostedtoolcache/Python/3.11.11/x64/lib/python3.11/site-packages/spikeinterface/widgets/traces.py:150: UserWarning: You have selected a time after the end of the segment. The range will be clipped to 0.4999999999999989
+  warnings.warn(
 </pre></div>
 </div>
 </section>
@@ -735,11 +751,11 @@ chosen settings, you can run:</p>
 
 Saving sync channel for: run-001_g0_imec0...
 write_binary_recording
-n_jobs=4 - samples_per_chunk=60,000 - chunk_memory=43.95 MiB - total_memory=175.78 MiB - chunk_duration=2.00s
+engine=process - n_jobs=4 - samples_per_chunk=60,000 - chunk_memory=43.95 MiB - total_memory=175.78 MiB - chunk_duration=2.00s
 
-write_binary_recording:   0%|          | 0/1 [00:00&lt;?, ?it/s]
-write_binary_recording: 100%|██████████| 1/1 [00:00&lt;00:00,  3.51it/s]
-write_binary_recording: 100%|██████████| 1/1 [00:00&lt;00:00,  3.51it/s]
+write_binary_recording (workers: 1 processes):   0%|          | 0/1 [00:00&lt;?, ?it/s]
+write_binary_recording (workers: 1 processes): 100%|██████████| 1/1 [00:00&lt;00:00,  3.43it/s]
+write_binary_recording (workers: 1 processes): 100%|██████████| 1/1 [00:00&lt;00:00,  3.43it/s]
 
 Saving data for: run-002_g0_imec0...
 
@@ -748,11 +764,11 @@ Saving data for: run-002_g0_imec0...
 
 Saving sync channel for: run-002_g0_imec0...
 write_binary_recording
-n_jobs=4 - samples_per_chunk=60,000 - chunk_memory=43.95 MiB - total_memory=175.78 MiB - chunk_duration=2.00s
+engine=process - n_jobs=4 - samples_per_chunk=60,000 - chunk_memory=43.95 MiB - total_memory=175.78 MiB - chunk_duration=2.00s
 
-write_binary_recording:   0%|          | 0/1 [00:00&lt;?, ?it/s]
-write_binary_recording: 100%|██████████| 1/1 [00:00&lt;00:00,  3.88it/s]
-write_binary_recording: 100%|██████████| 1/1 [00:00&lt;00:00,  3.88it/s]
+write_binary_recording (workers: 1 processes):   0%|          | 0/1 [00:00&lt;?, ?it/s]
+write_binary_recording (workers: 1 processes): 100%|██████████| 1/1 [00:00&lt;00:00,  3.74it/s]
+write_binary_recording (workers: 1 processes): 100%|██████████| 1/1 [00:00&lt;00:00,  3.74it/s]
 </pre></div>
 </div>
 <div class="admonition attention">
@@ -786,7 +802,7 @@ session has 2 runs (which are not concatenated),
 <section id="output-data-organisation">
 <h3>Output data organisation<a class="headerlink" href="#output-data-organisation" title="Link to this heading">#</a></h3>
 <p>See the</p>
-<p class="sphx-glr-timing"><strong>Total running time of the script:</strong> (0 minutes 3.753 seconds)</p>
+<p class="sphx-glr-timing"><strong>Total running time of the script:</strong> (0 minutes 3.460 seconds)</p>
 <div class="sphx-glr-footer sphx-glr-footer-example docutils container" id="sphx-glr-download-gallery-builds-tutorials-01-preprocessing-sessions-py">
 <div class="binder-badge docutils container">
 <a class="reference external image-reference" href="https://mybinder.org/v2/gh/neuroinformatics-unit/spikewrap/gh-pages?filepath=notebooks/gallery_builds/tutorials/01_preprocessing_sessions.ipynb"><img alt="Launch binder" src="../../_images/binder_badge_logo2.svg" style="width: 150px;" />

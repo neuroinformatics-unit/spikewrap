@@ -14,7 +14,7 @@ h1 { font-size: 0rem; }
 
 <p style="text-align: center; font-size: 48px; font-weight: bold;"> spikewrap </p>
 <p style="text-align: center; font-size: 22px;">A Python package for managing extracellular electrophysiology pipelines.</p>
-<p style="text-align: center; font-size: 22px;"><a href="gallery_builds/get_started/package_overview.html">1-minute overview</a></p>
+<p style="text-align: center; font-size: 22px;"><a href="gallery_builds/get_started/feature_overview.html">Feature overview</a></p>
 
 ::::{grid} 1 4 4 4 
 :gutter: 4

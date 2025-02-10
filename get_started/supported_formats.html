@@ -44,7 +44,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../_static/documentation_options.js?v=d45e8c67"></script>
+    <script src="../_static/documentation_options.js?v=01f34227"></script>
     <script src="../_static/doctools.js?v=9bcbadda"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/design-tabs.js?v=f930bc37"></script>
@@ -54,8 +54,8 @@
     <link rel="icon" href="../_static/light-logo-niu.png"/>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="Output Folder Format" href="output_folder_formats.html" />
-    <link rel="prev" title="How to Install" href="install.html" />
+    <link rel="next" title="Output Folder Structure" href="output_folder_formats.html" />
+    <link rel="prev" title="Feature Overview" href="../gallery_builds/get_started/feature_overview.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
   <meta name="docsearch:version" content="" />
@@ -120,7 +120,7 @@
   
   
   
-    <p class="title logo__title">spikewrap v0.0.1</p>
+    <p class="title logo__title">spikewrap v0.1.0</p>
   
 </a></div>
     
@@ -359,10 +359,10 @@
      aria-label="Section Navigation">
   <p class="bd-links__title" role="heading" aria-level="1">Section Navigation</p>
   <div class="bd-toc-item navbar-nav"><ul class="current nav bd-sidenav">
-<li class="toctree-l1"><a class="reference internal" href="install.html">How to Install</a></li>
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../gallery_builds/get_started/feature_overview.html">Feature Overview</a></li>
 <li class="toctree-l1 current active"><a class="current reference internal" href="#">Supported Formats</a></li>
-<li class="toctree-l1"><a class="reference internal" href="output_folder_formats.html">Output Folder Format</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../gallery_builds/get_started/package_overview.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="output_folder_formats.html">Output Folder Structure</a></li>
 </ul>
 </div>
 </nav></div>
@@ -427,10 +427,11 @@
 <span id="id1"></span><h1>Supported Formats<a class="headerlink" href="#supported-formats" title="Link to this heading">#</a></h1>
 <p>To manage project analysis, spikewrap must make some assumptions
 on how the data is organised.</p>
-<p>Currently, only data from
-<a class="reference external" href="https://www.neuropixels.org/">Neuropixels</a> probes acquired in
+<p>Currently, only recordings acquired with
 <a class="reference external" href="https://billkarsh.github.io/SpikeGLX/">SpikeGLX</a> or
-<a class="reference external" href="https://open-ephys.org/">OpenEphys</a> are supported.</p>
+<a class="reference external" href="https://open-ephys.org/">OpenEphys</a> are supported. <a class="reference external" href="https://www.neuropixels.org/">Neuropixels</a> probes
+are automatically detected from recordings, while other probes are supported
+through setting <a class="reference external" href="https://probeinterface.readthedocs.io/en/main/">ProbeInterface</a> objects.</p>
 <div class="note admonition">
 <p class="admonition-title">Contact Us</p>
 <p>If you would like to see more formats supported, please don’t hesitate to <a class="reference internal" href="../community/index.html#community"><span class="std std-ref">get in contact</span></a>.</p>
@@ -573,12 +574,12 @@ This means that datasets with multiple <code class="docutils literal notranslate
                   
 <div class="prev-next-area">
     <a class="left-prev"
-       href="install.html"
+       href="../gallery_builds/get_started/feature_overview.html"
        title="previous page">
       <i class="fa-solid fa-angle-left"></i>
       <div class="prev-next-info">
         <p class="prev-next-subtitle">previous</p>
-        <p class="prev-next-title">How to Install</p>
+        <p class="prev-next-title">Feature Overview</p>
       </div>
     </a>
     <a class="right-next"
@@ -586,7 +587,7 @@ This means that datasets with multiple <code class="docutils literal notranslate
        title="next page">
       <div class="prev-next-info">
         <p class="prev-next-subtitle">next</p>
-        <p class="prev-next-title">Output Folder Format</p>
+        <p class="prev-next-title">Output Folder Structure</p>
       </div>
       <i class="fa-solid fa-angle-right"></i>
     </a>

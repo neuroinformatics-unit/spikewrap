@@ -81,13 +81,17 @@ and print the underlying steps with:
 
     The preprocessing options are: {
         "1": [
+            "phase_shift",
+            {}
+        ],
+        "2": [
             "bandpass_filter",
             {
                 "freq_max": 6000,
                 "freq_min": 300
             }
         ],
-        "2": [
+        "3": [
             "common_reference",
             {
                 "operator": "median",
@@ -338,13 +342,17 @@ and we can load ``configs`` from file:
     {
         "preprocessing": {
             "1": [
+                "phase_shift",
+                {}
+            ],
+            "2": [
                 "bandpass_filter",
                 {
                     "freq_min": 300,
                     "freq_max": 6000
                 }
             ],
-            "2": [
+            "3": [
                 "common_reference",
                 {
                     "operator": "median",

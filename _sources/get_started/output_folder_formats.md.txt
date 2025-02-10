@@ -1,4 +1,4 @@
-# Output Folder Format
+# Output Folder Structure
 
 :::{attention}
 This output format is not set in stone. Please get in contact 
