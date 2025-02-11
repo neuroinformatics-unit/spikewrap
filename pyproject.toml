@@ -15,6 +15,7 @@ classifiers = [
     "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
     "Operating System :: OS Independent",
     "License :: OSI Approved :: BSD License",
 ]
@@ -71,7 +72,7 @@ exclude = ["tests*", "docs*"]
 addopts = "--cov=spikewrap"
 
 [tool.black]
-target-version = ['py38', 'py39', 'py310']
+target-version = ['py39', 'py310', 'py311', 'py312']
 skip-string-normalization = false
 line-length = 88
 
@@ -88,7 +89,7 @@ ignore = [
 ]
 
 [tool.ruff]
-line-length = 79
+line-length = 88
 exclude = ["__init__.py", "pyproject.toml", "build", ".eggs"]
 fix = true
 
