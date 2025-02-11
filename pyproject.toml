@@ -20,7 +20,7 @@ classifiers = [
 ]
 
 dependencies = [
-    "spikeinterface[full]", # Do i need to pin to version? YES but what one
+    "spikeinterface[full]==0.102.0", 
     "submitit",
     "slurmio",
     "psutil",
