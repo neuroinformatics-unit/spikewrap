@@ -1,6 +1,6 @@
 # Contributing Guide
 
-**Contributions to `spikewrap`` are very welcome and appreciated. This could be
+Contributions to ``spikewrap`` are very welcome and appreciated. This could be
 fixing a bug, improving the documentation or developing a new feature.
 
 If you're unsure about any part of the contributing process or have any questions, please
