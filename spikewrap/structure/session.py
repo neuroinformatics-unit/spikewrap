@@ -12,7 +12,10 @@ import numpy as np
 
 from spikewrap.configs import config_utils
 from spikewrap.process import _loading
-from spikewrap.structure._run import ConcatRun, SeparateRun
+from spikewrap.structure._preprocess_run import (
+    ConcatPreprocessRun,
+    SeparatePreprocessRun,
+)
 from spikewrap.utils import _utils
 
 
@@ -44,11 +47,11 @@ class Session:
     Notes
     -----
     The responsibility of this class is to manage the processing of runs
-    contained within the session. Runs are held in ``self._runs``, a list of
-    ``SeparateRun`` or ``ConcatRun`` classes. Runs are loaded from raw data
-    as separate runs, and will be converted to a ``ConcatRun`` if concatenated.
+    contained within the session. Runs are held in ``self._pp_runs``, a list of
+    ``SeparatePreprocessRun`` or ``ConcatPreprocessRun`` classes. Runs are loaded from raw data
+    as separate runs, and will be converted to a ``ConcatPreprocessRun`` if concatenated.
 
-    The attributes on this class (except for ``self._runs``) are to be treated
+    The attributes on this class (except for ``self._pp_runs``) are to be treated
     as constant for the lifetime of the class. For example, the output path
     should not be changed during the class instance lifetime.
 
@@ -85,9 +88,9 @@ class Session:
             Path(output_path) if output_path else self._output_from_parent_input_path()
         )
 
-        # self._runs may be updated during the lifetime of the object,
+        # self._pp_runs may be updated during the lifetime of the object,
         # but is private to this class.
-        self._runs: list[SeparateRun | ConcatRun] = []
+        self._pp_runs: list[SeparatePreprocessRun | ConcatPreprocessRun] = []
         self._create_run_objects()
 
     # ---------------------------------------------------------------------------
@@ -109,7 +112,7 @@ class Session:
             f"Loading runs from session path: {self._parent_input_path}"
         )
 
-        for run in self._runs:
+        for run in self._pp_runs:
             _utils.message_user(f"Loading run: {run._run_name}")
             run.load_raw_data()
 
@@ -146,13 +149,13 @@ class Session:
 
         self._create_run_objects(internal_overwrite=True)  # refresh everything
 
-        for run in self._runs:
+        for run in self._pp_runs:
             run.load_raw_data()
 
         if concat_runs:
             self._concat_runs()
 
-        for run in self._runs:
+        for run in self._pp_runs:
             run.preprocess(pp_steps, per_shank)
 
     def save_preprocessed(  # TODO: document, each run is in a separate SLURM job! keep like this for now
@@ -186,7 +189,7 @@ class Session:
             with default arguments. If a `dict` is provided, it should contain SLURM arguments.
             See `tutorials` in the documentation for details.
         """
-        for run in self._runs:
+        for run in self._pp_runs:
             run.save_preprocessed(overwrite, chunk_duration_s, n_jobs, slurm)
 
     def plot_preprocessed(
@@ -209,7 +212,7 @@ class Session:
         ----------
         run_idx
             - If ``"all"``, plots preprocessed data for all runs in the session.
-            - If an integer, plots preprocessed data for the run at the specified index in ``self._runs``.
+            - If an integer, plots preprocessed data for the run at the specified index in ``self._pp_runs``.
         mode
             Determines the plotting style, a heatmap-style or line plot.
         time_range
@@ -229,7 +232,7 @@ class Session:
         """
         time_range = np.array(time_range, dtype=np.float64)
 
-        all_runs = self._runs if run_idx == "all" else [self._runs[run_idx]]
+        all_runs = self._pp_runs if run_idx == "all" else [self._pp_runs[run_idx]]
 
         all_figs = {}
 
@@ -246,17 +249,66 @@ class Session:
 
         return all_figs
 
+    def sort(
+        self,
+        configs="neuropixels+kilosort2_5",
+        run_method="singularity",
+        # "local", "singularity", "docker" or path to MATLAB install (check for mex files!)
+        per_shank=True,
+        concat_runs=True,
+        overwrite=True,
+        slurm=False,
+    ):
+        """ """
+        import spikewrap as sw
+
+        config_dict = sw.load_config_dict(
+            sw.get_configs_path() / "neuropixels+mountainsort5.yaml"
+        )  # TODO: sort this out
+        sorting_configs = config_dict["sorting"]
+
+        if concat_runs:
+            raise NotImplementedError()
+            self._sorting_runs = [ConcatSortingRun(self._pp_runs)]
+        else:
+            from spikewrap.structure._sorting_run import SortingRun
+
+            self._sorting_runs = [SortingRun(pp_run) for pp_run in self._pp_runs]
+
+        # ConcatBeforePreprocessing
+        # ConcatAfterPreprocessing
+
+        # sorting_configs = self._inter_sorting_configs_from_configs_arguiment(configs)
+        # sorting_configs = configs
+        # _utils.show_sorting_configs(pp_steps)
+        # do some loading of files from disk to populate runs or check that runs matches
+        # any files on disk.
+
+        # if not any(self._runs):
+        #   runs_loaded = self._load_preprocessed_runs()
+        #    if not runs_loaded:
+        #        raise RuntimeError("no runs, cannot load")
+        # else:
+        #    for run in self._runs:
+        #       run.raise_if_run_does_not_match_saved()
+
+        # if concat_runs:
+        # update ConcatRuns to even concat preprocessed runs!!!
+
+        for run in self._sorting_runs:
+            run.sort(sorting_configs, run_method, per_shank, overwrite, slurm)
+
     # Getters -----------------------------------------------------------------
 
     def get_run_names(self) -> list[str]:
         """
-        Return a list of run names from the self._runs list.
+        Return a list of run names from the self._pp_runs list.
 
         If run concatenation is performed, the order of this
         list will be the order of concatenation. If concatenation
         was already performed, the run name will be ``"concat_run"``.
         """
-        return [run._run_name for run in self._runs]
+        return [run._run_name for run in self._pp_runs]
 
     def parent_input_path(self) -> Path:  # TODO: add docs
         return self._parent_input_path
@@ -275,7 +327,7 @@ class Session:
 
     def _create_run_objects(self, internal_overwrite: bool = False) -> None:
         """
-        Fill self._runs with a list of `SeparateRun` objects, each
+        Fill self._pp_runs with a list of `SeparatePreprocessRun` objects, each
         holding data for the run. The objects are instantiated here but
         recordings are not loaded, these are loaded with self.load_raw_data().
 
@@ -286,7 +338,7 @@ class Session:
         internal_overwrite
             Safety flag to ensure overwriting existing runs is intended.
         """
-        if self._runs and not internal_overwrite:
+        if self._pp_runs and not internal_overwrite:
             raise RuntimeError(f"Cannot overwrite _runs for session {self._ses_name}")
 
         session_path = (
@@ -299,11 +351,11 @@ class Session:
             self._passed_run_names,
         )
 
-        runs: list[SeparateRun] = []
+        runs: list[SeparatePreprocessRun] = []
 
         for run_path in run_paths:
             runs.append(
-                SeparateRun(
+                SeparatePreprocessRun(
                     parent_input_path=run_path.parent,  # may include "ephys" if NeuroBlueprint
                     parent_ses_name=self._ses_name,
                     run_name=run_path.name,
@@ -312,16 +364,16 @@ class Session:
                     probe=self._probe,
                 )
             )
-        self._runs = runs  # type: ignore
+        self._pp_runs = runs  # type: ignore
 
     def _concat_runs(self) -> None:
         """
-        Concatenate multiple separate runs into a single consolidated `ConcatRun`.
+        Concatenate multiple separate runs into a single consolidated `ConcatPreprocessRun`.
 
-        `SeparateRun` and `ConcatRun` both expose processing functionality
+        `SeparatePreprocessRun` and `ConcatPreprocessRun` both expose processing functionality
         can be substituted for one another in this context.
         """
-        if len(self._runs) == 1:
+        if len(self._pp_runs) == 1:
             raise RuntimeError("Cannot concatenate runs, only one run found.")
 
         assert self.get_run_names() != (
@@ -333,12 +385,12 @@ class Session:
         )
 
         assert all(
-            [isinstance(run, SeparateRun) for run in self._runs]
-        ), "All runs must be type `SeparateRun` for `ConcatRun"
+            [isinstance(run, SeparatePreprocessRun) for run in self._pp_runs]
+        ), "All runs must be type `SeparatePreprocessRun` for `ConcatPreprocessRun"
 
-        self._runs = [
-            ConcatRun(
-                self._runs,  # type: ignore
+        self._pp_runs = [
+            ConcatPreprocessRun(
+                self._pp_runs,  # type: ignore
                 self._parent_input_path,
                 self._ses_name,
                 self._output_path,
