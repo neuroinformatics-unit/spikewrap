@@ -106,16 +106,20 @@ How to preprocess a session
         "freq_min": 150
       }
     }
+    /home/runner/work/spikewrap/spikewrap/spikewrap/process/_loading.py:139: UserWarning: The sessions or runs provided for are not in creation datetime order.
+    They will be concatenated in the order provided, as:
+    ['run-002_g0_imec0', 'run-001_g0_imec0'].
+      warnings.warn(
 
     Loading runs from session path: /home/runner/work/spikewrap/spikewrap/spikewrap/examples/example_tiny_data/spikeglx/rawdata/sub-001
-
-    Loading run: run-001_g0_imec0
-
-    Loading data from path: /home/runner/work/spikewrap/spikewrap/spikewrap/examples/example_tiny_data/spikeglx/rawdata/sub-001/ses-001/ephys/run-001_g0_imec0
 
     Loading run: run-002_g0_imec0
 
     Loading data from path: /home/runner/work/spikewrap/spikewrap/spikewrap/examples/example_tiny_data/spikeglx/rawdata/sub-001/ses-001/ephys/run-002_g0_imec0
+
+    Loading run: run-001_g0_imec0
+
+    Loading data from path: /home/runner/work/spikewrap/spikewrap/spikewrap/examples/example_tiny_data/spikeglx/rawdata/sub-001/ses-001/ephys/run-001_g0_imec0
 
 
     The preprocessing options are: {
@@ -139,11 +143,11 @@ How to preprocess a session
         ]
     }
 
-    Loading data from path: /home/runner/work/spikewrap/spikewrap/spikewrap/examples/example_tiny_data/spikeglx/rawdata/sub-001/ses-001/ephys/run-001_g0_imec0
-
     Loading data from path: /home/runner/work/spikewrap/spikewrap/spikewrap/examples/example_tiny_data/spikeglx/rawdata/sub-001/ses-001/ephys/run-002_g0_imec0
 
-    Concatenating runs in the following order:['run-001_g0_imec0', 'run-002_g0_imec0']
+    Loading data from path: /home/runner/work/spikewrap/spikewrap/spikewrap/examples/example_tiny_data/spikeglx/rawdata/sub-001/ses-001/ephys/run-001_g0_imec0
+
+    Concatenating runs in the following order:['run-002_g0_imec0', 'run-001_g0_imec0']
 
     Split run: concat_run by shank. There are 2 shanks. 
 
@@ -155,10 +159,10 @@ How to preprocess a session
     Saving sync channel for: concat_run...
     write_binary_recording 
     engine=process - n_jobs=4 - samples_per_chunk=60,000 - chunk_memory=21.97 MiB - total_memory=87.89 MiB - chunk_duration=2.00s
-    write_binary_recording (workers: 1 processes):   0%|          | 0/1 [00:00<?, ?it/s]    write_binary_recording (workers: 1 processes): 100%|██████████| 1/1 [00:00<00:00,  2.04it/s]    write_binary_recording (workers: 1 processes): 100%|██████████| 1/1 [00:00<00:00,  2.04it/s]
+    write_binary_recording (workers: 1 processes):   0%|          | 0/1 [00:00<?, ?it/s]    write_binary_recording (workers: 1 processes): 100%|██████████| 1/1 [00:00<00:00,  1.87it/s]    write_binary_recording (workers: 1 processes): 100%|██████████| 1/1 [00:00<00:00,  1.87it/s]
     write_binary_recording 
     engine=process - n_jobs=4 - samples_per_chunk=60,000 - chunk_memory=21.97 MiB - total_memory=87.89 MiB - chunk_duration=2.00s
-    write_binary_recording (workers: 1 processes):   0%|          | 0/1 [00:00<?, ?it/s]    write_binary_recording (workers: 1 processes): 100%|██████████| 1/1 [00:00<00:00,  1.88it/s]    write_binary_recording (workers: 1 processes): 100%|██████████| 1/1 [00:00<00:00,  1.88it/s]
+    write_binary_recording (workers: 1 processes):   0%|          | 0/1 [00:00<?, ?it/s]    write_binary_recording (workers: 1 processes): 100%|██████████| 1/1 [00:00<00:00,  1.85it/s]    write_binary_recording (workers: 1 processes): 100%|██████████| 1/1 [00:00<00:00,  1.85it/s]
 
 
 
@@ -196,14 +200,14 @@ We could run again with different configs and multiprocessing:
     *
 
       .. image-sg:: /gallery_builds/how_to/images/sphx_glr_01_preprocess_a_session_002.png
-         :alt: Session: ses-001, Run: run-001_g0_imec0
+         :alt: Session: ses-001, Run: run-002_g0_imec0
          :srcset: /gallery_builds/how_to/images/sphx_glr_01_preprocess_a_session_002.png
          :class: sphx-glr-multi-img
 
     *
 
       .. image-sg:: /gallery_builds/how_to/images/sphx_glr_01_preprocess_a_session_003.png
-         :alt: Session: ses-001, Run: run-002_g0_imec0
+         :alt: Session: ses-001, Run: run-001_g0_imec0
          :srcset: /gallery_builds/how_to/images/sphx_glr_01_preprocess_a_session_003.png
          :class: sphx-glr-multi-img
 
@@ -229,24 +233,18 @@ We could run again with different configs and multiprocessing:
             }
         ]
     }
-
-    Loading data from path: /home/runner/work/spikewrap/spikewrap/spikewrap/examples/example_tiny_data/spikeglx/rawdata/sub-001/ses-001/ephys/run-001_g0_imec0
+    /home/runner/work/spikewrap/spikewrap/spikewrap/process/_loading.py:139: UserWarning: The sessions or runs provided for are not in creation datetime order.
+    They will be concatenated in the order provided, as:
+    ['run-002_g0_imec0', 'run-001_g0_imec0'].
+      warnings.warn(
 
     Loading data from path: /home/runner/work/spikewrap/spikewrap/spikewrap/examples/example_tiny_data/spikeglx/rawdata/sub-001/ses-001/ephys/run-002_g0_imec0
+
+    Loading data from path: /home/runner/work/spikewrap/spikewrap/spikewrap/examples/example_tiny_data/spikeglx/rawdata/sub-001/ses-001/ephys/run-001_g0_imec0
     /opt/hostedtoolcache/Python/3.11.11/x64/lib/python3.11/site-packages/spikeinterface/widgets/traces.py:150: UserWarning: You have selected a time after the end of the segment. The range will be clipped to 0.4999999999999989
       warnings.warn(
     /opt/hostedtoolcache/Python/3.11.11/x64/lib/python3.11/site-packages/spikeinterface/widgets/traces.py:150: UserWarning: You have selected a time after the end of the segment. The range will be clipped to 0.4999999999999989
       warnings.warn(
-
-    Saving data for: run-001_g0_imec0...
-
-    `overwrite=True`, so deleting all files and folders (except for slurm_logs) at the path:
-    /home/runner/work/spikewrap/spikewrap/spikewrap/examples/example_tiny_data/spikeglx/derivatives/sub-001/ses-001/ephys/run-001_g0_imec0
-
-    Saving sync channel for: run-001_g0_imec0...
-    write_binary_recording 
-    engine=process - n_jobs=4 - samples_per_chunk=60,000 - chunk_memory=43.95 MiB - total_memory=175.78 MiB - chunk_duration=2.00s
-    write_binary_recording (workers: 1 processes):   0%|          | 0/1 [00:00<?, ?it/s]    write_binary_recording (workers: 1 processes): 100%|██████████| 1/1 [00:00<00:00,  3.48it/s]    write_binary_recording (workers: 1 processes): 100%|██████████| 1/1 [00:00<00:00,  3.48it/s]
 
     Saving data for: run-002_g0_imec0...
 
@@ -256,7 +254,17 @@ We could run again with different configs and multiprocessing:
     Saving sync channel for: run-002_g0_imec0...
     write_binary_recording 
     engine=process - n_jobs=4 - samples_per_chunk=60,000 - chunk_memory=43.95 MiB - total_memory=175.78 MiB - chunk_duration=2.00s
-    write_binary_recording (workers: 1 processes):   0%|          | 0/1 [00:00<?, ?it/s]    write_binary_recording (workers: 1 processes): 100%|██████████| 1/1 [00:00<00:00,  2.98it/s]    write_binary_recording (workers: 1 processes): 100%|██████████| 1/1 [00:00<00:00,  2.98it/s]
+    write_binary_recording (workers: 1 processes):   0%|          | 0/1 [00:00<?, ?it/s]    write_binary_recording (workers: 1 processes): 100%|██████████| 1/1 [00:00<00:00,  2.99it/s]    write_binary_recording (workers: 1 processes): 100%|██████████| 1/1 [00:00<00:00,  2.99it/s]
+
+    Saving data for: run-001_g0_imec0...
+
+    `overwrite=True`, so deleting all files and folders (except for slurm_logs) at the path:
+    /home/runner/work/spikewrap/spikewrap/spikewrap/examples/example_tiny_data/spikeglx/derivatives/sub-001/ses-001/ephys/run-001_g0_imec0
+
+    Saving sync channel for: run-001_g0_imec0...
+    write_binary_recording 
+    engine=process - n_jobs=4 - samples_per_chunk=60,000 - chunk_memory=43.95 MiB - total_memory=175.78 MiB - chunk_duration=2.00s
+    write_binary_recording (workers: 1 processes):   0%|          | 0/1 [00:00<?, ?it/s]    write_binary_recording (workers: 1 processes): 100%|██████████| 1/1 [00:00<00:00,  2.93it/s]    write_binary_recording (workers: 1 processes): 100%|██████████| 1/1 [00:00<00:00,  2.93it/s]
 
 
 
@@ -264,7 +272,7 @@ We could run again with different configs and multiprocessing:
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** (0 minutes 4.363 seconds)
+   **Total running time of the script:** (0 minutes 4.532 seconds)
 
 
 .. _sphx_glr_download_gallery_builds_how_to_01_preprocess_a_session.py:

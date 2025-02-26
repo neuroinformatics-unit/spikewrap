@@ -44,7 +44,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../../_static/documentation_options.js?v=01f34227"></script>
+    <script src="../../_static/documentation_options.js?v=a58bc63e"></script>
     <script src="../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/design-tabs.js?v=f930bc37"></script>
@@ -120,7 +120,7 @@
   
   
   
-    <p class="title logo__title">spikewrap v0.1.0</p>
+    <p class="title logo__title">spikewrap v0.1.1</p>
   
 </a></div>
     
@@ -520,15 +520,20 @@ object. This probe will be set on all runs.</p>
 <a href="../../api_index.html#spikewrap.Session.preprocess" title="spikewrap.Session.preprocess" class="sphx-glr-backref-module-spikewrap sphx-glr-backref-type-py-method"><span class="n">session</span><span class="o">.</span><span class="n">preprocess</span></a><span class="p">(</span><span class="n">configs</span><span class="o">=</span><span class="s2">&quot;neuropixels+kilosort2_5&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
-<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>Loading runs from session path: /home/runner/work/spikewrap/spikewrap/spikewrap/examples/example_tiny_data/spikeglx/rawdata/sub-001
+<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>/home/runner/work/spikewrap/spikewrap/spikewrap/process/_loading.py:139: UserWarning: The sessions or runs provided for are not in creation datetime order.
+They will be concatenated in the order provided, as:
+[&#39;run-002_g0_imec0&#39;, &#39;run-001_g0_imec0&#39;].
+  warnings.warn(
 
-Loading run: run-001_g0_imec0
-
-Loading data from path: /home/runner/work/spikewrap/spikewrap/spikewrap/examples/example_tiny_data/spikeglx/rawdata/sub-001/ses-001/ephys/run-001_g0_imec0
+Loading runs from session path: /home/runner/work/spikewrap/spikewrap/spikewrap/examples/example_tiny_data/spikeglx/rawdata/sub-001
 
 Loading run: run-002_g0_imec0
 
 Loading data from path: /home/runner/work/spikewrap/spikewrap/spikewrap/examples/example_tiny_data/spikeglx/rawdata/sub-001/ses-001/ephys/run-002_g0_imec0
+
+Loading run: run-001_g0_imec0
+
+Loading data from path: /home/runner/work/spikewrap/spikewrap/spikewrap/examples/example_tiny_data/spikeglx/rawdata/sub-001/ses-001/ephys/run-001_g0_imec0
 
 
 The preprocessing options are: {
@@ -552,9 +557,9 @@ The preprocessing options are: {
     ]
 }
 
-Loading data from path: /home/runner/work/spikewrap/spikewrap/spikewrap/examples/example_tiny_data/spikeglx/rawdata/sub-001/ses-001/ephys/run-001_g0_imec0
-
 Loading data from path: /home/runner/work/spikewrap/spikewrap/spikewrap/examples/example_tiny_data/spikeglx/rawdata/sub-001/ses-001/ephys/run-002_g0_imec0
+
+Loading data from path: /home/runner/work/spikewrap/spikewrap/spikewrap/examples/example_tiny_data/spikeglx/rawdata/sub-001/ses-001/ephys/run-001_g0_imec0
 </pre></div>
 </div>
 <p>Due to the magic of SpikeInterface, all data loading is ‘lazy’ and will be very fast.
@@ -563,7 +568,7 @@ Note that <strong>nothing is written to disk at this stage</strong>.</p>
 <div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="nb">print</span><span class="p">(</span><a href="../../api_index.html#spikewrap.Session.get_run_names" title="spikewrap.Session.get_run_names" class="sphx-glr-backref-module-spikewrap sphx-glr-backref-type-py-method"><span class="n">session</span><span class="o">.</span><span class="n">get_run_names</span></a><span class="p">())</span>
 </pre></div>
 </div>
-<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>[&#39;run-001_g0_imec0&#39;, &#39;run-002_g0_imec0&#39;]
+<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>[&#39;run-002_g0_imec0&#39;, &#39;run-001_g0_imec0&#39;]
 </pre></div>
 </div>
 </section>
@@ -654,12 +659,16 @@ All preprocess steps are defined with their underlying SpikeInterface function n
         }
     ]
 }
-
-Loading data from path: /home/runner/work/spikewrap/spikewrap/spikewrap/examples/example_tiny_data/spikeglx/rawdata/sub-001/ses-001/ephys/run-001_g0_imec0
+/home/runner/work/spikewrap/spikewrap/spikewrap/process/_loading.py:139: UserWarning: The sessions or runs provided for are not in creation datetime order.
+They will be concatenated in the order provided, as:
+[&#39;run-002_g0_imec0&#39;, &#39;run-001_g0_imec0&#39;].
+  warnings.warn(
 
 Loading data from path: /home/runner/work/spikewrap/spikewrap/spikewrap/examples/example_tiny_data/spikeglx/rawdata/sub-001/ses-001/ephys/run-002_g0_imec0
 
-Concatenating runs in the following order:[&#39;run-001_g0_imec0&#39;, &#39;run-002_g0_imec0&#39;]
+Loading data from path: /home/runner/work/spikewrap/spikewrap/spikewrap/examples/example_tiny_data/spikeglx/rawdata/sub-001/ses-001/ephys/run-001_g0_imec0
+
+Concatenating runs in the following order:[&#39;run-002_g0_imec0&#39;, &#39;run-001_g0_imec0&#39;]
 
 Split run: concat_run by shank. There are 2 shanks.
 </pre></div>
@@ -708,8 +717,8 @@ configurations and arguments, then re-plotting. This can be performed in a
 </pre></div>
 </div>
 <ul class="sphx-glr-horizontal">
-<li><img src="../../_images/sphx_glr_01_preprocessing_sessions_002.png" srcset="../../_images/sphx_glr_01_preprocessing_sessions_002.png" alt="Session: ses-001, Run: run-001_g0_imec0" class = "sphx-glr-multi-img"/></li>
-<li><img src="../../_images/sphx_glr_01_preprocessing_sessions_003.png" srcset="../../_images/sphx_glr_01_preprocessing_sessions_003.png" alt="Session: ses-001, Run: run-002_g0_imec0" class = "sphx-glr-multi-img"/></li>
+<li><img src="../../_images/sphx_glr_01_preprocessing_sessions_002.png" srcset="../../_images/sphx_glr_01_preprocessing_sessions_002.png" alt="Session: ses-001, Run: run-002_g0_imec0" class = "sphx-glr-multi-img"/></li>
+<li><img src="../../_images/sphx_glr_01_preprocessing_sessions_003.png" srcset="../../_images/sphx_glr_01_preprocessing_sessions_003.png" alt="Session: ses-001, Run: run-001_g0_imec0" class = "sphx-glr-multi-img"/></li>
 </ul>
 <div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>The preprocessing options are: {
     &quot;1&quot;: [
@@ -726,10 +735,14 @@ configurations and arguments, then re-plotting. This can be performed in a
         }
     ]
 }
-
-Loading data from path: /home/runner/work/spikewrap/spikewrap/spikewrap/examples/example_tiny_data/spikeglx/rawdata/sub-001/ses-001/ephys/run-001_g0_imec0
+/home/runner/work/spikewrap/spikewrap/spikewrap/process/_loading.py:139: UserWarning: The sessions or runs provided for are not in creation datetime order.
+They will be concatenated in the order provided, as:
+[&#39;run-002_g0_imec0&#39;, &#39;run-001_g0_imec0&#39;].
+  warnings.warn(
 
 Loading data from path: /home/runner/work/spikewrap/spikewrap/spikewrap/examples/example_tiny_data/spikeglx/rawdata/sub-001/ses-001/ephys/run-002_g0_imec0
+
+Loading data from path: /home/runner/work/spikewrap/spikewrap/spikewrap/examples/example_tiny_data/spikeglx/rawdata/sub-001/ses-001/ephys/run-001_g0_imec0
 /opt/hostedtoolcache/Python/3.11.11/x64/lib/python3.11/site-packages/spikeinterface/widgets/traces.py:150: UserWarning: You have selected a time after the end of the segment. The range will be clipped to 0.4999999999999989
   warnings.warn(
 /opt/hostedtoolcache/Python/3.11.11/x64/lib/python3.11/site-packages/spikeinterface/widgets/traces.py:150: UserWarning: You have selected a time after the end of the segment. The range will be clipped to 0.4999999999999989
@@ -744,20 +757,7 @@ chosen settings, you can run:</p>
 <div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><a href="../../api_index.html#spikewrap.Session.save_preprocessed" title="spikewrap.Session.save_preprocessed" class="sphx-glr-backref-module-spikewrap sphx-glr-backref-type-py-method"><span class="n">session</span><span class="o">.</span><span class="n">save_preprocessed</span></a><span class="p">(</span><span class="n">overwrite</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">n_jobs</span><span class="o">=</span><span class="mi">6</span><span class="p">)</span>
 </pre></div>
 </div>
-<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>Saving data for: run-001_g0_imec0...
-
-`overwrite=True`, so deleting all files and folders (except for slurm_logs) at the path:
-/home/runner/work/spikewrap/spikewrap/spikewrap/examples/example_tiny_data/spikeglx/derivatives/sub-001/ses-001/ephys/run-001_g0_imec0
-
-Saving sync channel for: run-001_g0_imec0...
-write_binary_recording
-engine=process - n_jobs=4 - samples_per_chunk=60,000 - chunk_memory=43.95 MiB - total_memory=175.78 MiB - chunk_duration=2.00s
-
-write_binary_recording (workers: 1 processes):   0%|          | 0/1 [00:00&lt;?, ?it/s]
-write_binary_recording (workers: 1 processes): 100%|██████████| 1/1 [00:00&lt;00:00,  3.43it/s]
-write_binary_recording (workers: 1 processes): 100%|██████████| 1/1 [00:00&lt;00:00,  3.43it/s]
-
-Saving data for: run-002_g0_imec0...
+<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>Saving data for: run-002_g0_imec0...
 
 `overwrite=True`, so deleting all files and folders (except for slurm_logs) at the path:
 /home/runner/work/spikewrap/spikewrap/spikewrap/examples/example_tiny_data/spikeglx/derivatives/sub-001/ses-001/ephys/run-002_g0_imec0
@@ -767,8 +767,21 @@ write_binary_recording
 engine=process - n_jobs=4 - samples_per_chunk=60,000 - chunk_memory=43.95 MiB - total_memory=175.78 MiB - chunk_duration=2.00s
 
 write_binary_recording (workers: 1 processes):   0%|          | 0/1 [00:00&lt;?, ?it/s]
-write_binary_recording (workers: 1 processes): 100%|██████████| 1/1 [00:00&lt;00:00,  3.74it/s]
-write_binary_recording (workers: 1 processes): 100%|██████████| 1/1 [00:00&lt;00:00,  3.74it/s]
+write_binary_recording (workers: 1 processes): 100%|██████████| 1/1 [00:00&lt;00:00,  3.31it/s]
+write_binary_recording (workers: 1 processes): 100%|██████████| 1/1 [00:00&lt;00:00,  3.31it/s]
+
+Saving data for: run-001_g0_imec0...
+
+`overwrite=True`, so deleting all files and folders (except for slurm_logs) at the path:
+/home/runner/work/spikewrap/spikewrap/spikewrap/examples/example_tiny_data/spikeglx/derivatives/sub-001/ses-001/ephys/run-001_g0_imec0
+
+Saving sync channel for: run-001_g0_imec0...
+write_binary_recording
+engine=process - n_jobs=4 - samples_per_chunk=60,000 - chunk_memory=43.95 MiB - total_memory=175.78 MiB - chunk_duration=2.00s
+
+write_binary_recording (workers: 1 processes):   0%|          | 0/1 [00:00&lt;?, ?it/s]
+write_binary_recording (workers: 1 processes): 100%|██████████| 1/1 [00:00&lt;00:00,  3.29it/s]
+write_binary_recording (workers: 1 processes): 100%|██████████| 1/1 [00:00&lt;00:00,  3.28it/s]
 </pre></div>
 </div>
 <div class="admonition attention">
@@ -802,7 +815,7 @@ session has 2 runs (which are not concatenated),
 <section id="output-data-organisation">
 <h3>Output data organisation<a class="headerlink" href="#output-data-organisation" title="Link to this heading">#</a></h3>
 <p>See the</p>
-<p class="sphx-glr-timing"><strong>Total running time of the script:</strong> (0 minutes 3.460 seconds)</p>
+<p class="sphx-glr-timing"><strong>Total running time of the script:</strong> (0 minutes 3.586 seconds)</p>
 <div class="sphx-glr-footer sphx-glr-footer-example docutils container" id="sphx-glr-download-gallery-builds-tutorials-01-preprocessing-sessions-py">
 <div class="binder-badge docutils container">
 <a class="reference external image-reference" href="https://mybinder.org/v2/gh/neuroinformatics-unit/spikewrap/gh-pages?filepath=notebooks/gallery_builds/tutorials/01_preprocessing_sessions.ipynb"><img alt="Launch binder" src="../../_images/binder_badge_logo2.svg" style="width: 150px;" />
@@ -906,7 +919,7 @@ session has 2 runs (which are not concatenated),
     <div class="footer-items__start">
       
         <div class="footer-item"><p class="sphinx-version">
-    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.1.3.
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.2.1.
     <br/>
     </p>
     <p class="theme-version">

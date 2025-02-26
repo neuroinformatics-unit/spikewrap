@@ -6,7 +6,7 @@
 
 Computation times
 =================
-**00:03.469** total execution time for 3 files **from gallery_builds/tutorials**:
+**00:03.595** total execution time for 3 files **from gallery_builds/tutorials**:
 
 .. container::
 
@@ -33,7 +33,7 @@ Computation times
      - Time
      - Mem (MB)
    * - :ref:`sphx_glr_gallery_builds_tutorials_01_preprocessing_sessions.py` (``01_preprocessing_sessions.py``)
-     - 00:03.460
+     - 00:03.586
      - 0.0
    * - :ref:`sphx_glr_gallery_builds_tutorials_02_managing_configs.py` (``02_managing_configs.py``)
      - 00:00.008

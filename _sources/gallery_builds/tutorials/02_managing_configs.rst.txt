@@ -159,7 +159,7 @@ and see what configs you have available at this path:
 
 
     The available configs are:
-    ['neuropixels+kilosort2_5.yaml', 'my_config.yaml']
+    ['my_config.yaml', 'neuropixels+kilosort2_5.yaml']
 
 
 

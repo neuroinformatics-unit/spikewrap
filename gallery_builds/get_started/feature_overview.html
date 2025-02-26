@@ -44,7 +44,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../../_static/documentation_options.js?v=01f34227"></script>
+    <script src="../../_static/documentation_options.js?v=a58bc63e"></script>
     <script src="../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/design-tabs.js?v=f930bc37"></script>
@@ -120,7 +120,7 @@
   
   
   
-    <p class="title logo__title">spikewrap v0.1.0</p>
+    <p class="title logo__title">spikewrap v0.1.1</p>
   
 </a></div>
     
@@ -567,7 +567,13 @@ argument can be used to set <a class="reference external" href="https://probeint
 <span class="p">)</span>
 </pre></div>
 </div>
-<img src="../../_images/sphx_glr_feature_overview_001.png" srcset="../../_images/sphx_glr_feature_overview_001.png" alt="Session: ses-001, Run: run-001_g0_imec0 Shank: 1, Session: ses-001, Run: run-001_g0_imec0 Shank: 2" class = "sphx-glr-single-img"/><div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>The preprocessing options are: {
+<img src="../../_images/sphx_glr_feature_overview_001.png" srcset="../../_images/sphx_glr_feature_overview_001.png" alt="Session: ses-001, Run: run-002_g0_imec0 Shank: 1, Session: ses-001, Run: run-002_g0_imec0 Shank: 2" class = "sphx-glr-single-img"/><div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>/home/runner/work/spikewrap/spikewrap/spikewrap/process/_loading.py:139: UserWarning: The sessions or runs provided for are not in creation datetime order.
+They will be concatenated in the order provided, as:
+[&#39;run-002_g0_imec0&#39;, &#39;run-001_g0_imec0&#39;].
+  warnings.warn(
+
+
+The preprocessing options are: {
     &quot;1&quot;: [
         &quot;phase_shift&quot;,
         {}
@@ -588,36 +594,17 @@ argument can be used to set <a class="reference external" href="https://probeint
     ]
 }
 
-Loading data from path: /home/runner/work/spikewrap/spikewrap/spikewrap/examples/example_tiny_data/spikeglx/rawdata/sub-001/ses-001/ephys/run-001_g0_imec0
-
 Loading data from path: /home/runner/work/spikewrap/spikewrap/spikewrap/examples/example_tiny_data/spikeglx/rawdata/sub-001/ses-001/ephys/run-002_g0_imec0
 
-Split run: run-001_g0_imec0 by shank. There are 2 shanks.
+Loading data from path: /home/runner/work/spikewrap/spikewrap/spikewrap/examples/example_tiny_data/spikeglx/rawdata/sub-001/ses-001/ephys/run-001_g0_imec0
 
 Split run: run-002_g0_imec0 by shank. There are 2 shanks.
+
+Split run: run-001_g0_imec0 by shank. There are 2 shanks.
 /opt/hostedtoolcache/Python/3.11.11/x64/lib/python3.11/site-packages/spikeinterface/widgets/traces.py:150: UserWarning: You have selected a time after the end of the segment. The range will be clipped to 0.4999999999999989
   warnings.warn(
 /opt/hostedtoolcache/Python/3.11.11/x64/lib/python3.11/site-packages/spikeinterface/widgets/traces.py:150: UserWarning: You have selected a time after the end of the segment. The range will be clipped to 0.4999999999999989
   warnings.warn(
-
-Saving data for: run-001_g0_imec0...
-
-`overwrite=True`, so deleting all files and folders (except for slurm_logs) at the path:
-/home/runner/work/spikewrap/spikewrap/spikewrap/examples/example_tiny_data/spikeglx/derivatives/sub-001/ses-001/ephys/run-001_g0_imec0
-
-Saving sync channel for: run-001_g0_imec0...
-write_binary_recording
-engine=process - n_jobs=4 - samples_per_chunk=60,000 - chunk_memory=21.97 MiB - total_memory=87.89 MiB - chunk_duration=2.00s
-
-write_binary_recording (workers: 1 processes):   0%|          | 0/1 [00:00&lt;?, ?it/s]
-write_binary_recording (workers: 1 processes): 100%|██████████| 1/1 [00:00&lt;00:00,  2.83it/s]
-write_binary_recording (workers: 1 processes): 100%|██████████| 1/1 [00:00&lt;00:00,  2.83it/s]
-write_binary_recording
-engine=process - n_jobs=4 - samples_per_chunk=60,000 - chunk_memory=21.97 MiB - total_memory=87.89 MiB - chunk_duration=2.00s
-
-write_binary_recording (workers: 1 processes):   0%|          | 0/1 [00:00&lt;?, ?it/s]
-write_binary_recording (workers: 1 processes): 100%|██████████| 1/1 [00:00&lt;00:00,  2.59it/s]
-write_binary_recording (workers: 1 processes): 100%|██████████| 1/1 [00:00&lt;00:00,  2.59it/s]
 
 Saving data for: run-002_g0_imec0...
 
@@ -629,14 +616,33 @@ write_binary_recording
 engine=process - n_jobs=4 - samples_per_chunk=60,000 - chunk_memory=21.97 MiB - total_memory=87.89 MiB - chunk_duration=2.00s
 
 write_binary_recording (workers: 1 processes):   0%|          | 0/1 [00:00&lt;?, ?it/s]
-write_binary_recording (workers: 1 processes): 100%|██████████| 1/1 [00:00&lt;00:00,  2.74it/s]
-write_binary_recording (workers: 1 processes): 100%|██████████| 1/1 [00:00&lt;00:00,  2.74it/s]
+write_binary_recording (workers: 1 processes): 100%|██████████| 1/1 [00:00&lt;00:00,  2.82it/s]
+write_binary_recording (workers: 1 processes): 100%|██████████| 1/1 [00:00&lt;00:00,  2.81it/s]
+write_binary_recording
+engine=process - n_jobs=4 - samples_per_chunk=60,000 - chunk_memory=21.97 MiB - total_memory=87.89 MiB - chunk_duration=2.00s
+
+write_binary_recording (workers: 1 processes):   0%|          | 0/1 [00:00&lt;?, ?it/s]
+write_binary_recording (workers: 1 processes): 100%|██████████| 1/1 [00:00&lt;00:00,  2.55it/s]
+write_binary_recording (workers: 1 processes): 100%|██████████| 1/1 [00:00&lt;00:00,  2.55it/s]
+
+Saving data for: run-001_g0_imec0...
+
+`overwrite=True`, so deleting all files and folders (except for slurm_logs) at the path:
+/home/runner/work/spikewrap/spikewrap/spikewrap/examples/example_tiny_data/spikeglx/derivatives/sub-001/ses-001/ephys/run-001_g0_imec0
+
+Saving sync channel for: run-001_g0_imec0...
 write_binary_recording
 engine=process - n_jobs=4 - samples_per_chunk=60,000 - chunk_memory=21.97 MiB - total_memory=87.89 MiB - chunk_duration=2.00s
 
 write_binary_recording (workers: 1 processes):   0%|          | 0/1 [00:00&lt;?, ?it/s]
 write_binary_recording (workers: 1 processes): 100%|██████████| 1/1 [00:00&lt;00:00,  2.78it/s]
 write_binary_recording (workers: 1 processes): 100%|██████████| 1/1 [00:00&lt;00:00,  2.78it/s]
+write_binary_recording
+engine=process - n_jobs=4 - samples_per_chunk=60,000 - chunk_memory=21.97 MiB - total_memory=87.89 MiB - chunk_duration=2.00s
+
+write_binary_recording (workers: 1 processes):   0%|          | 0/1 [00:00&lt;?, ?it/s]
+write_binary_recording (workers: 1 processes): 100%|██████████| 1/1 [00:00&lt;00:00,  3.19it/s]
+write_binary_recording (workers: 1 processes): 100%|██████████| 1/1 [00:00&lt;00:00,  3.19it/s]
 </pre></div>
 </div>
 <p>with data output to the standardised
@@ -662,7 +668,7 @@ structure:</p>
 </pre></div>
 </div>
 <p>Next, visit <a class="reference internal" href="../../get_started/index.html#get-started"><span class="std std-ref">Get Started</span></a> and <a class="reference internal" href="../tutorials/index.html#tutorials-index"><span class="std std-ref">Tutorials</span></a> to try out <code class="docutils literal notranslate"><span class="pre">spikewrap</span></code>.</p>
-<p class="sphx-glr-timing"><strong>Total running time of the script:</strong> (0 minutes 2.700 seconds)</p>
+<p class="sphx-glr-timing"><strong>Total running time of the script:</strong> (0 minutes 2.691 seconds)</p>
 <div class="sphx-glr-footer sphx-glr-footer-example docutils container" id="sphx-glr-download-gallery-builds-get-started-feature-overview-py">
 <div class="binder-badge docutils container">
 <a class="reference external image-reference" href="https://mybinder.org/v2/gh/neuroinformatics-unit/spikewrap/gh-pages?filepath=notebooks/gallery_builds/get_started/feature_overview.ipynb"><img alt="Launch binder" src="../../_images/binder_badge_logo.svg" style="width: 150px;" />
@@ -755,7 +761,7 @@ structure:</p>
     <div class="footer-items__start">
       
         <div class="footer-item"><p class="sphinx-version">
-    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.1.3.
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.2.1.
     <br/>
     </p>
     <p class="theme-version">
