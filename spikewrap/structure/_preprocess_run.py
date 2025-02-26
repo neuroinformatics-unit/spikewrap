@@ -20,7 +20,7 @@ from spikewrap.utils import _slurm, _utils
 from spikewrap.visualise._visualise import visualise_run_preprocessed
 
 
-class BaseRun:
+class BasePreprocessRun:
     """
     Base class for an electrophysiology 'run'. Manages loading data,
     preprocessing and saving of the run.
@@ -60,9 +60,11 @@ class BaseRun:
         # These parameters should be treated as constant and never changed
         # during the lifetime of the class. Use the properties (which do not
         # expose a setter) for both internal and external calls.
-        self._parent_input_path = parent_input_path
+        self._parent_input_path = parent_input_path  # TODO: REnAME AS ses_input_path
         self._parent_ses_name = parent_ses_name
-        self._run_name = run_name
+        self._run_name = (
+            run_name  # TODO: this is raw data run folder, naming should be clearler!
+        )
         self._output_path = session_output_path / run_name
         self._file_format = file_format
 
@@ -327,12 +329,12 @@ class BaseRun:
 # -----------------------------------------------------------------------------
 
 
-class SeparateRun(BaseRun):
+class SeparatePreprocessRun(BasePreprocessRun):
     """
     Represents a single electrophysiological run. Exposes Run functionality
     and ability to load the SpikeInterface recording for this run into the class.
 
-    If concatenated, a list of `SeparateRuns` are converted to a `ConcatRun`.
+    If concatenated, a list of `SeparatePreprocessRuns` are converted to a `ConcatPreprocessRun`.
     """
 
     def __init__(
@@ -347,7 +349,7 @@ class SeparateRun(BaseRun):
         self._parent_input_path: Path
         self._probe = probe
 
-        super(SeparateRun, self).__init__(
+        super(SeparatePreprocessRun, self).__init__(
             parent_input_path,
             parent_ses_name,
             run_name,
@@ -384,12 +386,12 @@ class SeparateRun(BaseRun):
 # -----------------------------------------------------------------------------
 
 
-class ConcatRun(BaseRun):
+class ConcatPreprocessRun(BasePreprocessRun):
     """
-    Subclass of `Run` used for concatenating `SeparateRun`s and
+    Subclass of `Run` used for concatenating `SeparatePreprocessRun`s and
     processing the concatenated recording.
 
-    Differences from `SeparateRun`:
+    Differences from `SeparatePreprocessRun`:
     1) ``load_run_data`` will raise, as it is assumed raw data has
        already been loaded as separate runs and concatenated.
     2) ``_orig_run_names`` holds the names of original, separate
@@ -398,13 +400,13 @@ class ConcatRun(BaseRun):
 
     def __init__(
         self,
-        runs_list: list[SeparateRun],
+        runs_list: list[SeparatePreprocessRun],
         parent_input_path: Path,
         parent_ses_name: str,
         session_output_path: Path,
         file_format: Literal["spikeglx", "openephys"],
     ):
-        super(ConcatRun, self).__init__(
+        super(ConcatPreprocessRun, self).__init__(
             parent_input_path=parent_input_path,
             parent_ses_name=parent_ses_name,
             run_name="concat_run",
@@ -455,7 +457,7 @@ class ConcatRun(BaseRun):
         be called on this subclass, because raw-data is already loaded
         (and concatenated, to form this recording).
 
-        `ConcatRun` should only be preprocessed and saved.
+        `ConcatPreprocessRun` should only be preprocessed and saved.
 
         Parameters
         ----------
@@ -467,10 +469,10 @@ class ConcatRun(BaseRun):
         )
 
     def _format_recordings_to_concat(
-        self, runs_list: list[SeparateRun]
+        self, runs_list: list[SeparatePreprocessRun]
     ) -> tuple[list[BaseRecording], list[BaseRecording], list[str]]:
         """
-        Extracts raw data, sync data, and run names from a list of SeparateRun
+        Extracts raw data, sync data, and run names from a list of SeparatePreprocessRun
         objects and returns the relevant data.
 
         No checks on whether it is suitable to concatenate the recordings
@@ -480,7 +482,7 @@ class ConcatRun(BaseRun):
         ----------
         runs_list
             List of runs to be concatenated. Must not contain
-            already-concatenated `ConcatRun` objects.
+            already-concatenated `ConcatPreprocessRun` objects.
         """
         raw_data: list[BaseRecording] = []
         sync_data: list[BaseRecording] = []
