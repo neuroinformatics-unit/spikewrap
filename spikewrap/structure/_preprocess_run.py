@@ -409,7 +409,7 @@ class ConcatPreprocessRun(BasePreprocessRun):
         super(ConcatPreprocessRun, self).__init__(
             parent_input_path=parent_input_path,
             parent_ses_name=parent_ses_name,
-            run_name="concat_run",
+            run_name="concat_runs",
             session_output_path=session_output_path,
             file_format=file_format,
         )
