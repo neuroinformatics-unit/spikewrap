@@ -11,7 +11,7 @@ if __name__ == "__main__":
 
     session.preprocess(
         configs="neuropixels+kilosort2_5",
-        per_shank=True,
+        per_shank=False,
         concat_runs=False,
     )
 
@@ -28,11 +28,25 @@ if __name__ == "__main__":
     # 3) figure out overwrite
     # 4) figure out run_method
 
+    # TODO: properly test runs and stuff
+
     session.sort(
         configs="neuropixels+mountainsort5",
-        run_method="local",  # "local", "singularity", "docker" or path to MATLAB install (check for mex files!)
-        per_shank=False,
-        concat_runs=False,
+        run_names="all",  # TODO: test, not even sure whether to include...
+        run_sorter_method="local",  # "local", "singularity", "docker" or path to MATLAB install (check for mex files!)
+        per_shank=True,
+        concat_runs=True,
         overwrite=True,
         slurm=False,
     )
+
+    """
+2)    configs="neuropixels+mountainsort5",
+1)    runs="all",
+7)    run_sorter_method="local",  # "local", "singularity", "docker" or path to MATLAB install (check for mex files!)
+3)    per_shank=False,
+4)    concat_runs=False,
+5)    overwrite=True,
+6)    slurm=False,
+8)  handle existing preprocessing, loading into preprocessing etc.
+    """

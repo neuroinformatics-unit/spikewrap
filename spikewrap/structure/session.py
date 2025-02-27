@@ -16,6 +16,7 @@ from spikewrap.structure._preprocess_run import (
     ConcatPreprocessRun,
     SeparatePreprocessRun,
 )
+from spikewrap.structure._sorting_run import SortingRun
 from spikewrap.utils import _utils
 
 
@@ -143,7 +144,9 @@ class Session:
         per_shank
             If ``True``, perform preprocessing on each shank separately.
         """
-        pp_steps = self._infer_pp_steps_from_configs_argument(configs)
+        pp_steps = self._infer_pp_steps_from_configs_argument(
+            configs, "preprocessing"
+        )  # TODO: RENAME !
 
         _utils.show_preprocessing_configs(pp_steps)
 
@@ -251,7 +254,7 @@ class Session:
 
     def sort(
         self,
-        configs="neuropixels+kilosort2_5",
+        configs,
         run_method="singularity",
         # "local", "singularity", "docker" or path to MATLAB install (check for mex files!)
         per_shank=True,
@@ -260,23 +263,54 @@ class Session:
         slurm=False,
     ):
         """ """
-        import spikewrap as sw
 
-        config_dict = sw.load_config_dict(
-            sw.get_configs_path() / "neuropixels+mountainsort5.yaml"
-        )  # TODO: sort this out
-        sorting_configs = config_dict["sorting"]
+        sorting_configs = self._infer_pp_steps_from_configs_argument(configs, "sorting")
 
-        if concat_runs:
-            raise NotImplementedError()
-            self._sorting_runs = [ConcatSortingRun(self._pp_runs)]
+        if concat_runs and len(self._pp_runs) == 1:
+            raise ValueError(
+                "Cannot concatenate a single run."
+            )  ## TODO: also check if run names is just 1from
+
+        elif concat_runs and isinstance(self._pp_runs[0], ConcatPreprocessRun):
+            warnings.warn(
+                "concat_runs=True` for sorting but runs were already concatenated for preprocessing."
+            )
+            self._sorting_runs = [SortingRun(self._pp_runs[0])]
+
         else:
-            from spikewrap.structure._sorting_run import SortingRun
+            if run_names == "all":
+                runs_to_sort = self._pp_runs
 
-            self._sorting_runs = [SortingRun(pp_run) for pp_run in self._pp_runs]
+            elif isistance(run_names, str):
+                runs_to_sort = [
+                    run for run in self._pp_runs if run.run_name == run_names
+                ]
 
-        # ConcatBeforePreprocessing
-        # ConcatAfterPreprocessing
+            elif isinstance(run_names, list):
+                mapping = {run.run_name: run for run in self._pp_runs}
+                runs_to_sort = []
+                for name in run_names:
+                    if name in mapping:
+                        runs_to_sort.append(mapping[name])
+                    else:
+                        raise ValueError(
+                            f"The name {name} was not found in the preprocessed runs: {self.get_run_names()}"
+                        )
+                runs_to_sort = [mapping[name] for name in run_names]
+            else:
+                raise TypeError("`run_names` is an invalid type.")
+
+            if not any(runs_to_sort):
+                raise ValueError(
+                    f"`run_names` is not a valid run. Must be one of {self.get_run_names()}"
+                )
+
+            if concat_runs:
+                breakpoint()
+                self._sorting_runs = [ConcatSortingRun(runs_to_sort)]
+            else:
+                breakpoint()
+                self._sorting_runs = [SortingRun(pp_run) for pp_run in runs_to_sort]
 
         # sorting_configs = self._inter_sorting_configs_from_configs_arguiment(configs)
         # sorting_configs = configs
@@ -465,7 +499,9 @@ class Session:
             )
 
     @staticmethod
-    def _infer_pp_steps_from_configs_argument(configs) -> dict[str, list]:
+    def _infer_pp_steps_from_configs_argument(
+        configs, preprocessing_or_sorting
+    ) -> dict[str, list]:  # TODO: RENAME !
         """
         Given the possible arguments for `configs` in `preprocess()`,
         infer the `pp_steps` dictionary of preprocessing steps to run.
@@ -477,11 +513,16 @@ class Session:
         """
         if not isinstance(configs, dict):
             if isinstance(configs, Path) or "/" in configs or "\\" in configs:
-                pp_steps = config_utils.load_config_dict(configs)["preprocessing"]
+                settings = config_utils.load_config_dict(configs)[
+                    preprocessing_or_sorting
+                ]
             else:
-                pp_steps, _ = config_utils.get_configs(configs)
+                pp_steps, sorting = config_utils.get_configs(configs)
+                settings = (
+                    pp_steps if preprocessing_or_sorting == "preprocessing" else sorting
+                )
         else:
-            # maybe the user did not include the "preprocessing" top level
-            pp_steps = configs.get("preprocessing", configs)
+            # maybe the user did not include the "preprocessing" or "sorting" top level
+            settings = configs.get(preprocessing_or_sorting, configs)
 
-        return pp_steps
+        return settings
