@@ -1,7 +1,5 @@
 import shutil
 
-import spikeinterface.full as si
-
 from spikewrap.utils import _utils
 
 # TODO: manage lifetime
@@ -13,6 +11,9 @@ class BaseSortingRun:
         # do some checks on sorter, either installed, or not installed etc.
         # run method... parse it properly to produce run_sorter outputs
         # handle overwrite
+        # add note because slow
+        from spikeinterface.sorters import run_sorter
+
         if slurm:
             self._sort_slurm(
                 sorting_configs, run_sorter_method, per_shank, overwrite, slurm
@@ -55,7 +56,7 @@ class BaseSortingRun:
             if rec_name != "grouped":
                 out_path = out_path / f"shank_{rec_name}"
 
-            si.run_sorter(
+            run_sorter(
                 sorter_name=sorter_name,
                 recording=recording,
                 folder=out_path,
