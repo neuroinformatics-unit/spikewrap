@@ -1,6 +1,6 @@
 import shutil
 
-from spikewrap.utils import _utils
+from spikewrap.utils import _slurm, _utils
 
 # TODO: manage lifetime
 
@@ -67,7 +67,7 @@ class BaseSortingRun:
                 **sorter_kwargs,
             )
 
-    def sort_slurm(
+    def _sort_slurm(
         self, sorting_configs, run_sorter_method, per_shank, overwrite, slurm
     ):
         """ """
