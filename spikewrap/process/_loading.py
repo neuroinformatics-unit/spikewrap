@@ -10,8 +10,6 @@ if TYPE_CHECKING:
 import re
 import warnings
 
-import spikeinterface.full as si
-
 from spikewrap.utils import _utils
 
 
@@ -22,11 +20,14 @@ def load_data(
     explain (e.g. without sync needed for sorting, otherwise store sync for
     storing the sync array!
     """
+    # Import here as SI imports can be slow
+    import spikeinterface.extractors as si_extractors
+
     _utils.message_user(f"Loading data from path: {run_path}")
 
     if file_format == "spikeglx":
         without_sync, with_sync = [
-            si.read_spikeglx(
+            si_extractors.read_spikeglx(
                 folder_path=run_path,
                 stream_id="imec0.ap",
                 all_annotations=True,
@@ -36,13 +37,13 @@ def load_data(
         ]
 
     elif file_format == "openephys":
-        without_sync = si.read_openephys(
+        without_sync = si_extractors.read_openephys(
             folder_path=run_path,
             all_annotations=True,
             load_sync_channel=False,
         )
         try:
-            with_sync = si.read_openephys(
+            with_sync = si_extractors.read_openephys(
                 folder_path=run_path,
                 all_annotations=False,
                 load_sync_channel=True,
