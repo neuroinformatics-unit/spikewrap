@@ -6,6 +6,7 @@ if TYPE_CHECKING:
     import matplotlib
     from probeinterface import Probe
 
+import warnings
 from pathlib import Path
 
 import numpy as np
@@ -16,7 +17,7 @@ from spikewrap.structure._preprocess_run import (
     ConcatPreprocessRun,
     SeparatePreprocessRun,
 )
-from spikewrap.structure._sorting_run import SortingRun
+from spikewrap.structure._sorting_run import ConcatSortingRun, SortingRun
 from spikewrap.utils import _utils
 
 
@@ -255,7 +256,7 @@ class Session:
     def sort(
         self,
         configs,
-        run_method="singularity",
+        run_sorter_method="singularity",
         # "local", "singularity", "docker" or path to MATLAB install (check for mex files!)
         per_shank=True,
         concat_runs=True,
@@ -266,51 +267,27 @@ class Session:
 
         sorting_configs = self._infer_pp_steps_from_configs_argument(configs, "sorting")
 
-        if concat_runs and len(self._pp_runs) == 1:
-            raise ValueError(
-                "Cannot concatenate a single run."
-            )  ## TODO: also check if run names is just 1from
-
-        elif concat_runs and isinstance(self._pp_runs[0], ConcatPreprocessRun):
-            warnings.warn(
-                "concat_runs=True` for sorting but runs were already concatenated for preprocessing."
-            )
-            self._sorting_runs = [SortingRun(self._pp_runs[0])]
-
-        else:
-            if run_names == "all":
-                runs_to_sort = self._pp_runs
-
-            elif isistance(run_names, str):
-                runs_to_sort = [
-                    run for run in self._pp_runs if run.run_name == run_names
+        if concat_runs:
+            if len(self._pp_runs) == 1:
+                if isinstance(self._pp_runs[0], ConcatPreprocessRun):
+                    warnings.warn(
+                        "concat_runs=True` for sorting but runs were already concatenated for preprocessing."
+                    )
+                    self._sorting_runs = [
+                        SortingRun(self._pp_runs[0], self._output_path)
+                    ]
+                else:
+                    raise ValueError(
+                        "Cannot concatenate a single run."
+                    )  ## TODO: also check if run names is just 1from
+            else:
+                self._sorting_runs = [
+                    ConcatSortingRun(self._pp_runs, self._output_path)
                 ]
-
-            elif isinstance(run_names, list):
-                mapping = {run.run_name: run for run in self._pp_runs}
-                runs_to_sort = []
-                for name in run_names:
-                    if name in mapping:
-                        runs_to_sort.append(mapping[name])
-                    else:
-                        raise ValueError(
-                            f"The name {name} was not found in the preprocessed runs: {self.get_run_names()}"
-                        )
-                runs_to_sort = [mapping[name] for name in run_names]
-            else:
-                raise TypeError("`run_names` is an invalid type.")
-
-            if not any(runs_to_sort):
-                raise ValueError(
-                    f"`run_names` is not a valid run. Must be one of {self.get_run_names()}"
-                )
-
-            if concat_runs:
-                breakpoint()
-                self._sorting_runs = [ConcatSortingRun(runs_to_sort)]
-            else:
-                breakpoint()
-                self._sorting_runs = [SortingRun(pp_run) for pp_run in runs_to_sort]
+        else:
+            self._sorting_runs = [
+                SortingRun(pp_run, self._output_path) for pp_run in self._pp_runs
+            ]
 
         # sorting_configs = self._inter_sorting_configs_from_configs_arguiment(configs)
         # sorting_configs = configs
@@ -330,7 +307,7 @@ class Session:
         # update ConcatRuns to even concat preprocessed runs!!!
 
         for run in self._sorting_runs:
-            run.sort(sorting_configs, run_method, per_shank, overwrite, slurm)
+            run.sort(sorting_configs, run_sorter_method, per_shank, overwrite, slurm)
 
     # Getters -----------------------------------------------------------------
 
