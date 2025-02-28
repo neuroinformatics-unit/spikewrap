@@ -10,6 +10,8 @@ if TYPE_CHECKING:
 import re
 import warnings
 
+import spikeinterface.extractors as si_extractors
+
 from spikewrap.utils import _utils
 
 
@@ -20,9 +22,6 @@ def load_data(
     explain (e.g. without sync needed for sorting, otherwise store sync for
     storing the sync array!
     """
-    # Import here as SI imports can be slow
-    import spikeinterface.extractors as si_extractors
-
     _utils.message_user(f"Loading data from path: {run_path}")
 
     if file_format == "spikeglx":

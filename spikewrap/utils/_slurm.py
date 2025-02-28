@@ -183,3 +183,13 @@ def send_user_start_message(
 def is_slurm_installed():
     slurm_installed = _system_call_success("sinfo -v")
     return slurm_installed
+
+
+def _delete_folder_contents_except_slurm_logs(path_to_folder: Path) -> None:
+    """ """
+    for path_ in path_to_folder.iterdir():
+        if path_.name != "slurm_logs":
+            if path_.is_file():
+                path_.unlink()
+            elif path_.is_dir():
+                shutil.rmtree(path_)

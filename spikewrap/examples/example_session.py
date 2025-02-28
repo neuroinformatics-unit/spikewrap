@@ -12,7 +12,7 @@ if __name__ == "__main__":
     session.preprocess(
         configs="neuropixels+kilosort2_5",
         per_shank=False,
-        concat_runs=True,
+        concat_run=True,
     )
 
     #    session.plot_preprocessed(
@@ -34,13 +34,11 @@ if __name__ == "__main__":
         configs="neuropixels+mountainsort5",
         run_sorter_method="local",  # "local", "singularity", "docker" or path to MATLAB install (check for mex files!)
         per_shank=True,
-        concat_runs=True,
+        concat_run=True,
         overwrite=True,
         slurm=False,
     )
 
     """
-6)  slurm=False,
-7)  run_sorter_method="local",  # "local", "singularity", "docker" or path to MATLAB install (check for mex files!)
 8)  handle existing preprocessing, loading into preprocessing etc.
     """

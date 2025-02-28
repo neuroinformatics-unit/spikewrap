@@ -9,7 +9,6 @@ if TYPE_CHECKING:
     from probeinterface import Probe
     from spikeinterface.core import BaseRecording
 
-import shutil
 
 import spikeinterface.full as si
 
@@ -147,7 +146,12 @@ class BasePreprocessRun:
 
         if self._output_path.is_dir():
             if overwrite:
-                self._delete_existing_run_except_slurm_logs(self._output_path)
+                _utils.message_user(
+                    f"`overwrite=True`, so deleting all files and folders "
+                    f"(except for slurm_logs) at the path:\n"
+                    f"{output_path}"
+                )
+                _slurm._delete_folder_contents_except_slurm_logs(output_path)
             else:
                 raise RuntimeError(
                     f"`overwrite` is `False` but data already exists at the run path: {self._output_path}."
@@ -157,25 +161,6 @@ class BasePreprocessRun:
 
         for preprocessed in self._preprocessed.values():
             preprocessed.save_binary(chunk_duration_s)
-
-    @staticmethod
-    def _delete_existing_run_except_slurm_logs(output_path):
-        """
-        When overwriting the data for this run, delete
-        everything except the ``"slurm_logs"`` folder.
-        """
-        _utils.message_user(
-            f"`overwrite=True`, so deleting all files and folders "
-            f"(except for slurm_logs) at the path:\n"
-            f"{output_path}"
-        )
-
-        for path_ in output_path.iterdir():
-            if path_.name != "slurm_logs":
-                if path_.is_file():
-                    path_.unlink()
-                elif path_.is_dir():
-                    shutil.rmtree(path_)
 
     def plot_preprocessed(
         self,
@@ -409,7 +394,7 @@ class ConcatPreprocessRun(BasePreprocessRun):
         super(ConcatPreprocessRun, self).__init__(
             parent_input_path=parent_input_path,
             parent_ses_name=parent_ses_name,
-            run_name="concat_runs",
+            run_name="concat_run",
             session_output_path=session_output_path,
             file_format=file_format,
         )
