@@ -121,7 +121,7 @@ class Session:
     def preprocess(
         self,
         configs: dict | str | Path,
-        concat_runs: bool = False,
+        concat_run: bool = False,
         per_shank: bool = False,
     ) -> None:
         """
@@ -139,7 +139,7 @@ class Session:
             - If a ``Path`` is provided, expects the path to a valid spikewrap config YAML file.
             - A spikewrap configs dictionary, either including the ``"preprocessing"`` level
               or the ``"preprocessing"`` level itself. See documentation for details.
-        concat_runs
+        concat_run
             If ``True``, all runs will be concatenated together before preprocessing.
             Use ``session.get_run_names()`` to check the order of concatenation.
         per_shank
@@ -156,8 +156,8 @@ class Session:
         for run in self._pp_runs:
             run.load_raw_data()
 
-        if concat_runs:
-            self._concat_runs()
+        if concat_run:
+            self._concat_run()
 
         for run in self._pp_runs:
             run.preprocess(pp_steps, per_shank)
@@ -255,31 +255,37 @@ class Session:
 
     def sort(
         self,
-        configs,
-        run_sorter_method="singularity",
-        # "local", "singularity", "docker" or path to MATLAB install (check for mex files!)
-        per_shank=True,
-        concat_runs=True,
-        overwrite=True,
-        slurm=False,
+        configs: str | dict,
+        run_sorter_method: str = "singularity",
+        per_shank: bool = True,
+        concat_run: bool = True,
+        overwrite: bool = True,
+        slurm: bool = False,
     ):
-        """ """
+        """
+        EXPLAIN
 
+        Parameters
+        ----------
+
+        """
         sorting_configs = self._infer_pp_steps_from_configs_argument(configs, "sorting")
 
-        if concat_runs:
+        self._sorting_runs = []
+
+        if concat_run:
             if len(self._pp_runs) == 1:
                 if isinstance(self._pp_runs[0], ConcatPreprocessRun):
                     warnings.warn(
-                        "concat_runs=True` for sorting but runs were already concatenated for preprocessing."
+                        "concat_run=True` for sorting but runs were already concatenated for preprocessing."
                     )
                     self._sorting_runs = [
                         SortingRun(self._pp_runs[0], self._output_path)
                     ]
                 else:
                     raise ValueError(
-                        "Cannot concatenate a single run."
-                    )  ## TODO: also check if run names is just 1from
+                        f"`concat_run=True` but there is only one preprocessed run: {self.get_run_names()}"
+                    )
             else:
                 self._sorting_runs = [
                     ConcatSortingRun(self._pp_runs, self._output_path)
@@ -288,23 +294,6 @@ class Session:
             self._sorting_runs = [
                 SortingRun(pp_run, self._output_path) for pp_run in self._pp_runs
             ]
-
-        # sorting_configs = self._inter_sorting_configs_from_configs_arguiment(configs)
-        # sorting_configs = configs
-        # _utils.show_sorting_configs(pp_steps)
-        # do some loading of files from disk to populate runs or check that runs matches
-        # any files on disk.
-
-        # if not any(self._runs):
-        #   runs_loaded = self._load_preprocessed_runs()
-        #    if not runs_loaded:
-        #        raise RuntimeError("no runs, cannot load")
-        # else:
-        #    for run in self._runs:
-        #       run.raise_if_run_does_not_match_saved()
-
-        # if concat_runs:
-        # update ConcatRuns to even concat preprocessed runs!!!
 
         for run in self._sorting_runs:
             run.sort(sorting_configs, run_sorter_method, per_shank, overwrite, slurm)
@@ -377,7 +366,7 @@ class Session:
             )
         self._pp_runs = runs  # type: ignore
 
-    def _concat_runs(self) -> None:
+    def _concat_run(self) -> None:
         """
         Concatenate multiple separate runs into a single consolidated `ConcatPreprocessRun`.
 
