@@ -1,3 +1,4 @@
+import shutil
 from pathlib import Path
 from typing import Literal
 
@@ -10,7 +11,7 @@ from spikewrap.structure._preprocess_run import (
     ConcatPreprocessRun,
     SeparatePreprocessRun,
 )
-from spikewrap.utils import _managing_sorters, _slurm, _utils
+from spikewrap.utils import _managing_sorters, _slurm
 
 
 class BaseSortingRun:
@@ -26,10 +27,10 @@ class BaseSortingRun:
 
     def sort(
         self,
+        overwrite: bool,
         sorting_configs: dict,
         run_sorter_method: str,
         per_shank: bool,
-        overwrite: bool,
         slurm: bool | dict,
     ):
         """
@@ -40,7 +41,7 @@ class BaseSortingRun:
         """
         if slurm:
             self._sort_slurm(
-                sorting_configs, run_sorter_method, per_shank, overwrite, slurm
+                overwrite, sorting_configs, run_sorter_method, per_shank, slurm
             )
             return
 
@@ -61,7 +62,7 @@ class BaseSortingRun:
 
             out_path = self._output_path
             if rec_name != "grouped":
-                out_path = out_path / f"shank_{rec_name}"
+                out_path = out_path / rec_name
 
             run_sorter(
                 sorter_name=sorter,
@@ -74,12 +75,21 @@ class BaseSortingRun:
                 **sorter_kwargs,
             )
 
+    # TODO: only delete "sorting" but not preprocessing!
+    def handle_overwrite_output_path(self, overwrite):
+        """ """
+        if self._output_path.is_dir():
+            if overwrite:
+                shutil.rmtree(self._output_path)
+            else:
+                raise RuntimeError("need `overwrite`.")
+
     def _sort_slurm(
         self,
+        overwrite: bool,
         sorting_configs: dict,
         run_sorter_method: str | Path,
         per_shank: bool,
-        overwrite: bool,
         slurm: bool | dict,
     ):
         """ """
@@ -89,6 +99,7 @@ class BaseSortingRun:
             slurm_ops,
             func_to_run=self.sort,
             func_opts={
+                "overwrite": overwrite,
                 "sorting_configs": sorting_configs,
                 "run_sorter_method": run_sorter_method,
                 "per_shank": per_shank,
@@ -97,19 +108,6 @@ class BaseSortingRun:
             },
             log_base_path=self._output_path,
         )
-
-    def handle_overwrite_output_path(self, overwrite):
-        """ """
-        if self._output_path.is_dir():
-            if overwrite:
-                _utils.message_user(
-                    f"`overwrite=True`, so deleting all files and folders "
-                    f"(except for slurm_logs) at the path:\n"
-                    f"{self._output_path}"
-                )
-                _slurm._delete_folder_contents_except_slurm_logs(self._output_path)
-            else:
-                raise RuntimeError("need `overwrite`.")
 
     def split_per_shank(self):
         """ """
@@ -128,7 +126,11 @@ class BaseSortingRun:
                 f"Cannot split run {self._run_name} by shank as there is no 'group' property."
             )
 
-        self._preprocessed_recording = recording.split_by("group")
+        split_recording = recording.split_by("group")
+
+        self._preprocessed_recording = {
+            f"shank_{key}": value for key, value in split_recording.items()
+        }
 
     def get_singularity_image_path(
         self, sorter: str
@@ -224,12 +226,7 @@ class SortingRun(BaseSortingRun):
         run_name = pp_run._run_name
         output_path = session_output_path / run_name / "sorting"
 
-        preprocessed_recording = {
-            key: _utils._get_dict_value_from_step_num(preprocessed_data._data, "last")[
-                0
-            ]
-            for key, preprocessed_data in pp_run._preprocessed.items()
-        }
+        preprocessed_recording = pp_run._preprocessed
 
         super().__init__(
             run_name, session_output_path, output_path, preprocessed_recording
@@ -260,12 +257,7 @@ class ConcatSortingRun(BaseSortingRun):
                     "Somehow grouped and per-shank recordings are mixed. "
                     "This should not happen."
                 )
-
-                recording = _utils._get_dict_value_from_step_num(
-                    run._preprocessed[key]._data, "last"
-                )[0]
-
-                preprocessed_recording[key].append(recording)
+                preprocessed_recording[key].append(run._preprocessed[key])
 
         # Concatenate the lists for each shank into a single recording
         for key in shank_keys:

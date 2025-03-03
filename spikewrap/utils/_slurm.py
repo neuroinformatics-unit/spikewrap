@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import datetime
-import shutil
 import subprocess
 from pathlib import Path
 from typing import Callable
@@ -184,17 +183,3 @@ def send_user_start_message(
 def is_slurm_installed():
     slurm_installed = _system_call_success("sinfo -v")
     return slurm_installed
-
-
-def _delete_folder_contents_except_slurm_logs(path_to_folder: Path) -> None:
-    """
-    Delete all folders in `path_to_folder` except the canonical
-    `"slurm_logs"` folder. This is useful to delete a processing run
-    but maintain provenance.
-    """
-    for path_ in path_to_folder.iterdir():
-        if path_.name != "slurm_logs":
-            if path_.is_file():
-                path_.unlink()
-            elif path_.is_dir():
-                shutil.rmtree(path_)

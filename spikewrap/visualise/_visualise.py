@@ -7,7 +7,6 @@ import numpy as np
 import spikeinterface.full as si
 
 from spikewrap.configs._backend import canon
-from spikewrap.utils import _utils
 
 
 def visualise_run_preprocessed(
@@ -64,15 +63,11 @@ def visualise_run_preprocessed(
     axes = axes.flatten()
 
     # Add spikeinterface plot_traces() plots to appropriate axis
-    for i, (key, preprocessed) in enumerate(all_preprocessed.items()):
+    for i, (key, preprocessed_recording) in enumerate(all_preprocessed.items()):
         ax = axes[i]
-
-        recording_to_plot, _ = _utils._get_dict_value_from_step_num(
-            preprocessed._data, "last"
-        )
-
+        breakpoint()
         si.plot_traces(
-            recording_to_plot,
+            preprocessed_recording,
             order_channel_by_depth=True,
             time_range=time_range,
             return_scaled=True,

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import shutil
 from typing import TYPE_CHECKING, Literal
 
 if TYPE_CHECKING:
@@ -14,7 +15,7 @@ import spikeinterface.full as si
 
 from spikewrap.configs._backend import canon
 from spikewrap.process import _loading, _saving
-from spikewrap.structure._preprocessed import Preprocessed
+from spikewrap.process._preprocessing import _preprocess_recording  # TODO
 from spikewrap.utils import _slurm, _utils
 from spikewrap.visualise._visualise import visualise_run_preprocessed
 
@@ -123,9 +124,7 @@ class BasePreprocessRun:
         for key, raw_rec in self._raw.items():
             rec_name = f"shank_{key}" if key != canon.grouped_shankname() else key
 
-            self._preprocessed[key] = Preprocessed(
-                raw_rec, pp_steps, self._output_path, rec_name
-            )
+            self._preprocessed[rec_name] = _preprocess_recording(raw_rec, pp_steps)
 
     def save_preprocessed(
         self, overwrite: bool, chunk_duration_s: float, n_jobs: int, slurm: dict | bool
@@ -148,8 +147,33 @@ class BasePreprocessRun:
 
         self._save_sync_channel()
 
-        for preprocessed in self._preprocessed.values():
-            preprocessed.save_binary(chunk_duration_s)
+        for shank_name, preprocessed_recording in self._preprocessed.items():
+
+            preprocessed_path = self._output_path / canon.preprocessed_folder()
+
+            if shank_name != "grouped":  # TODO: canonical
+                preprocessed_path = preprocessed_path / shank_name
+
+            preprocessed_recording.save(
+                folder=preprocessed_path,
+                chunk_duration=f"{chunk_duration_s}s",
+            )
+
+    # TODO: should delete preprocessed and sync here!!
+    # TODO: merge with sorting...
+    def _handle_overwrite_output(self, overwrite: bool) -> None:
+        """
+        TODOD
+        """
+        for folder in ["preprocessed", "sync"]:
+            out_folder = self._output_path / folder
+            if out_folder.is_dir():
+                if overwrite:
+                    shutil.rmtree(out_folder)
+                else:
+                    raise RuntimeError(
+                        f"`overwrite` is `False` but data already exists at the run path: {self._output_path}."
+                    )
 
     def plot_preprocessed(
         self,
@@ -260,7 +284,6 @@ class BasePreprocessRun:
             slurm_ops,
             func_to_run=self.save_preprocessed,
             func_opts={
-                "overwrite": overwrite,
                 "chunk_duration_s": chunk_duration_s,
                 "n_jobs": n_jobs,
                 "slurm": False,
@@ -282,23 +305,6 @@ class BasePreprocessRun:
 
         if self._sync:
             _saving.save_sync_channel(self._sync, sync_output_path, self._file_format)
-
-    def _handle_overwrite_output(self, overwrite: bool) -> None:
-        """
-        TODOD
-        """
-        if self._output_path.is_dir():
-            if overwrite:
-                _utils.message_user(
-                    f"`overwrite=True`, so deleting all files and folders "
-                    f"(except for slurm_logs) at the path:\n"
-                    f"{self._output_path}"
-                )
-                _slurm._delete_folder_contents_except_slurm_logs(self._output_path)
-            else:
-                raise RuntimeError(
-                    f"`overwrite` is `False` but data already exists at the run path: {self._output_path}."
-                )
 
     # Helpers -----------------------------------------------------------------
 
@@ -439,7 +445,9 @@ class ConcatPreprocessRun(BasePreprocessRun):
         """
         super().save_preprocessed(overwrite, chunk_duration_s, n_jobs, slurm)
 
-        with open(self._output_path / "orig_run_names.txt", "w") as f:
+        with open(
+            self._output_path / "preprocessed" / "orig_run_names.txt", "w"
+        ) as f:  # TODO: use canonical, update docs
             f.write("\n".join(self._orig_run_names))
 
     def load_raw_data(self, internal_overwrite: bool = False) -> None:
