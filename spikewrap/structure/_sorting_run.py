@@ -1,13 +1,27 @@
+from pathlib import Path
+
+import spikeinterface
+import spikeinterface.full as si
 from spikeinterface.sorters import run_sorter
+from spikeinterface.sorters.runsorter import SORTER_DOCKER_MAP
 
 from spikewrap.processing._preprocessing_run import (
     ConcatPreprocessRun,
     SeparatePreprocessRun,
 )
-from spikewrap.utils import _slurm, _utils
+from spikewrap.utils import _managing_sorters, _slurm, _utils
 
 
 class BaseSortingRun:
+    """ """
+
+    def __init__(
+        self, run_name, session_output_path, output_path, preprocessed_recording
+    ):
+        self._run_name = run_name
+        self._session_output_path = session_output_path
+        self._output_path = output_path
+        self._preprocessed_recording = preprocessed_recording
 
     def sort(
         self,
@@ -30,36 +44,18 @@ class BaseSortingRun:
             return
 
         assert len(sorting_configs) == 1, "Only one sorter supported."
-        ((sorter_name, sorter_kwargs),) = sorting_configs.items()
+        ((sorter, sorter_kwargs),) = sorting_configs.items()
+
+        run_docker, run_singularity = _managing_sorters._configure_run_sorter_method(
+            run_sorter_method,
+            sorter,
+            self.get_singularity_image_path(sorter),  # TODO: maybe move that move
+        )
 
         if per_shank:
-            if "grouped" not in self._preprocessed_recording:
-                raise RuntimeError(
-                    "`per_shank=True` but the recording was already split per shank for preprocessing."
-                )
-            else:
-                assert (
-                    len(self._preprocessed_recording) == 1
-                    and "grouped" in self._preprocessed_recording
-                ), ""
-                recording = self._preprocessed_recording["grouped"]
+            self.split_per_shank()
 
-                if recording.get_property("group") is None:
-                    raise ValueError(
-                        f"Cannot split run {self._run_name} by shank as there is no 'group' property."
-                    )
-                self._preprocessed_recording = recording.split_by("group")
-
-        if self._output_path.is_dir():
-            if overwrite:
-                _utils.message_user(
-                    f"`overwrite=True`, so deleting all files and folders "
-                    f"(except for slurm_logs) at the path:\n"
-                    f"{output_path}"
-                )
-                _slurm._delete_folder_contents_except_slurm_logs(output_path)
-            else:
-                raise RuntimeError("need `overwrite`.")
+        self.handle_overwrite_output_path(overwrite)
 
         for rec_name, recording in self._preprocessed_recording.items():
 
@@ -68,43 +64,26 @@ class BaseSortingRun:
                 out_path = out_path / f"shank_{rec_name}"
 
             run_sorter(
-                sorter_name=sorter_name,
+                sorter_name=sorter,
                 recording=recording,
                 folder=out_path,
                 verbose=True,
-                docker_image=False,
-                singularity_image=False,
-                remove_existing_folder=True,  # TODO: integrate a bit better, ensure this doesn't lead anything weird..?
+                docker_image=run_docker,
+                singularity_image=run_singularity,
+                remove_existing_folder=False,
                 **sorter_kwargs,
             )
 
     def _sort_slurm(
-        self, sorting_configs, run_sorter_method, per_shank, overwrite, slurm
+        self,
+        sorting_configs: dict,
+        run_sorter_method: str | Path,
+        per_shank: bool,
+        overwrite: bool,
+        slurm: bool | dict,
     ):
         """ """
         slurm_ops: dict | bool = slurm if isinstance(slurm, dict) else False
-
-        kilosort_list = ["kilosort", "kilosort2", "kilosort2_5", "kilosort3"]
-        matlab_list = kilosort_list + ["HDSort", "IronClust", "Waveclus"]
-
-        run_docker, run_singularity = False
-        if run_sorter_method == "local":
-            if sorter in kilosort_list:
-                raise ValueError("Some error")
-
-        elif isinstance(run_sorter_method, str) or isinstance(run_sorter_method, Path):
-            assert sorter in matlab_list, "MUST BE KILOSORT"
-            if sorter in kilosort_list:
-                pass
-                # check mex files are found in kilosort and raise if not!
-                # raise if not a real file.
-            # if sorter == "":
-            #    HDSortSorter.set_hdsort_path()
-
-        elif run_sorter_method == "docker":
-            run_docker = True
-        elif run_sorter_method == "singularity":
-            run_singularity = True
 
         _slurm.run_in_slurm(
             slurm_ops,
@@ -119,6 +98,57 @@ class BaseSortingRun:
             log_base_path=self._output_path,
         )
 
+    def handle_overwrite_output_path(self, overwrite):
+        """ """
+        if self._output_path.is_dir():
+            if overwrite:
+                _utils.message_user(
+                    f"`overwrite=True`, so deleting all files and folders "
+                    f"(except for slurm_logs) at the path:\n"
+                    f"{self._output_path}"
+                )
+                _slurm._delete_folder_contents_except_slurm_logs(self._output_path)
+            else:
+                raise RuntimeError("need `overwrite`.")
+
+    def split_per_shank(self):
+        """ """
+        if "grouped" not in self._preprocessed_recording:
+            raise RuntimeError(
+                "`per_shank=True` but the recording was already split per shank for preprocessing."
+            )
+        assert (
+            len(self._preprocessed_recording) == 1
+        ), "There should only be a single recording before splitting by shank."
+
+        recording = self._preprocessed_recording["grouped"]
+
+        if recording.get_property("group") is None:
+            raise ValueError(
+                f"Cannot split run {self._run_name} by shank as there is no 'group' property."
+            )
+
+        self._preprocessed_recording = recording.split_by("group")
+
+    def get_singularity_image_path(
+        self, sorter: str
+    ) -> Path:  # TODO: maybe pass this from above.
+        """ """
+        spikeinterface_version = spikeinterface.__version__
+
+        sorter_path = (
+            self._session_output_path.parent.parent.parent  # TODO: hacky, this is the folder containing rawdata / derivatives
+            / "sorter_images"
+            / sorter
+            / spikeinterface_version
+            / SORTER_DOCKER_MAP[sorter]
+        )
+
+        if not sorter_path.is_file():
+            _managing_sorters._download_sorter(sorter, sorter_path)
+
+        return sorter_path
+
 
 class SortingRun(BaseSortingRun):
     def __init__(
@@ -127,32 +157,35 @@ class SortingRun(BaseSortingRun):
         session_output_path: Path,
     ):
         """ """
-        self._run_name = pp_run._run_name
-        self._output_path = session_output_path / self._run_name / "sorting"
+        run_name = pp_run._run_name
+        output_path = session_output_path / run_name / "sorting"
 
-        self._preprocessed_recording = {
+        preprocessed_recording = {
             key: _utils._get_dict_value_from_step_num(preprocessed_data._data, "last")[
                 0
             ]
             for key, preprocessed_data in pp_run._preprocessed.items()
         }
 
+        super().__init__(
+            run_name, session_output_path, output_path, preprocessed_recording
+        )
+
 
 class ConcatSortingRun(BaseSortingRun):
     def __init__(
-        self, pp_runs_list: List[SeparatePreprocessRun], session_output_path: Path
+        self, pp_runs_list: list[SeparatePreprocessRun], session_output_path: Path
     ):
         """
         TODO
 
         """
-        self._orig_run_names = [run._run_name for run in pp_runs_list]
-        self._run_name = "concat_run"
-        self._output_path = session_output_path / self._run_name / "sorting"
+        run_name = "concat_run"
+        output_path = session_output_path / run_name / "sorting"
 
         shank_keys = list(pp_runs_list[0]._preprocessed.keys())
 
-        recordings_dict = {key: [] for key in shank_keys}
+        preprocessed_recording: dict = {key: [] for key in shank_keys}
 
         # Create a dict (key is "grouped" or shank number) of lists where the
         # lists contain all recordings to concatenate for that shank
@@ -164,14 +197,19 @@ class ConcatSortingRun(BaseSortingRun):
                     "This should not happen."
                 )
 
-                preprocessed_recording = _utils._get_dict_value_from_step_num(
+                recording = _utils._get_dict_value_from_step_num(
                     run._preprocessed[key]._data, "last"
                 )[0]
 
-                recordings_dict[key].append(preprocessed_recording)
+                preprocessed_recording[key].append(recording)
 
         # Concatenate the lists for each shank into a single recording
         for key in shank_keys:
-            recordings_dict[key] = si.concatenate_recordings(recordings_dict[key])
+            preprocessed_recording[key] = si.concatenate_recordings(
+                preprocessed_recording[key]
+            )
 
-        self._preprocessed_recording = recordings_dict
+        super().__init__(
+            run_name, session_output_path, output_path, preprocessed_recording
+        )
+        self._orig_run_names = [run._run_name for run in pp_runs_list]

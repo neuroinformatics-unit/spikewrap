@@ -271,7 +271,7 @@ class Session:
         """
         sorting_configs = self._infer_pp_steps_from_configs_argument(configs, "sorting")
 
-        self._sorting_runs = []
+        self._sorting_runs: list[SortingRun | ConcatSortingRun] = []
 
         if concat_run:
             if len(self._pp_runs) == 1:
