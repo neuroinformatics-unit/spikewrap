@@ -29,7 +29,10 @@ if __name__ == "__main__":
     # 4) figure out run_method
 
     # TODO: properly test runs and stuff
-
+    # 1) make a test script for singularity
+    # 2) and docker
+    # 3) and matlab
+    # 4) and ofc local
     session.sort(
         configs="neuropixels+mountainsort5",
         run_sorter_method="local",  # "local", "singularity", "docker" or path to MATLAB install (check for mex files!)
