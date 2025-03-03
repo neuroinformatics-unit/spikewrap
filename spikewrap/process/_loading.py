@@ -5,6 +5,7 @@ from typing import TYPE_CHECKING, Literal
 if TYPE_CHECKING:
     from pathlib import Path
 
+    from probeinterface import Probe
     from spikeinterface.core import BaseRecording
 
 import re
@@ -16,7 +17,7 @@ from spikewrap.utils import _utils
 
 
 def load_data(
-    run_path: Path, file_format: Literal["spikeglx", "openephys"], probe  # TODO: TYPE!
+    run_path: Path, file_format: Literal["spikeglx", "openephys"], probe: Probe | None
 ) -> tuple[BaseRecording, BaseRecording]:
     """
     explain (e.g. without sync needed for sorting, otherwise store sync for

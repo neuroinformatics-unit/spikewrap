@@ -144,18 +144,7 @@ class BasePreprocessRun:
         if n_jobs != 1:
             si.set_global_job_kwargs(n_jobs=n_jobs)
 
-        if self._output_path.is_dir():
-            if overwrite:
-                _utils.message_user(
-                    f"`overwrite=True`, so deleting all files and folders "
-                    f"(except for slurm_logs) at the path:\n"
-                    f"{output_path}"
-                )
-                _slurm._delete_folder_contents_except_slurm_logs(output_path)
-            else:
-                raise RuntimeError(
-                    f"`overwrite` is `False` but data already exists at the run path: {self._output_path}."
-                )
+        self._handle_overwrite_output(overwrite)
 
         self._save_sync_channel()
 
@@ -293,6 +282,23 @@ class BasePreprocessRun:
 
         if self._sync:
             _saving.save_sync_channel(self._sync, sync_output_path, self._file_format)
+
+    def _handle_overwrite_output(self, overwrite: bool) -> None:
+        """
+        TODOD
+        """
+        if self._output_path.is_dir():
+            if overwrite:
+                _utils.message_user(
+                    f"`overwrite=True`, so deleting all files and folders "
+                    f"(except for slurm_logs) at the path:\n"
+                    f"{self._output_path}"
+                )
+                _slurm._delete_folder_contents_except_slurm_logs(self._output_path)
+            else:
+                raise RuntimeError(
+                    f"`overwrite` is `False` but data already exists at the run path: {self._output_path}."
+                )
 
     # Helpers -----------------------------------------------------------------
 
