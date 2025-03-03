@@ -1,11 +1,12 @@
 from pathlib import Path
+from typing import Literal
 
 import spikeinterface
 import spikeinterface.full as si
 from spikeinterface.sorters import run_sorter
 from spikeinterface.sorters.runsorter import SORTER_DOCKER_MAP
 
-from spikewrap.processing._preprocessing_run import (
+from spikewrap.structure._preprocess_run import (
     ConcatPreprocessRun,
     SeparatePreprocessRun,
 )
@@ -46,10 +47,9 @@ class BaseSortingRun:
         assert len(sorting_configs) == 1, "Only one sorter supported."
         ((sorter, sorter_kwargs),) = sorting_configs.items()
 
-        run_docker, run_singularity = _managing_sorters._configure_run_sorter_method(
-            run_sorter_method,
+        run_docker, run_singularity = self._configure_run_sorter_method(
             sorter,
-            self.get_singularity_image_path(sorter),  # TODO: maybe move that move
+            run_sorter_method,
         )
 
         if per_shank:
@@ -148,6 +148,70 @@ class BaseSortingRun:
             _managing_sorters._download_sorter(sorter, sorter_path)
 
         return sorter_path
+
+    def _configure_run_sorter_method(
+        self, sorter: str, run_sorter_method: str | Path
+    ) -> tuple[bool, Literal[False] | Path]:
+        """ """
+        kilosort_matlab_list = ["kilosort", "kilosort2", "kilosort2_5", "kilosort3"]
+        matlab_list = kilosort_matlab_list + ["HDSort", "IronClust", "Waveclus"]
+
+        run_singularity: Literal[False] | Path
+
+        run_docker = run_singularity = False
+
+        if run_sorter_method == "local":
+            if sorter in matlab_list:
+                raise ValueError("Some error")
+
+        elif isinstance(run_sorter_method, str) or isinstance(run_sorter_method, Path):
+
+            repo_path = Path(run_sorter_method)
+
+            if not repo_path.is_dir():
+                raise FileNotFoundError(
+                    f"No repository for {sorter} found at: {repo_path}"
+                )
+
+            assert sorter in matlab_list, "MUST BE KILOSORT"
+
+            if sorter in kilosort_matlab_list:
+                pass
+                # check mex files are found in kilosort and raise if not!
+                # raise if not a real file.
+                # if sorter == "":
+                #    HDSortSorter.set_hdsort_path()
+
+            assert Path(run_sorter_method)
+
+            setter_functions = {
+                "kilosort": si.KilosortSorter.set_kilosort_path,
+                "kilosort2": si.Kilosort2Sorter.set_kilosort2_path,
+                "kilosort2_5": si.Kilosort2_5Sorter.set_kilosort2_5_path,
+                "kilosort3": si.Kilosort3Sorter.set_kilosort3_path,
+                "HDSort": si.HDSortSorter.set_hdsort_path,
+                "IronClust": si.IronClustSorter.set_ironclust_path,
+                "Waveclus": si.WaveClusSorter.set_waveclus_path,
+            }
+
+            setter_functions[sorter](run_sorter_method)
+
+        elif run_sorter_method == "docker":
+            assert _checks._docker_desktop_is_running(), (
+                f"The sorter {sorter} requires a virtual machine image to run, but "
+                f"Docker is not running. Open Docker Desktop to start Docker."
+            )
+            run_docker = True
+
+        elif run_sorter_method == "singularity":
+            if not _checks._system_call_success("singularity version"):
+                raise RuntimeError(
+                    "`singularity` is not installed, cannot run the sorter with singularity."
+                )
+
+            run_singularity = self.get_singularity_image_path(sorter)
+
+        return run_docker, run_singularity
 
 
 class SortingRun(BaseSortingRun):
