@@ -93,7 +93,6 @@ class Session:
         # self._pp_runs may be updated during the lifetime of the object,
         # but is private to this class.
         self._pp_runs: list[SeparatePreprocessRun | ConcatPreprocessRun] = []
-        self._create_run_objects()
 
     # ---------------------------------------------------------------------------
     # Public Functions
@@ -141,7 +140,7 @@ class Session:
               or the ``"preprocessing"`` level itself. See documentation for details.
         concat_run
             If ``True``, all runs will be concatenated together before preprocessing.
-            Use ``session.get_run_names()`` to check the order of concatenation.
+            Use ``session.get_pp_run_names()`` to check the order of concatenation.
         per_shank
             If ``True``, perform preprocessing on each shank separately.
         """
@@ -269,8 +268,12 @@ class Session:
         ----------
 
         """
+        if not any(self._pp_runs):
+            self.load_pp_runs_from_disk()
+
         sorting_configs = self._infer_pp_steps_from_configs_argument(configs, "sorting")
 
+        # TODO: own function?
         self._sorting_runs: list[SortingRun | ConcatSortingRun] = []
 
         if concat_run:
@@ -284,7 +287,7 @@ class Session:
                     ]
                 else:
                     raise ValueError(
-                        f"`concat_run=True` but there is only one preprocessed run: {self.get_run_names()}"
+                        f"`concat_run=True` but there is only one preprocessed run: {self.get_pp_run_names()}"
                     )
             else:
                 self._sorting_runs = [
@@ -296,11 +299,11 @@ class Session:
             ]
 
         for run in self._sorting_runs:
-            run.sort(sorting_configs, run_sorter_method, per_shank, overwrite, slurm)
+            run.sort(overwrite, sorting_configs, run_sorter_method, per_shank, slurm)
 
     # Getters -----------------------------------------------------------------
 
-    def get_run_names(self) -> list[str]:
+    def get_pp_run_names(self) -> list[str]:
         """
         Return a list of run names from the self._pp_runs list.
 
@@ -309,6 +312,10 @@ class Session:
         was already performed, the run name will be ``"concat_run"``.
         """
         return [run._run_name for run in self._pp_runs]
+
+    def get_sorting_run_names(self) -> list[str]:
+        """ """
+        return [run._run_name for run in self._sorting_runs]
 
     def parent_input_path(self) -> Path:  # TODO: add docs
         return self._parent_input_path
@@ -376,12 +383,12 @@ class Session:
         if len(self._pp_runs) == 1:
             raise RuntimeError("Cannot concatenate runs, only one run found.")
 
-        assert self.get_run_names() != (
+        assert self.get_pp_run_names() != (
             "concat_run"
         ), "Expected, runs are already concatenated."  # TODO: Expose
 
         _utils.message_user(
-            f"Concatenating runs in the following order:" f"{self.get_run_names()}"
+            f"Concatenating runs in the following order:" f"{self.get_pp_run_names()}"
         )
 
         assert all(

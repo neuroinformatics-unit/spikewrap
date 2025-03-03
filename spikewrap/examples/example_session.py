@@ -12,7 +12,7 @@ if __name__ == "__main__":
     session.preprocess(
         configs="neuropixels+kilosort2_5",
         per_shank=False,
-        concat_run=True,
+        concat_run=False,
     )
 
     #    session.plot_preprocessed(
@@ -33,6 +33,7 @@ if __name__ == "__main__":
     # 2) and docker
     # 3) and matlab
     # 4) and ofc local
+    # TODO: check there is a warning when per_shank is on for prepro and off for sorting. maybe raise?
     session.sort(
         configs="neuropixels+mountainsort5",
         run_sorter_method="local",  # "local", "singularity", "docker" or path to MATLAB install (check for mex files!)
