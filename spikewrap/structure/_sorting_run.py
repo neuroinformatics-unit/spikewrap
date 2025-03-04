@@ -8,11 +8,19 @@ from spikeinterface.sorters import run_sorter
 from spikeinterface.sorters.runsorter import SORTER_DOCKER_MAP
 
 from spikewrap.structure._preprocess_run import PreprocessedRun
-from spikewrap.utils import _managing_sorters, _slurm
+from spikewrap.utils import _checks, _managing_sorters, _slurm
 
 
 class BaseSortingRun:
-    """ """
+    """
+    Class to manage the sorting of preprocessed data. Writes the sorting output
+    to disk using SpikeInterface's `run_sorter`.
+
+    Notes
+    -----
+    This class does not mutate its inputs. It holds the preprocessed recording
+    object, and will copy and split by-shank on the fly if sorting per-shank.
+    """
 
     def __init__(
         self, run_name, session_output_path, output_path, preprocessed_recording
@@ -24,21 +32,33 @@ class BaseSortingRun:
 
     def sort(
         self,
-        overwrite: bool,
         sorting_configs: dict,
         run_sorter_method: str,
         per_shank: bool,
+        overwrite: bool,
         slurm: bool | dict,
     ):
         """
+                Run sorting using SpikeInterface's `run_sorter`.
 
-        Parameters
-        ----------
+                Parameters
+                ----------
+                sorting_configs
+                    A dictionary containing the sorting options, with key is the
+                    sorter name and value a dictionary of kwargs to pass to the sorter.
 
-        """
+                See `session.sort()` for other parameters.
+
+                Notes
+                -----
+                This function will coordinate deleting existing outputs if they
+                exist and `overwrite` is true. `_configure_run_sorter_method` will
+                perform many checks on docker / singularity image as well as call
+                SpikeInterface functions to set the matlab path if required.
+        `"""
         if slurm:
             self._sort_slurm(
-                overwrite, sorting_configs, run_sorter_method, per_shank, slurm
+                sorting_configs, run_sorter_method, per_shank, overwrite, slurm
             )
             return
 
@@ -50,16 +70,18 @@ class BaseSortingRun:
             run_sorter_method,
         )
 
-        if per_shank:
-            self.split_per_shank()
-
         self.handle_overwrite_output_path(overwrite)
 
-        for rec_name, recording in self._preprocessed_recording.items():
+        if per_shank:
+            preprocessed_recording = self.split_per_shank()
+        else:
+            preprocessed_recording = self._preprocessed_recording
+
+        for shank_id, recording in preprocessed_recording.items():
 
             out_path = self._output_path
-            if rec_name != "grouped":
-                out_path = out_path / rec_name
+            if shank_id != "grouped":
+                out_path = out_path / shank_id
 
             run_sorter(
                 sorter_name=sorter,
@@ -72,9 +94,10 @@ class BaseSortingRun:
                 **sorter_kwargs,
             )
 
-    # TODO: only delete "sorting" but not preprocessing!
     def handle_overwrite_output_path(self, overwrite):
-        """ """
+        """
+        Handle overwriting of the output `sorting` folder.
+        """
         if self._output_path.is_dir():
             if overwrite:
                 shutil.rmtree(self._output_path)
@@ -83,20 +106,22 @@ class BaseSortingRun:
 
     def _sort_slurm(
         self,
-        overwrite: bool,
         sorting_configs: dict,
         run_sorter_method: str | Path,
         per_shank: bool,
+        overwrite: bool,
         slurm: bool | dict,
     ):
-        """ """
+        """
+        See `save_preprocessed_slurm` for details on this mechanism. Briefly,
+        we need to re-call the sorting function in the slurm environment.
+        """
         slurm_ops: dict | bool = slurm if isinstance(slurm, dict) else False
 
         _slurm.run_in_slurm(
             slurm_ops,
             func_to_run=self.sort,
             func_opts={
-                "overwrite": overwrite,
                 "sorting_configs": sorting_configs,
                 "run_sorter_method": run_sorter_method,
                 "per_shank": per_shank,
@@ -107,10 +132,14 @@ class BaseSortingRun:
         )
 
     def split_per_shank(self):
-        """ """
+        """
+        Return the preprocessed recording split by shank (if it
+        currently not split by shank, i.e. the shank id is "grouped").
+        """
         if "grouped" not in self._preprocessed_recording:
             raise RuntimeError(
                 "`per_shank=True` but the recording was already split per shank for preprocessing."
+                "Set to `False`."
             )
         assert (
             len(self._preprocessed_recording) == 1
@@ -125,18 +154,21 @@ class BaseSortingRun:
 
         split_recording = recording.split_by("group")
 
-        self._preprocessed_recording = {
+        preprocessed_recording = {
             f"shank_{key}": value for key, value in split_recording.items()
         }
+        return preprocessed_recording
 
-    def get_singularity_image_path(
-        self, sorter: str
-    ) -> Path:  # TODO: maybe pass this from above.
-        """ """
+    def get_singularity_image_path(self, sorter: str) -> Path:
+        """
+        Get the path to where the singularity image is stored (at the
+        same level as "rawdata" and "derivatives" as these are shared
+        across the project).
+        """
         spikeinterface_version = spikeinterface.__version__
 
         sorter_path = (
-            self._session_output_path.parent.parent.parent  # TODO: hacky, this is the folder containing rawdata / derivatives
+            self._session_output_path.parent.parent.parent  # TODO: hacky? :(
             / "sorter_images"
             / sorter
             / spikeinterface_version
@@ -151,7 +183,28 @@ class BaseSortingRun:
     def _configure_run_sorter_method(
         self, sorter: str, run_sorter_method: str | Path
     ) -> tuple[bool, Literal[False] | Path]:
-        """ """
+        """
+         This function configures how the sorter is run. There are four
+         possible options:
+
+         1) "local". This assumes the sorter is written in python and can be
+            run in the current python environment. This includes sorters such
+            as kilosort4 and mountainsort.
+
+         2) For matlab-based sorters, spikeinterface can take a path to the repository
+            and run the sorting from there. To do this, we need to call the appropriate
+            `set_<sorter>_path` function.
+
+        3) We can run on docker or singularity. For docker, the docker desktop client
+           manages image downloading. For singularity, we need to do this ourselves.
+           By default, spikeinterface will download the sorter to the working directory
+           when the script is called. It is better to download it manually and
+           move it to a central place so it can be reused.
+
+         TODO
+         ----
+         Tidy this up!
+        """
         kilosort_matlab_list = ["kilosort", "kilosort2", "kilosort2_5", "kilosort3"]
         matlab_list = kilosort_matlab_list + ["HDSort", "IronClust", "Waveclus"]
 
@@ -213,13 +266,15 @@ class BaseSortingRun:
         return run_docker, run_singularity
 
 
-class SortingRun(BaseSortingRun):
+class SeparateSortingRun(BaseSortingRun):
     def __init__(
         self,
         pp_run: PreprocessedRun,
         session_output_path: Path,
     ):
-        """ """
+        """
+        A class to handle sorting of an individual preprocessed run.
+        """
         run_name = pp_run._run_name
         output_path = session_output_path / run_name / "sorting"
 
@@ -233,8 +288,12 @@ class SortingRun(BaseSortingRun):
 class ConcatSortingRun(BaseSortingRun):
     def __init__(self, pp_runs_list: list[PreprocessedRun], session_output_path: Path):
         """
-        TODO
+        A class to handle the sorting of a concatenation of a set of separate preprocess runs.
 
+        This class:
+            1) concatenates the passed recordings into a single recording.
+            2) sets the `_orig_run_names` variable containing the concatenates
+               run names (in concatenation order).
         """
         run_name = "concat_run"
         output_path = session_output_path / run_name / "sorting"

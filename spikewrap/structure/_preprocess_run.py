@@ -11,41 +11,42 @@ if TYPE_CHECKING:
     import matplotlib
 
 
+import numpy as np
 import spikeinterface.full as si
 
 from spikewrap.configs._backend import canon
-from spikewrap.process import _saving
 from spikewrap.utils import _slurm, _utils
 from spikewrap.visualise._visualise import visualise_run_preprocessed
 
 
 class PreprocessedRun:
     """
-    Base class for an electrophysiology 'run'. Manages loading data,
-    preprocessing and saving of the run.
+    Holds the fully-preprocessed spikeinterface recordings. No further
+    processing is done at this stage, this class manages the saving
+    and visualisation of the preprocessed data.
 
     Parameters
     ----------
     raw_data_path
         Path to the raw-data session folder (e.g. ses-001 or ses-001/ephys)
-        in which this run is contained.
+        from which this data was preprocessed
+    ses_name
+        The session name for this run
     run_name
         Folder name of this run.
+    file_format
+        The file format (e.g. openephys, spikeglx) of the original data.
     session_output_path
         Path to the output (processed) parent session-level data.
-    file_format
-        "spikeglx" or "openephys", acquisition software used.
+    preprocessed_data
+        The preprocessed data in a dictionary, which keys "grouped"
+        or the shank_ids (e.g. "shank_0", ...) if split by shank.
+    sync
+        The recording containing the sync channel.
 
-    Notes
-    -----
-    This class instance should manage data for the same run
-    throughout its lifetimes, the format, paths and run name
-    should not change.
-
-    The _raw, _preprocessed, _sync attributes may be loaded
-    repeatedly from the passed paths in order to 'refresh'
-    their state (for example, preprocessed with different options,
-    or reset to grouped recordings instead of separate shank).
+    TODO
+    ----
+    None of these attributes should be mutable. Make a frozen dataclass?
     """
 
     def __init__(
@@ -83,7 +84,7 @@ class PreprocessedRun:
         """
         Save the fully preprocessed run to binary.
 
-        see the public session.save_preprocessed()
+        see the public session.save_preprocessed() for arguments.
         """
         if slurm:
             self._save_preprocessed_slurm(overwrite, chunk_duration_s, n_jobs, slurm)
@@ -98,11 +99,12 @@ class PreprocessedRun:
 
         self._save_sync_channel()
 
+        # Save the recordings to disk, handling shank ids
         for shank_name, preprocessed_recording in self._preprocessed.items():
 
             preprocessed_path = self._output_path / canon.preprocessed_folder()
 
-            if shank_name != "grouped":  # TODO: canonical
+            if shank_name != canon.grouped_shankname():
                 preprocessed_path = preprocessed_path / shank_name
 
             preprocessed_recording.save(
@@ -112,16 +114,22 @@ class PreprocessedRun:
 
         self.save_class_attributes_to_yaml(
             self._output_path / canon.preprocessed_folder()
-        )  # TODO: some jenky stuff here AND TIDY UP
+        )
 
         if self._orig_run_names:
             with open(
-                self._output_path / "preprocessed" / "orig_run_names.txt", "w"
-            ) as f:  # TODO: use canonical, update docs
-                f.write("\n".join(self._orig_run_names))
+                self._output_path / canon.preprocessed_folder() / "orig_run_names.txt",
+                "w",
+            ) as file:
+                file.write("\n".join(self._orig_run_names))
 
     def save_class_attributes_to_yaml(self, path_to_save):
         """
+        Dump the class attributes to file so the class
+        can be loaded later.
+
+        TODO
+        ----
         Should use __to_dict? but want to be very
         selective about what is included.
         """
@@ -135,14 +143,16 @@ class PreprocessedRun:
             "orig_run_names": self._orig_run_names,
             "shank_ids": list(self._preprocessed.keys()),
         }
-        with open(path_to_save / "spikewrap_info.yaml", "w") as file:
+        with open(path_to_save / canon.spikewrap_info_filename(), "w") as file:
             yaml.dump(to_dump, file)
 
     def _handle_overwrite_output(self, overwrite: bool) -> None:
         """
-        TODOD
+        If `overwrite`, delete the preprocessed and sync folders
+        from the run output path. Raise if they exist
+        and `overwrite` is False.
         """
-        for folder in ["preprocessed", "sync"]:
+        for folder in [canon.preprocessed_folder(), canon.sync_folder()]:
             out_folder = self._output_path / folder
             if out_folder.is_dir():
                 if overwrite:
@@ -236,17 +246,20 @@ class PreprocessedRun:
         it does not interfere with sorting. As such, a separate recording with the
         sync channel present is maintained and handled separately here.
         """
-        sync_output_path = self._output_path / canon.sync_folder()
-
-        _utils.message_user(f"Saving sync channel for: {self._run_name}...")
-
         if self._sync:
-            _saving.save_sync_channel(self._sync, sync_output_path, self._file_format)
+            _utils.message_user(f"Saving sync channel for: {self._run_name}...")
 
-    # Helpers -----------------------------------------------------------------
+            # extract the sync channel from the recording object
+            select_sync_recording = self._sync.select_channels(
+                [self._sync.get_channel_ids()[-1]]
+            )
+            sync_data = select_sync_recording.get_traces()[:, 0]
 
-    def _is_split_by_shank(self) -> bool:
-        """
-        Returns ``True`` if this run recording has been split into separate shanks.
-        """
-        return len(self._raw) > 1
+            assert sync_data.size == select_sync_recording.get_num_samples()
+
+            # Save the sync channel
+            sync_output_filepath = (
+                self._output_path / canon.sync_folder() / canon.saved_sync_filename()
+            )
+            sync_output_filepath.parent.mkdir(parents=True, exist_ok=True)
+            np.save(sync_output_filepath, sync_data)

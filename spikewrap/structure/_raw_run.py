@@ -19,8 +19,8 @@ from spikewrap.utils import _utils
 
 class RawRun:
     """
-    Base class for an electrophysiology 'run'. Manages loading data,
-    preprocessing and saving of the run.
+    Base class for an electrophysiology 'run'.
+    Manages loading the raw data and preprocessing it.
 
     Parameters
     ----------
@@ -36,14 +36,14 @@ class RawRun:
 
     Notes
     -----
-    This class instance should manage data for the same run
-    throughout its lifetimes, the format, paths and run name
-    should not change.
+    The raw data is loaded directly into `self._raw` and this
+    data is never mutated or split by shank. If splitting by
+    shank when preprocessing, a copied splt-by-shank version
+    is generated and used in the preprocessing.
 
-    The _raw, _preprocessed, _sync attributes may be loaded
-    repeatedly from the passed paths in order to 'refresh'
-    their state (for example, preprocessed with different options,
-    or reset to grouped recordings instead of separate shank).
+    TODO
+    ----
+    The attributes should not be mutated. Use a frozen dataclass?
     """
 
     def __init__(
@@ -53,14 +53,10 @@ class RawRun:
         run_name: str,
         file_format: Literal["spikeglx", "openephys"],
     ):
-        # These parameters should be treated as constant and never changed
-        # during the lifetime of the class. Use the properties (which do not
-        # expose a setter) for both internal and external calls.
-        self._parent_input_path = parent_input_path  # TODO: REnAME AS ses_input_path
+
+        self._parent_input_path = parent_input_path
         self._parent_ses_name = parent_ses_name
-        self._run_name = (
-            run_name  # TODO: this is raw data run folder, naming should be clearler!
-        )
+        self._run_name = run_name
         self._file_format = file_format
 
         # These properties are mutable and refreshed during
@@ -74,7 +70,7 @@ class RawRun:
 
     def load_raw_data(self, internal_overwrite: bool = False) -> None:
         """
-        IF applicable, this function should load
+        If applicable, this function should load
         SpikeInterface recording objects.
         """
         raise NotImplementedError("Implement in base class.")
@@ -91,7 +87,7 @@ class RawRun:
         self._sync = None
         self.load_raw_data(internal_overwrite=True)
 
-    def preprocess(self, pp_steps: dict, per_shank: bool) -> None:
+    def preprocess(self, pp_steps: dict, per_shank: bool) -> dict:
         """
         Preprocess the run. If ``per_shank``, the ``self._raw``
         recording is split into separate shank groups before preprocessing.
@@ -113,10 +109,8 @@ class RawRun:
             runs_to_preprocess = self._raw
 
         preprocessed = {}
-        for rec_name, raw_rec in runs_to_preprocess.items():
-            preprocessed[rec_name] = _preprocess_recording(raw_rec, pp_steps)
-
-        # create a preprocessed thing
+        for shank_id, raw_rec in runs_to_preprocess.items():
+            preprocessed[shank_id] = _preprocess_recording(raw_rec, pp_steps)
 
         return preprocessed
 
@@ -167,8 +161,6 @@ class SeparateRawRun(RawRun):
     """
     Represents a single electrophysiological run. Exposes Run functionality
     and ability to load the SpikeInterface recording for this run into the class.
-
-    If concatenated, a list of `SeparatePreprocessRuns` are converted to a `ConcatPreprocessRun`.
     """
 
     def __init__(
@@ -220,10 +212,10 @@ class SeparateRawRun(RawRun):
 
 class ConcatRawRun(RawRun):
     """
-    Subclass of `Run` used for concatenating `SeparatePreprocessRun`s and
+    Subclass of `Run` used for concatenating `SeparateRawRun`s and
     processing the concatenated recording.
 
-    Differences from `SeparatePreprocessRun`:
+    Differences from `SeparateRawRun`:
     1) ``load_run_data`` will raise, as it is assumed raw data has
        already been loaded as separate runs and concatenated.
     2) ``_orig_run_names`` holds the names of original, separate
@@ -232,7 +224,7 @@ class ConcatRawRun(RawRun):
 
     def __init__(
         self,
-        runs_list: list[SeparatePreprocessRun],
+        runs_list: list[SeparateRawRun],
         parent_input_path: Path,
         parent_ses_name: str,
         file_format: Literal["spikeglx", "openephys"],
@@ -269,8 +261,6 @@ class ConcatRawRun(RawRun):
         be called on this subclass, because raw-data is already loaded
         (and concatenated, to form this recording).
 
-        `ConcatPreprocessRun` should only be preprocessed and saved.
-
         Parameters
         ----------
         See base class.
@@ -281,11 +271,11 @@ class ConcatRawRun(RawRun):
         )
 
     def _format_recordings_to_concat(
-        self, runs_list: list[SeparatePreprocessRun]
+        self, runs_list: list[SeparateRawRun]
     ) -> tuple[list[BaseRecording], list[BaseRecording], list[str]]:
         """
-        Extracts raw data, sync data, and run names from a list of SeparatePreprocessRun
-        objects and returns the relevant data.
+        Extracts raw data, sync data, and run names from a list of
+        SeparateRawRun objects and returns the relevant data.
 
         No checks on whether it is suitable to concatenate the recordings
         is performed here, as this is done in the SpikeInterface function.
@@ -294,7 +284,7 @@ class ConcatRawRun(RawRun):
         ----------
         runs_list
             List of runs to be concatenated. Must not contain
-            already-concatenated `ConcatPreprocessRun` objects.
+            already-concatenated `ConcatRawRun` objects.
         """
         raw_data: list[BaseRecording] = []
         sync_data: list[BaseRecording] = []

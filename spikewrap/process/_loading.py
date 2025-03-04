@@ -19,10 +19,7 @@ from spikewrap.utils import _utils
 def load_data(
     run_path: Path, file_format: Literal["spikeglx", "openephys"], probe: Probe | None
 ) -> tuple[BaseRecording, BaseRecording]:
-    """
-    explain (e.g. without sync needed for sorting, otherwise store sync for
-    storing the sync array!
-    """
+    """ """
     _utils.message_user(f"Loading data from path: {run_path}")
 
     if file_format == "spikeglx":
