@@ -1,15 +1,13 @@
 from __future__ import annotations
 
-from pathlib import Path
-
-import numpy as np
 import probeinterface as pi
 import pytest
+from base import BaseTest
 
 import spikewrap as sw
 
 
-class TestSetProbe:
+class TestSetProbe(BaseTest):
 
     @pytest.mark.parametrize("per_shank", [True, False])
     @pytest.mark.parametrize("concat_runs", [True, False])
@@ -32,8 +30,8 @@ class TestSetProbe:
         session.preprocess(self.get_pp_steps(), per_shank, concat_runs)
 
         all_run_data = []
-        for run in session._runs:
-            for rec in run._raw.values():
+        for run in session._pp_runs:
+            for rec in run._preprocessed.values():
                 all_run_data.append(rec)
 
         assert all([isinstance(rec.get_probe(), pi.Probe) for rec in all_run_data])
@@ -70,26 +68,3 @@ class TestSetProbe:
             session.preprocess(self.get_pp_steps(), per_shank=False, concat_runs=False)
 
         assert "A probe was already auto-detected." in str(e.value)
-
-    # Getters
-    # ----------------------------------------------------------------------------------
-
-    def get_pp_steps(self):
-        return {"1": ["bandpass_filter", {"freq_min": 300, "freq_max": 6000}]}
-
-    def get_no_probe_sub_path(self):
-        return (
-            Path(__file__).parent.parent
-            / "test_data"
-            / "no_probe"
-            / "rawdata"
-            / "sub-001"
-        )
-
-    def get_mock_probe(self):
-        """
-        Get an arbitrary probe to use on the test recording (16 channels).
-        """
-        mock_probe = pi.get_probe("neuropixels", "NP2014")
-        mock_probe = mock_probe.get_slice(np.arange(16))
-        return mock_probe
