@@ -13,7 +13,7 @@ if __name__ == "__main__":
     session.preprocess(
         configs="neuropixels+kilosort2_5",
         per_shank=True,
-        concat_run=True,
+        concat_runs=True,
     )
 
     session.plot_preprocessed(
@@ -24,7 +24,7 @@ if __name__ == "__main__":
         overwrite=True, n_jobs=1, slurm=False, chunk_duration_s=0.1
     )
 
-    # 1) figure out what will happen for all per_shank, concat_run combinations
+    # 1) figure out what will happen for all per_shank, concat_runs combinations
     # 2) figure out slurm
     # 3) figure out overwrite
     # 4) figure out run_method
@@ -39,7 +39,7 @@ if __name__ == "__main__":
         configs="neuropixels+mountainsort5",
         run_sorter_method="local",  # "local", "singularity", "docker" or path to MATLAB install (check for mex files!)
         per_shank=False,
-        concat_run=False,
+        concat_runs=False,
         overwrite=True,
         slurm=False,
     )

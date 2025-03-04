@@ -102,7 +102,9 @@ class BaseSortingRun:
             if overwrite:
                 shutil.rmtree(self._output_path)
             else:
-                raise RuntimeError("need `overwrite`.")
+                raise RuntimeError(
+                    f"`overwrite=False` but a folder already exists at: {self._output_path}"
+                )
 
     def _sort_slurm(
         self,
@@ -137,7 +139,7 @@ class BaseSortingRun:
         currently not split by shank, i.e. the shank id is "grouped").
         """
         if "grouped" not in self._preprocessed_recording:
-            raise RuntimeError(
+            raise ValueError(
                 "`per_shank=True` but the recording was already split per shank for preprocessing."
                 "Set to `False`."
             )
