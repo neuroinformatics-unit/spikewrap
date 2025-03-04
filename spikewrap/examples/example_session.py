@@ -9,19 +9,20 @@ if __name__ == "__main__":
         file_format="spikeglx",
     )
 
-    session.preprocess(
-        configs="neuropixels+kilosort2_5",
-        per_shank=False,
-        concat_run=False,
-    )
+    # TODO: document well the class lifespan
+    #   session.preprocess(
+    #       configs="neuropixels+kilosort2_5",
+    #       per_shank=True,
+    #       concat_run=True,
+    #   )
 
-    #    session.plot_preprocessed(
-    #        run_idx="all", mode="map", show_channel_ids=False, show=True, figsize=(12, 8)
-    #    )
+    #  session.plot_preprocessed(
+    #      run_idx="all", mode="map", show_channel_ids=False, show=True, figsize=(12, 8)
+    #  )
 
-    session.save_preprocessed(
-        overwrite=True, n_jobs=1, slurm=False, chunk_duration_s=0.1
-    )
+    #  session.save_preprocessed(
+    #      overwrite=True, n_jobs=1, slurm=False, chunk_duration_s=0.1
+    #  )
 
     # 1) figure out what will happen for all per_shank, concat_run combinations
     # 2) figure out slurm
@@ -37,8 +38,8 @@ if __name__ == "__main__":
     session.sort(
         configs="neuropixels+mountainsort5",
         run_sorter_method="local",  # "local", "singularity", "docker" or path to MATLAB install (check for mex files!)
-        per_shank=True,
-        concat_run=True,
+        per_shank=False,
+        concat_run=False,
         overwrite=True,
         slurm=False,
     )

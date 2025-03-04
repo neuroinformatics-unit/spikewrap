@@ -7,10 +7,7 @@ import spikeinterface.full as si
 from spikeinterface.sorters import run_sorter
 from spikeinterface.sorters.runsorter import SORTER_DOCKER_MAP
 
-from spikewrap.structure._preprocess_run import (
-    ConcatPreprocessRun,
-    SeparatePreprocessRun,
-)
+from spikewrap.structure._preprocess_run import PreprocessedRun
 from spikewrap.utils import _managing_sorters, _slurm
 
 
@@ -219,7 +216,7 @@ class BaseSortingRun:
 class SortingRun(BaseSortingRun):
     def __init__(
         self,
-        pp_run: ConcatPreprocessRun | SeparatePreprocessRun,
+        pp_run: PreprocessedRun,
         session_output_path: Path,
     ):
         """ """
@@ -234,9 +231,7 @@ class SortingRun(BaseSortingRun):
 
 
 class ConcatSortingRun(BaseSortingRun):
-    def __init__(
-        self, pp_runs_list: list[SeparatePreprocessRun], session_output_path: Path
-    ):
+    def __init__(self, pp_runs_list: list[PreprocessedRun], session_output_path: Path):
         """
         TODO
 
