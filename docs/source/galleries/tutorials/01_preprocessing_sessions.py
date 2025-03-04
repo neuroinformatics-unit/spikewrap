@@ -128,8 +128,9 @@ sw.show_configs("neuropixels+kilosort2_5")
 
 configs = {
     "preprocessing": {
-        "1": ["bandpass_filter", {"freq_min": 300, "freq_max": 6000}],
-        "2": ["common_reference", {"operator": "median"}],
+        "1": ["phase_shift", {}],
+        "2": ["bandpass_filter", {"freq_min": 300, "freq_max": 6000}],
+        "3": ["common_reference", {"operator": "median"}],
     }
 }
 
