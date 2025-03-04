@@ -137,8 +137,9 @@ configs = {
 # :class:`spikewrap.Session.preprocess()` will also accept a dictionary with the top-level omitted
 
 pp_steps = {
-    "1": ["bandpass_filter", {"freq_min": 300, "freq_max": 6000}],
-    "2": ["common_reference", {"operator": "median"}],
+    "1": ["phase_shift", {}],
+    "2": ["bandpass_filter", {"freq_min": 300, "freq_max": 6000}],
+    "3": ["common_reference", {"operator": "median"}],
 }
 
 # %%
