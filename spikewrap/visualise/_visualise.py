@@ -63,9 +63,8 @@ def visualise_run_preprocessed(
     axes = axes.flatten()
 
     # Add spikeinterface plot_traces() plots to appropriate axis
-    for i, (key, preprocessed_recording) in enumerate(all_preprocessed.items()):
+    for i, (shank_id, preprocessed_recording) in enumerate(all_preprocessed.items()):
         ax = axes[i]
-        breakpoint()
         si.plot_traces(
             preprocessed_recording,
             order_channel_by_depth=True,
@@ -76,10 +75,10 @@ def visualise_run_preprocessed(
             ax=ax,
             segment_index=0,
         )
-        if key == canon.grouped_shankname():
+        if shank_id == canon.grouped_shankname():
             ax.set_title(f"Session: {ses_name}, Run: {run_name}")
         else:
-            ax.set_title(f"Session: {ses_name}, Run: {run_name} Shank: {int(key) + 1}")
+            ax.set_title(f"Session: {ses_name}, Run: {run_name},  {shank_id}")
 
     plt.tight_layout()
 

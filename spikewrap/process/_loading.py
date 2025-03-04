@@ -86,7 +86,7 @@ def load_data(
 # exactly the process described in the documentation.
 
 
-def get_run_paths(
+def get_raw_run_paths(
     file_format: Literal["spikeglx", "openephys"],
     ses_path: Path,
     passed_run_names: Literal["all"] | list[str],
