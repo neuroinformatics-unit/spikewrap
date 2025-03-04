@@ -85,7 +85,9 @@ def get_configs_path() -> Path:
     return configs_path
 
 
-def _create_user_configs_folder(configs_path: Path) -> None:  # TODO: generalise this, run every startup!?
+def _create_user_configs_folder(
+    configs_path: Path,
+) -> None:  # TODO: generalise this, run every startup!?
     """
     Create the spikewrap configs path where config YAML files
     are stored. Copy the YAMLs  from the spikewrap install

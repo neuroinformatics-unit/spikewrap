@@ -102,7 +102,7 @@ class Session:
     def preprocess(
         self,
         configs: dict | str | Path,
-        concat_run: bool = False,
+        concat_runs: bool = False,
         per_shank: bool = False,
     ) -> None:
         """
@@ -120,7 +120,7 @@ class Session:
             - If a ``Path`` is provided, expects the path to a valid spikewrap config YAML file.
             - A spikewrap configs dictionary, either including the ``"preprocessing"`` level
               or the ``"preprocessing"`` level itself. See documentation for details.
-        concat_run
+        concat_runs
             If ``True``, all runs will be concatenated together before preprocessing.
             Use ``session.get_raw_run_names()`` to check the order of concatenation.
         per_shank
@@ -135,7 +135,7 @@ class Session:
         )
 
         runs_to_preprocess: list[SeparateRawRun | ConcatRawRun]
-        if concat_run:
+        if concat_runs:
             runs_to_preprocess = [self._get_concat_raw_run()]
         else:
             runs_to_preprocess = self._raw_runs  # type: ignore
@@ -259,7 +259,7 @@ class Session:
         configs: str | dict,
         run_sorter_method: str = "singularity",
         per_shank: bool = True,
-        concat_run: bool = True,
+        concat_runs: bool = True,
         overwrite: bool = True,
         slurm: bool = False,
     ):
@@ -285,7 +285,7 @@ class Session:
         per_shank
             If `True`, preprocessed recordings will be split by shank. If preprocessed recordings
             were already split by shank for preprocessing, this should be `False`.
-        concat_run
+        concat_runs
             If `True`, preprocessed runs will be concatenated togerher before sorting. If runs were
             already concatenated before preprocessing, this should be `False`.
         overwrite
@@ -308,10 +308,10 @@ class Session:
 
         self._sorting_runs = []
 
-        if concat_run:
+        if concat_runs:
             if len(pp_runs) == 1:
                 raise ValueError(
-                    f"`concat_run=True` but there is only one preprocessed run: {pp_runs[0]._run_name}"
+                    f"`concat_runs=True` but there is only one preprocessed run: {pp_runs[0]._run_name}"
                 )
             else:
                 self._sorting_runs = [ConcatSortingRun(pp_runs, self._output_path)]
@@ -369,9 +369,16 @@ class Session:
             for shank_id in run_info["shank_ids"]:
 
                 if shank_id == "grouped":
-                    recording = si.load(run_folder / "preprocessed" / "si_preprocessed")
+                    recording_path = run_folder / "preprocessed"
                 else:
-                    recording = si.load(run_folder / "preprocessed" / shank_id)
+                    recording_path = run_folder / "preprocessed" / shank_id
+
+                if not recording_path.is_dir():
+                    raise FileNotFoundError(
+                        f"No preprocessed data found at: {recording_path}"
+                    )
+
+                recording = si.load(recording_path)
 
                 preprocessed_shanks[shank_id] = recording
 
