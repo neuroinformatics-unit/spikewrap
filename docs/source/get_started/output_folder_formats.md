@@ -39,7 +39,7 @@ However, the output folder can  be overridden by passing the ``output_path`` arg
 
 Here, the concatenated runs are stored in a folder with the canonical name
 ``concat_run``. The names of the original runs and their concatenation order
-are stored in ``orig_runb_names.txt``.
+are stored in ``orig_run_names.txt``.
 
 ## No run concatenation, not split by shank
 

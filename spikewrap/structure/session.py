@@ -8,19 +8,22 @@ if TYPE_CHECKING:
     import matplotlib
     from probeinterface import Probe
 
-import warnings
 from pathlib import Path
 
 import numpy as np
 import spikeinterface.full as si
 
 from spikewrap.configs import config_utils
+from spikewrap.configs._backend import canon
 from spikewrap.process import _loading
 from spikewrap.structure._preprocess_run import PreprocessedRun
-from spikewrap.structure._sorting_run import ConcatSortingRun, SortingRun
-from spikewrap.structure.raw_run import (
+from spikewrap.structure._raw_run import (
     ConcatRawRun,
     SeparateRawRun,
+)
+from spikewrap.structure._sorting_run import (
+    ConcatSortingRun,
+    SeparateSortingRun,
 )
 from spikewrap.utils import _utils
 
@@ -28,8 +31,7 @@ from spikewrap.utils import _utils
 class Session:
     """
     Represents an electrophysiological recording session, consisting of a single or multiple runs.
-
-    Exposes ``preprocess()``, ``plot_preprocessed()`, and ``save_preprocessed()`` functions to handle preprocessing of all runs.
+    Exposes functions for preproecssing and sorting data from the session.
 
     Parameters
     ----------
@@ -53,18 +55,16 @@ class Session:
     Notes
     -----
     The responsibility of this class is to manage the processing of runs
-    contained within the session. Runs are held in ``self._pp_runs``, a list of
-    ``SeparateRawRun`` or ``ConcatRawRun`` classes. Runs are loaded from raw data
-    as separate runs, and will be converted to a ``ConcatRawRun`` if concatenated.
+    contained within the session. Raw data are held in ``self._raw_runs``, a list of
+    ``SeparateRawRun``.
 
-    The attributes on this class (except for ``self._pp_runs``) are to be treated
-    as constant for the lifetime of the class. For example, the output path
-    should not be changed during the class instance lifetime.
+    self._pp_runs is filled by self.preprocess(). Copies of _raw_runs are concatenated
+    and / or split-by-shank before preprocessing, which fills self._pp_runs.
 
-    When ``preprocess`` is called, all runs are re-loaded and operations performed
-    from scratch. This is to cleanly handle concatenation of runs and possible
-    splitting of multi-shank recordings. This is more robust than attempting
-    to continually concatenate / split runs and shanks.
+    self._sorting_runs contains the sorting based on self._pp_runs. Again, copies
+    of preprocessing runs are concatenated and / or split by shank before sorting.
+
+    Properties of this class should never be modified from outside the class.
     """
 
     def __init__(
@@ -76,14 +76,11 @@ class Session:
         output_path: Path | None = None,
         probe: Probe | None = None,
     ):
-        """ """
+
         parent_input_path = Path(subject_path)
         self._check_input_path(parent_input_path)
         self._check_file_format(file_format)
 
-        # These parameters should be treated as constant and never changed
-        # during the lifetime of the class. Use the properties (which do not
-        # expose a setter) for both internal and external calls.
         self._passed_run_names = run_names
         self._file_format = file_format
         self._probe = probe
@@ -94,34 +91,13 @@ class Session:
             Path(output_path) if output_path else self._output_from_parent_input_path()
         )
 
-        # self._raw_runs may be updated during the lifetime of the object,
-        # but is private to this class.
         self._raw_runs: list[SeparateRawRun] = []
-        self._pp_runs: List[PreprocessedRun] = []
-        # self._sorting_runs:
+        self._pp_runs: list[PreprocessedRun] = []
+        self._sorting_runs: list[SeparateSortingRun | ConcatSortingRun]
 
     # ---------------------------------------------------------------------------
     # Public Functions
     # ---------------------------------------------------------------------------
-
-    def load_raw_data(self) -> None:
-        """
-        Load the raw data from each run into SpikeInterface
-        recording objects.
-
-        This function can be used to check data is loading successfully,
-        but can be skipped, with ``preprocess()`` run directly.
-
-        Data is loaded lazily at this stage (recording objects are created
-        but no data is actually loaded from disk).
-        """
-        _utils.message_user(
-            f"Loading runs from session path: {self._parent_input_path}"
-        )
-
-        for run in self._pp_runs:
-            _utils.message_user(f"Loading run: {run._run_name}")
-            run.load_raw_data()
 
     def preprocess(
         self,
@@ -155,41 +131,39 @@ class Session:
         _utils.show_preprocessing_configs(pp_steps)
 
         self._load_raw_data(
-            internal_overwrite=True
-        )  # refresh everything? maybe not... I think rename to load_raw_data and then just load and fill togehter.
+            internal_overwrite=True  # just reload and overwrite to be safe
+        )
 
+        runs_to_preprocess: list[SeparateRawRun | ConcatRawRun]
         if concat_run:
-            runs_to_preprocess = [
-                self._get_concat_run()
-            ]  # return a concat run, no state!
+            runs_to_preprocess = [self._get_concat_raw_run()]
         else:
-            runs_to_preprocess = self._raw_runs
+            runs_to_preprocess = self._raw_runs  # type: ignore
 
         self._pp_runs = []
-
         for run in runs_to_preprocess:
 
             preprocessed_run = run.preprocess(pp_steps, per_shank)
 
-            orig_run_names = (
+            orig_run_names = (  # TODO: this is not nice :(
                 run._orig_run_names if isinstance(run, ConcatRawRun) else None
-            )  # TODO: super jenky
+            )
 
             self._pp_runs.append(
                 PreprocessedRun(
-                    run._parent_input_path,  # TODO: rename this is so confusing.
-                    self._ses_name,
-                    run._run_name,
-                    run._file_format,
-                    self._output_path,
-                    preprocessed_run,
-                    run._sync,
-                    pp_steps,
-                    orig_run_names,
+                    raw_data_path=run._parent_input_path,
+                    ses_name=self._ses_name,
+                    run_name=run._run_name,
+                    file_format=run._file_format,
+                    session_output_path=self._output_path,
+                    preprocessed_data=preprocessed_run,
+                    sync=run._sync,
+                    pp_steps=pp_steps,
+                    orig_run_names=orig_run_names,
                 )
             )
 
-    def save_preprocessed(  # TODO: document, each run is in a separate SLURM job! keep like this for now
+    def save_preprocessed(
         self,
         overwrite: bool = False,
         chunk_duration_s: float = 2,
@@ -290,66 +264,108 @@ class Session:
         slurm: bool = False,
     ):
         """
-        EXPLAIN
+        Sort the preprocessed recordings (self.get_preprocessed_run_names())
+        and save the output to disk.
 
         Parameters
         ----------
 
+        configs
+            - If a ``str`` is provided, expects the name of a stored configuration file.
+              See ``show_available_configs()`` and ``save_config_dict()`` for details.
+            - If a ``Path`` is provided, expects the path to a valid spikewrap config YAML file.
+            - A spikewrap configs dictionary, either including the ``"sorting"`` level
+              or the ``"sorting"`` level itself. Only 1 sorter at a time currently supported.
+        run_sorter_method
+            - if "local", use the current python environment to run sorting (e.g. for `kilosort4`)
+            - if a path (either string or Path), must be the path to a matlab repository
+              used to run the sorter (e.g. kilosort 2.5 repository).
+            - if "docker" or "singularity", docker or singularity will be used to run the sorting.
+              singularity images are stored in a folder at the level of "rawdata" and "derivatives".
+        per_shank
+            If `True`, preprocessed recordings will be split by shank. If preprocessed recordings
+            were already split by shank for preprocessing, this should be `False`.
+        concat_run
+            If `True`, preprocessed runs will be concatenated togerher before sorting. If runs were
+            already concatenated before preprocessing, this should be `False`.
+        overwrite
+            If `True`, existing outputs will be overwritten. Otherwise, an error will be raised
+            if existing outputs are found.
+        slurm
+            Configuration for submitting the save jobs to a SLURM workload manager.
+            If `False` (default), jobs will be run locally. If `True`, job will be run in SLURM
+            with default arguments. If a `dict` is provided, it should contain SLURM arguments.
+            See `tutorials` in the documentation for details.
+
         """
+        pp_runs: list[PreprocessedRun]
         if not any(self._pp_runs):
-            pp_runs = self.load_pp_runs_from_disk()
+            pp_runs = self._load_pp_runs_from_disk()
         else:
             pp_runs = self._pp_runs
 
         sorting_configs = self._infer_pp_steps_from_configs_argument(configs, "sorting")
 
-        # TODO: own function?
-        self._sorting_runs: list[SortingRun | ConcatSortingRun] = []
+        self._sorting_runs = []
 
         if concat_run:
-            if len(self._pp_runs) == 1:
-                if isinstance(pp_runs, ConcatRawRun):
-                    warnings.warn(
-                        "concat_run=True` for sorting but runs were already concatenated for preprocessing."
-                    )
-                    self._sorting_runs = [SortingRun(pp_runs, self._output_path)]
-                else:
-                    raise ValueError(
-                        f"`concat_run=True` but there is only one preprocessed run: {pp_runs[0]._run_name}"
-                    )
+            if len(pp_runs) == 1:
+                raise ValueError(
+                    f"`concat_run=True` but there is only one preprocessed run: {pp_runs[0]._run_name}"
+                )
             else:
                 self._sorting_runs = [ConcatSortingRun(pp_runs, self._output_path)]
         else:
             self._sorting_runs = [
-                SortingRun(pp_run, self._output_path) for pp_run in pp_runs
+                SeparateSortingRun(pp_run, self._output_path) for pp_run in pp_runs
             ]
 
         for run in self._sorting_runs:
-            run.sort(overwrite, sorting_configs, run_sorter_method, per_shank, slurm)
+            run.sort(sorting_configs, run_sorter_method, per_shank, overwrite, slurm)
 
-    def load_pp_runs_from_disk(self):
-        """ """
+    def _load_pp_runs_from_disk(self) -> list[PreprocessedRun]:
+        """
+        Load a list of PreprocessedRun, that have been previously saved, from disk.
+
+        This is used to allow sorting from previously saved data, allowing `session.preprocess()`
+        to be skipped. These will be loaded in the order specified in the run names passed to
+        this class on instantiation. If this is "all" they will be loaded from disk in glob order.
+
+        TODO
+        ----
+        It would be nice to load these into self._pp_runs so that they can be re-visualised.
+        """
         if self._passed_run_names == "all":
+            # Find all folderes with "preprocessed" folder inside,
+            # assuming this is an already-preprocessed run.
             run_folders = list(self._output_path.glob("*"))
             passed_run_names = []
             for run_path in run_folders:
                 if run_path.is_dir() and any(run_path.glob("preprocessed")):
                     passed_run_names.append(run_path.name)
+
         else:
             passed_run_names = self._passed_run_names
 
+        _utils.message_user(
+            "Preprocessed runs were loaded from disk, in the order:"
+            f"{passed_run_names}"
+        )
         pp_runs = []
 
         for run_name in passed_run_names:
 
+            # For each run, load the stored spikewrap info.
             run_folder = self._output_path / run_name
 
-            file_path = run_folder / "preprocessed" / "spikewrap_info.yaml"
+            file_path = run_folder / "preprocessed" / canon.spikewrap_info_filename()
 
-            with file_path.open("r") as file:  # Open the file correctly
+            with file_path.open("r") as file:
                 run_info = yaml.safe_load(file)
 
-            preprocessed_shanks = {}  # TOOD: RENAME
+            # Based on the number of saved shanks, load the recording objects
+            # into a dictionary (keys are shank_id)
+            preprocessed_shanks = {}
             for shank_id in run_info["shank_ids"]:
 
                 if shank_id == "grouped":
@@ -359,6 +375,7 @@ class Session:
 
                 preprocessed_shanks[shank_id] = recording
 
+            # Instantiate the class based on the above parameters
             run = PreprocessedRun(
                 Path(run_info["raw_data_path"]),
                 run_info["ses_name"],
@@ -387,15 +404,16 @@ class Session:
         """
         return [run._run_name for run in self._raw_runs]
 
+    def get_preprocessed_run_names(self) -> list[str]:
+        """ """
+        return [run._run_name for run in self._pp_runs]
+
     def get_sorting_run_names(self) -> list[str]:
         """ """
         return [run._run_name for run in self._sorting_runs]
 
-    def parent_input_path(self) -> Path:  # TODO: add docs
+    def parent_input_path(self) -> Path:
         return self._parent_input_path
-
-    def get_passed_run_names(self) -> Literal["all"] | list[str]:
-        return self._passed_run_names
 
     def get_output_path(self):
         return self._output_path
@@ -408,23 +426,25 @@ class Session:
 
     def _load_raw_data(self, internal_overwrite: bool = False) -> None:
         """
-        Fill self._pp_runs with a list of `SeparateRawRun` objects, each
-        holding data for the run. The objects are instantiated here but
-        recordings are not loaded, these are loaded with self.load_raw_data().
-
-        This function overwrites all exiting runs.
+        Fill self._raw_runs with a list of `SeparateRawRun` objects,
+        each holding data for the run.
 
         Parameters
         ----------
         internal_overwrite
             Safety flag to ensure overwriting existing runs is intended.
+
+        Notes
+        -----
+        The session may include a `ephys` folder (NeuroBlueprint) but currently
+        non-NeuroBlueprint (no `ephys` folder) is included. `session_path` is the
+        path to the `ses-xxx` folder but `get_raw_run_paths` will detect and
+        include the `ephys` folder if necessary.
         """
         if self._raw_runs and not internal_overwrite:
             raise RuntimeError(f"Cannot overwrite _runs for session {self._ses_name}")
 
-        session_path = (
-            self._parent_input_path / self._ses_name
-        )  # will not include "ephys"
+        session_path = self._parent_input_path / self._ses_name
 
         run_paths = _loading.get_raw_run_paths(
             self._file_format,
@@ -437,7 +457,7 @@ class Session:
         for run_path in run_paths:
 
             separate_run = SeparateRawRun(
-                parent_input_path=run_path.parent,  # may include "ephys" if NeuroBlueprint
+                parent_input_path=run_path.parent,
                 parent_ses_name=self._ses_name,
                 run_name=run_path.name,
                 file_format=self._file_format,
@@ -446,10 +466,9 @@ class Session:
             separate_run.load_raw_data()
             runs.append(separate_run)
 
-        self._raw_runs = runs  # type: ignore
+        self._raw_runs = runs
 
-    # TODO: think carefully about state, now that we are not refreshing
-    def _get_concat_run(self) -> None:
+    def _get_concat_raw_run(self) -> ConcatRawRun:
         """
         Concatenate multiple separate runs into a single consolidated `ConcatRawRun`.
 
@@ -459,17 +478,17 @@ class Session:
         if len(self._raw_runs) == 1:
             raise RuntimeError("Cannot concatenate runs, only one run found.")
 
+        assert all(
+            [isinstance(run, SeparateRawRun) for run in self._raw_runs]
+        ), "All runs must be type `SeparateRawRun` for `ConcatRawRun"
+
         _utils.message_user(
             f"Concatenating raw recordings in the following order:"
             f"{self.get_raw_run_names()}"
         )
 
-        assert all(
-            [isinstance(run, SeparateRawRun) for run in self._raw_runs]
-        ), "All runs must be type `SeparateRawRun` for `ConcatRawRun"
-
         return ConcatRawRun(
-            self._raw_runs,  # type: ignore
+            self._raw_runs,
             self._parent_input_path,
             self._ses_name,
             self._file_format,

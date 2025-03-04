@@ -1,6 +1,9 @@
 from __future__ import annotations
 
-from typing import Callable
+from typing import TYPE_CHECKING, Callable
+
+if TYPE_CHECKING:
+    from spikeinterface.core import BaseRecording
 
 import numpy as np
 import spikeinterface.full as si
@@ -9,7 +12,7 @@ import spikeinterface.full as si
 def _preprocess_recording(
     raw_recording: BaseRecording,
     pp_steps: dict,
-) -> None:
+) -> dict:
     """
     Preprocess a raw recording with the preprocessing
     steps defined in `pp_steps`.
