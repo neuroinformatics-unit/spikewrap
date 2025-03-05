@@ -184,4 +184,5 @@ def is_slurm_installed():
     slurm_installed = _system_call_success("sinfo -v")
     return slurm_installed
 
+
 # TODO: reinstante slurm delete thing!

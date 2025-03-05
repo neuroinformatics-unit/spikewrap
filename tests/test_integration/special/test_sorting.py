@@ -1,11 +1,6 @@
 from __future__ import annotations
 
-import shutil
-
-import pytest
-
 import spikewrap as sw
-
 
 DATA_SUB_PATH = r"/ceph/neuroinformatics/neuroinformatics/scratch/jziminski/ephys/code/git-repos/SPIKEWRAP_TESTS/data/time-short/rawdata/1119617"
 KILOSORT2_5_PATH = "/ceph/neuroinformatics/neuroinformatics/scratch/jziminski/ephys/code/git-repos/SPIKEWRAP_TESTS/matlab_repos/kilosort2_5/Kilosort"
@@ -13,6 +8,7 @@ KILOSORT2_5_PATH = "/ceph/neuroinformatics/neuroinformatics/scratch/jziminski/ep
 KILOSORT2_5_PATH_NOMEX = "/ceph/neuroinformatics/neuroinformatics/scratch/jziminski/ephys/code/git-repos/SPIKEWRAP_TESTS/matlab_repos/kilosort2_5_nomex/Kilosort"
 
 # class TestSortingSpecial():
+
 
 def test_kilosort4_local():
 
@@ -30,9 +26,7 @@ def test_kilosort4_local():
     )
 
     config_dict = {"kilosort4": {}}
-    session.sort(
-        config_dict, "local"
-    )
+    session.sort(config_dict, "local")
 
 
 # @pytest.mark.parametrize("slurm", [True, False])
@@ -60,7 +54,9 @@ def test_kilosort2_5_path(slurm=True):
     gpu_arguments["exclude"] = None
     print(gpu_arguments)
     session.sort(
-        config_dict, KILOSORT2_5_PATH, slurm=False, # gpu_arguments  # TODO: handle when to require GPU node!
+        config_dict,
+        KILOSORT2_5_PATH,
+        slurm=False,  # gpu_arguments  # TODO: handle when to require GPU node!
     )
 
 
@@ -77,7 +73,6 @@ def test_kilosort2_5_nomex():
         # TODO: neuropixels+kilsort... allow possible ones, then choose sorter....
         per_shank=True,
         concat_runs=True,  # TODO: jsut run on a single run
-
     )
 
     config_dict = {"kilosort2_5": {}}
@@ -89,7 +84,9 @@ def test_kilosort2_5_nomex():
     gpu_arguments["exclude"] = None
 
     session.sort(
-        config_dict, KILOSORT2_5_PATH_NOMEX, slurm=False, # gpu_arguments
+        config_dict,
+        KILOSORT2_5_PATH_NOMEX,
+        slurm=False,  # gpu_arguments
         # TODO: handle when to require GPU node!
     )
 
@@ -99,7 +96,8 @@ def test_kilosort2_5_nomex():
     # TODO: expose a function like 'compile kilosort mex files..."
     # questions 1) where to put code that is run on stitch
     # questions 2) worth making a spikewrap module?
-    
+
+
 def test_kilosort4_singularity():
     session = sw.Session(
         subject_path=DATA_SUB_PATH,
@@ -124,7 +122,9 @@ def test_kilosort4_singularity():
     gpu_arguments["exclude"] = None
 
     session.sort(
-        config_dict, "singularity", slurm=False,
+        config_dict,
+        "singularity",
+        slurm=False,
     )
 
 
