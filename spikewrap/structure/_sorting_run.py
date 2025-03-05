@@ -68,6 +68,7 @@ class BaseSortingRun:
         run_docker, run_singularity = self._configure_run_sorter_method(
             sorter,
             run_sorter_method,
+            slurm,
         )
 
         self.handle_overwrite_output_path(overwrite)
@@ -100,7 +101,7 @@ class BaseSortingRun:
         """
         if self._output_path.is_dir():
             if overwrite:
-                shutil.rmtree(self._output_path)
+                shutil.rmtree(self._output_path)  # TODO: ADD BACK!
             else:
                 raise RuntimeError(
                     f"`overwrite=False` but a folder already exists at: {self._output_path}"
@@ -170,7 +171,7 @@ class BaseSortingRun:
         spikeinterface_version = spikeinterface.__version__
 
         sorter_path = (
-            self._session_output_path.parent.parent.parent  # TODO: hacky? :(
+            self._session_output_path.parent.parent.parent.parent # 1) hacky, just look for derivatives... 2)  might contain ephys? use sub path?
             / "sorter_images"
             / sorter
             / spikeinterface_version
@@ -183,7 +184,7 @@ class BaseSortingRun:
         return sorter_path
 
     def _configure_run_sorter_method(
-        self, sorter: str, run_sorter_method: str | Path
+        self, sorter: str, run_sorter_method: str | Path, slurm: bool
     ) -> tuple[bool, Literal[False] | Path]:
         """
          This function configures how the sorter is run. There are four
@@ -241,17 +242,21 @@ class BaseSortingRun:
                 raise FileNotFoundError(
                     f"No repository for {sorter} found at: {repo_path}"
                 )
+            assert sorter in matlab_list, "MUST BE KILOSORT1-3. This is {sorter}."
 
-            assert sorter in matlab_list, "MUST BE KILOSORT"
+            if slurm:
+                _checks._system_call_success("module load matlab")  # TODO: how to handle this nicely
+
+            if not _checks._system_call_success("matlab -batch 'ver'"):
+                raise RuntimeError("MATLAB NOT FOUnd!")
 
             if sorter in kilosort_matlab_list:
-                pass
-                # check mex files are found in kilosort and raise if not!
-                # raise if not a real file.
-                # if sorter == "":
-                #    HDSortSorter.set_hdsort_path()
-
-            assert Path(run_sorter_method)
+                if not any(repo_path.glob("CUDA/*.mex*")):
+                    raise RuntimeError(
+                        f"No mex files found in the kilosort repo. "  # TODO: could do this automatically...
+                        f"Make sure to check the installation results in the {sorter} "
+                        f"branch of the kilosort github repo. Mex file compilation is required."
+                    )
 
             setter_functions = {
                 "kilosort": si.KilosortSorter.set_kilosort_path,
