@@ -258,8 +258,8 @@ class Session:
         self,
         configs: str | dict,
         run_sorter_method: str = "singularity",
-        per_shank: bool = True,
-        concat_runs: bool = True,
+        per_shank: bool = False,
+        concat_runs: bool = False,
         overwrite: bool = True,
         slurm: bool = False,
     ):

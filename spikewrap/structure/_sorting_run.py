@@ -218,6 +218,21 @@ class BaseSortingRun:
             if sorter in matlab_list:
                 raise ValueError("Some error")
 
+        elif run_sorter_method == "docker":
+            assert _checks._docker_desktop_is_running(), (
+                f"The sorter {sorter} requires a virtual machine image to run, but "
+                f"Docker is not running. Open Docker Desktop to start Docker."
+            )
+            run_docker = True
+
+        elif run_sorter_method == "singularity":
+            if not _checks._system_call_success("singularity version"):
+                raise RuntimeError(
+                    "`singularity` is not installed, cannot run the sorter with singularity."
+                )
+
+            run_singularity = self.get_singularity_image_path(sorter)
+
         elif isinstance(run_sorter_method, str) or isinstance(run_sorter_method, Path):
 
             repo_path = Path(run_sorter_method)
@@ -249,21 +264,6 @@ class BaseSortingRun:
             }
 
             setter_functions[sorter](run_sorter_method)
-
-        elif run_sorter_method == "docker":
-            assert _checks._docker_desktop_is_running(), (
-                f"The sorter {sorter} requires a virtual machine image to run, but "
-                f"Docker is not running. Open Docker Desktop to start Docker."
-            )
-            run_docker = True
-
-        elif run_sorter_method == "singularity":
-            if not _checks._system_call_success("singularity version"):
-                raise RuntimeError(
-                    "`singularity` is not installed, cannot run the sorter with singularity."
-                )
-
-            run_singularity = self.get_singularity_image_path(sorter)
 
         return run_docker, run_singularity
 
