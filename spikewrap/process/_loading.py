@@ -168,7 +168,7 @@ def get_spikeglx_runs(ses_path: Path) -> list[Path]:
 
     for path_ in putative_run_paths:
         subpath_ = list(path_.glob("*g*_imec*"))
-        if re.match(r'.*g.*imec.*', path_.name):
+        if re.match(r".*g.*imec.*", path_.name):
             detected_run_paths.append(path_)
         elif any(subpath_):
             if not len(subpath_) == 1:
@@ -195,7 +195,9 @@ def get_spikeglx_runs(ses_path: Path) -> list[Path]:
 
     # Currently, multi-trigger not supported
     for path_ in detected_run_paths:
-        rec_paths = list(path_.rglob("*.bin"))  # rglob as we might have two-level run folder (TODO: DOC)
+        rec_paths = list(
+            path_.rglob("*.bin")
+        )  # rglob as we might have two-level run folder (TODO: DOC)
         if len(rec_paths) > 1:
             raise RuntimeError(
                 f"The run folder {path_} contains more than one recording.\n"

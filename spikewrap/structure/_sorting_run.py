@@ -171,7 +171,7 @@ class BaseSortingRun:
         spikeinterface_version = spikeinterface.__version__
 
         sorter_path = (
-            self._session_output_path.parent.parent.parent.parent # 1) hacky, just look for derivatives... 2)  might contain ephys? use sub path?
+            self._session_output_path.parent.parent.parent.parent  # 1) hacky, just look for derivatives... 2)  might contain ephys? use sub path?
             / "sorter_images"
             / sorter
             / spikeinterface_version
@@ -245,7 +245,9 @@ class BaseSortingRun:
             assert sorter in matlab_list, "MUST BE KILOSORT1-3. This is {sorter}."
 
             if slurm:
-                _checks._system_call_success("module load matlab")  # TODO: how to handle this nicely
+                _checks._system_call_success(
+                    "module load matlab"
+                )  # TODO: how to handle this nicely
 
             if not _checks._system_call_success("matlab -batch 'ver'"):
                 raise RuntimeError("MATLAB NOT FOUnd!")
