@@ -110,7 +110,8 @@ class RawRun:
 
         preprocessed = {}
         for shank_id, raw_rec in runs_to_preprocess.items():
-            preprocessed[shank_id] = _preprocess_recording(raw_rec, pp_steps)
+            prepro_dict = {"0-raw": raw_rec}
+            preprocessed[shank_id] = _preprocess_recording(prepro_dict, pp_steps)
 
         return preprocessed
 

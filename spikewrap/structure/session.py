@@ -380,7 +380,11 @@ class Session:
 
                 recording = si.load(recording_path)
 
-                preprocessed_shanks[shank_id] = recording
+                prepro_dict = {
+                    run_info["prepro_key"]: recording
+                }  # TODO: check naming of this and make sure its consistent
+
+                preprocessed_shanks[shank_id] = prepro_dict
 
             # Instantiate the class based on the above parameters
             run = PreprocessedRun(

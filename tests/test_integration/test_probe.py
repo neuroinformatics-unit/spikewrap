@@ -5,6 +5,7 @@ import pytest
 from base import BaseTest
 
 import spikewrap as sw
+from spikewrap.utils import _utils
 
 
 class TestSetProbe(BaseTest):
@@ -31,7 +32,8 @@ class TestSetProbe(BaseTest):
 
         all_run_data = []
         for run in session._pp_runs:
-            for rec in run._preprocessed.values():
+            for prepro_dict in run._preprocessed.values():
+                rec, _ = _utils._get_dict_value_from_step_num(prepro_dict, "last")
                 all_run_data.append(rec)
 
         assert all([isinstance(rec.get_probe(), pi.Probe) for rec in all_run_data])
