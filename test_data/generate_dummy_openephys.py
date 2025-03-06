@@ -1,6 +1,7 @@
-import numpy as np
-from pathlib import Path
 import json
+from pathlib import Path
+
+import numpy as np
 
 # Define paths
 base_dir = Path("./dummy_openephys")
@@ -16,7 +17,9 @@ num_channels = 4  # Simulating 4-channel recording
 sampling_rate = 30000  # 30 kHz, typical for Neuropixels
 
 # Generate random int16 data
-dummy_data = np.random.randint(-32768, 32767, size=(num_samples, num_channels), dtype=np.int16)
+dummy_data = np.random.randint(
+    -32768, 32767, size=(num_samples, num_channels), dtype=np.int16
+)
 with open(ephys_dir / "continuous.dat", "wb") as f:
     f.write(dummy_data.tobytes())
 
@@ -28,15 +31,10 @@ oebin_content = {
             "name": "Record Node 103",
             "id": 103,
             "recorded_data": "binary",
-            "streams": [
-                {
-                    "stream_name": "Neuropixels-AP",
-                    "stream_id": "0"
-                }
-            ]
+            "streams": [{"stream_name": "Neuropixels-AP", "stream_id": "0"}],
         }
     ],
-    "format": "OpenEphysBinary"
+    "format": "OpenEphysBinary",
 }
 
 # Write `structure.oebin`
