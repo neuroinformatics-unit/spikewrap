@@ -185,4 +185,17 @@ def is_slurm_installed():
     return slurm_installed
 
 
+def check_slurm_job_status(job_id):
+    try:
+        result = subprocess.run(
+            ["squeue", "--job", str(job_id)], capture_output=True, text=True, check=True
+        )
+        if job_id in result.stdout:
+            return "Job is running or pending."
+        else:
+            return "Job is not running."
+    except subprocess.CalledProcessError as e:
+        return f"Error checking job: {e}"
+
+
 # TODO: reinstante slurm delete thing!
