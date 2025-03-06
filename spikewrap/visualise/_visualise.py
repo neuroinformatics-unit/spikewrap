@@ -7,6 +7,7 @@ import numpy as np
 import spikeinterface.full as si
 
 from spikewrap.configs._backend import canon
+from spikewrap.utils import _utils
 
 
 def visualise_run_preprocessed(
@@ -63,10 +64,15 @@ def visualise_run_preprocessed(
     axes = axes.flatten()
 
     # Add spikeinterface plot_traces() plots to appropriate axis
-    for i, (shank_id, preprocessed_recording) in enumerate(all_preprocessed.items()):
+    for i, (key, preprocessed) in enumerate(all_preprocessed.items()):
         ax = axes[i]
+
+        recording_to_plot, _ = _utils._get_dict_value_from_step_num(
+            preprocessed, "last"
+        )
+
         si.plot_traces(
-            preprocessed_recording,
+            recording_to_plot,
             order_channel_by_depth=True,
             time_range=time_range,
             return_scaled=True,
@@ -75,10 +81,10 @@ def visualise_run_preprocessed(
             ax=ax,
             segment_index=0,
         )
-        if shank_id == canon.grouped_shankname():
+        if key == canon.grouped_shankname():
             ax.set_title(f"Session: {ses_name}, Run: {run_name}")
         else:
-            ax.set_title(f"Session: {ses_name}, Run: {run_name},  {shank_id}")
+            ax.set_title(f"Session: {ses_name}, Run: {run_name}, {key}")
 
     plt.tight_layout()
 

@@ -100,12 +100,16 @@ class PreprocessedRun:
         self._save_sync_channel()
 
         # Save the recordings to disk, handling shank ids
-        for shank_name, preprocessed_recording in self._preprocessed.items():
+        for shank_name, preprocessed_dict in self._preprocessed.items():
 
             preprocessed_path = self._output_path / canon.preprocessed_folder()
 
             if shank_name != canon.grouped_shankname():
                 preprocessed_path = preprocessed_path / shank_name
+
+            preprocessed_recording, prep_dict_key = (
+                _utils._get_dict_value_from_step_num(preprocessed_dict, "last")
+            )
 
             preprocessed_recording.save(
                 folder=preprocessed_path,
@@ -133,6 +137,17 @@ class PreprocessedRun:
         Should use __to_dict? but want to be very
         selective about what is included.
         """
+
+        full_prepro_keys = [
+            _utils._get_dict_value_from_step_num(prepro_dict, "last")[1]
+            for prepro_dict in self._preprocessed.values()
+        ]
+        assert len(set(full_prepro_keys)) == 1, (
+            "Somehow the different shanks have different preprocessing steps applied. "
+            "This should not happen."
+        )
+        prepro_key = full_prepro_keys[0]
+
         to_dump = {
             "raw_data_path": self._raw_data_path.as_posix(),
             "ses_name": self._ses_name,
@@ -142,6 +157,7 @@ class PreprocessedRun:
             "pp_steps": self._pp_steps,
             "orig_run_names": self._orig_run_names,
             "shank_ids": list(self._preprocessed.keys()),
+            "prepro_key": prepro_key,
         }
         with open(path_to_save / canon.spikewrap_info_filename(), "w") as file:
             yaml.dump(to_dump, file)

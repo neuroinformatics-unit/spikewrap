@@ -8,7 +8,7 @@ from spikeinterface.sorters import run_sorter
 from spikeinterface.sorters.runsorter import SORTER_DOCKER_MAP
 
 from spikewrap.structure._preprocess_run import PreprocessedRun
-from spikewrap.utils import _checks, _managing_sorters, _slurm
+from spikewrap.utils import _checks, _managing_sorters, _slurm, _utils
 
 
 class BaseSortingRun:
@@ -289,7 +289,12 @@ class SeparateSortingRun(BaseSortingRun):
         run_name = pp_run._run_name
         output_path = session_output_path / run_name / "sorting"
 
-        preprocessed_recording = pp_run._preprocessed
+        preprocessed_recording = {
+            shank_id: _utils._get_dict_value_from_step_num(
+                preprocessed_dict, "last", bypass_checks=True
+            )[0]
+            for shank_id, preprocessed_dict in pp_run._preprocessed.items()
+        }
 
         super().__init__(
             run_name, session_output_path, output_path, preprocessed_recording
@@ -309,25 +314,28 @@ class ConcatSortingRun(BaseSortingRun):
         run_name = "concat_run"
         output_path = session_output_path / run_name / "sorting"
 
-        shank_keys = list(pp_runs_list[0]._preprocessed.keys())
+        shank_ids = list(pp_runs_list[0]._preprocessed.keys())
 
-        preprocessed_recording: dict = {key: [] for key in shank_keys}
+        preprocessed_recording: dict = {id: [] for id in shank_ids}
 
         # Create a dict (key is "grouped" or shank number) of lists where the
         # lists contain all recordings to concatenate for that shank
         for run in pp_runs_list:
-            for key in shank_keys:
+            for shank_id in shank_ids:
 
-                assert key in run._preprocessed, (
+                assert shank_id in run._preprocessed, (
                     "Somehow grouped and per-shank recordings are mixed. "
                     "This should not happen."
                 )
-                preprocessed_recording[key].append(run._preprocessed[key])
+                full_prepro_data, _ = _utils._get_dict_value_from_step_num(
+                    run._preprocessed[shank_id], "last"
+                )
+                preprocessed_recording[shank_id].append(full_prepro_data)
 
         # Concatenate the lists for each shank into a single recording
-        for key in shank_keys:
-            preprocessed_recording[key] = si.concatenate_recordings(
-                preprocessed_recording[key]
+        for shank_id in shank_ids:
+            preprocessed_recording[shank_id] = si.concatenate_recordings(
+                preprocessed_recording[shank_id]
             )
 
         super().__init__(
