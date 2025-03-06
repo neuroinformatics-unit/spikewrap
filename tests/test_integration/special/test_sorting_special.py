@@ -72,7 +72,7 @@ def test_kilosort2_5_nomex():
         configs="neuropixels+kilosort2_5",
         # TODO: neuropixels+kilsort... allow possible ones, then choose sorter....
         per_shank=True,
-        concat_runs=True,  # TODO: jsut run on a single run
+        concat_runs=True,  # TODO: just run on a single run
     )
 
     config_dict = {"kilosort2_5": {}}

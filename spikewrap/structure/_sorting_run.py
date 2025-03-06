@@ -184,7 +184,10 @@ class BaseSortingRun:
         return sorter_path
 
     def _configure_run_sorter_method(
-        self, sorter: str, run_sorter_method: str | Path, slurm: bool
+        self,
+        sorter: str,
+        run_sorter_method: str | Path,
+        slurm: bool | dict,
     ) -> tuple[bool, Literal[False] | Path]:
         """
          This function configures how the sorter is run. There are four
@@ -211,9 +214,8 @@ class BaseSortingRun:
         kilosort_matlab_list = ["kilosort", "kilosort2", "kilosort2_5", "kilosort3"]
         matlab_list = kilosort_matlab_list + ["HDSort", "IronClust", "Waveclus"]
 
-        run_singularity: Literal[False] | Path
-
-        run_docker = run_singularity = False
+        run_singularity: Literal[False] | Path = False
+        run_docker: bool = False
 
         if run_sorter_method == "local":
             if sorter in matlab_list:
