@@ -1,0 +1,17 @@
+{
+    "GUI version": "0.6.0",
+    "processors": [
+        {
+            "name": "Record Node 103",
+            "id": 103,
+            "recorded_data": "binary",
+            "streams": [
+                {
+                    "stream_name": "Neuropixels-AP",
+                    "stream_id": "0"
+                }
+            ]
+        }
+    ],
+    "format": "OpenEphysBinary"
+}

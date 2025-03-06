@@ -1,10 +1,9 @@
 from __future__ import annotations
 
+from pathlib import Path  # Move Path outside TYPE_CHECKING
 from typing import TYPE_CHECKING, Literal
 
 if TYPE_CHECKING:
-    from pathlib import Path
-
     from spikeinterface.core import BaseRecording
 
 import re
@@ -36,18 +35,26 @@ def load_data(
         ]
 
     elif file_format == "openephys":
+        # Check if the format is legacy
+        files = [f for f in Path(run_path).iterdir()]
+        is_legacy = any(".continuous" in f.name and f.is_file() for f in files)
+
         without_sync = si.read_openephys(
             folder_path=run_path,
             all_annotations=True,
             load_sync_channel=False,
         )
-        try:
+
+        if not is_legacy:
             with_sync = si.read_openephys(
                 folder_path=run_path,
                 all_annotations=False,
                 load_sync_channel=True,
             )
-        except ValueError:
+        else:
+            _utils.message_user(
+                "[WARNING] Detected legacy OpenEphys format. Sync channel not supported."
+            )
             with_sync = None
 
     else:
