@@ -190,7 +190,7 @@ pp_attempt_2 = copy.deepcopy(configs)
 # This is currently quite verbose. It is the second preprocessing
 # step, second element of the list ["function_name", {function_kwargs...}]
 # (see processing dictionary defined above)
-pp_attempt_2["preprocessing"]["2"][1]["operator"] = "average"
+pp_attempt_2["preprocessing"]["3"][1]["operator"] = "average"
 
 session.preprocess(
     configs=pp_attempt_2,
