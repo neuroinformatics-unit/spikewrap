@@ -52,7 +52,9 @@ def load_data(
                 load_sync_channel=True,
             )
         else:
-            _utils.message_user("[WARNING] Detected legacy OpenEphys format. Sync channel not supported.")
+            _utils.message_user(
+                "[WARNING] Detected legacy OpenEphys format. Sync channel not supported."
+            )
             with_sync = None
 
     else:
