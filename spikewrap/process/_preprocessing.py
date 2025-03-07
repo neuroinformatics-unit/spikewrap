@@ -8,14 +8,13 @@ import spikeinterface.full as si
 from spikewrap.utils import _utils
 
 
-def _fill_with_preprocessed_recordings(
+def _preprocess_recording(
     preprocess_data: dict[str, list],
     pp_steps: dict,
-) -> None:
+) -> dict:
     """
     Fill the Preprocessed._data dict with preprocessed
     SpikeInterface recording objects according to pp_steps.
-
     For each preprocessing step, the key will be a concatenation
     of all preprocessing steps that were performed.
     e.g. "0-raw", "0-raw_1-phase_shift_2-bandpass_filter"
@@ -33,9 +32,10 @@ def _fill_with_preprocessed_recordings(
     checked_pp_steps, pp_step_names = _check_and_sort_pp_steps(pp_steps, pp_funcs)
 
     for step_num, pp_info in checked_pp_steps.items():
+
         pp_name, pp_options = pp_info
 
-        last_pp_step_output, __ = _utils._get_dict_value_from_step_num(
+        last_pp_step_output, _ = _utils._get_dict_value_from_step_num(
             preprocess_data, step_num=str(int(step_num) - 1)
         )
 
@@ -44,6 +44,8 @@ def _fill_with_preprocessed_recordings(
         new_name = f"{step_num}-" + "-".join(["raw"] + pp_step_names[: int(step_num)])
 
         preprocess_data[new_name] = preprocessed_recording
+
+    return preprocess_data
 
 
 # Helpers for preprocessing steps dictionary -------------------------------------------

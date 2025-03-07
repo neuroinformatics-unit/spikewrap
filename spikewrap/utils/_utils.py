@@ -7,6 +7,7 @@ if TYPE_CHECKING:
 
     from spikeinterface.core import BaseRecording
 
+
 import copy
 import json
 import os
@@ -31,30 +32,24 @@ def message_user(message: str) -> None:
 
 
 def _get_dict_value_from_step_num(
-    data: dict, step_num: str
+    data: dict, step_num: str, bypass_checks: bool = False
 ) -> tuple[BaseRecording, str]:
     """
     Get the preprocessed recording from a `Preprocessed._data` dict given
     the preprocessing step number.
-
     Keys in the dict represent preprocessing steps, formatted as:
     e.g., 0-raw, 1-raw-bandpass_filter, 2-raw_bandpass_filter-common_average.
-
     This function retrieves the recording object by matching the step number.
-
     Parameters
     ----------
     data
         The `Preprocessed._data` dict containing preprocessing steps and recordings.
-
     step_num
         The preprocessing step number (or "last" for the final step) to retrieve.
-
     Returns
     -------
     dict_value
         The recording object corresponding to the given step number.
-
     pp_key
         The key of the preprocessing dict associated with the step number.
     """
@@ -63,9 +58,11 @@ def _get_dict_value_from_step_num(
 
         # Complete overkill as a check but this is critical.
         step_num = str(int(np.max(pp_key_nums)))
-        assert (
-            int(step_num) == len(data.keys()) - 1
-        ), "the last key has been taken incorrectly"
+
+        if not bypass_checks:
+            assert (
+                int(step_num) == len(data.keys()) - 1
+            ), "the last key has been taken incorrectly"
 
     select_step_pp_key = [key for key in data.keys() if key.split("-")[0] == step_num]
 
@@ -82,15 +79,12 @@ def _get_keys_first_char(data: dict, as_int: bool = False) -> list[str] | list[i
     """
     Get the first character of all keys in a dictionary.
     Expected that the first characters are integers (as str type).
-
     Parameters
     ----------
     data
         The `Preprocessed._data` dict containing preprocessing steps and recordings.
-
     as_int
         If True, the first character of the keys are cast to integer type.
-
     Returns
     -------
     list_of_numbers

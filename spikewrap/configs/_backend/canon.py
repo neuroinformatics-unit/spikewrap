@@ -16,3 +16,11 @@ def grouped_shankname():
 
 def shank_prefix():
     return "shank_"
+
+
+def saved_sync_filename():
+    return "sync_channel.npy"
+
+
+def spikewrap_info_filename():
+    return "spikewrap_info.yaml"
