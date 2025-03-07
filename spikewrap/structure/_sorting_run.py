@@ -206,10 +206,6 @@ class BaseSortingRun:
            By default, spikeinterface will download the sorter to the working directory
            when the script is called. It is better to download it manually and
            move it to a central place so it can be reused.
-
-         TODO
-         ----
-         Tidy this up!
         """
         kilosort_matlab_list = ["kilosort", "kilosort2", "kilosort2_5", "kilosort3"]
         matlab_list = kilosort_matlab_list + ["HDSort", "IronClust", "Waveclus"]
@@ -217,10 +213,18 @@ class BaseSortingRun:
         run_singularity: Literal[False] | Path = False
         run_docker: bool = False
 
+        # If local, it is a python-based sorter and
+        # we can run in the local environment.
         if run_sorter_method == "local":
             if sorter in matlab_list:
-                raise ValueError("Some error")
+                raise ValueError(
+                    "`run_sorter_method` is 'local' but this sorter "
+                    "must be run in MATLAB. Either provide the path to "
+                    "the downloaded sorter repository or use singularity / docker.`"
+                )
 
+        # Else if "docker", tell spikeinterface we want to use Docker.
+        # The docker desktop client manages the image download.
         elif run_sorter_method == "docker":
             assert _checks._docker_desktop_is_running(), (
                 f"The sorter {sorter} requires a virtual machine image to run, but "
@@ -228,6 +232,9 @@ class BaseSortingRun:
             )
             run_docker = True
 
+        # If "singularity", we manage the downloading of the singularity
+        # image so that it is shared across the project, and return the
+        # path of the downloaded image to pass to spikeinterface.
         elif run_sorter_method == "singularity":
             if not _checks._system_call_success("singularity version"):
                 raise RuntimeError(
@@ -236,6 +243,9 @@ class BaseSortingRun:
 
             run_singularity = self.get_singularity_image_path(sorter)
 
+        # Finally, (assume any other string is a path) we have the path to a
+        # repo for a sorter that requires matlab. Perform some checks and
+        # then set the appropriate function on spikeinterface.
         elif isinstance(run_sorter_method, str) or isinstance(run_sorter_method, Path):
 
             repo_path = Path(run_sorter_method)
@@ -246,11 +256,6 @@ class BaseSortingRun:
                 )
             assert sorter in matlab_list, "MUST BE KILOSORT1-3. This is {sorter}."
 
-            if slurm:
-                _checks._system_call_success(
-                    "module load matlab"
-                )  # TODO: how to handle this nicely
-
             if not _checks._system_call_success("matlab -batch 'ver'"):
                 raise RuntimeError(
                     "Matlab not found. Check matlab is available in the current environment."
@@ -259,8 +264,9 @@ class BaseSortingRun:
 
             if sorter in kilosort_matlab_list:
                 if not any(repo_path.glob("CUDA/*.mex*")):
+                    # TODO: could do this automatically...
                     raise RuntimeError(
-                        f"No mex files found in the kilosort repo. "  # TODO: could do this automatically...
+                        f"No mex files found in the kilosort repo. "
                         f"Make sure to check the installation results in the {sorter} "
                         f"branch of the kilosort github repo. Mex file compilation is required."
                     )

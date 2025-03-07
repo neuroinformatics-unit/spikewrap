@@ -1,12 +1,11 @@
 from __future__ import annotations
 
 import shutil
+from pathlib import Path
+
+import pytest
 
 import spikewrap as sw
-import pytest
-from pathlib import Path
-import subprocess
-
 
 DATA_SUB_PATH = r"/ceph/neuroinformatics/neuroinformatics/scratch/jziminski/ephys/code/git-repos/SPIKEWRAP_TESTS/data/time-short/rawdata/1119617"
 KILOSORT2_5_PATH = "/ceph/neuroinformatics/neuroinformatics/scratch/jziminski/ephys/code/git-repos/SPIKEWRAP_TESTS/matlab_repos/kilosort2_5/Kilosort"
@@ -19,14 +18,15 @@ KILOSORT2_5_PATH_NOMEX = "/ceph/neuroinformatics/neuroinformatics/scratch/jzimin
 # TODO: need to expose "module load matlab" option in the slurm script.
 # for now, just a way to add commands!
 # and need to add a test here...
+# TODO: check that tests are properly deleted, and check
+# TODO: check sorter saved in the correct place!
 
 
 class TestInternal:
 
     @pytest.fixture(scope="function")
     def prepro_session(self):
-        """
-        """
+        """ """
 
         sub_path = Path(DATA_SUB_PATH)
         rawdata_path = sub_path.parent
@@ -76,7 +76,6 @@ class TestInternal:
             )
         assert "No mex files found" in str(e.value)
 
-
     def test_kilosort2_5_singularity(self, prepro_session):
         config_dict = {"kilosort2_5": {}}
 
@@ -84,3 +83,5 @@ class TestInternal:
             config_dict,
             "singularity",
         )
+
+        # TODO: check sorter saved in the correct place!
