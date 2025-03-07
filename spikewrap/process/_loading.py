@@ -1,9 +1,10 @@
 from __future__ import annotations
 
-from pathlib import Path  # Move Path outside TYPE_CHECKING
 from typing import TYPE_CHECKING, Literal
 
 if TYPE_CHECKING:
+    from pathlib import Path
+
     from spikeinterface.core import BaseRecording
 
 import re
@@ -112,14 +113,16 @@ def load_data(
 
     # Handle probe setting
     if probe is None:
-        _utils.message_user("⚠ No probe provided. Please select one manually.")
+        _utils.message_user("No probe provided. Please select one manually.")
         probe = choose_probe()
+        without_sync = without_sync.set_probe(probe)
 
     _utils.message_user(f"Using user-selected probe: {probe}")
 
     if probe is not None:
         if without_sync and without_sync.has_probe():
             _utils.message_user("Probe auto-detected. Using the detected probe.")
+            without_sync = without_sync.set_probe(probe)
         elif probe:
             _utils.message_user(
                 "No auto-detected probe found. Using the user-provided probe."
