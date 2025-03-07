@@ -1,27 +1,77 @@
 from __future__ import annotations
 
+from pathlib import Path  # Move Path outside TYPE_CHECKING
 from typing import TYPE_CHECKING, Literal
 
 if TYPE_CHECKING:
-    from pathlib import Path
-
     from spikeinterface.core import BaseRecording
 
 import re
 import warnings
 
 import spikeinterface.full as si
+from probeinterface import Probe, get_probe
 
 from spikewrap.utils import _utils
 
 
+def choose_probe() -> Probe:
+    """
+    Allows the user to manually enter the manufacturer and probe name to select a probe.
+
+    Returns:
+        Probe: The selected probe object.
+    """
+    print("\nNo probe detected. Please select one manually.")
+
+    # Ask for manufacturer and probe name directly from the user
+    manufacturer = input(
+        "\nEnter the manufacturer name (e.g., 'cambridgeneurotech', 'neuropixels', 'neuronexus'): "
+    ).strip()
+
+    # Validate manufacturer
+    if manufacturer not in ["cambridgeneurotech", "neuropixels", "neuronexus"]:
+        print(
+            f"Invalid manufacturer '{manufacturer}'. Please enter a valid manufacturer."
+        )
+        return None
+
+    # Ask for the probe name directly from the user
+    probe_name = input(
+        f"Enter the probe name for {manufacturer} (e.g., 'ASSY-37-E-1' for cambridgeneurotech): "
+    ).strip()
+
+    try:
+        # Get the selected probe using manufacturer and probe name
+        selected_probe = get_probe(manufacturer, probe_name)
+        print(f"\nSelected Probe: {probe_name} from {manufacturer}")
+        return selected_probe
+    except Exception as e:
+        print(f"Error fetching probe: {e}")
+        return None
+
+
 def load_data(
-    run_path: Path, file_format: Literal["spikeglx", "openephys"], probe  # TODO: TYPE!
+    run_path: Path,
+    file_format: Literal["spikeglx", "openephys"],
+    probe: Probe | None = None,
 ) -> tuple[BaseRecording, BaseRecording]:
     """
-    explain (e.g. without sync needed for sorting, otherwise store sync for
-    storing the sync array!
+    Loads electrophysiology data from the specified path.
+
+    - If the recording **already has a probe**, keeps it (auto-detected).
+    - If `probe` is provided, sets it manually.
+    - If **no probe is detected**, raises an error.
+
+    Parameters:
+    - run_path (Path): Path to the recording data.
+    - file_format (Literal["spikeglx", "openephys"]): Data format.
+    - probe (Probe | None): Optional ProbeInterface object for manually setting probe.
+
+    Returns:
+    - tuple: (without_sync, with_sync) recordings, or (None, None) if legacy OpenEphys format.
     """
+
     _utils.message_user(f"Loading data from path: {run_path}")
 
     if file_format == "spikeglx":
@@ -56,23 +106,30 @@ def load_data(
     if without_sync.get_num_segments() > 1:
         raise RuntimeError(
             f"Data at\n{run_path}\nhas multiple segments. "
-            f"This should nto be the case. "
+            f"This should not be the case. "
             f"Each run must contain only 1 recording."
         )
 
-    if probe is not None:
-        if without_sync.has_probe():
-            raise RuntimeError(
-                "A probe was already auto-detected. Cannot manually set probe. "
-                "Please contact spikewrap if required."
-            )
-        without_sync = without_sync.set_probe(probe)
+    # Handle probe setting
+    if probe is None:
+        _utils.message_user("⚠ No probe provided. Please select one manually.")
+        probe = choose_probe()
 
-    if not without_sync.has_probe():
-        raise RuntimeError(
-            "No probe is attached to this recording. Pass a `probe` object to set."
-            "See ProbeInterface for available probes."
-        )
+    _utils.message_user(f"Using user-selected probe: {probe}")
+
+    if probe is not None:
+        if without_sync and without_sync.has_probe():
+            _utils.message_user("Probe auto-detected. Using the detected probe.")
+        elif probe:
+            _utils.message_user(
+                "No auto-detected probe found. Using the user-provided probe."
+            )
+            without_sync = without_sync.set_probe(probe)
+        else:
+            raise RuntimeError(
+                "No probe is attached to this recording, and no probe was provided. "
+                "Pass a `probe` object to set one. See ProbeInterface for available probes."
+            )
 
     return without_sync, with_sync
 
