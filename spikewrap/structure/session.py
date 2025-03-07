@@ -129,7 +129,7 @@ class Session:
         per_shank
             If ``True``, perform preprocessing on each shank separately.
         """
-        pp_steps = self._infer_pp_steps_from_configs_argument(configs, "preprocessing")
+        pp_steps = self._infer_steps_from_configs_argument(configs, "preprocessing")
 
         _utils.show_preprocessing_configs(pp_steps)
 
@@ -307,7 +307,7 @@ class Session:
         else:
             pp_runs = self._pp_runs
 
-        sorting_configs = self._infer_pp_steps_from_configs_argument(configs, "sorting")
+        sorting_configs = self._infer_steps_from_configs_argument(configs, "sorting")
 
         self._sorting_runs = []
 
@@ -337,6 +337,10 @@ class Session:
         TODO
         ----
         It would be nice to load these into self._pp_runs so that they can be re-visualised.
+
+        TODO
+        ----
+        This badly needs a tidy up
         """
         if self._passed_run_names == "all":
             # Find all folderes with "preprocessed" folder inside,
@@ -586,7 +590,7 @@ class Session:
             )
 
     @staticmethod
-    def _infer_pp_steps_from_configs_argument(
+    def _infer_steps_from_configs_argument(
         configs, preprocessing_or_sorting
     ) -> dict[str, list]:  # TODO: RENAME !
         """

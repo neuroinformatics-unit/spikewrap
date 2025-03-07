@@ -1,6 +1,6 @@
 # ruff: noqa: E402
 """
-.. _slurm-tutorial:
+.. _sorting-tutorial:
 
 Sorting
 =======
@@ -16,6 +16,9 @@ Sorting
 #
 # Spike sorting can be run on preprocessed data, even without saving to disk,
 # using the :class:`spikewrap.Session.sort` function:
+# TODO: LINK https://spikeinterface.readthedocs.io/en/latest/modules/sorters.html#internal-sorters
+# https://spikeinterface.readthedocs.io/en/latest/modules/sorters.html#external-sorters-the-wrapper-concept
+
 import spikewrap as sw
 
 session = sw.Session(
@@ -62,12 +65,12 @@ session.sort(
 #                        │           └── ...
 #                        └── ...
 #
-# The `per_shank` and `concat_runs` arguments indicate whether
+# The ``per_shank`` and ``concat_runs`` arguments indicate whether
 # the recording should be split per shank or concatenated
 # prior to sorting. If the recording has already been split-by-shank
 # and / or concatenated before preprocessing, they will remain so for sorting.
 #
-# The `run_sorter_method` indicates the method used to run the sorter.
+# The ``run_sorter_method`` indicates the method used to run the sorter.
 # For sorters written in python (e.g. kilosort4, mountainsort5), these
 # can be installed in the current environment and ``"local"`` used.
 # Otherwise, the path to a matlab repository can be used, or ``docker``
@@ -133,7 +136,35 @@ session.sort(
 #    In this case, sorting will be run on the data preprocessed by ``configs_dict_2``.
 #    As such, it is recommended to save the preprocessed data only when
 #    configurations have been decided on.
+
+# %%
+# Ways to run the sorter
+# ----------------------------------------
 #
+# The ``run_sorter_method`` argument specifies the method used to run the sorter.
+# These are based on the extensive options provided by the SpikeInterface package,
+# which provide great flexibility in ways that sorters can be run.
+#
+# ``"local"``:
+#   Should be used if the sorter can be run in the current python environment,
+#   (i.e. it is a sorter written in Python, such as ``"kilosort4"`` or ``"spykingcircus2"``.s
+#
+# A ``Path``:
+#    If the sorter is written in Matlab (e.g. kilosort 1-3, ``"waveclus"``) and Matlab
+#    is installed on your system, you can pass a path to the github downloaded repository
+#    of the sorter.
+#
+# ``"singularity"``:
+#    Use singularity to run the sorter in a container. This is useful is you want to
+#    run a sorter written in Matlab, but do not have Matlab available on your system.
+#    Under the hood, Matlab is installed in the singularity image automatically.
+#    Singularity images will be downloaded and saved in a ``sorter_images`` folder at the
+#    same level as `rawdata` / `derivatives`. These are expected to be shared across
+#    the entire project.
+#
+# ``"docker"``:
+#   Run the sorter in a docker image. The docker client will manage the downloading of sorters.
+
 # %%
 # Sorting Configs
 # ---------------
@@ -156,11 +187,15 @@ config_dict = {
 # of the stored config file, the full config dictionary such as above,
 # or the "sorting" sub-dictionary, e.g.:
 
-sorting_dict = {"sorting": {"mountainsort5": {}}
+sorting_dict = {"sorting": {"mountainsort5": {}}}
+
+session.sort(
+    configs=sorting_dict, run_sorter_method="local"
+)
 
 # %%
-# The sorter name (e.g. "mountainsort5") should make the SpikeInterface
+# The sorter name (e.g. ``"mountainsort5"``) should make the SpikeInterface
 # sorter name, while the keyword-arguments should match the sorter-specific arguments.
 #
 # These can be found at the corresponding soruce code files for the SpikeInterface
-# sorter, e.g. kilsoort2_5, kilosort4, mountainsort5, spykingcircus2).
+# sorter, e.g. ``"kilsoort2_5"``, ``"kilosort4"``, ``"mountainsort5"``, ``"spykingcircus2"``).
