@@ -28,7 +28,5 @@ def _download_sorter(sorter: str, sorter_path: Path) -> None:
     sorter_path_parent.mkdir(exist_ok=True, parents=True)
     os.chdir(sorter_path_parent)
 
-    breakpoint()
-
     container_image = SORTER_DOCKER_MAP[sorter]
     Client.pull(f"docker://{container_image}")
