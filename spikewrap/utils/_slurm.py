@@ -117,7 +117,7 @@ def wrap_function_with_env_setup(
     print(f"\nrunning {function.__name__} with SLURM....\n")
 
     subprocess.run(
-        f"module load miniconda; " f"source activate {env_name}; module load cuda",
+        f"module load miniconda; module load matlab; source activate {env_name}; module load cuda",  # TODO: expose this, these are SWC defaults. matlab not always necessary.
         executable="/bin/bash",
         shell=True,
     )

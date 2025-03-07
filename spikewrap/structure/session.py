@@ -81,6 +81,9 @@ class Session:
         self._check_input_path(parent_input_path)
         self._check_file_format(file_format)
 
+        if isinstance(run_names, str) and not run_names == "all":
+            run_names = [run_names]
+
         self._passed_run_names = run_names
         self._file_format = file_format
         self._probe = probe
@@ -347,6 +350,12 @@ class Session:
         else:
             passed_run_names = self._passed_run_names
 
+        if "concat_run" in passed_run_names and len(passed_run_names) != 1:
+            raise ValueError(
+                "Cannot load `concat_run` alongside separate runs. Specify "
+                "the exact runs to sort with the `run_names` argument of `Session`."
+            )
+
         _utils.message_user(
             "Preprocessed runs were loaded from disk, in the order:"
             f"{passed_run_names}"
@@ -359,6 +368,11 @@ class Session:
             run_folder = self._output_path / run_name
 
             file_path = run_folder / "preprocessed" / canon.spikewrap_info_filename()
+
+            if not file_path.is_file():
+                raise FileNotFoundError(
+                    f"No saved preprocessed data found at: {file_path}"
+                )
 
             with file_path.open("r") as file:
                 run_info = yaml.safe_load(file)
@@ -378,7 +392,7 @@ class Session:
                         f"No preprocessed data found at: {recording_path}"
                     )
 
-                recording = si.load(recording_path)
+                recording = si.load_extractor(recording_path)
 
                 prepro_dict = {
                     run_info["prepro_key"]: recording
