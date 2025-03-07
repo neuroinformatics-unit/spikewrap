@@ -243,13 +243,6 @@ class PreprocessedRun:
         """
         slurm_ops: dict | bool = slurm if isinstance(slurm, dict) else False
 
-        # 1) find last slurm job ID from slurm_logs
-        # 2) run command to check if it is currently running
-        # 3) if it is currently running, or is (schedule to run) then raise an error
-        # 4) do the same for preprocessing
-        # 5) finish docs
-        # 6) finish tests
-
         _slurm.run_in_slurm(
             slurm_ops,
             func_to_run=self.save_preprocessed,

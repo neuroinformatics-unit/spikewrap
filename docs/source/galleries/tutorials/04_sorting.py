@@ -102,19 +102,20 @@ session = sw.Session(
     subject_path=sw.get_example_data_path() / "rawdata" / "sub-001",
     session_name="ses-001",
     file_format="spikeglx",
-    run_names=["concat_run"]  # run names to sort TODO CHECK THIS IS NOT A STR IF NOT ALL ALSO TODO YOU CAN HAVE MIXED PP RUNS WHEN LOADING FROM DISK!! 
+    run_names=["concat_run"]
 )
 
 # Here, the preprocessed data will be detected and loaded from disk, if available.
 # Otherwise, an error will be raised.
 
+# run names to sort TODO CHECK THIS IS NOT A STR IF NOT ALL ALSO TODO YOU CAN HAVE MIXED PP RUNS WHEN LOADING FROM DISK!!
 # TODO: why does this not raise if no save data done? TODO: review and add asserts
 
 session.sort(
     configs="neuropixels+mountainsort5", run_sorter_method="local"
 )
 
-
+# %%
 # .. note::
 #
 #    The sorting will always run on the most recent preprocessing. For example:
@@ -154,9 +155,10 @@ config_dict = {
 # The :class:`spikewrap.Session.sort` function will accept the name
 # of the stored config file, the full config dictionary such as above,
 # or the "sorting" sub-dictionary, e.g.:
-#
-# sorting_dict = {"sorting: {"mountainsort5": {}}"
-#
+
+sorting_dict = {"sorting": {"mountainsort5": {}}
+
+# %%
 # The sorter name (e.g. "mountainsort5") should make the SpikeInterface
 # sorter name, while the keyword-arguments should match the sorter-specific arguments.
 #

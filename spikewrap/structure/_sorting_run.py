@@ -252,7 +252,10 @@ class BaseSortingRun:
                 )  # TODO: how to handle this nicely
 
             if not _checks._system_call_success("matlab -batch 'ver'"):
-                raise RuntimeError("MATLAB NOT FOUnd!")
+                raise RuntimeError(
+                    "Matlab not found. Check matlab is available in the current environment."
+                    "May need to 'module load matlab' if on a HPC system."
+                )
 
             if sorter in kilosort_matlab_list:
                 if not any(repo_path.glob("CUDA/*.mex*")):
@@ -328,7 +331,7 @@ class ConcatSortingRun(BaseSortingRun):
                     "This should not happen."
                 )
                 full_prepro_data, _ = _utils._get_dict_value_from_step_num(
-                    run._preprocessed[shank_id], "last"
+                    run._preprocessed[shank_id], "last", bypass_checks=True
                 )
                 preprocessed_recording[shank_id].append(full_prepro_data)
 
