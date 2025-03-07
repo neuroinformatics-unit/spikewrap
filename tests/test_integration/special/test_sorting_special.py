@@ -1,136 +1,86 @@
 from __future__ import annotations
 
+import shutil
+
 import spikewrap as sw
+import pytest
+from pathlib import Path
+import subprocess
+
 
 DATA_SUB_PATH = r"/ceph/neuroinformatics/neuroinformatics/scratch/jziminski/ephys/code/git-repos/SPIKEWRAP_TESTS/data/time-short/rawdata/1119617"
 KILOSORT2_5_PATH = "/ceph/neuroinformatics/neuroinformatics/scratch/jziminski/ephys/code/git-repos/SPIKEWRAP_TESTS/matlab_repos/kilosort2_5/Kilosort"
 
 KILOSORT2_5_PATH_NOMEX = "/ceph/neuroinformatics/neuroinformatics/scratch/jziminski/ephys/code/git-repos/SPIKEWRAP_TESTS/matlab_repos/kilosort2_5_nomex/Kilosort"
 
-# class TestSortingSpecial():
+# TODO: expose a function like 'compile kilosort mex files..."
+# TODO: test docker (on CI?)
+# TODO: need to module load matlab for these tests
+# TODO: need to expose "module load matlab" option in the slurm script.
+# for now, just a way to add commands!
+# and need to add a test here...
 
 
-def test_kilosort4_local():
+class TestInternal:
 
-    session = sw.Session(
-        subject_path=DATA_SUB_PATH,
-        session_name="ses-001",
-        file_format="spikeglx",
-    )
+    @pytest.fixture(scope="function")
+    def prepro_session(self):
+        """
+        """
 
-    # TODO: document well the class lifespan
-    session.preprocess(
-        configs="neuropixels+kilosort2_5",  # TODO: neuropixels+kilsort... allow possible ones, then choose sorter....
-        per_shank=True,
-        concat_runs=True,
-    )
+        sub_path = Path(DATA_SUB_PATH)
+        rawdata_path = sub_path.parent
+        assert rawdata_path.name == "rawdata"
+        derivatves_path = rawdata_path.parent / "derivatives"
 
-    config_dict = {"kilosort4": {}}
-    session.sort(config_dict, "local")
+        if derivatves_path.is_dir():
+            shutil.rmtree(derivatves_path)
 
+        session = sw.Session(
+            subject_path=DATA_SUB_PATH,
+            session_name="ses-001",
+            file_format="spikeglx",
+        )
 
-# @pytest.mark.parametrize("slurm", [True, False])
-def test_kilosort2_5_path(slurm=True):
+        # TODO: document well the class lifespan
+        session.preprocess(
+            configs="neuropixels+kilosort2_5",  # prepo same for all sorters...
+            per_shank=True,
+            concat_runs=True,
+        )
+        return session
 
-    session = sw.Session(
-        subject_path=DATA_SUB_PATH,
-        session_name="ses-001",
-        file_format="spikeglx",
-    )
+    def test_kilosort4_local(self, prepro_session):
 
-    # TODO: document well the class lifespan
-    session.preprocess(
-        configs="neuropixels+kilosort2_5",  # TODO: neuropixels+kilsort... allow possible ones, then choose sorter....
-        per_shank=True,
-        concat_runs=True,
-    )
+        config_dict = {"kilosort4": {}}
+        prepro_session.sort(config_dict, "local")
 
-    config_dict = {"kilosort2_5": {}}
+    def test_kilosort2_5_path(self, prepro_session):
 
-    gpu_arguments = sw.default_slurm_options("gpu")
+        config_dict = {"kilosort2_5": {}}
 
-    gpu_arguments["mem_gb"] = 60
-    gpu_arguments["env_name"] = "dammy-test"
-    gpu_arguments["exclude"] = None
-    print(gpu_arguments)
-    session.sort(
-        config_dict,
-        KILOSORT2_5_PATH,
-        slurm=False,  # gpu_arguments  # TODO: handle when to require GPU node!
-    )
+        prepro_session.sort(
+            config_dict,
+            KILOSORT2_5_PATH,
+            slurm=False,
+        )
 
+    def test_kilosort2_5_nomex(self, prepro_session):
 
-def test_kilosort2_5_nomex():
-    session = sw.Session(
-        subject_path=DATA_SUB_PATH,
-        session_name="ses-001",
-        file_format="spikeglx",
-    )
+        config_dict = {"kilosort2_5": {}}
 
-    # TODO: document well the class lifespan
-    session.preprocess(
-        configs="neuropixels+kilosort2_5",
-        # TODO: neuropixels+kilsort... allow possible ones, then choose sorter....
-        per_shank=True,
-        concat_runs=True,  # TODO: just run on a single run
-    )
-
-    config_dict = {"kilosort2_5": {}}
-
-    gpu_arguments = sw.default_slurm_options("gpu")
-
-    gpu_arguments["mem_gb"] = 60
-    gpu_arguments["env_name"] = "dammy-test"
-    gpu_arguments["exclude"] = None
-
-    session.sort(
-        config_dict,
-        KILOSORT2_5_PATH_NOMEX,
-        slurm=False,  # gpu_arguments
-        # TODO: handle when to require GPU node!
-    )
-
-    # TODO: mutlipel slurm jobs one after the other will try and write to the same place!!! need to make sure past slurm job is finished
-    # remove exclude node!
-    # easiest way is to write a 'job_running' folder and tidy up on close... but this leads to own issues...
-    # TODO: expose a function like 'compile kilosort mex files..."
-    # questions 1) where to put code that is run on stitch
-    # questions 2) worth making a spikewrap module?
+        with pytest.raises(RuntimeError) as e:
+            prepro_session.sort(
+                config_dict,
+                KILOSORT2_5_PATH_NOMEX,
+            )
+        assert "No mex files found" in str(e.value)
 
 
-def test_kilosort4_singularity():
-    session = sw.Session(
-        subject_path=DATA_SUB_PATH,
-        session_name="ses-001",
-        file_format="spikeglx",
-    )
+    def test_kilosort2_5_singularity(self, prepro_session):
+        config_dict = {"kilosort2_5": {}}
 
-    # TODO: document well the class lifespan
-    session.preprocess(
-        configs="neuropixels+mountainsort5",
-        # TODO: neuropixels+kilsort... allow possible ones, then choose sorter....
-        per_shank=True,
-        concat_runs=True,
-    )
-
-    config_dict = {"mountainsort5": {}}
-
-    gpu_arguments = sw.default_slurm_options("gpu")
-
-    gpu_arguments["mem_gb"] = 60
-    gpu_arguments["env_name"] = "dammy-test"
-    gpu_arguments["exclude"] = None
-
-    session.sort(
-        config_dict,
-        "singularity",
-        slurm=False,
-    )
-
-
-# TODO: test docker! maybe can do on CI?
-
-# test_kilosort4_local()
-# test_kilosort2_5_path()
-# test_kilosort2_5_nomex()
-test_kilosort4_singularity()
+        prepro_session.sort(
+            config_dict,
+            "singularity",
+        )
