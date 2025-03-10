@@ -19,7 +19,10 @@ from spikewrap.utils import _utils
 def load_data(
     run_path: Path, file_format: Literal["spikeglx", "openephys"], probe: Probe | None
 ) -> tuple[BaseRecording, BaseRecording]:
-    """ """
+    """
+    TODO: add note that must juggle two recordings has probe is not loaded on sync recording!
+
+    """
     _utils.message_user(f"Loading data from path: {run_path}")
 
     if file_format == "spikeglx":

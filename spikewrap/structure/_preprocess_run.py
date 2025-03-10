@@ -41,8 +41,8 @@ class PreprocessedRun:
     preprocessed_data
         The preprocessed data in a dictionary, which keys "grouped"
         or the shank_ids (e.g. "shank_0", ...) if split by shank.
-    sync
-        The recording containing the sync channel.
+    sync_data
+        The (in memory) sync channel data).
 
     TODO
     ----
@@ -57,7 +57,7 @@ class PreprocessedRun:
         file_format: str,
         session_output_path: Path,
         preprocessed_data,
-        sync,
+        sync_data,
         pp_steps,
         orig_run_names=None,
     ):
@@ -72,7 +72,7 @@ class PreprocessedRun:
         self._orig_run_names = orig_run_names
 
         self._preprocessed = preprocessed_data
-        self._sync = sync
+        self._sync_data = sync_data
 
     # ---------------------------------------------------------------------------
     # Public Functions
@@ -263,20 +263,15 @@ class PreprocessedRun:
         it does not interfere with sorting. As such, a separate recording with the
         sync channel present is maintained and handled separately here.
         """
-        if self._sync:
+        if self._sync_data:
             _utils.message_user(f"Saving sync channel for: {self._run_name}...")
 
-            # extract the sync channel from the recording object
-            select_sync_recording = self._sync.select_channels(
-                [self._sync.get_channel_ids()[-1]]
-            )
-            sync_data = select_sync_recording.get_traces()[:, 0]
-
-            assert sync_data.size == select_sync_recording.get_num_samples()
+            pp_rec = self._preprocessed[list(self._preprocessed.keys())[0]]
+            assert self._sync_data == pp_rec.get_num_samples()
 
             # Save the sync channel
             sync_output_filepath = (
                 self._output_path / canon.sync_folder() / canon.saved_sync_filename()
             )
             sync_output_filepath.parent.mkdir(parents=True, exist_ok=True)
-            np.save(sync_output_filepath, sync_data)
+            np.save(sync_output_filepath, self._sync_data)
