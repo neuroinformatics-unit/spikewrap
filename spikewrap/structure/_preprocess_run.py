@@ -277,3 +277,6 @@ class PreprocessedRun:
             )
             sync_output_filepath.parent.mkdir(parents=True, exist_ok=True)
             np.save(sync_output_filepath, self._sync_data)
+
+    def get_sync_channel(self) -> None | np.ndarray:
+        return self._sync_data

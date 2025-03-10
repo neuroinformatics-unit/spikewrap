@@ -547,6 +547,14 @@ class Session:
                 "If this is annoying please contact spikewrap."
             )
 
+    def get_sync_channel_after_preprocessing(self, run_idx: int) -> None | np.ndarray:
+        """ """
+        if not any(self._pp_runs):
+            raise RuntimeError(
+                "Preprocessing must be performed before running this function."
+            )
+        return self._pp_runs[run_idx].get_sync_channel()
+
     # ---------------------------------------------------------------------------
     # Private Functions
     # ---------------------------------------------------------------------------
