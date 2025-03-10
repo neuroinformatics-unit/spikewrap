@@ -4,14 +4,14 @@ if __name__ == "__main__":
 
     # Make up a probe for this recording
     session = sw.Session(
-        subject_path=sw.get_example_data_path("openephys") / "rawdata" / "sub-001",
+        subject_path=sw.get_example_data_path("spikeglx") / "rawdata" / "sub-001",
         session_name="ses-001",
-        file_format="openephys",
+        file_format="spikeglx",
     )
 
     session.preprocess(
-        configs="neuropixels+kilosort2_5",
-        per_shank=False,
+        configs="neuropixels+mountainsort5",
+        per_shank=True,
         concat_runs=True,
     )
 
@@ -21,4 +21,13 @@ if __name__ == "__main__":
 
     session.save_preprocessed(
         overwrite=True, n_jobs=1, slurm=False, chunk_duration_s=0.1
+    )
+
+    session.sort(
+        configs="neuropixels+mountainsort5",
+        run_sorter_method="local",
+        per_shank=False,
+        concat_runs=False,
+        overwrite=True,
+        slurm=False,
     )

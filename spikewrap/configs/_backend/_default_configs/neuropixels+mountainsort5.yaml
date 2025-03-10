@@ -1,0 +1,19 @@
+'preprocessing':
+  '1':
+  - phase_shift
+  - {}
+  '2':
+  - bandpass_filter
+  - freq_min: 300
+    freq_max: 6000
+  '3':
+  - common_reference
+  - operator: median
+    reference: global
+
+
+# Turn off Kilosort filtering and common referencing. This allows data
+# visualisation and quality metrics on the SpikeInterface side while
+# leaving drift-correction and whitening to Kilosort.
+'sorting':
+  'mountainsort5': {"filter": False"}

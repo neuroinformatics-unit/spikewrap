@@ -97,17 +97,18 @@ session = sw.Session(
     run_names="all"
 )
 
-session.load_raw_data()
-
-session.preprocess(configs="neuropixels+kilosort2_5")
+session.preprocess(configs="neuropixels+kilosort2_5", concat_runs=True)
 
 # %%
 # Due to the magic of SpikeInterface, all data loading is 'lazy' and will be very fast.
 # Note that **nothing is written to disk at this stage**.
 #
 # We can inspect the detected run names with:
+print(session.get_raw_run_names())
 
-print(session.get_run_names())
+# and the names of the preprocessed runs (which may change to "concat_run"
+# if the runs are concatenated prior to preprocessing:
+print(session.get_preprocessed_run_names())
 
 # %%
 # Preprocessing Options

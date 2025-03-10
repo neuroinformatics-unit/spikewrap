@@ -8,15 +8,9 @@ below will be added with high priority once the review is complete.
 
 ::::
 
-## More Preprocessing Steps, and Sorting!
+## More Preprocessing Steps
 
 Currently only ```phase_shift```, ```bandpass_filter``` and ```common_reference``` are exposed.
-Similarly, sorting routines are not yet available.
-
-```python
-
-session.sort(configs="neuropixel+kilsort2_5")
-
 ```
 
 ## Subject level
