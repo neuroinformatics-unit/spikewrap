@@ -263,11 +263,13 @@ class PreprocessedRun:
         it does not interfere with sorting. As such, a separate recording with the
         sync channel present is maintained and handled separately here.
         """
-        if self._sync_data:
+        if self._sync_data is not None:
             _utils.message_user(f"Saving sync channel for: {self._run_name}...")
 
-            pp_rec = self._preprocessed[list(self._preprocessed.keys())[0]]
-            assert self._sync_data == pp_rec.get_num_samples()
+            pp_rec = _utils._get_dict_value_from_step_num(
+                self._preprocessed[list(self._preprocessed.keys())[0]], "last"
+            )[0]
+            assert self._sync_data.size == pp_rec.get_num_samples()
 
             # Save the sync channel
             sync_output_filepath = (

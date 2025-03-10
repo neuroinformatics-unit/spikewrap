@@ -61,8 +61,8 @@ class RawRun:
         self._run_name = run_name
         self._file_format = file_format
 
-        # These properties are mutable and refreshed during
-        # the lifetime of the class, by this class only.
+        # _raw should not change throughout the lifetime of the class
+        # self._sync may be edited in place.
         self._raw: dict = {}
         self._sync = None
 
@@ -124,6 +124,67 @@ class RawRun:
         Return `True` if data has been loaded as SpikeInterface recordings.
         """
         return self._raw != {}
+
+        # ---------------------------------------------------------------------------
+        # Sync Channel
+        # ---------------------------------------------------------------------------
+
+    def plot_sync_channel(self, show: bool) -> list[matplotlib.lines.Line2D]:
+        """
+        TODO
+        ----
+        -  move this into _visualise
+        - make it cleaner / look nicer.
+        """
+        traces = self.get_sync_channel()
+
+        plot = plt.plot(traces)
+
+        if show:
+            plt.show()
+
+        return plot
+
+    def get_sync_channel(self) -> np.ndarray:
+        """
+        Return the sync channel data (from the self._sync
+        recording that holds the sync-attached recording).
+        """
+        if not self.raw_is_loaded():
+            raise RuntimeError("Raw data is not yet loaded. Use `load_raw_data()`.")
+
+        if not self._sync:
+            raise ValueError("No sync channel found on this run.")
+
+        select_sync_recording = self._sync.select_channels(
+            [self._sync.get_channel_ids()[-1]]
+        )
+
+        rec_to_check = self._raw[list(self._raw.keys())[0]]
+
+        traces = select_sync_recording.get_traces()
+
+        assert (
+            traces.size == rec_to_check.get_num_samples()
+        ), "Somehow the sync channel does not have the same number of samples as the recording!"
+
+        return select_sync_recording.get_traces()
+
+    def silence_sync_channel(self, periods_to_silence: list[tuple]) -> None:
+        """
+        Silence the sync-channel recording. Note this will zero all
+        channels in the recording, but we only care about the sync channel!
+        """
+        # TODO: copy.
+        if not self.raw_is_loaded():
+            raise RuntimeError("Raw data is not yet loaded. Use `load_raw_data()`.")
+
+        if not self._sync:
+            raise ValueError("No sync channel found on this run.")
+
+        self._sync = si.silence_periods(
+            recording=self._sync, list_periods=[periods_to_silence], mode="zeros"
+        )
 
     # ---------------------------------------------------------------------------
     # Private Functions
@@ -206,56 +267,6 @@ class SeparateRawRun(RawRun):
 
         self._raw = {canon.grouped_shankname(): without_sync}
         self._sync = with_sync
-
-    def plot_sync_channel(self, show: bool) -> matplotlib.lines.Line2D:
-        """
-        TODO
-        ----
-        -  move this into _visualise
-        - make it cleaner / look nicer.
-        """
-        traces = self.get_sync_channel()
-
-        plot = plt.plot(traces)
-
-        if show:
-            plt.show()
-
-        return plot
-
-    def get_sync_channel(self) -> np.ndarray:
-        """
-        Return the sync channel data (from the self._sync
-        recording that holds the sync-attached recording).
-        """
-        if not self._sync:
-            raise ValueError("No sync channel found on this run.")
-
-        select_sync_recording = self._sync.select_channels(
-            [self._sync.get_channel_ids()[-1]]
-        )
-
-        rec_to_check = self._raw[list(self._raw.keys())[0]]
-
-        traces = select_sync_recording.get_traces()
-
-        assert (
-            traces.size == rec_to_check.get_num_samples()
-        ), "Somehow the sync channel does not have the same number of samples as the recording!"
-
-        return select_sync_recording.get_traces()
-
-    def silence_sync_channel(self, periods_to_silence: list[tuple]) -> None:
-        """
-        Silence the sync-channel recording. Note this will zero all
-        channels in the recording, but we only care about the sync channel!
-        """
-        if not self._sync:
-            raise ValueError("No sync channel found on this run.")
-
-        self._sync = si.silence_periods(
-            recording=self._sync, list_periods=[periods_to_silence], mode="zeros"
-        )
 
 
 # -----------------------------------------------------------------------------
