@@ -216,3 +216,8 @@ notfound_context = {
 # needed for GH pages (vs readthedocs),
 # because we have no '/<language>/<version>/' in the URL
 notfound_urls_prefix = None
+
+linkcheck_ignore = [
+    "https://github.com/SpikeInterface/*",  # to avoid odd 403 error
+]
+
