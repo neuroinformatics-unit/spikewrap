@@ -50,6 +50,7 @@ session.sort(
 # Sorting results are output to a folder called ``sorting`` in the run's output folder:
 #
 # .. code-block::
+#
 #     └── my_project/
 #         └── derivatives/
 #             └── sub-001  /
@@ -67,6 +68,8 @@ session.sort(
 #                         │           └── ...
 #                         └── ...
 #
+
+# %%
 # The ``per_shank`` and ``concat_runs`` arguments on the ``sort`` function
 # indicate whether the recording should be split per shank or concatenated
 # prior to sorting. If the recording has already been split-by-shank

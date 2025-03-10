@@ -158,29 +158,31 @@ session.sort(
 # `NeuroBlueprint <https://neuroblueprint.neuroinformatics.dev/latest/index.html>`_
 # structure:
 #
-# .. code-block::
+# .. code-block:: none
 #
-#    └── root_folder/
-#        └── derivatives/
-#            └── sub-001/
-#                └── ses-001  /
-#                    └── ephys/
-#                        └── run-001_g0_imec0/
-#                        │   ├── preprocessed/
-#                        │   │   ├── shank_0/
-#                        │   │   │   └── si_recording/
-#                        │   │   │       └── <spikeinterface binary>
-#                        │   │   └── shank_1/
-#                        │   │       └── si_recording/
-#                        │   │           └── <spikeinterface binary>
-#                        │   └── sync/
-#                        │       └── sync_channel.npy
-#                        ├── run-002_g0_imec0/
-#                        │   └── ...
-#                        └── concat_run
-#                            └── sorting
-#                                ├── shank_0/
-#                                │   └── ...
-#                                └── ...
-#
+#     └── root_folder/
+#         └── derivatives/
+#             └── sub-001/
+#                 └── ses-001  /
+#                     └── ephys/
+#                         ├── run-001_g0_imec0/
+#                         │   ├── preprocessed/
+#                         │   │   ├── shank_0/
+#                         │   │   │   └── si_recording/
+#                         │   │   │       └── <spikeinterface_binary>
+#                         │   │   └── shank_1/
+#                         │   │       └── si_recording/
+#                         │   │           └── <spikeinterface_binary>
+#                         │   └── sync/
+#                         │       └── sync_channel.npy
+#                         ├── run-002_g0_imec0/
+#                         │   └── preprocessed/
+#                         │       └── ...
+#                         └── concat_run/
+#                             └── sorting/
+#                                 ├── shank_0/
+#                                 │   └── ...
+#                                 └── ...
+
+# %%
 # Next, visit :ref:`get-started` and :ref:`tutorials_index` to try out ``spikewrap``.
