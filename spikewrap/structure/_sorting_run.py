@@ -1,13 +1,17 @@
+from __future__ import annotations
+
 import shutil
 from pathlib import Path
-from typing import Literal
+from typing import TYPE_CHECKING, Literal
+
+if TYPE_CHECKING:
+    from spikewrap.structure._preprocess_run import PreprocessedRun
 
 import spikeinterface
 import spikeinterface.full as si
 from spikeinterface.sorters import run_sorter
 from spikeinterface.sorters.runsorter import SORTER_DOCKER_MAP
 
-from spikewrap.structure._preprocess_run import PreprocessedRun
 from spikewrap.utils import _checks, _managing_sorters, _slurm, _utils
 
 
