@@ -19,7 +19,7 @@ Users 'request' resource from SLURM to run their jobs, and are allocated
 the resources in a priority order calculated by SLURM.
 
 Why use SLURM?
--------------------------------
+--------------
 
 SLURM can be used to run jobs at certain computationally-heavy steps
 in the preprocessing pipeline.

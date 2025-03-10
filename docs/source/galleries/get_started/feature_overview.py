@@ -124,7 +124,7 @@ session = sw.Session(
 # and prototyping of preprocessing steps
 
 session.preprocess(
-    configs="neuropixels+kilosort2_5",
+    configs="neuropixels+mountainsort5",
     per_shank=True,
     concat_runs=False,
 )
@@ -143,6 +143,14 @@ session.save_preprocessed(
     overwrite=True,
     n_jobs=12,
     slurm=False
+)
+
+# In this example, runs were preprocessed separately,
+# and are concatenated together before sorting.
+session.preprocess(
+    configs="neuropixels+mountainsort5",
+    run_sorter_method="local",
+    concat_runs=True,
 )
 
 # %%
@@ -167,7 +175,12 @@ session.save_preprocessed(
 #                        │   │           └── <spikeinterface binary>
 #                        │   └── sync/
 #                        │       └── sync_channel.npy
-#                        └── run-002_g0_imec0/
-#                            └── ...
+#                        ├── run-002_g0_imec0/
+#                        │   └── ...
+#                        └── concat_run
+#                            └── sorting
+#                                ├── shank_0/
+#                                │   └── ...
+#                                └── ...
 #
 # Next, visit :ref:`get-started` and :ref:`tutorials_index` to try out ``spikewrap``.

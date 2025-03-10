@@ -16,4 +16,4 @@
 # visualisation and quality metrics on the SpikeInterface side while
 # leaving drift-correction and whitening to Kilosort.
 'sorting':
-  'mountainsort5': {}
+  'mountainsort5': {"filter": False"}

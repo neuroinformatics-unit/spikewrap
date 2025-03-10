@@ -77,7 +77,7 @@ def get_configs_path() -> Path:
     Path
         The path to the spikewrap `configs` directory.
     """
-    configs_path = Path.home() / ".spikewrap" / "configs"
+    configs_path = Path.home() / "spikewrap" / "configs"
 
     if not configs_path.is_dir():
         _create_user_configs_folder(configs_path)

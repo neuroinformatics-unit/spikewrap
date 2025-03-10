@@ -3,7 +3,7 @@
 .. _sorting-howto:
 
 How  to run Spike Sorting
-===================
+=========================
 
 .. note::
     This is a quick how-to on spike sorting. See :ref:`here <sorting-tutorial>` for a long-form tutorial.
