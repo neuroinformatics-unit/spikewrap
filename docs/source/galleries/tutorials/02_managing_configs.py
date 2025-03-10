@@ -50,7 +50,7 @@ sw.show_configs("neuropixels+kilosort2_5")
 # %%
 # It is possible to create and share your own keyword configs. Under the hood,
 # these are ``.yaml`` files that hold a python dictionary representation of the steps.
-# These are stored in a dedicated path, (``.spikewrap`` in your user directory), which
+# These are stored in a dedicated path, (``spikewrap`` in your user directory), which
 # you can find with:
 
 sw.get_configs_path()

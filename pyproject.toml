@@ -51,6 +51,7 @@ dev = [
   "types-setuptools",
   "types-PyYAML",
   "types-toml",
+  "mountainsort5; sys_platform != 'darwin'"  # TODO: Currently isosplit6 not installing on some macOS runners. Turned off in the tests too.
 ]
 
 [build-system]

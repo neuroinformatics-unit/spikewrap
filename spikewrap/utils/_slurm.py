@@ -117,7 +117,7 @@ def wrap_function_with_env_setup(
     print(f"\nrunning {function.__name__} with SLURM....\n")
 
     subprocess.run(
-        f"module load miniconda; " f"source activate {env_name}; module load cuda",
+        f"module load miniconda; module load matlab; source activate {env_name}; module load cuda",  # TODO: expose this, these are SWC defaults. matlab not always necessary.
         executable="/bin/bash",
         shell=True,
     )
@@ -183,3 +183,19 @@ def send_user_start_message(
 def is_slurm_installed():
     slurm_installed = _system_call_success("sinfo -v")
     return slurm_installed
+
+
+def check_slurm_job_status(job_id):
+    try:
+        result = subprocess.run(
+            ["squeue", "--job", str(job_id)], capture_output=True, text=True, check=True
+        )
+        if job_id in result.stdout:
+            return "Job is running or pending."
+        else:
+            return "Job is not running."
+    except subprocess.CalledProcessError as e:
+        return f"Error checking job: {e}"
+
+
+# TODO: reinstante slurm delete thing!

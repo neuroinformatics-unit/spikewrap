@@ -68,7 +68,7 @@ def visualise_run_preprocessed(
         ax = axes[i]
 
         recording_to_plot, _ = _utils._get_dict_value_from_step_num(
-            preprocessed._data, "last"
+            preprocessed, "last"
         )
 
         si.plot_traces(
@@ -84,7 +84,7 @@ def visualise_run_preprocessed(
         if key == canon.grouped_shankname():
             ax.set_title(f"Session: {ses_name}, Run: {run_name}")
         else:
-            ax.set_title(f"Session: {ses_name}, Run: {run_name} Shank: {int(key) + 1}")
+            ax.set_title(f"Session: {ses_name}, Run: {run_name}, {key}")
 
     plt.tight_layout()
 

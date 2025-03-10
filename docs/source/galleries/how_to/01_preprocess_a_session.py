@@ -26,8 +26,6 @@ if __name__ == "__main__":  # for multiprocessing
         probe=None  # (optional argument), auto-detected for Neuropixels, but can set ProbeInterface probes here
     )
 
-    session.load_raw_data()
-
     session.preprocess(
         configs="neuropixels+kilosort2_5",
         per_shank=True,

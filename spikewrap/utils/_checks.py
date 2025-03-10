@@ -21,3 +21,12 @@ def _system_call_success(command: str) -> bool:
         ).returncode
         == 0
     )
+
+
+def _docker_desktop_is_running():
+    """
+    Note "docker -v" shows if docker is installed but not necessarily
+    running. "docker ps" requires docker to be running, which can
+    be achieved by opening Docker Desktop.
+    """
+    return _system_call_success("docker ps")
