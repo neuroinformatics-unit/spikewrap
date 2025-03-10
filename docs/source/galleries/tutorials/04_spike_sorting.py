@@ -68,8 +68,6 @@ session.sort(
 #                         │           └── ...
 #                         └── ...
 #
-
-# %%
 # The ``per_shank`` and ``concat_runs`` arguments on the ``sort`` function
 # indicate whether the recording should be split per shank or concatenated
 # prior to sorting. If the recording has already been split-by-shank
@@ -177,6 +175,7 @@ session.sort(
 # Sorting Configs
 # ---------------
 # .. _sorting-configs:
+#
 # A configurations dictionary (see :ref:`Managing Configs <configs-tutorial>`) is structured like:
 
 
@@ -210,3 +209,4 @@ session.sort(
 # `kilsort4 <https://github.com/SpikeInterface/spikeinterface/blob/697058eb528394f89ae4b5d03aa56c1ba3ec9db2/src/spikeinterface/sorters/external/kilosort4.py#L18>`_,
 # `mountainsort5 <https://github.com/SpikeInterface/spikeinterface/blob/697058eb528394f89ae4b5d03aa56c1ba3ec9db2/src/spikeinterface/sorters/external/mountainsort5.py#L18>`_ or
 # `spykingcircus2" <https://github.com/SpikeInterface/spikeinterface/blob/697058eb528394f89ae4b5d03aa56c1ba3ec9db2/src/spikeinterface/sorters/internal/spyking_circus2.py#L23>`_.
+#
