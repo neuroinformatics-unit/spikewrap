@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import shutil
+import sys
 
 import pytest
 from base import BaseTest
@@ -50,6 +51,9 @@ class TestSorting(BaseTest):
         config_dict["sorting"]["mountainsort5"] = {"whiten": False}
         return config_dict
 
+    @pytest.mark.skipif(
+        sys.platform == "darwin", reason="Isoplit not installing on macOS"
+    )
     def test_bad_per_shank(self):
         """
         Cannot sort per-shank if preprocessing was run per shank.
@@ -71,6 +75,9 @@ class TestSorting(BaseTest):
                 overwrite=True,
             )
 
+    @pytest.mark.skipif(
+        sys.platform == "darwin", reason="Isoplit not installing on macOS"
+    )
     def test_bad_concat_run(self):
         """
         Cannot concatenate runs for sorting if raw data
@@ -93,6 +100,9 @@ class TestSorting(BaseTest):
                 overwrite=True,
             )
 
+    @pytest.mark.skipif(
+        sys.platform == "darwin", reason="Isoplit not installing on macOS"
+    )
     def test_prepro_per_shank(self):
         """
         Check outputs when runs are split-per-shank for preprocessing
@@ -121,6 +131,9 @@ class TestSorting(BaseTest):
             assert (out_path / "preprocessed" / "shank_0").is_dir()
             assert (out_path / "sorting" / "shank_0").is_dir()
 
+    @pytest.mark.skipif(
+        sys.platform == "darwin", reason="Isoplit not installing on macOS"
+    )
     def test_prepro_concat_run(self):
         """
         Check outputs when runs are concatenated for preprocessing
@@ -147,6 +160,9 @@ class TestSorting(BaseTest):
         assert (out_path / "preprocessed" / "properties").is_dir()
         assert (out_path / "sorting" / "sorter_output").is_dir()
 
+    @pytest.mark.skipif(
+        sys.platform == "darwin", reason="Isoplit not installing on macOS"
+    )
     def test_prepro_per_shank_and_concat_runs(self):
         """
         Check outputs when runs are both split-by-shank and
@@ -173,6 +189,9 @@ class TestSorting(BaseTest):
         assert (out_path / "preprocessed" / "shank_0").is_dir()
         assert (out_path / "sorting" / "shank_0").is_dir()
 
+    @pytest.mark.skipif(
+        sys.platform == "darwin", reason="Isoplit not installing on macOS"
+    )
     def test_sort_per_shank(self):
         """
         Test when runs are split-by-shank after preprocessing, before sorting
@@ -199,6 +218,9 @@ class TestSorting(BaseTest):
             ).is_dir()
             assert (session._output_path / run_name / "sorting" / "shank_0").is_dir()
 
+    @pytest.mark.skipif(
+        sys.platform == "darwin", reason="Isoplit not installing on macOS"
+    )
     def test_sort_concat_runs(self):
         """
         Test when runs are  concatenated after
@@ -229,6 +251,9 @@ class TestSorting(BaseTest):
             session._output_path / "concat_run" / "sorting" / "sorter_output"
         ).is_dir()
 
+    @pytest.mark.skipif(
+        sys.platform == "darwin", reason="Isoplit not installing on macOS"
+    )
     def test_sort_per_shank_and_concat_runs(self):
         """
         Test when runs are split-per-shank and
@@ -263,6 +288,9 @@ class TestSorting(BaseTest):
             / "sorter_output"
         ).is_dir()
 
+    @pytest.mark.skipif(
+        sys.platform == "darwin", reason="Isoplit not installing on macOS"
+    )
     @pytest.mark.parametrize("prepro_per_shank", [True, False])
     def test_load_prepro_from_file_for_sorting(self, prepro_per_shank):
         """

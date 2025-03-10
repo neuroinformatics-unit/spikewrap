@@ -147,7 +147,7 @@ session.save_preprocessed(
 
 # In this example, runs were preprocessed separately,
 # and are concatenated together before sorting.
-session.preprocess(
+session.sort(
     configs="neuropixels+mountainsort5",
     run_sorter_method="local",
     concat_runs=True,
