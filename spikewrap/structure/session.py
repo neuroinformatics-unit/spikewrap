@@ -56,10 +56,13 @@ class Session:
     -----
     The responsibility of this class is to manage the processing of runs
     contained within the session. Raw data are held in ``self._raw_runs``, a list of
-    ``SeparateRawRun``.
+    ``SeparateRawRun``. The sync channel (if available) is held on the raw run in a
+    recording object (other channels unused) and possibly mutated.
+    ``load_raw_runs()`` will refresh the run sync channels.
 
     self._pp_runs is filled by self.preprocess(). Copies of _raw_runs are concatenated
     and / or split-by-shank before preprocessing, which fills self._pp_runs.
+    The sync channel is attached in-memory (no longer on a recording).
 
     self._sorting_runs contains the sorting based on self._pp_runs. Again, copies
     of preprocessing runs are concatenated and / or split by shank before sorting.
@@ -96,7 +99,7 @@ class Session:
 
         self._raw_runs: list[SeparateRawRun] = []
         self._pp_runs: list[PreprocessedRun] = []
-        self._sorting_runs: list[SeparateSortingRun | ConcatSortingRun]
+        self._sorting_runs: list[SeparateSortingRun | ConcatSortingRun] = []
 
     # ---------------------------------------------------------------------------
     # Public Functions
@@ -128,14 +131,15 @@ class Session:
             Use ``session.get_raw_run_names()`` to check the order of concatenation.
         per_shank
             If ``True``, perform preprocessing on each shank separately.
+        overwrite_in_memory
+            If ``False`` (default), the
         """
         pp_steps = self._infer_steps_from_configs_argument(configs, "preprocessing")
 
         _utils.show_preprocessing_configs(pp_steps)
 
-        self._load_raw_data(
-            internal_overwrite=True  # just reload and overwrite to be safe
-        )
+        if not any(self._raw_runs):
+            self._load_raw_data(internal_overwrite=False)
 
         runs_to_preprocess: list[SeparateRawRun | ConcatRawRun]
         if concat_runs:
@@ -160,7 +164,7 @@ class Session:
                     file_format=run._file_format,
                     session_output_path=self._output_path,
                     preprocessed_data=preprocessed_run,
-                    sync=run._sync,
+                    sync_data=run.get_sync_channel() if run._sync else None,
                     pp_steps=pp_steps,
                     orig_run_names=orig_run_names,
                 )
@@ -412,7 +416,7 @@ class Session:
                 run_info["file_format"],
                 Path(run_info["session_output_path"]),
                 preprocessed_shanks,
-                sync=False,
+                sync_data=None,
                 pp_steps=run_info["pp_steps"],
                 orig_run_names=run_info["orig_run_names"],
             )
@@ -425,27 +429,131 @@ class Session:
 
     def get_raw_run_names(self) -> list[str]:
         """
-        Return a list of run names from the self._pp_runs list.
+        Return a list of run names for the raw data.
 
-        If run concatenation is performed, the order of this
-        list will be the order of concatenation. If concatenation
-        was already performed, the run name will be ``"concat_run"``.
+        Their order is the order in which any concatenation
+        will be performed.
         """
         return [run._run_name for run in self._raw_runs]
 
     def get_preprocessed_run_names(self) -> list[str]:
-        """ """
+        """
+        Return a list of names of the preprocessed data.
+        If data was concatenated, the run name will be "concat_run".
+
+        If not concatenated, their order is the order
+        concatenation will take place prior to sorting
+        (if ``concat_run=True``).
+        """
         return [run._run_name for run in self._pp_runs]
 
-    def get_sorting_run_names(self) -> list[str]:
-        """ """
-        return [run._run_name for run in self._sorting_runs]
-
     def parent_input_path(self) -> Path:
+        """
+        Name of the parent path for this sessions raw data
+        (i.e. the path of the subject folder).
+        """
         return self._parent_input_path
 
-    def get_output_path(self):
+    def get_output_path(self) -> Path:
+        """
+        The path where processed data will be output for this session.
+        """
         return self._output_path
+
+    def load_raw_data(self, overwrite: bool = False) -> None:
+        """
+        Load raw data, to allow editing of the sync channel.
+        Note this will overwrite any previous editing of the
+        sync channel.
+        """
+        if any(self._raw_runs) and not overwrite:
+            raise RuntimeError(
+                "Runs have already been loaded for this session. "
+                "Use `overwrite=True` to load again."
+            )
+
+        self._load_raw_data(internal_overwrite=overwrite)
+
+    def get_sync_channel(self, run_idx: int):
+        """
+        Return the sync channel in a numpy array. Currently only
+        Neuropixels (sync channel is 385th channel) supported.
+
+        Parameters
+        __________
+
+        run_idx
+            Index of the run to get the sync channel from,
+            as ordered by ``self.get_raw_run_names()``.
+        """
+        self._assert_sync_channel_checks()
+
+        return self._raw_runs[run_idx].get_sync_channel()
+
+    def plot_sync_channel(
+        self, run_idx: int, show: bool = True
+    ) -> list[matplotlib.lines.Line2D]:
+        """
+        Plot the sync channel for the run.
+
+        Parameters
+        ----------
+
+        run_idx
+            Index of the run to get the sync channel from,
+            as ordered by ``self.get_raw_run_names()``.
+        show
+            If ``True``, plt.show() is called.
+        """
+        self._assert_sync_channel_checks()
+
+        return self._raw_runs[run_idx].plot_sync_channel(show)
+
+    def silence_sync_channel(
+        self, run_idx: int, periods_to_silence: list[tuple]
+    ) -> None:
+        """
+        Set periods on the sync channel to zero.
+
+        Parameters
+        ----------
+
+        run_idx
+            Index of the run to get the sync channel from,
+            as ordered by ``self.get_raw_run_names()``.
+        periods_to_silence
+            A list of 2-tuples, where each entry in the tuples are
+            the (start, stop) sample to silence. For example,
+            [(0, 10), (50, 500)] will set the samples 0 - 10 and
+            50 - 500 to zero.
+        """
+        self._assert_sync_channel_checks()
+
+        self._raw_runs[run_idx].silence_sync_channel(periods_to_silence)
+
+    def _assert_sync_channel_checks(self):
+        """ """
+        if not any(self._raw_runs):
+            raise RuntimeError(
+                "Cannot work with sync channels until raw data loaded. "
+                "Use `session.load_raw_data()`."
+            )
+
+        if any(self._pp_runs) or any(self._sorting_runs):
+            raise RuntimeError(
+                "Cannot work with the sync channel after preprocessing. "
+                "Sync channel must be handled prior to preprocessing. "
+                "Instantiate a new Session object to begin a new workflow. "
+                "If this is annoying please contact spikewrap."
+            )
+
+    def get_sync_channel_after_preprocessing(self, run_idx: int) -> None | np.ndarray:
+        """ """
+        if not any(self._pp_runs):
+            raise RuntimeError(
+                "Preprocessing must be performed before running this function."
+            )
+        return self._pp_runs[run_idx].get_sync_channel()
 
     # ---------------------------------------------------------------------------
     # Private Functions
