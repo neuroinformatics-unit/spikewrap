@@ -4,12 +4,16 @@ if __name__ == "__main__":
 
     # Make up a probe for this recording
     session = sw.Session(
-        subject_path=r"X:\neuroinformatics\scratch\jziminski\ephys\kkouk\crabs\rawdata\sub-002_id-KK07",
+        subject_path="/ceph/neuroinformatics\scratch\jziminski\ephys\kkouk\crabs\rawdata\sub-002_id-KK07",  # r"X:\neuroinformatics\scratch\jziminski\ephys\kkouk\crabs\rawdata\sub-002_id-KK07",
         session_name="ses-01_20250123",
         file_format="spikeglx",
     )
 
-    session.load_raw_data()
+    session.preprocess(
+        configs="neuropixels+mountainsort5",
+    )
+
+    session.save_preprocessed(slurm=True)
 
     if False:
         session.preprocess(
