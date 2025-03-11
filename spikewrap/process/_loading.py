@@ -163,25 +163,35 @@ def get_spikeglx_runs(ses_path: Path) -> list[Path]:
 
     # Look for spikeglx runs, either folders at the session level that include
     # pattern like "g0_imec" or contain a folder that does.
+    putative_run_paths = [path_ for path_ in ses_path.glob("*") if path_.is_dir()]
+    detected_run_paths = []
 
-    files_in_ses_folder = list(ses_path.glob("*.ap.bin"))
-    if any(files_in_ses_folder):
-        detected_run_paths = [ses_path]
-    else:
-        putative_run_paths = [path_ for path_ in ses_path.glob("*") if path_.is_dir()]
-        detected_run_paths = []
+    for path_ in putative_run_paths:
 
-        for path_ in putative_run_paths:
-            subpath_ = list(path_.glob("*g*_imec*"))
-            if re.match(r".*g.*imec.*", path_.name):
-                detected_run_paths.append(path_)
-            elif any(subpath_):
+        # If the putative run path folder contains spikeglx
+        # formatting then it is itself a run path.
+        if re.match(r".*g.*imec.*", path_.name):
+            detected_run_paths.append(path_)
+
+        # Otherwise it might hold spikeglx data files within it, in
+        # which case it is a run path
+        elif any(path_.glob("*.ap.bin")):
+            detected_run_paths.append(path_)
+
+        # Otherwise if the putative run folder contains a
+        # spikeglx-formatted folder then it is a run folder
+        # (spikeinterface will auto-detect data recursively from
+        # this folder down, which is why we only allow one folder
+        # within the run folder in this case.
+        else:
+            subpath_ = list(path_.glob("*g*imec*"))
+            if any(subpath_):
                 if not len(subpath_) == 1:
                     raise RuntimeError(
                         f"Multiple gates / triggers are not supported. Only one folder"
                         f"expected in path: {path_}"
                     )
-                detected_run_paths.append(path_)
+            detected_run_paths.append(path_)
 
     # Currently, only imec0 supported
     for path_ in detected_run_paths:
@@ -201,7 +211,7 @@ def get_spikeglx_runs(ses_path: Path) -> list[Path]:
     # Currently, multi-trigger not supported
     for path_ in detected_run_paths:
         rec_paths = list(
-            path_.rglob("*ap.bin")
+            path_.rglob("*ap.bin")  # currently LFP not supported.
         )  # rglob as we might have two-level run folder (TODO: DOC)
         if len(rec_paths) > 1:
             raise RuntimeError(
