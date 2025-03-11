@@ -11,8 +11,8 @@ Sync Channel Tutorial
 """
 # %%
 # .. warning::
-#     Currently, the only supported sync channel is for Neuropixels data (in which it is
-#     the 385th channel). Please get in contact to see other cases supported.
+#     Currently, the only supported sync channel is from Neuropixels Imec stream
+#     (in which it is the 385th channel). Please get in contact to see other cases supported.
 #
 # Sync channels are used in extracellular electrophysiology to coordinate timestamps
 # from across acquisition devices.
@@ -29,7 +29,7 @@ Sync Channel Tutorial
 # Raw data must be loaded prior to working with the sync channel.
 # The sync channel for a particular run is specified with the ``run_idx``
 # parameter. Runs are accessed in the order they are loaded (as specified
-# with ``run_names``, see :func:`spikewrap.session.get_raw_run_names`.
+# with ``run_names``, see :class:`spikewrap.Session.get_raw_run_names`.
 #
 # In this toy example data, the sync channel is set to all ones (typically,
 # it would be all ``0`` interspersed with ``1`` indicating triggers).
@@ -97,8 +97,8 @@ plot = session.plot_sync_channel(run_idx=0, show=True)
 #
 # If runs are concatenated during preprocessing, the sync channel
 # will be concatenated. To see the sync channel after preprocessing,
-# use the function :func:`spikewrap.session.get_sync_channel_after_preprocessing`.
-
+# use the function :class:`spikewrap.Session.get_sync_channel_after_preprocessing`.
+#
 # Note that the sync channel itself is never preprocessed, and in the case
 # that concatenation is not performed, the sync channel on a preprocessed
 # run will be the same as the sync channel before preprocessing is performed.

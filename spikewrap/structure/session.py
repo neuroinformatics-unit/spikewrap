@@ -548,7 +548,9 @@ class Session:
             )
 
     def get_sync_channel_after_preprocessing(self, run_idx: int) -> None | np.ndarray:
-        """ """
+        """
+        Test
+        """
         if not any(self._pp_runs):
             raise RuntimeError(
                 "Preprocessing must be performed before running this function."
