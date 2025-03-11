@@ -168,14 +168,7 @@ def get_spikeglx_runs(ses_path: Path) -> list[Path]:
 
     for path_ in putative_run_paths:
 
-        # If the putative run path folder contains spikeglx
-        # formatting then it is itself a run path.
-        if re.match(r".*g.*imec.*", path_.name):
-            detected_run_paths.append(path_)
-
-        # Otherwise it might hold spikeglx data files within it, in
-        # which case it is a run path
-        elif any(path_.glob("*.ap.bin")):
+        if any(path_.glob("*.ap.bin")):
             detected_run_paths.append(path_)
 
         # Otherwise if the putative run folder contains a
