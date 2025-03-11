@@ -486,7 +486,7 @@ class Session:
             Index of the run to get the sync channel from,
             as ordered by ``self.get_raw_run_names()``.
         """
-        self.assert_sync_channel_checks()
+        self._assert_sync_channel_checks()
 
         return self._raw_runs[run_idx].get_sync_channel()
 
@@ -505,7 +505,7 @@ class Session:
         show
             If ``True``, plt.show() is called.
         """
-        self.assert_sync_channel_checks()
+        self._assert_sync_channel_checks()
 
         return self._raw_runs[run_idx].plot_sync_channel(show)
 
@@ -527,11 +527,11 @@ class Session:
             [(0, 10), (50, 500)] will set the samples 0 - 10 and
             50 - 500 to zero.
         """
-        self.assert_sync_channel_checks()
+        self._assert_sync_channel_checks()
 
         self._raw_runs[run_idx].silence_sync_channel(periods_to_silence)
 
-    def assert_sync_channel_checks(self):
+    def _assert_sync_channel_checks(self):
         """ """
         if not any(self._raw_runs):
             raise RuntimeError(
