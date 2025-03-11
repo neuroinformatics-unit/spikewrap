@@ -12,8 +12,8 @@ How to Edit the Sync Channel
 
 # %%
 # .. warning::
-#     Currently, the only supported sync channel is for Neuropixels data (in which it is
-#     the 385th channel). Please get in contact to see other cases supported.
+#     Currently, the only supported sync channel is from Neuropixels Imec stream
+#     (in which it is the 385th channel). Please get in contact to see other cases supported.
 
 
 import spikewrap as sw
