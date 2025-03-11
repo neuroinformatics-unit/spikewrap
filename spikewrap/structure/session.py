@@ -531,6 +531,13 @@ class Session:
 
         self._raw_runs[run_idx].silence_sync_channel(periods_to_silence)
 
+    def save_sync_channels(self, overwrite: bool, slurm: dict | bool) -> None:
+        """
+        Save all loaded runs sync channel to disk.
+        """
+        for run in self._raw_runs:
+            run.save_sync_channel(overwrite, slurm)
+
     def _assert_sync_channel_checks(self):
         """ """
         if not any(self._raw_runs):

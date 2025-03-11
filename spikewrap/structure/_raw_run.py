@@ -186,6 +186,48 @@ class RawRun:
             recording=self._sync, list_periods=[periods_to_silence], mode="zeros"
         )
 
+    def save_sync_channel(
+        self, overwrite: bool = False, slurm: bool | dict = False
+    ) -> None:
+        """
+        Save the sync channel as a ``.npy`` file.
+
+        In SI, sorting cannot proceed if the sync channel is loaded to ensure
+        it does not interfere with sorting. As such, a separate recording with the
+        sync channel present is maintained and handled separately here.
+        """
+        if self._sync is not None:
+
+            if slurm:
+                self._save_sync_channel_slurm(overwrite, slurm)
+
+            sync_data = self.get_sync_channel()
+
+            _utils.message_user(f"Saving sync channel for: {self._run_name}...")
+
+            assert sync_data.size == self._raw["grouped"].get_num_samples()
+
+            # Save the sync channel
+            sync_output_filepath = (
+                self._output_path / canon.sync_folder() / canon.saved_sync_filename()
+            )
+            sync_output_filepath.parent.mkdir(parents=True, exist_ok=True)
+            np.save(sync_output_filepath, sync_data)
+
+    def _save_sync_channel_slurm(self, overwrite, slurm):
+        """ """
+        slurm_ops: dict | bool = slurm if isinstance(slurm, dict) else False
+
+        _slurm.run_in_slurm(
+            slurm_ops,
+            func_to_run=self.save_preprocessed,
+            func_opts={
+                "overwrite": overwrite,
+                "slurm": False,
+            },
+            log_base_path=self._output_path,
+        )
+
     # ---------------------------------------------------------------------------
     # Private Functions
     # ---------------------------------------------------------------------------
