@@ -193,14 +193,17 @@ config_dict = {
 # The :class:`spikewrap.Session.sort` function will accept the name
 # of the stored config file, the full config dictionary such as above,
 # or the "sorting" sub-dictionary, e.g.:
+#
+# .. code-block:: python
+#
+#     sorting_dict = {"sorting": {"mountainsort5": {"filter": False}}}
+#
+#     session.sort(
+#         configs=sorting_dict, run_sorter_method="local"
+#     )
+#
 
-sorting_dict = {"sorting": {"mountainsort5": {"filter": False}}}
-
-session.sort(
-    configs=sorting_dict, run_sorter_method="local"
-)
-
-# %%  # `their documentation. <https://spikeinterface.readthedocs.io/en/stable/>`_,
+# %%
 # The sorter name (e.g. ``"mountainsort5"``) should make the
 # `SpikeInterface sorter name <https://spikeinterface.readthedocs.io/en/latest/modules/sorters.html#supported-spike-sorters>`_,
 # while the keyword-arguments should match the sorter-specific arguments.These can be found at the

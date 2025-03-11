@@ -26,6 +26,7 @@ from .configs.config_utils import (
 from .configs.hpc import default_slurm_options
 
 # TODO: there must be a better way!
+# this is necessary for doc api linking?
 __all__ = [
     "Session",
     "get_example_data_path",
@@ -36,4 +37,13 @@ __all__ = [
     "load_config_dict",
     "save_config_dict",
     "default_slurm_options",
+    "get_raw_run_names",
+    "get_preprocessed_run_names",
+    "parent_input_path",
+    "get_output_path",
+    "load_raw_data",
+    "get_sync_channel",
+    "plot_sync_channel",
+    "silence_sync_channel",
+    "get_sync_channel_after_preprocessing",
 ]

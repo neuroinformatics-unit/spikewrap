@@ -68,4 +68,4 @@ This will output a folder structure like:
 
 ## Get Involved
 
-Contributions to ``spikewrap`` are welcome and appreciated! Please see our [contributing guide](https://spikewrap.neuroinformatics.dev/community/contributing_guide.html) for details, and don't hesitate to ask any questions on our [Zulip Chat](https://neuroinformatics.zulipchat.com/#narrow/stream/406002-Spikewrap).
+Contributions to ``spikewrap`` are welcome and appreciated! Please see our [contributing guide](https://spikewrap.neuroinformatics.dev/community/contributing_guidelines.html) for details, and don't hesitate to ask any questions on our [Zulip Chat](https://neuroinformatics.zulipchat.com/#narrow/stream/406002-Spikewrap).
