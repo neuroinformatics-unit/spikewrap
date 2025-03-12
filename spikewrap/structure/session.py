@@ -8,6 +8,7 @@ if TYPE_CHECKING:
     import matplotlib
     from probeinterface import Probe
 
+import time
 from pathlib import Path
 
 import numpy as np
@@ -26,7 +27,6 @@ from spikewrap.structure._sorting_run import (
     SeparateSortingRun,
 )
 from spikewrap.utils import _utils
-import time
 
 
 class Session:
@@ -204,7 +204,9 @@ class Session:
             See `tutorials` in the documentation for details.
         """
         for run in self._pp_runs:
-            job_if_slurm = run.save_preprocessed(overwrite, chunk_duration_s, n_jobs, slurm)
+            job_if_slurm = run.save_preprocessed(
+                overwrite, chunk_duration_s, n_jobs, slurm
+            )
 
             if slurm:
                 self._running_slurm_jobs.append(job_if_slurm)
@@ -333,7 +335,9 @@ class Session:
             ]
 
         for run in self._sorting_runs:
-            job_if_slurm = run.sort(sorting_configs, run_sorter_method, per_shank, overwrite, slurm)
+            job_if_slurm = run.sort(
+                sorting_configs, run_sorter_method, per_shank, overwrite, slurm
+            )
 
             if slurm:
                 self._running_slurm_jobs.append(job_if_slurm)
@@ -431,21 +435,26 @@ class Session:
             pp_runs.append(run)
 
         return pp_runs
+
     # Getters -----------------------------------------------------------------
 
     def wait_for_slurm(self):
-        """
-        """
+        """ """
+        breakpoint()  ## TODO: CHECK
         for job in self._running_slurm_jobs:
             job.refresh()
-        self._running_slurm_jobs = [job for job in self._running_slurm_jobs if job.state != "COMPLETED"]
+        self._running_slurm_jobs = [
+            job for job in self._running_slurm_jobs if job.state != "COMPLETED"
+        ]
 
         while True:
 
-            for job in self._running_slurm_jobs
+            for job in self._running_slurm_jobs:
                 job.refresh()
 
-            self._running_slurm_jobs = [job for job in self._running_slurm_jobs if job.state != "COMPLETED"]
+            self._running_slurm_jobs = [
+                job for job in self._running_slurm_jobs if job.state != "COMPLETED"
+            ]
 
             if not any(self._running_slurm_jobs):
                 break

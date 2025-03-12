@@ -61,10 +61,10 @@ class BaseSortingRun:
                 SpikeInterface functions to set the matlab path if required.
         `"""
         if slurm:
-            self._sort_slurm(
+            job = self._sort_slurm(
                 sorting_configs, run_sorter_method, per_shank, overwrite, slurm
             )
-            return
+            return job
 
         assert len(sorting_configs) == 1, "Only one sorter supported."
         ((sorter, sorter_kwargs),) = sorting_configs.items()
@@ -125,7 +125,7 @@ class BaseSortingRun:
         """
         slurm_ops: dict | bool = slurm if isinstance(slurm, dict) else False
 
-        _slurm.run_in_slurm(
+        job = _slurm.run_in_slurm(
             slurm_ops,
             func_to_run=self.sort,
             func_opts={
@@ -137,6 +137,8 @@ class BaseSortingRun:
             },
             log_base_path=self._output_path,
         )
+
+        return job
 
     def split_per_shank(self):
         """
