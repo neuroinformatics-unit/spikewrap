@@ -439,27 +439,20 @@ class Session:
     # Getters -----------------------------------------------------------------
 
     def wait_for_slurm(self):
-        """ """
-        breakpoint()  ## TODO: CHECK
-        for job in self._running_slurm_jobs:
-            job.refresh()
-        self._running_slurm_jobs = [
-            job for job in self._running_slurm_jobs if job.state != "COMPLETED"
-        ]
-
+        """
+        Run a while loop with pause until
+        all slurm jobs are complete.
+        """
         while True:
 
-            for job in self._running_slurm_jobs:
-                job.refresh()
-
             self._running_slurm_jobs = [
-                job for job in self._running_slurm_jobs if job.state != "COMPLETED"
+                job for job in self._running_slurm_jobs if not job.done()
             ]
 
             if not any(self._running_slurm_jobs):
                 break
 
-            time.sleep(1)
+            time.sleep(5)
 
     # Getters -----------------------------------------------------------------
 
