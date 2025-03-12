@@ -60,6 +60,7 @@ def run_in_slurm(
 
     send_user_start_message(func_to_run.__name__, log_path, job, func_opts)
 
+    return job
 
 # Utils --------------------------------------------------------------------------------
 
