@@ -11,7 +11,6 @@ if TYPE_CHECKING:
     import matplotlib
 
 
-import numpy as np
 import spikeinterface.full as si
 
 from spikewrap.configs._backend import canon
@@ -41,8 +40,6 @@ class PreprocessedRun:
     preprocessed_data
         The preprocessed data in a dictionary, which keys "grouped"
         or the shank_ids (e.g. "shank_0", ...) if split by shank.
-    sync_data
-        The (in memory) sync channel data).
 
     TODO
     ----
@@ -57,7 +54,6 @@ class PreprocessedRun:
         file_format: str,
         session_output_path: Path,
         preprocessed_data,
-        sync_data,
         pp_steps,
         orig_run_names=None,
     ):
@@ -72,7 +68,6 @@ class PreprocessedRun:
         self._orig_run_names = orig_run_names
 
         self._preprocessed = preprocessed_data
-        self._sync_data = sync_data
 
     # ---------------------------------------------------------------------------
     # Public Functions
@@ -96,8 +91,6 @@ class PreprocessedRun:
             si.set_global_job_kwargs(n_jobs=n_jobs)
 
         self._handle_overwrite_output(overwrite)
-
-        self._save_sync_channel()
 
         # Save the recordings to disk, handling shank ids
         for shank_name, preprocessed_dict in self._preprocessed.items():
@@ -164,19 +157,18 @@ class PreprocessedRun:
 
     def _handle_overwrite_output(self, overwrite: bool) -> None:
         """
-        If `overwrite`, delete the preprocessed and sync folders
+        If `overwrite`, delete the preprocessed
         from the run output path. Raise if they exist
         and `overwrite` is False.
         """
-        for folder in [canon.preprocessed_folder(), canon.sync_folder()]:
-            out_folder = self._output_path / folder
-            if out_folder.is_dir():
-                if overwrite:
-                    shutil.rmtree(out_folder)
-                else:
-                    raise RuntimeError(
-                        f"`overwrite` is `False` but data already exists at the run path: {self._output_path}."
-                    )
+        out_folder = self._output_path / canon.preprocessed_folder()
+        if out_folder.is_dir():
+            if overwrite:
+                shutil.rmtree(out_folder)
+            else:
+                raise RuntimeError(
+                    f"`overwrite` is `False` but data already exists at the run path: {self._output_path}."
+                )
 
     def plot_preprocessed(
         self,
@@ -254,29 +246,3 @@ class PreprocessedRun:
             },
             log_base_path=self._output_path,
         )
-
-    def _save_sync_channel(self) -> None:
-        """
-        Save the sync channel as a ``.npy`` file.
-
-        In SI, sorting cannot proceed if the sync channel is loaded to ensure
-        it does not interfere with sorting. As such, a separate recording with the
-        sync channel present is maintained and handled separately here.
-        """
-        if self._sync_data is not None:
-            _utils.message_user(f"Saving sync channel for: {self._run_name}...")
-
-            pp_rec = _utils._get_dict_value_from_step_num(
-                self._preprocessed[list(self._preprocessed.keys())[0]], "last"
-            )[0]
-            assert self._sync_data.size == pp_rec.get_num_samples()
-
-            # Save the sync channel
-            sync_output_filepath = (
-                self._output_path / canon.sync_folder() / canon.saved_sync_filename()
-            )
-            sync_output_filepath.parent.mkdir(parents=True, exist_ok=True)
-            np.save(sync_output_filepath, self._sync_data)
-
-    def get_sync_channel(self) -> None | np.ndarray:
-        return self._sync_data

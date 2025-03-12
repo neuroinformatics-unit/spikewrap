@@ -26,7 +26,7 @@ from .configs.config_utils import (
 from .configs.hpc import default_slurm_options
 
 # TODO: there must be a better way!
-# this is necessary for doc api linking?
+# this is necessary for doc api linking? can I just remove!?!??
 __all__ = [
     "Session",
     "get_example_data_path",
@@ -45,5 +45,5 @@ __all__ = [
     "get_sync_channel",
     "plot_sync_channel",
     "silence_sync_channel",
-    "get_sync_channel_after_preprocessing",
+    "get_sync_channel",
 ]

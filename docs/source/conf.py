@@ -189,9 +189,6 @@ html_favicon = "_static/light-logo-niu.png"
 linkcheck_anchors_ignore_for_url = [
     "https://neuroinformatics.zulipchat.com"
 ]
-# A list of regular expressions that match URIs that should not be checked
-linkcheck_ignore = [
-]
 
 intersphinx_mapping = {
     "scipy": ("https://docs.scipy.org/doc/scipy/", None),
@@ -217,7 +214,9 @@ notfound_context = {
 # because we have no '/<language>/<version>/' in the URL
 notfound_urls_prefix = None
 
+# A list of regular expressions that match URIs that should not be checked
 linkcheck_ignore = [
-    "https://github.com/SpikeInterface/*",  # to avoid odd 403 error
+    "https://github.com/SpikeInterface/*",
+    "https://github.com/billkarsh/CatGT/*"
 ]
 
