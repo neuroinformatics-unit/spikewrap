@@ -60,50 +60,18 @@ class TestSorting(BaseTest):
             run_idx=1, periods_to_silence=[(50, 550), (800, 899)]
         )
 
-        def check_run_1(sync_1):
-            assert np.all(sync_1[:10] == 0)
-            assert np.all(sync_1[10:] == 1)
-
-        def check_run_2(sync_2):
-            assert np.all(sync_2[0:50] == 1)
-            assert np.all(sync_2[50:550] == 0)
-            assert np.all(sync_2[550:800] == 1)
-            assert np.all(sync_2[800:899] == 0)
-            assert np.all(sync_2[899:] == 1)
-
         # Check that the sync data is silenced
         run_1_sync = session.get_sync_channel(0)
         run_2_sync = session.get_sync_channel(1)
 
-        check_run_1(run_1_sync)
-        check_run_2(run_2_sync)
+        assert np.all(run_1_sync[:10] == 0)
+        assert np.all(run_1_sync[10:] == 1)
 
-        # and that these changes are propagated to the preprocessing
-        session.preprocess("neuropixels+mountainsort5", concat_runs=False)
-
-        check_run_1(session._pp_runs[0]._sync_data)
-        check_run_2(session._pp_runs[1]._sync_data)
-
-        # and that these changes are propagated and in the correct order
-        # when preprocessed data is concatenated.
-        session.preprocess("neuropixels+mountainsort5", concat_runs=True)
-        concat_sync = session._pp_runs[0]._sync_data
-
-        run_1_from_concat = concat_sync[:1000]
-        run_2_from_concat = concat_sync[1000:]
-
-        check_run_1(run_1_from_concat)
-        check_run_2(run_2_from_concat)
-
-        # and that the concat data is saved correctly
-        session.save_preprocessed()
-
-        load_sync = np.load(
-            session._output_path / "concat_run" / "sync" / "sync_channel.npy"
-        )
-
-        check_run_1(load_sync[:1000])
-        check_run_2(load_sync[1000:])
+        assert np.all(run_2_sync[0:50] == 1)
+        assert np.all(run_2_sync[50:550] == 0)
+        assert np.all(run_2_sync[550:800] == 1)
+        assert np.all(run_2_sync[800:899] == 0)
+        assert np.all(run_2_sync[899:] == 1)
 
     def test_plot_sync(self, session):
         """
@@ -171,3 +139,22 @@ class TestSorting(BaseTest):
 
         with pytest.raises(RuntimeError):
             session.plot_sync_channel(0)
+
+    def test_save_sync(self, session):
+
+        session.load_raw_data()
+
+        session.silence_sync_channel(1, [(250, 500)])
+
+        session.save_sync_channel()
+
+        load_1_sync = np.load(
+            session._output_path / "recording1" / "sync" / "sync_channel.npy"
+        )
+        load_2_sync = np.load(
+            session._output_path / "recording2" / "sync" / "sync_channel.npy"
+        )
+
+        assert np.all(load_1_sync == 1)
+        assert np.all(load_2_sync[:250] == 1)
+        assert np.all(load_2_sync[250:500] == 0)

@@ -164,7 +164,6 @@ class Session:
                     file_format=run._file_format,
                     session_output_path=self._output_path,
                     preprocessed_data=preprocessed_run,
-                    sync_data=run.get_sync_channel() if run._sync else None,
                     pp_steps=pp_steps,
                     orig_run_names=orig_run_names,
                 )
@@ -416,7 +415,6 @@ class Session:
                 run_info["file_format"],
                 Path(run_info["session_output_path"]),
                 preprocessed_shanks,
-                sync_data=None,
                 pp_steps=run_info["pp_steps"],
                 orig_run_names=run_info["orig_run_names"],
             )
@@ -531,12 +529,20 @@ class Session:
 
         self._raw_runs[run_idx].silence_sync_channel(periods_to_silence)
 
-    def save_sync_channels(self, overwrite: bool, slurm: dict | bool) -> None:
+    def save_sync_channel(
+        self, overwrite: bool = False, slurm: dict | bool = False
+    ) -> None:
         """
         Save all loaded runs sync channel to disk.
         """
+        if not self.raw_runs_loaded():
+            self._load_raw_data(internal_overwrite=False)
+
         for run in self._raw_runs:
             run.save_sync_channel(overwrite, slurm)
+
+    def raw_runs_loaded(self):
+        return all(run._raw is not None for run in self._raw_runs)
 
     def _assert_sync_channel_checks(self):
         """ """
@@ -553,16 +559,6 @@ class Session:
                 "Instantiate a new Session object to begin a new workflow. "
                 "If this is annoying please contact spikewrap."
             )
-
-    def get_sync_channel_after_preprocessing(self, run_idx: int) -> None | np.ndarray:
-        """
-        Test
-        """
-        if not any(self._pp_runs):
-            raise RuntimeError(
-                "Preprocessing must be performed before running this function."
-            )
-        return self._pp_runs[run_idx].get_sync_channel()
 
     # ---------------------------------------------------------------------------
     # Private Functions
@@ -608,6 +604,7 @@ class Session:
                 run_name=run_path.name,
                 file_format=self._file_format,
                 probe=self._probe,
+                sync_output_path=self._output_path / run_path.name,
             )
             separate_run.load_raw_data()
             runs.append(separate_run)

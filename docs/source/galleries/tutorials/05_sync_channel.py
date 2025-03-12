@@ -18,8 +18,15 @@ Sync Channel Tutorial
 # from across acquisition devices.
 #
 # In ``spikewrap``, the sync channel can be inspected and edited. **This step
-# must be performed prior to preprocessing**, after which the sync channel
-# is split from the recording for saving.
+# must be performed prior to preprocessing**.
+#
+# .. warning::
+#
+#     ``spikewrap`` does not currently provide any methods for concatenating the sync channel.
+#     This is because a straightforward concatenation may be error prone
+#     `(see here for more details) <https://spikeinterface.readthedocs.io/en/latest/api.html#spikeinterface.preprocessing.silence_periods>`_.
+#     We are keen to extend sync-channel processing functionality, please get in contact with your use-case
+#     to help usc extend support.
 
 # %%
 # Inspecting the sync channel
@@ -29,7 +36,7 @@ Sync Channel Tutorial
 # Raw data must be loaded prior to working with the sync channel.
 # The sync channel for a particular run is specified with the ``run_idx``
 # parameter. Runs are accessed in the order they are loaded (as specified
-# with ``run_names``, see :class:`spikewrap.Session.get_raw_run_names`.
+# with ``run_names``, see :class:`spikewrap.Session.get_raw_run_names`).
 #
 # In this toy example data, the sync channel is set to all ones (typically,
 # it would be all ``0`` interspersed with ``1`` indicating triggers).
@@ -92,46 +99,18 @@ session.load_raw_data(overwrite=True)
 plot = session.plot_sync_channel(run_idx=0, show=True)
 
 # %%
-# Concatenating the sync channel
-# ------------------------------
-#
-# If runs are concatenated during preprocessing, the sync channel
-# will be concatenated. To see the sync channel after preprocessing,
-# use the function :class:`spikewrap.Session.get_sync_channel_after_preprocessing`.
-#
-# Note that the sync channel itself is never preprocessed, and in the case
-# that concatenation is not performed, the sync channel on a preprocessed
-# run will be the same as the sync channel before preprocessing is performed.
-#
-# The only difference is that if runs were concatenated before preprocessing,
-# the sync channel will now reflect this. In the below example, the sync channel
-# is now 2000 samples long (each run is 1000 samples long):
-
-session.preprocess("neuropixels+kilosort2_5", concat_runs=True)
-
-concat_sync_channel = session.get_sync_channel_after_preprocessing(run_idx=0)
-
-import matplotlib.pyplot as plt
-
-plt.plot(concat_sync_channel)
-plt.show()
-
-# %%
-# This is the sync channel that will be saved when :class:`spikewrap.Session.save_preprocessed` is called.
-
-# %%
 # Saving the sync channel
 # -----------------------
 #
-# The easiest way to manage sync channel saving is to let spikewrap save the sync
-# channel as part of :class:`spikewrap.Session.save_preprocessed`. Otherwise, it can get saved
-# manually after obtaining it from a getter function.
+# The sync channel can be saved with:
+
+session.save_sync_channel(overwrite=False, slurm=False)
+
+# %%
+# which will save the sync channel for all loaded runs to the run folder.
+# See the :ref:`SLURM tutorial <slurm-tutorial>` for more information on using slurm.
 #
-# .. note::
-#     Currently, the sync channel is saved after preprocessing, but not sorting. Therefore,
-#     if concatenating runs before sorting, this will not be reflected in the sync channel.
-#     Please get in contact if you would like to see this implemented.
-#
+
 
 
 
