@@ -4,6 +4,7 @@ from typing import Callable
 
 import numpy as np
 import spikeinterface.full as si
+from spikeinterface import BaseRecording
 
 from spikewrap.utils import _utils
 
@@ -120,6 +121,107 @@ def _get_pp_funcs() -> dict[str, Callable]:
         "phase_shift": si.phase_shift,
         "bandpass_filter": si.bandpass_filter,
         "common_reference": si.common_reference,
+        "remove_bad_channels": remove_bad_channels,
     }
 
     return pp_funcs
+
+
+# Custom Preproessors
+# ----------------------------------------------------------------------
+# These should be merged into SpikeInterface in future wherever possible
+# TODO: suggest feature on SI side to sub-select by label,
+# await https://github.com/SpikeInterface/spikeinterface/pull/3685
+
+
+def remove_bad_channels(
+    recording: BaseRecording,
+    labels_to_remove: Literal["all"] | str | list[str] = "all",
+    detect_bad_channel_kwargs: dict | None = None,
+):
+    """ """
+    ids_to_remove = _get_bad_channel_ids(
+        recording, labels_to_remove, detect_bad_channel_kwargs
+    )
+
+    return remove_channels(recording, ids_to_remove)
+
+
+def interpolate_bad_channels(
+    recording: BaseRecording,
+    labels_to_remove: Literal["all"] | str | list[str] = "all",
+    detect_bad_channel_kwargs: dict | None = None,
+    interpolate_bad_channel_kwargs: dict | None = None,
+):
+    """ """
+    ids_to_interpolate = _get_bad_channel_ids(
+        recording, labels_to_remove, detect_bad_channel_kwargs
+    )
+
+    if interpolate_bad_channel_kwargs is None:
+        interpolate_bad_channel_kwargs = {}
+
+    return interpolate_channels(
+        recording, ids_to_interpolate, interpolate_bad_channel_kwargs
+    )
+
+
+def interpolate_channels(  # TODO: test si kwargs
+    recording: BaseRecording,
+    channel_ids: list[str],
+    interpolate_bad_channel_kwargs: dict | None = None,
+) -> BaseRecording:
+    """ """
+    if interpolate_bad_channel_kwargs is None:
+        interpolate_bad_channel_kwargs = {}
+
+    return si.interpolate_bad_channels(
+        recording, channel_ids, **interpolate_bad_channel_kwargs
+    )
+
+
+def remove_channels(recording: BaseRecording, channel_ids: list[str]) -> BaseRecording:
+    """ """
+    return recording.remove_channels(channel_ids)
+
+
+def _get_bad_channel_ids(
+    recording: BaseRecording,
+    labels_to_remove: Literal["all"] | str | list[str] = "all",
+    detect_bad_channel_kwargs: dict | None = None,
+):
+    """ """
+    if detect_bad_channel_kwargs is None:
+        detect_bad_channel_kwargs = {}
+
+    detect_bad_channel_kwargs: dict
+
+    bad_channel_ids, channel_labels = si.detect_bad_channels(
+        recording, **detect_bad_channel_kwargs
+    )
+
+    all_dead_labels = ["dead", "noisy", "out"]
+
+    if labels_to_remove == "all":
+        ids_to_remove = bad_channel_ids
+    else:
+        if isinstance(labels_to_remove, str):
+            labels_to_remove = [labels_to_remove]
+
+        channel_ids = recording.get_channel_ids()
+
+        ids_to_remove = []
+        for label in labels_to_remove:
+
+            if label not in all_dead_labels:
+                raise ValueError(
+                    f"The passed label {label} is not valid, valid labels are: {all_dead_labels}"
+                )
+
+            chan_id_by_label = [
+                id for (i, id) in enumerate(channel_ids) if channel_labels[i] == label
+            ]
+
+            ids_to_remove += chan_id_by_label
+
+    return ids_to_remove
