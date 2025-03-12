@@ -4,6 +4,7 @@ from pathlib import Path  # Move Path outside TYPE_CHECKING
 from typing import TYPE_CHECKING, Literal
 
 if TYPE_CHECKING:
+    from probeinterface import Probe
     from spikeinterface.core import BaseRecording
 
 
