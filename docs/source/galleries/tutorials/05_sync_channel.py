@@ -12,7 +12,8 @@ Sync Channel Tutorial
 # --- hide: start ---
 import shutil
 import spikewrap as sw
-shutil.rmtree(sw.get_example_data_path("openephys") / "derivatives")
+if (derivatives_path := sw.get_example_data_path("openephys") / "derivatives").is_dir():
+    shutil.rmtree(derivatives_path)
 # --- hide: stop ---
 
 # %%
