@@ -6,26 +6,28 @@ from typing import TYPE_CHECKING, Literal
 if TYPE_CHECKING:
     from spikeinterface.core import BaseRecording
 
+
 import re
 import warnings
 
+import spikeinterface.extractors as si_extractors
 import spikeinterface.full as si
 
 from spikewrap.utils import _utils
 
 
 def load_data(
-    run_path: Path, file_format: Literal["spikeglx", "openephys"], probe  # TODO: TYPE!
+    run_path: Path, file_format: Literal["spikeglx", "openephys"], probe: Probe | None
 ) -> tuple[BaseRecording, BaseRecording]:
     """
-    explain (e.g. without sync needed for sorting, otherwise store sync for
-    storing the sync array!
+    TODO: add note that must juggle two recordings has probe is not loaded on sync recording!
+
     """
     _utils.message_user(f"Loading data from path: {run_path}")
 
     if file_format == "spikeglx":
         without_sync, with_sync = [
-            si.read_spikeglx(
+            si_extractors.read_spikeglx(
                 folder_path=run_path,
                 stream_id="imec0.ap",
                 all_annotations=True,
@@ -91,7 +93,7 @@ def load_data(
 # exactly the process described in the documentation.
 
 
-def get_run_paths(
+def get_raw_run_paths(
     file_format: Literal["spikeglx", "openephys"],
     ses_path: Path,
     passed_run_names: Literal["all"] | list[str],
@@ -168,9 +170,32 @@ def get_spikeglx_runs(ses_path: Path) -> list[Path]:
     list of Path
         A list of validated run paths, each contain one recording.
     """
-    detected_run_paths = [
-        path_ for path_ in ses_path.glob("*g*_imec*") if path_.is_dir()
-    ]
+
+    # Look for spikeglx runs, either folders at the session level that include
+    # pattern like "g0_imec" or contain a folder that does.
+    putative_run_paths = [path_ for path_ in ses_path.glob("*") if path_.is_dir()]
+    detected_run_paths = []
+
+    for path_ in putative_run_paths:
+
+        # If the run contains spikeglx files
+        if any(path_.glob("*.ap.bin")):
+            detected_run_paths.append(path_)
+
+        # Otherwise if the putative run folder contains a
+        # spikeglx-formatted folder then it is a run folder
+        # (spikeinterface will auto-detect data recursively from
+        # this folder down, which is why we only allow one folder
+        # within the run folder in this case.
+        else:
+            subpath_ = list(path_.glob("*g*imec*"))
+            if any(subpath_):
+                if not len(subpath_) == 1:
+                    raise RuntimeError(
+                        f"Multiple gates / triggers are not supported. Only one folder"
+                        f"expected in path: {path_}"
+                    )
+            detected_run_paths.append(path_)
 
     # Currently, only imec0 supported
     for path_ in detected_run_paths:
@@ -189,7 +214,9 @@ def get_spikeglx_runs(ses_path: Path) -> list[Path]:
 
     # Currently, multi-trigger not supported
     for path_ in detected_run_paths:
-        rec_paths = list(path_.glob("*.bin"))
+        rec_paths = list(
+            path_.rglob("*ap.bin")  # currently LFP not supported.
+        )  # rglob as we might have two-level run folder (TODO: DOC)
         if len(rec_paths) > 1:
             raise RuntimeError(
                 f"The run folder {path_} contains more than one recording.\n"
