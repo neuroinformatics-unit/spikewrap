@@ -207,7 +207,6 @@ class Session:
             job_if_slurm = run.save_preprocessed(
                 overwrite, chunk_duration_s, n_jobs, slurm
             )
-
             if slurm:
                 self._running_slurm_jobs.append(job_if_slurm)
 
@@ -338,7 +337,6 @@ class Session:
             job_if_slurm = run.sort(
                 sorting_configs, run_sorter_method, per_shank, overwrite, slurm
             )
-
             if slurm:
                 self._running_slurm_jobs.append(job_if_slurm)
 
@@ -570,7 +568,10 @@ class Session:
             self._load_raw_data(internal_overwrite=False)
 
         for run in self._raw_runs:
-            run.save_sync_channel(overwrite, slurm)
+            job_if_slurm = run.save_sync_channel(overwrite, slurm)
+
+            if slurm:
+                self._running_slurm_jobs.append(job_if_slurm)
 
     def raw_runs_loaded(self):
         return all(run._raw is not None for run in self._raw_runs)

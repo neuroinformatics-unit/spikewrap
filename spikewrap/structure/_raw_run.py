@@ -206,7 +206,8 @@ class RawRun:
         if self._sync is not None:
 
             if slurm:
-                self._save_sync_channel_slurm(overwrite, slurm)
+                job = self._save_sync_channel_slurm(overwrite, slurm)
+                return job
 
             sync_output_folder = self._sync_output_path / canon.sync_folder()
 
@@ -238,7 +239,7 @@ class RawRun:
             self._sync_output_path is not None
         ), "SeparateRawRun only contains self._sync_output_path"
 
-        _slurm.run_in_slurm(
+        job = _slurm.run_in_slurm_core(
             slurm_ops,
             func_to_run=self._save_sync_channel_slurm,
             func_opts={
@@ -247,6 +248,8 @@ class RawRun:
             },
             log_base_path=self._sync_output_path,
         )
+
+        return job
 
     # ---------------------------------------------------------------------------
     # Private Functions

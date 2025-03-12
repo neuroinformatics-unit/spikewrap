@@ -82,8 +82,10 @@ class PreprocessedRun:
         see the public session.save_preprocessed() for arguments.
         """
         if slurm:
-            self._save_preprocessed_slurm(overwrite, chunk_duration_s, n_jobs, slurm)
-            return
+            job = self._save_preprocessed_slurm(
+                overwrite, chunk_duration_s, n_jobs, slurm
+            )
+            return job
 
         _utils.message_user(f"Saving data for: {self._run_name}...")
 
@@ -235,7 +237,7 @@ class PreprocessedRun:
         """
         slurm_ops: dict | bool = slurm if isinstance(slurm, dict) else False
 
-        _slurm._run_in_slurm_core(
+        job = _slurm._run_in_slurm_core(
             slurm_ops,
             func_to_run=self.save_preprocessed,
             func_opts={
@@ -246,3 +248,5 @@ class PreprocessedRun:
             },
             log_base_path=self._output_path,
         )
+
+        return job
