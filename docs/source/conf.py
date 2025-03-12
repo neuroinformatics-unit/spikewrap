@@ -218,6 +218,7 @@ notfound_context = {
 notfound_urls_prefix = None
 
 linkcheck_ignore = [
-    "https://github.com/SpikeInterface/*",  # to avoid odd 403 error
+    "https://github.com/SpikeInterface/*",
+    "https://github.com/billkarsh/CatGT/blob/1ad1abe894e07d5fa3cb0439961d162caba34628/Build/ReadMe.md?plain=1#L1121"
 ]
 
