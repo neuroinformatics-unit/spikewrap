@@ -9,6 +9,12 @@ Sync Channel Tutorial
     This is a long-form tutorial on sorting. See :ref:`here <sync-channel-howto>` for a quick how-to.
 
 """
+# --- hide: start ---
+import shutil
+import spikewrap as sw
+shutil.rmtree(sw.get_example_data_path("openephys") / "derivatives")
+# --- hide: stop ---
+
 # %%
 # .. warning::
 #     Currently, the only supported sync channel is from Neuropixels Imec stream
