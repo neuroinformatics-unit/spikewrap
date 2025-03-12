@@ -21,12 +21,9 @@ def test_legacy_openephys_detection(tmp_path):
 
     session_path = create_dummy_openephys_folder(tmp_path)
 
-    # check for legacy format
-    legacy_format = any(session_path.rglob("structure.openephys"))
-
     # Try calling `load_data()` and check if it raises an error
     try:
-        # Make sure load_data gets to legacy check first
+        # Make sure load_data gets to our legacy check first
         load_data(session_path, "openephys", probe=None)
         # If no error was raised, fail the test
         pytest.fail("Function is NOT detecting `structure.openephys`. Test failed.")
