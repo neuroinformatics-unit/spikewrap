@@ -12,7 +12,7 @@ if __name__ == "__main__":
     session.preprocess(
         configs="neuropixels+mountainsort5",
         per_shank=True,
-        concat_runs=True,
+        concat_runs=False,
     )
 
     if False:
@@ -30,6 +30,9 @@ if __name__ == "__main__":
         slurm=True,
         chunk_duration_s=0.1,
     )
+
+    print("Waiting for slurm")
+    session.wait_for_slurm()
 
     if False:
         session.sort(
