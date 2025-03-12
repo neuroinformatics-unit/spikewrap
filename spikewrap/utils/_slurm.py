@@ -14,7 +14,32 @@ from spikewrap.utils import _utils
 from spikewrap.utils._checks import _system_call_success
 
 
-def run_in_slurm(
+def run_in_slurm(slurm_opts: None | dict, func_to_run: Callable, log_base_path: Path):
+    """
+    Run a function in a slurm job.
+
+    Parameters
+    ----------
+
+    slurm_opts
+        A dictionary of options that control execution of the slurm
+        job. See spikewrap.default_slurm_options() for details.
+
+    func_to_run
+        The functino to run inside the slurm job.
+
+    log_base_path
+        The path where a folder slurm logs will be output
+
+    """
+    _run_in_slurm_core(slurm_opts, func_to_run, {}, log_base_path)
+
+
+# Private Functions
+# -----------------------------------------------------------------------------
+
+
+def _run_in_slurm_core(
     slurm_opts: bool | dict,
     func_to_run: Callable,
     func_opts: dict,
@@ -22,6 +47,9 @@ def run_in_slurm(
 ):
     """
     Run a function in SLURM using submitit.
+    This is very similar to `run_in_slurm` but exposes
+    passing `func_opts` to pass at runtime, which is not
+    exposed publicly to avoid confusion.
 
     Parameters
     ----------
@@ -36,7 +64,7 @@ def run_in_slurm(
     func_opts
         A dictionary of kwargs to run in `func_to_run`.
     """
-    if not is_slurm_installed():
+    if not _is_slurm_installed():
         raise RuntimeError("Cannot run with slurm, slurm is not found on this system.")
 
     used_slurm_opts = default_slurm_options()
@@ -47,18 +75,18 @@ def run_in_slurm(
     should_wait = used_slurm_opts.pop("wait")
     env_name = used_slurm_opts.pop("env_name")
 
-    log_path = make_job_log_output_path(log_base_path)
+    log_path = _make_job_log_output_path(log_base_path)
 
-    executor = get_executor(log_path, used_slurm_opts)
+    executor = _get_executor(log_path, used_slurm_opts)
 
     job = executor.submit(
-        wrap_function_with_env_setup, func_to_run, env_name, func_opts
+        _wrap_function_with_env_setup, func_to_run, env_name, func_opts
     )
 
     if should_wait:
         job.wait()
 
-    send_user_start_message(func_to_run.__name__, log_path, job, func_opts)
+    _send_user_start_message(func_to_run.__name__, log_path, job, func_opts)
 
     return job
 
@@ -66,7 +94,7 @@ def run_in_slurm(
 # Utils --------------------------------------------------------------------------------
 
 
-def get_executor(log_path: Path, slurm_opts: dict) -> submitit.AutoExecutor:
+def _get_executor(log_path: Path, slurm_opts: dict) -> submitit.AutoExecutor:
     """
     Return the executor object that defines parameters of the SLURM node to
     request and the path to logs.
@@ -95,7 +123,7 @@ def get_executor(log_path: Path, slurm_opts: dict) -> submitit.AutoExecutor:
     return executor
 
 
-def wrap_function_with_env_setup(
+def _wrap_function_with_env_setup(
     function: Callable, env_name: str, func_opts: dict
 ) -> None:
     """
@@ -127,7 +155,7 @@ def wrap_function_with_env_setup(
     function(**func_opts)
 
 
-def make_job_log_output_path(log_base_path: Path) -> Path:
+def _make_job_log_output_path(log_base_path: Path) -> Path:
     """
     The SLURM job logs are saved to a folder 'slurm_logs'.
 
@@ -153,7 +181,7 @@ def make_job_log_output_path(log_base_path: Path) -> Path:
     return log_path
 
 
-def send_user_start_message(
+def _send_user_start_message(
     processing_function: str, log_path: Path, job: submitit.Job, func_opts: dict
 ) -> None:
     """
@@ -182,22 +210,9 @@ def send_user_start_message(
     )
 
 
-def is_slurm_installed():
+def _is_slurm_installed():
     slurm_installed = _system_call_success("sinfo -v")
     return slurm_installed
-
-
-def check_slurm_job_status(job_id):
-    try:
-        result = subprocess.run(
-            ["squeue", "--job", str(job_id)], capture_output=True, text=True, check=True
-        )
-        if job_id in result.stdout:
-            return "Job is running or pending."
-        else:
-            return "Job is not running."
-    except subprocess.CalledProcessError as e:
-        return f"Error checking job: {e}"
 
 
 # TODO: reinstante slurm delete thing!
