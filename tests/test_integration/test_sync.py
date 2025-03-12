@@ -141,7 +141,13 @@ class TestSorting(BaseTest):
             session.plot_sync_channel(0)
 
     def test_save_sync(self, session):
+        """
+        Test sync channel saves correctly
+        and the overwrite flag works as expected
+        """
 
+        # Load raw data, edit it, save and reload checking
+        # reloaded data is correct
         session.load_raw_data()
 
         session.silence_sync_channel(1, [(250, 500)])
@@ -158,3 +164,19 @@ class TestSorting(BaseTest):
         assert np.all(load_1_sync == 1)
         assert np.all(load_2_sync[:250] == 1)
         assert np.all(load_2_sync[250:500] == 0)
+
+        # Overwrite the sync data, then try and save
+        # (should raise error with overwrite false)
+        session.load_raw_data(overwrite=True)
+
+        with pytest.raises(RuntimeError):
+            session.save_sync_channel()  # overwrite False is expected default
+
+        # Now save it and check the overwritten
+        # sync data is saved
+        session.save_sync_channel(overwrite=True)
+
+        load_2_sync = np.load(
+            session._output_path / "recording2" / "sync" / "sync_channel.npy"
+        )
+        assert np.all(load_2_sync == 1)
