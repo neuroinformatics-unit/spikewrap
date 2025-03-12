@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from pathlib import Path  # Move Path outside TYPE_CHECKING
+from pathlib import Path  # Moved Path outside TYPE_CHECKING
 from typing import TYPE_CHECKING, Literal
 
 if TYPE_CHECKING:
