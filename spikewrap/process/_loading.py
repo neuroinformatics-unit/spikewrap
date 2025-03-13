@@ -51,7 +51,7 @@ def load_data(
             load_sync_channel=False,
         )
         try:
-            with_sync = si.read_openephys(
+            with_sync = si_extractors.read_openephys(
                 folder_path=run_path,
                 all_annotations=False,
                 load_sync_channel=True,
