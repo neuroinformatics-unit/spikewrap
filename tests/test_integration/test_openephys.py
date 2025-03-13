@@ -17,7 +17,7 @@ class TestLegacyOpenEphysLoading:
         )
         node_path = session_path / "Record Node 103"
         node_path.mkdir(parents=True, exist_ok=True)
-        # Create `structure.openephys` to detect a legacy dataset
+        # Create `structure.openephys` to detect legacy format
         (node_path / "structure.openephys").touch()
         return session_path
 
