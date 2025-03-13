@@ -12,7 +12,6 @@ import re
 import warnings
 
 import spikeinterface.extractors as si_extractors
-import spikeinterface.full as si
 
 from spikewrap.utils import _utils
 
