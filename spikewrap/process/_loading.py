@@ -45,7 +45,7 @@ def load_data(
                 "Please contact the spikewrap team if you would like to see this supported."
             )
 
-        without_sync = si.read_openephys(
+        without_sync = si_extractors.read_openephys(
             folder_path=run_path,
             all_annotations=True,
             load_sync_channel=False,
