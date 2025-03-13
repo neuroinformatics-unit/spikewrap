@@ -25,7 +25,6 @@ class TestLegacyOpenEphysLoading:
         """
         Ensure that load_data() properly detects `structure.openephys` and raises an error.
         """
-
         with pytest.raises(RuntimeError) as e:
             load_data(legacy_openephys_session_path, "openephys", probe=None)
         assert "Legacy OpenEphys format is not supported." in str(e.value)
