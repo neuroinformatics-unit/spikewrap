@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Callable
+from typing import Callable, Literal
 
 import numpy as np
 import spikeinterface.full as si
@@ -122,6 +122,9 @@ def _get_pp_funcs() -> dict[str, Callable]:
         "bandpass_filter": si.bandpass_filter,
         "common_reference": si.common_reference,
         "remove_bad_channels": remove_bad_channels,
+        "interpolate_bad_channels": interpolate_bad_channels,
+        "remove_channels": remove_channels,
+        "interpolate_channels": interpolate_channels,
     }
 
     return pp_funcs
@@ -139,7 +142,26 @@ def remove_bad_channels(
     labels_to_remove: Literal["all"] | str | list[str] = "all",
     detect_bad_channel_kwargs: dict | None = None,
 ):
-    """ """
+    """
+    Detect bad channels on the recording ("dead", "noise" or "out")
+    and remove them. Uses on SpikeInterface's ``detect_bad_channels``
+    and `remove_channels`` functions.
+
+    Parameters
+    ----------
+
+    recording
+        The spikeinterface recording object to preprocess
+        (not passed via spikewrap config dictionary).
+    labels_to_remove
+        A list of labels, channels that are categorised with this
+        label will be removed. Can be some combination
+        of "dead", "noise" or "out". "all" will remove channels
+        with any of these labels.
+    detect_bad_channel_kwargs
+        dictionary of kwargs passed to SpikeInterface's
+        ``detect_bad_channels`` function.
+    """
     ids_to_remove = _get_bad_channel_ids(
         recording, labels_to_remove, detect_bad_channel_kwargs
     )
@@ -153,7 +175,12 @@ def interpolate_bad_channels(
     detect_bad_channel_kwargs: dict | None = None,
     interpolate_bad_channel_kwargs: dict | None = None,
 ):
-    """ """
+    """
+    Detect bad channels on the recording ("dead", "noise" or "out")
+    and interpolate them. Uses on SpikeInterface's
+    ``detect_bad_channels`` and `interpolate_bad_channels`` functions.
+
+    """
     ids_to_interpolate = _get_bad_channel_ids(
         recording, labels_to_remove, detect_bad_channel_kwargs
     )
@@ -166,12 +193,28 @@ def interpolate_bad_channels(
     )
 
 
-def interpolate_channels(  # TODO: test si kwargs
+def interpolate_channels(
     recording: BaseRecording,
     channel_ids: list[str],
     interpolate_bad_channel_kwargs: dict | None = None,
 ) -> BaseRecording:
-    """ """
+    """
+    Return the recording with channels interpolated.
+    Kriging interpolation used, as implemented in the
+    SpikeInterface function ``interpolate_bad_channels``.
+
+    Parameter
+    ---------
+    recording
+        The spikeinterface recording object to preprocess
+        (not passed via spikewrap config dictionary).
+    channel_ids
+        List of channel ids, corresponding channels will be
+        interpolated.
+    interpolate_bad_channel_kwargs
+        dictionary of kwargs passed to SpikeInterface's
+        ``interpolate_bad_channels`` function.
+    """
     if interpolate_bad_channel_kwargs is None:
         interpolate_bad_channel_kwargs = {}
 
@@ -181,7 +224,18 @@ def interpolate_channels(  # TODO: test si kwargs
 
 
 def remove_channels(recording: BaseRecording, channel_ids: list[str]) -> BaseRecording:
-    """ """
+    """
+    Return the recording with channels removed.
+
+    Parameter
+    ---------
+    recording
+        The spikeinterface recording object to preprocess
+        (not passed via spikewrap config dictionary).
+    channel_ids
+        List of channel ids, corresponding channels will be
+        removed from the recording.
+    """
     return recording.remove_channels(channel_ids)
 
 
@@ -190,19 +244,25 @@ def _get_bad_channel_ids(
     labels_to_remove: Literal["all"] | str | list[str] = "all",
     detect_bad_channel_kwargs: dict | None = None,
 ):
-    """ """
+    """
+    Returns a list of channel ids corresponding to the
+    labels that match ``labels_to_remove``. These are the labels
+    returned by SpikeInterface's ``detect_bad_channel`` kwargs
+    (returned in a list that maps 1:1 on the channel ids from
+    `get_channel_ids`.
+    """
+    # Detect the bad channels.
     if detect_bad_channel_kwargs is None:
         detect_bad_channel_kwargs = {}
-
-    detect_bad_channel_kwargs: dict
 
     bad_channel_ids, channel_labels = si.detect_bad_channels(
         recording, **detect_bad_channel_kwargs
     )
 
-    all_dead_labels = ["dead", "noisy", "out"]
+    all_dead_labels = ["dead", "noise", "out"]
 
     if labels_to_remove == "all":
+        # By default, SpikeInterface will remove all bad channels
         ids_to_remove = bad_channel_ids
     else:
         if isinstance(labels_to_remove, str):
@@ -210,6 +270,8 @@ def _get_bad_channel_ids(
 
         channel_ids = recording.get_channel_ids()
 
+        # Iterate through the labels to match, collecting
+        # all corresponding channel ids.
         ids_to_remove = []
         for label in labels_to_remove:
 
