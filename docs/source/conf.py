@@ -105,6 +105,9 @@ exclude_patterns = [
     "gallery_builds/tutorials/*.ipynb", "gallery_builds/get_started/*.ipynb", "gallery_builds/how_to/*.ipynb"  # TODO: rename if not using custom
 ]
 
+
+import sphinx_gallery.sorting
+
 fast_mode = "fast" in os.getenv("SPHINXENV", "")
 
 # Configure Sphinx gallery
@@ -213,6 +216,7 @@ notfound_urls_prefix = None
 # A list of regular expressions that match URIs that should not be checked
 linkcheck_ignore = [
     "https://github.com/SpikeInterface/*",
-    "https://github.com/billkarsh/CatGT/*"
+    "https://github.com/billkarsh/CatGT/*",
+    "https://figshare.com/articles/online_resource/Spike_sorting_pipeline_for_the_International_Brain_Laboratory/19705522?file=49783080"
 ]
 
