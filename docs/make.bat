@@ -29,11 +29,12 @@ if "%1" == "" goto help
 REM Check if "fast" is passed as an argument and update SPHINXOPTS
 for %%A in (%*) do (
 	if "%%A"=="fast" (
-		set SPHINXOPTS=%SPHINXOPTS% -t fast
+        set SPHINXOPTS=%SPHINXOPTS% -t fast
 	)
 )
 
 :process_targets
+if "%1" == "fast" shift
 if "%1" == "clean" (
 	echo Removing auto-generated files...
 	rmdir /S /Q %BUILDDIR%
