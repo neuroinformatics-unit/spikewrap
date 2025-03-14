@@ -19,7 +19,8 @@ clean:
 	rm -rf ./source/gallery_builds
 
 fast:
-	@export SPHINXENV=fast
+	@echo "Fast mode enabled"
+	@$(MAKE) SPHINXENV=fast
 
 # Catch-all target: route all unknown targets to Sphinx using the new
 # "make mode" option.  $(O) is meant as a shortcut for $(SPHINXOPTS).
