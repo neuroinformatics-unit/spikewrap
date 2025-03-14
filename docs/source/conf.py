@@ -105,6 +105,9 @@ exclude_patterns = [
     "gallery_builds/tutorials/*.ipynb", "gallery_builds/get_started/*.ipynb", "gallery_builds/how_to/*.ipynb"  # TODO: rename if not using custom
 ]
 
+
+import sphinx_gallery.sorting
+
 fast_mode = "fast" in os.getenv("SPHINXENV", "")
 
 # Configure Sphinx gallery

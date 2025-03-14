@@ -17,8 +17,8 @@ import spikeinterface.full as si
 
 from spikewrap.configs._backend import canon
 from spikewrap.process import _loading
+from spikewrap.process._preprocessing import _preprocess_recording  # TODO
 from spikewrap.utils import _slurm, _utils
-from spikewrap.process.preprocessing import _preprocess_recording  # TODO
 
 
 class RawRun:

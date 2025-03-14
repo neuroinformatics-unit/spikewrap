@@ -8,7 +8,7 @@ from pathlib import Path
 
 import yaml
 
-from spikewrap.process import preprocessing
+from spikewrap.process import _preprocessing
 from spikewrap.utils import _utils
 
 
@@ -191,7 +191,7 @@ def show_supported_preprocessing_steps() -> None:
     Print the (currently supported) SpikeInterface
     preprocessing steps.
     """
-    pp_steps = preprocessing._get_pp_funcs()
+    pp_steps = _preprocessing._get_pp_funcs()
 
     _utils.message_user(
         f"Currently supported preprocessing steps are:\n" f"{list(pp_steps.keys())}"
