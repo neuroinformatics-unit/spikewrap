@@ -4,7 +4,7 @@ import numpy as np
 import pytest
 import spikeinterface.full as si
 from base import BaseTest
-from spikeinterface._preprocessing import interpolate_bad_channels
+from spikeinterface.preprocessing import interpolate_bad_channels
 
 import spikewrap as sw
 from spikewrap.process._preprocessing import _get_bad_channel_ids
