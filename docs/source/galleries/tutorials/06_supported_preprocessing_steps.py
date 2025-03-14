@@ -17,7 +17,7 @@ see XXX for more detail on configs:
 pp_steps = {
     "1": ["phase_shift", {}],
     "2": ["bandpass_filter", {"freq_min": 300, "freq_max": 6000}],
-    "3": ["remove_bad_channels", {"detect_bad_channel_kwargs": {"chunk_duration_s": 0.5}],
+    "3": ["remove_bad_channels", {"detect_bad_channel_kwargs": {"chunk_duration_s": 0.5}}],
     "4": ["common_reference", {"operator": "median"}],
 }
 
@@ -51,7 +51,7 @@ pp_steps = {
 # : This function removes
 #
 # ``interpolate_bad_channels``
-#
+# :
 #
 #
 # ``remove_channels``
