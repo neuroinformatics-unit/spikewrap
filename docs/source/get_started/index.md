@@ -15,7 +15,7 @@ How to install ``spikewrap``.
 :::
 
 :::{grid-item-card} {fas}`sitemap;sd-text-primary` Feature Overview
-:link: sphx_glr_gallery_builds_get_started_feature_overview.py
+:link: sphx_glr_gallery_builds_get_started_slow_feature_overview.py
 :link-type: ref
 
 Key features of the package.
@@ -45,7 +45,7 @@ How ``spikewrap`` outputs processed data.
 :hidden:
 
 installation
-../gallery_builds/get_started/feature_overview
+../gallery_builds/get_started/slow_feature_overview
 supported_formats
 output_folder_formats
 ```
