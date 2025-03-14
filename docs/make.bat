@@ -26,25 +26,21 @@ if errorlevel 9009 (
 
 if "%1" == "" goto help
 
-REM Check if "fast" is passed as an argument and update SPHINXOPTS
-for %%A in (%*) do (
-	if "%%A"=="fast" (
-        set SPHINXOPTS=%SPHINXOPTS% -t fast
-	)
-)
-
-:process_targets
-if "%1" == "fast" shift
 if "%1" == "clean" (
 	echo Removing auto-generated files...
 	rmdir /S /Q %BUILDDIR%
 	rmdir /S /Q %SOURCEDIR%\gallery_builds\
-) else (
-	%SPHINXBUILD% -M %1 %SOURCEDIR% %BUILDDIR% %SPHINXOPTS% %O%
+	shift
 )
 
-shift
-if not "%1" == "" goto process_targets
+if "%1" == "fast" (
+    set SPHINXENV=fast
+    echo "Fast mode enabled: SPHINXENV is now %SPHINXENV%"
+    shift
+)
+
+echo %SPHINXBUILD% -M %1 %SOURCEDIR% %BUILDDIR% %SPHINXOPTS% %O%
+%SPHINXBUILD% -M %1 %SOURCEDIR% %BUILDDIR% %SPHINXOPTS% %O%
 
 goto end
 
