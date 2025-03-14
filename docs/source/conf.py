@@ -107,13 +107,12 @@ exclude_patterns = [
 
 import sphinx_gallery.sorting
 
+fast_mode = tags.has("fast")
 
 # Configure Sphinx gallery
 sphinx_gallery_conf = {
     "examples_dirs": ["galleries/tutorials", "galleries/get_started", "galleries/how_to"],
-    "filename_pattern": "/*.py",  # which files to execute before inclusion
     "gallery_dirs": ["gallery_builds/tutorials", "gallery_builds/get_started", "gallery_builds/how_to"],  # output directory
-    "run_stale_examples": True,  # re-run examples on each build
     # Integration with Binder, see https://sphinx-gallery.github.io/stable/configuration.html#generate-binder-links-for-gallery-notebooks-experimental
     "binder": {
         "org": "neuroinformatics-unit",
@@ -125,9 +124,8 @@ sphinx_gallery_conf = {
     "reference_url": {"spikewrap": None},
     "thumbnail_size": (1500, 1500),  # width, height in pixels
     'within_subsection_order': "FileNameSortKey",
-    #  "default_thumb_file": "",  # default thumbnail image
- #   "remove_config_comments": True,
-    # do not render config params set as # sphinx_gallery_config [= value]
+    "filename_pattern": r"^(?!.*slow).*\.py" if fast_mode else  r".*\.py",  # skip "slow" pages in fast mode
+    "run_stale_examples": not fast_mode,  # Don't re-run unchanged scripts unless needed
 }
 
 
