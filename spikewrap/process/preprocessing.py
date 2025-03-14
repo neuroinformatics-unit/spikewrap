@@ -130,7 +130,7 @@ def _get_pp_funcs() -> dict[str, Callable]:
     return pp_funcs
 
 
-# Custom Preproessors
+# Custom Preprocessors
 # ----------------------------------------------------------------------
 # These should be merged into SpikeInterface in future wherever possible
 # TODO: suggest feature on SI side to sub-select by label,

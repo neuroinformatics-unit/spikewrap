@@ -7,7 +7,7 @@ from base import BaseTest
 from spikeinterface.preprocessing import interpolate_bad_channels
 
 import spikewrap as sw
-from spikewrap.process._preprocessing import _get_bad_channel_ids
+from spikewrap.process.preprocessing import _get_bad_channel_ids
 
 
 class TestPreprocessing(BaseTest):
