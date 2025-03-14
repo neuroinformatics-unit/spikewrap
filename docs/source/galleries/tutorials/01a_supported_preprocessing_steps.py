@@ -65,12 +65,21 @@ pp_steps = {
 # For reference, their implementations are in ``spikewrap.process._preprocessing``
 # (however, they should not be called directly, instead use the config_dict as above).
 #
+# .. note::
+#     Currently, bad-channel detection is performed per-run (if not concatenated). In some cases it is useful
+#     to remove the union of all bad channels (across runs from each run). This is not currently implemented in
+#     spikewrap, but if you would like to use this, please get in contact.
+#
+# .. warning::
+#     Bad-channel detection is performed at the :class:`spikewrap.Session.preprocess` stage,  and so may slow down
+#     this call. This is in contract to other preprocessing steps which are lazy.
+#
 # ``remove_bad_channels``
 # ^^^^^^^^^^^^^^^^^^^^^^^
 #
 # This function removes bad channels from the recording. Under the hood it uses SpikeInterface's
 # `detect_bad_channels <https://spikeinterface.readthedocs.io/en/latest/api.html#spikeinterface.preprocessing.detect_bad_channels>`_
-# and `remove_channels <https://spikeinterface.readthedocs.io/en/latest/modules/preprocessing.html#detect-bad-channels-interpolate-bad-channels>`_ functions.
+# and `remove_channels <https://spikeinterface.readthedocs.io/en/latest/modules/preprocessing.html#detect-bad-channels-interpolate-bad-channels>`__ functions.
 # The default settings use the International Brain Laboratory's (IBLs)
 # `detect bad channels approach <https://figshare.com/articles/online_resource/Spike_sorting_pipeline_for_the_International_Brain_Laboratory/19705522?file=49783080>`_. It's parameters are:
 #
@@ -81,33 +90,32 @@ pp_steps = {
 # ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 #
 # This function interpolates (Kriging) bad channels in the recording. Under the hood it uses SpikeInterface's
-# `detect_bad_channels <https://spikeinterface.readthedocs.io/en/latest/api.html#spikeinterface.preprocessing.detect_bad_channels>`_ and
-# `interpolate_bad_channels <https://spikeinterface.readthedocs.io/en/latest/modules/preprocessing.html#detect-bad-channels-interpolate-bad-channels>`_ function.
+# `detect_bad_channels <https://spikeinterface.readthedocs.io/en/latest/api.html#spikeinterface.preprocessing.detect_bad_channels>`__ and
+# `interpolate_bad_channels <https://spikeinterface.readthedocs.io/en/latest/modules/preprocessing.html#detect-bad-channels-interpolate-bad-channels>`__ function.
 # Note that the spikeinterface ``interpolate_bad_channels`` only interpolates a given list of channels, rather than the detect-and-interpolate performed in ``spikewrap``.
 # The default method uses the International Brain Laboratory's (IBLs)
 # `detect bad channels approach <https://figshare.com/articles/online_resource/Spike_sorting_pipeline_for_the_International_Brain_Laboratory/19705522?file=49783080>`_
 #
 # * ``labels_to_remove``: Set the bad-channel labels to interpolate. During bad channel detection, channels are labelled ``"good"``, ``"out"`` (of brain), ``"noise"`` and ``"dead""``. This argument interpolates channels that have the passed labels. e.g. ``["noise", "dead"]`` will interpolate only dead and noisy channels, but out of brain and good channels will be retained.
 # * ``detect_bad_channel_kwargs``: A dictionary of arguments that will be passed to SpikeInterface's `detect_bad_channels <https://spikeinterface.readthedocs.io/en/latest/api.html#spikeinterface.preprocessing.detect_bad_channels>`_.
-# * ``interpolate_bad_channel_kwargs``: A dictionary of kwargs that will be passed to SpikeInterface's `interpolate_bad_channels <https://spikeinterface.readthedocs.io/en/latest/modules/preprocessing.html#detect-bad-channels-interpolate-bad-channels>`_ function that performs the interpolation (but not detection).
+# * ``interpolate_bad_channel_kwargs``: A dictionary of kwargs that will be passed to SpikeInterface's `interpolate_bad_channels <https://spikeinterface.readthedocs.io/en/latest/modules/preprocessing.html#detect-bad-channels-interpolate-bad-channels>`__ function that performs the interpolation (but not detection).
 #
 # ``remove_channels``
 # ^^^^^^^^^^^^^^^^^^^
 #
 # This function to remove a given list of channels from the recording.
-# Uses SpikeInterface's `whiten <https://spikeinterface.readthedocs.io/en/latest/api.html#spikeinterface.preprocessing.whiten>`_ function.
+# Uses SpikeInterface's `whiten <https://spikeinterface.readthedocs.io/en/latest/api.html#spikeinterface.preprocessing.whiten>`__ function.
 #
 # * ``channel_ids``: A list of channel ids to remove from the recording.
-#
 #
 # ``interpolate_channels``
 # ^^^^^^^^^^^^^^^^^^^^^^^^
 #
 # This function to interpolate (Kriging) a given list of channels in the recording.
-# Uses SpikeInterface's `interpolate_bad_channels <https://spikeinterface.readthedocs.io/en/latest/api.html#spikeinterface.preprocessing.whiten>`_ function.
+# Uses SpikeInterface's `interpolate_bad_channels <https://spikeinterface.readthedocs.io/en/latest/api.html#spikeinterface.preprocessing.whiten>`__ function.
 #
 # * ``channel_ids``: A list of channel ids to interpolate.
-# * ``interpolate_bad_channel_kwargs``: A dictionary of kwargs that will be passed to SpikeInterface's `interpolate_bad_channels <https://spikeinterface.readthedocs.io/en/latest/modules/preprocessing.html#detect-bad-channels-interpolate-bad-channels>`_ function that performs the interpolation (but not detection).
+# * ``interpolate_bad_channel_kwargs``: A dictionary of kwargs that will be passed to SpikeInterface's `interpolate_bad_channels <https://spikeinterface.readthedocs.io/en/latest/modules/preprocessing.html#detect-bad-channels-interpolate-bad-channels>`__ function that performs the interpolation (but not detection).
 #
 
 
