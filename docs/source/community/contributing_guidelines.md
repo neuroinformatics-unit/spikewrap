@@ -128,7 +128,7 @@ folder and open the `index.html` file.
 
 If running with fast mode :
 ```
-make fast clean html
+make clean fast html
 ```
 then any gallery with 'slow' in the filename will not be run, and run_stale_examples is set to False.
 
