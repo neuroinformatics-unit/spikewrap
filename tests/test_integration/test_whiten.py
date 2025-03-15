@@ -32,15 +32,15 @@ class TestWhiten(BaseTest):
             "1": [
                 "whiten",
                 {
-                    "apply_mean": False,
+                    "apply_mean": True,
                     "mode": "global",
                     "dtype": "float32",
                     "int_scale": 1.0,
-                    "chunk_size": 500,
-                    "num_chunks_per_segment": 50,
+                    "chunk_size": 1000,
+                    "num_chunks_per_segment": 150,
                     "seed": 42,
                     # Set to True if setup is computationally efficient, use regularize_kwargs with caution
-                    "regularize": False,
+                    "regularize": True,
                 },
             ]
         }
