@@ -121,6 +121,7 @@ def _get_pp_funcs() -> dict[str, Callable]:
         "phase_shift": si.phase_shift,
         "bandpass_filter": si.bandpass_filter,
         "common_reference": si.common_reference,
+        "whiten": si.whiten,
         "remove_bad_channels": remove_bad_channels,
         "interpolate_bad_channels": interpolate_bad_channels,
         "remove_channels": remove_channels,
