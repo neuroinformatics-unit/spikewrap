@@ -47,7 +47,9 @@ class TestWhiten(BaseTest):
         session.preprocess(whitening_config)
         spikewrap_whitened = session._pp_runs[0]
 
-        underlying_recording = spikewrap_whitened._preprocessed["grouped"]["1-raw-whiten"]
+        underlying_recording = spikewrap_whitened._preprocessed["grouped"][
+            "1-raw-whiten"
+        ]
         sw_data = underlying_recording.get_traces()
         W_sw = np.array(
             spikewrap_whitened._preprocessed["grouped"]["1-raw-whiten"]._kwargs["W"]
