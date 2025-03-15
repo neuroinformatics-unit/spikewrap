@@ -119,6 +119,7 @@ session = sw.Session(
     probe=None,  # optional argument to set probe
 )
 
+session.save_sync_channel()
 
 # Run (lazy) preprocessing, for fast plotting
 # and prototyping of preprocessing steps

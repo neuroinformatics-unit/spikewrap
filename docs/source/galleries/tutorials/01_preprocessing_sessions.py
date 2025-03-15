@@ -21,7 +21,12 @@ We will cover:
    ``spikewrap``'s features are currently limited. See the :ref:`Roadmap <roadmap>`
    for planned features.
 
+Under the hood, spikewrap uses SpikeInterface to perform all preprocessing steps.
+See the :ref:`Supported Preprocessing Steps <supported-preprocessing-tutorial>` for details
+on supported functionality.
 """
+
+
 
 # %%
 # Loading Data
@@ -100,8 +105,8 @@ session = sw.Session(
 session.preprocess(configs="neuropixels+kilosort2_5", concat_runs=True)
 
 # %%
-# Due to the magic of SpikeInterface, all data loading is 'lazy' and will be very fast.
-# Note that **nothing is written to disk at this stage**.
+# Due to the magic of SpikeInterface, data loading and most preprocessing functions
+# are 'lazy' and will be very fast. Note that **nothing is written to disk at this stage**.
 #
 # We can inspect the detected run names with:
 print(session.get_raw_run_names())
@@ -125,7 +130,8 @@ sw.show_configs("neuropixels+kilosort2_5")
 
 # %%
 # Otherwise, we can define a dictionary with the steps to pass to :class:`spikewrap.Session.preprocess()`.
-# All preprocess steps are defined with their underlying SpikeInterface function name.
+# Preprocess steps generally take the underlying SpikeInterface function name and parameters, see
+# :ref:`Supported Preprocessing Steps <supported-preprocessing-tutorial>` for details.
 
 configs = {
     "preprocessing": {

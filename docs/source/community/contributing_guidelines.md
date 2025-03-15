@@ -126,6 +126,14 @@ to the `build` folder. To read the built documentation in a browser, navigate to
 folder and open the `index.html` file.
 
 
+If running with fast mode :
+```
+make clean fast html
+```
+then any gallery with 'slow' in the filename will not be run, and run_stale_examples is set to False.
+
+Note the order is very important for this command, swapping argument order will result in an error.
+
 ### Editing the documentation
 
 The documentation is hosted using [GitHub Pages](https://pages.github.com/), and the source can be found at

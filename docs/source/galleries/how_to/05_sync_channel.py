@@ -44,11 +44,4 @@ session.silence_sync_channel(
 # refresh the sync channel
 session.load_raw_data(overwrite=True)
 
-# The sync channel can be concatenated as part of the preprocessing
-session.preprocess("neuropixels+kilosort2_5", concat_runs=True)
-
-# the sync channel will only change after preprocessing if concatenation is used.
-concat_sync_channel = session.get_sync_channel_after_preprocessing(run_idx=0)
-
-# this is the sync channel that is saved with `save_preprocessed`:
-session.save_preprocessed(overwrite=True)
+session.save_sync_channel(overwrite=True, slurm=False)

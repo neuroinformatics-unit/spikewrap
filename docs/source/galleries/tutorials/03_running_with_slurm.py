@@ -25,7 +25,7 @@ SLURM can be used to run jobs at certain computationally-heavy steps
 in the preprocessing pipeline.
 
 In `SpikeInterface <https://spikeinterface.readthedocs.io/en/stable/>`_,
-data loading and preprocessing is 'lazy', meaning operations are only
+data loading and many preprocessing steps are 'lazy', meaning operations are only
 performed on data as they are needed. This makes certain operations very fast,
 such as:
 

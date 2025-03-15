@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import shutil
 from typing import TYPE_CHECKING, Literal
 
 if TYPE_CHECKING:
@@ -11,12 +12,13 @@ if TYPE_CHECKING:
     from spikeinterface.core import BaseRecording
 
 import matplotlib.pyplot as plt
+import numpy as np
 import spikeinterface.full as si
 
 from spikewrap.configs._backend import canon
 from spikewrap.process import _loading
 from spikewrap.process._preprocessing import _preprocess_recording  # TODO
-from spikewrap.utils import _utils
+from spikewrap.utils import _slurm, _utils
 
 
 class RawRun:
@@ -35,6 +37,9 @@ class RawRun:
         Path to the output (processed) parent session-level data.
     file_format
         "spikeglx" or "openephys", acquisition software used.
+    sync_output_path
+        For `SeparateRawRun`, where the sync channel is saved.
+        Should be same path as preprocessed data output.
 
     Notes
     -----
@@ -54,12 +59,14 @@ class RawRun:
         parent_ses_name: str,
         run_name: str,
         file_format: Literal["spikeglx", "openephys"],
+        sync_output_path: Path | None,
     ):
 
         self._parent_input_path = parent_input_path
         self._parent_ses_name = parent_ses_name
         self._run_name = run_name
         self._file_format = file_format
+        self._sync_output_path = sync_output_path  # TODO: this name is confusing because it seems like the folder to the sync path but it is just to the run output path... should probably rename a lot
 
         # _raw should not change throughout the lifetime of the class
         # self._sync may be edited in place.
@@ -186,6 +193,61 @@ class RawRun:
             recording=self._sync, list_periods=[periods_to_silence], mode="zeros"
         )
 
+    def save_sync_channel(
+        self, overwrite: bool = False, slurm: bool | dict = False
+    ) -> None:
+        """
+        Save the sync channel as a ``.npy`` file.
+
+        In SI, sorting cannot proceed if the sync channel is loaded to ensure
+        it does not interfere with sorting. As such, a separate recording with the
+        sync channel present is maintained and handled separately here.
+        """
+        if self._sync is not None:
+
+            if slurm:
+                self._save_sync_channel_slurm(overwrite, slurm)
+
+            sync_output_folder = self._sync_output_path / canon.sync_folder()
+
+            if sync_output_folder.is_dir():
+                if overwrite:
+                    shutil.rmtree(sync_output_folder)
+                else:
+                    raise RuntimeError(
+                        f"`overwrite=False` but sync data already exists at: {sync_output_folder}"
+                    )
+
+            sync_data = self.get_sync_channel()
+
+            _utils.message_user(f"Saving sync channel for: {self._run_name}...")
+
+            assert sync_data.size == self._raw["grouped"].get_num_samples()
+
+            # Save the sync channel
+            assert self._sync_output_path is not None
+
+            sync_output_folder.mkdir(parents=True, exist_ok=True)
+            np.save(sync_output_folder / canon.saved_sync_filename(), sync_data)
+
+    def _save_sync_channel_slurm(self, overwrite: bool, slurm: dict | bool) -> None:
+        """ """
+        slurm_ops: dict | bool = slurm if isinstance(slurm, dict) else False
+
+        assert (
+            self._sync_output_path is not None
+        ), "SeparateRawRun only contains self._sync_output_path"
+
+        _slurm.run_in_slurm(
+            slurm_ops,
+            func_to_run=self._save_sync_channel_slurm,
+            func_opts={
+                "overwrite": overwrite,
+                "slurm": False,
+            },
+            log_base_path=self._sync_output_path,
+        )
+
     # ---------------------------------------------------------------------------
     # Private Functions
     # ---------------------------------------------------------------------------
@@ -234,15 +296,13 @@ class SeparateRawRun(RawRun):
         run_name: str,
         file_format: Literal["spikeglx", "openephys"],
         probe: Probe | None,
+        sync_output_path: Path,
     ):
         self._parent_input_path: Path
         self._probe = probe
 
         super(SeparateRawRun, self).__init__(
-            parent_input_path,
-            parent_ses_name,
-            run_name,
-            file_format,
+            parent_input_path, parent_ses_name, run_name, file_format, sync_output_path
         )
 
     def load_raw_data(self, internal_overwrite: bool = False) -> None:
@@ -284,6 +344,8 @@ class ConcatRawRun(RawRun):
        already been loaded as separate runs and concatenated.
     2) ``_orig_run_names`` holds the names of original, separate
        recordings in the order they were concatenated.
+    3) `sync_output_path` is `None` because sync channel is handled
+       at the separate-run level.
     """
 
     def __init__(
@@ -298,6 +360,7 @@ class ConcatRawRun(RawRun):
             parent_ses_name=parent_ses_name,
             run_name="concat_run",
             file_format=file_format,
+            sync_output_path=None,
         )
 
         # Get the recordings to concatenate

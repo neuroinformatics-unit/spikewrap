@@ -105,15 +105,15 @@ exclude_patterns = [
     "gallery_builds/tutorials/*.ipynb", "gallery_builds/get_started/*.ipynb", "gallery_builds/how_to/*.ipynb"  # TODO: rename if not using custom
 ]
 
+
 import sphinx_gallery.sorting
 
+fast_mode = "fast" in os.getenv("SPHINXENV", "")
 
 # Configure Sphinx gallery
 sphinx_gallery_conf = {
     "examples_dirs": ["galleries/tutorials", "galleries/get_started", "galleries/how_to"],
-    "filename_pattern": "/*.py",  # which files to execute before inclusion
     "gallery_dirs": ["gallery_builds/tutorials", "gallery_builds/get_started", "gallery_builds/how_to"],  # output directory
-    "run_stale_examples": True,  # re-run examples on each build
     # Integration with Binder, see https://sphinx-gallery.github.io/stable/configuration.html#generate-binder-links-for-gallery-notebooks-experimental
     "binder": {
         "org": "neuroinformatics-unit",
@@ -125,9 +125,8 @@ sphinx_gallery_conf = {
     "reference_url": {"spikewrap": None},
     "thumbnail_size": (1500, 1500),  # width, height in pixels
     'within_subsection_order': "FileNameSortKey",
-    #  "default_thumb_file": "",  # default thumbnail image
- #   "remove_config_comments": True,
-    # do not render config params set as # sphinx_gallery_config [= value]
+    "filename_pattern": r"^(?!.*slow).*\.py" if fast_mode else  r".*\.py",  # skip "slow" pages in fast mode
+    "run_stale_examples": not fast_mode,  # Don't re-run unchanged scripts unless needed
 }
 
 
@@ -189,9 +188,6 @@ html_favicon = "_static/light-logo-niu.png"
 linkcheck_anchors_ignore_for_url = [
     "https://neuroinformatics.zulipchat.com"
 ]
-# A list of regular expressions that match URIs that should not be checked
-linkcheck_ignore = [
-]
 
 intersphinx_mapping = {
     "scipy": ("https://docs.scipy.org/doc/scipy/", None),
@@ -217,7 +213,10 @@ notfound_context = {
 # because we have no '/<language>/<version>/' in the URL
 notfound_urls_prefix = None
 
+# A list of regular expressions that match URIs that should not be checked
 linkcheck_ignore = [
-    "https://github.com/SpikeInterface/*",  # to avoid odd 403 error
+    "https://github.com/SpikeInterface/*",
+    "https://github.com/billkarsh/CatGT/*",
+    "https://figshare.com/articles/online_resource/Spike_sorting_pipeline_for_the_International_Brain_Laboratory/19705522?file=49783080"
 ]
 

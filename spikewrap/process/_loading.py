@@ -37,6 +37,13 @@ def load_data(
         ]
 
     elif file_format == "openephys":
+        is_legacy_format = any(run_path.rglob("structure.openephys"))
+        if is_legacy_format:
+            raise RuntimeError(
+                "Legacy OpenEphys format is not supported. "
+                "Please contact the spikewrap team if you would like to see this supported."
+            )
+
         without_sync = si_extractors.read_openephys(
             folder_path=run_path,
             all_annotations=True,

@@ -29,10 +29,12 @@ session = sw.Session(
     probe=None,  # optional argument to set probe (neuropixels auto-detected)
 )
 
+session.save_sync_channel()
+
 session.preprocess(
     configs="neuropixels+kilosort2_5",
     per_shank=True,
-    concat_runs=True,
+    concat_runs=False,
 )
 
 session.save_preprocessed(
@@ -47,19 +49,20 @@ This will output a folder structure like:
 ```
 └── derivatives/
     └── sub-001/
-        └── ses-001  /
+        └── ses-001/
             └── ephys/
-                └── concat_run/
-                    ├── preprocessed/
-                    │   ├── shank_0/
-                    │   │   └── si_recording/
-                    │   │       └── <spikeinterface binary>
-                    │   └── shank_1/
-                    │       └── si_recording/
-                    │           └── <spikeinterface binary> 
-                    └── sync/
-                    │   └── sync_channel.npy
-                    └── orig_run_names.txt
+                ├── run-001/
+                │   ├── preprocessed/
+                │   │   ├── shank_0/
+                │   │   │   └── si_recording/
+                │   │   │       └── <spikeinterface binary>
+                │   │   └── shank_1/
+                │   │       └── si_recording/
+                │   │           └── <spikeinterface binary>      
+                │   └── sync/
+                │       └── sync_channel.npy
+                └── run-002/
+                    └── ...    
 ```                   
 
 ## Installation

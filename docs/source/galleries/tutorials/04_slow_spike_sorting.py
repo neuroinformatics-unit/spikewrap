@@ -59,8 +59,6 @@ session.sort(
 #                         ├── concat_run/
 #                         │   ├── preprocessed/
 #                         │   │   └── <preprocessed_data>
-#                         │   ├── sync/
-#                         │   │   └── <sync_data>
 #                         │   └── sorting/
 #                         │       └── shank_0
 #                         │           └── ...
