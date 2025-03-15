@@ -32,7 +32,7 @@ class TestWhiten(BaseTest):
             "1": [
                 "whiten",
                 {
-                    "apply_mean": True,
+                    "apply_mean": False,
                     "mode": "global",
                     "dtype": "float32",
                     "int_scale": 1.0,
@@ -40,7 +40,7 @@ class TestWhiten(BaseTest):
                     "num_chunks_per_segment": 150,
                     "seed": 42,
                     # Set to True if setup is computationally efficient, use regularize_kwargs with caution
-                    "regularize": True,
+                    "regularize": False,
                 },
             ]
         }
