@@ -1,26 +1,23 @@
-import pytest
-import numpy as np
-import spikewrap as sw
-from pathlib import Path
-import spikeinterface.full as si
 import pickle
+
+import numpy as np
+import pytest
+
+import spikewrap as sw
+
 
 def test_preprocessing_pickling():
     """Test that preprocessing objects are correctly pickled during SLURM execution."""
     # Get example data path
     example_data = sw.get_example_data_path("spikeglx") / "rawdata" / "sub-001"
-    
+
     # Create two identical sessions
     session_local = sw.Session(
-        subject_path=example_data,
-        session_name="ses-001",
-        file_format="spikeglx"
+        subject_path=example_data, session_name="ses-001", file_format="spikeglx"
     )
-    
+
     session_slurm = sw.Session(
-        subject_path=example_data,
-        session_name="ses-001",
-        file_format="spikeglx"
+        subject_path=example_data, session_name="ses-001", file_format="spikeglx"
     )
 
     # Use simple preprocessing steps for testing
@@ -42,15 +39,19 @@ def test_preprocessing_pickling():
     local_runs = session_local.get_preprocessed_run_names()
     slurm_runs = session_slurm.get_preprocessed_run_names()
 
-    assert local_runs == slurm_runs, "Run names should match between local and SLURM execution"
+    assert (
+        local_runs == slurm_runs
+    ), "Run names should match between local and SLURM execution"
 
     for run_name in local_runs:
         local_recording = session_local._pp_runs[run_name]._preprocessed
         slurm_recording = session_slurm._pp_runs[run_name]._preprocessed
 
         # Compare recording objects
-        assert local_recording.keys() == slurm_recording.keys(), f"Recording keys don't match for run {run_name}"
-        
+        assert (
+            local_recording.keys() == slurm_recording.keys()
+        ), f"Recording keys don't match for run {run_name}"
+
         for key in local_recording.keys():
             local_data = local_recording[key]
             slurm_data = slurm_recording[key]
@@ -58,21 +59,23 @@ def test_preprocessing_pickling():
             # Compare key properties
             assert local_data.get_num_channels() == slurm_data.get_num_channels()
             assert local_data.get_num_segments() == slurm_data.get_num_segments()
-            assert local_data.get_sampling_frequency() == slurm_data.get_sampling_frequency()
+            assert (
+                local_data.get_sampling_frequency()
+                == slurm_data.get_sampling_frequency()
+            )
 
             # Compare actual data content
             local_traces = local_data.get_traces(start_frame=0, end_frame=1000)
             slurm_traces = slurm_data.get_traces(start_frame=0, end_frame=1000)
             np.testing.assert_array_almost_equal(local_traces, slurm_traces)
 
+
 def test_direct_pickling():
     """Test direct pickling/unpickling of preprocessing objects."""
     example_data = sw.get_example_data_path("spikeglx") / "rawdata" / "sub-001"
-    
+
     session = sw.Session(
-        subject_path=example_data,
-        session_name="ses-001",
-        file_format="spikeglx"
+        subject_path=example_data, session_name="ses-001", file_format="spikeglx"
     )
 
     pp_steps = {
@@ -100,7 +103,7 @@ def test_direct_pickling():
         unpickled_recording = unpickled_run._preprocessed
 
         assert orig_recording.keys() == unpickled_recording.keys()
-        
+
         for key in orig_recording.keys():
             orig_data = orig_recording[key]
             unpickled_data = unpickled_recording[key]
@@ -108,12 +111,16 @@ def test_direct_pickling():
             # Compare properties
             assert orig_data.get_num_channels() == unpickled_data.get_num_channels()
             assert orig_data.get_num_segments() == unpickled_data.get_num_segments()
-            assert orig_data.get_sampling_frequency() == unpickled_data.get_sampling_frequency()
+            assert (
+                orig_data.get_sampling_frequency()
+                == unpickled_data.get_sampling_frequency()
+            )
 
             # Compare actual data
             orig_traces = orig_data.get_traces(start_frame=0, end_frame=1000)
             unpickled_traces = unpickled_data.get_traces(start_frame=0, end_frame=1000)
             np.testing.assert_array_almost_equal(orig_traces, unpickled_traces)
 
+
 if __name__ == "__main__":
-    pytest.main([__file__]) 
+    pytest.main([__file__])
