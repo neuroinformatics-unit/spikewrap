@@ -8,6 +8,7 @@ if TYPE_CHECKING:
     import matplotlib
     from probeinterface import Probe
 
+import time
 from pathlib import Path
 
 import numpy as np
@@ -96,6 +97,8 @@ class Session:
         self._output_path = (
             Path(output_path) if output_path else self._output_from_parent_input_path()
         )
+
+        self._running_slurm_jobs = []
 
         self._raw_runs: list[SeparateRawRun] = []
         self._pp_runs: list[PreprocessedRun] = []
@@ -201,7 +204,11 @@ class Session:
             See `tutorials` in the documentation for details.
         """
         for run in self._pp_runs:
-            run.save_preprocessed(overwrite, chunk_duration_s, n_jobs, slurm)
+            job_if_slurm = run.save_preprocessed(
+                overwrite, chunk_duration_s, n_jobs, slurm
+            )
+            if slurm:
+                self._running_slurm_jobs.append(job_if_slurm)
 
     def plot_preprocessed(
         self,
@@ -327,7 +334,11 @@ class Session:
             ]
 
         for run in self._sorting_runs:
-            run.sort(sorting_configs, run_sorter_method, per_shank, overwrite, slurm)
+            job_if_slurm = run.sort(
+                sorting_configs, run_sorter_method, per_shank, overwrite, slurm
+            )
+            if slurm:
+                self._running_slurm_jobs.append(job_if_slurm)
 
     def _load_pp_runs_from_disk(self) -> list[PreprocessedRun]:
         """
@@ -422,6 +433,24 @@ class Session:
             pp_runs.append(run)
 
         return pp_runs
+
+    # Getters -----------------------------------------------------------------
+
+    def wait_for_slurm(self):
+        """
+        Run a while loop with pause until
+        all slurm jobs are complete.
+        """
+        while True:
+
+            self._running_slurm_jobs = [
+                job for job in self._running_slurm_jobs if not job.done()
+            ]
+
+            if not any(self._running_slurm_jobs):
+                break
+
+            time.sleep(5)
 
     # Getters -----------------------------------------------------------------
 
@@ -539,7 +568,10 @@ class Session:
             self._load_raw_data(internal_overwrite=False)
 
         for run in self._raw_runs:
-            run.save_sync_channel(overwrite, slurm)
+            job_if_slurm = run.save_sync_channel(overwrite, slurm)
+
+            if slurm:
+                self._running_slurm_jobs.append(job_if_slurm)
 
     def raw_runs_loaded(self):
         return all(run._raw is not None for run in self._raw_runs)
