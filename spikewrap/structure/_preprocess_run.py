@@ -120,6 +120,8 @@ class PreprocessedRun:
             ) as file:
                 file.write("\n".join(self._orig_run_names))
 
+        self._save_diagnostic_plots()
+
     def save_class_attributes_to_yaml(self, path_to_save):
         """
         Dump the class attributes to file so the class
@@ -210,6 +212,92 @@ class PreprocessedRun:
     # ---------------------------------------------------------------------------
     # Private Functions
     # ---------------------------------------------------------------------------
+    def _generate_and_save_plot(
+        self,
+        run_name,
+        preprocessed_dict,
+        ses_name,
+        output_path,
+        filename,
+        *,
+        mode="map",
+        time_range=(0, 10),
+        show_channel_ids=True,
+    ):
+        """
+        Helper method to generate and save a plot for a given mode.
+
+        :param run_name: Name of the run (e.g., "test_run").
+        :param preprocessed_dict: Dictionary containing the preprocessed recording.
+        :param ses_name: Session name (e.g., "test_session").
+        :param output_path: Path where the plot should be saved.
+        :param filename: The file name for the saved plot.
+        :param mode: The visualization mode ("map" or "line"), defaults to "map".
+        :param time_range: The time range for the plot, defaults to (0, 10).
+        :param show_channel_ids: Whether to show channel IDs in the plot, defaults to True.
+        """
+        fig = visualise_run_preprocessed(
+            run_name,
+            False,
+            preprocessed_dict,
+            ses_name,
+            figsize=(10, 5),
+            mode=mode,
+            time_range=time_range,
+            show_channel_ids=show_channel_ids,
+        )
+        fig.savefig(output_path / filename)
+        fig.clf()
+
+    def _save_diagnostic_plots(self) -> None:
+        """
+        Save diagnostic plots after bad channel detection.
+
+        This function generates and saves:
+        - A plot of the data before bad channel detection.
+        - A plot of the data after bad channel detection.
+        - Individual plots for each detected bad channel.
+        """
+        diagnostic_path = self._output_path / "diagnostic_plots"
+        diagnostic_path.mkdir(parents=True, exist_ok=True)
+
+        _utils.message_user(f"Saving diagnostic plots for: {self._run_name}...")
+
+        for shank_name, preprocessed_dict in self._preprocessed.items():
+            preprocessed_recording, _ = _utils._get_dict_value_from_step_num(
+                preprocessed_dict, "last"
+            )
+
+            # Generate before and after plots
+            self._generate_and_save_plot(
+                self._run_name,
+                preprocessed_dict,
+                self._ses_name,
+                diagnostic_path,
+                f"{shank_name}_before_detection.png",
+                mode="map",
+            )
+            self._generate_and_save_plot(
+                self._run_name,
+                preprocessed_dict,
+                self._ses_name,
+                diagnostic_path,
+                f"{shank_name}_after_detection.png",
+                mode="map",
+            )
+
+            # Save individual bad channel plots
+            bad_channels = preprocessed_recording.get_property("bad_channels")
+            if bad_channels:
+                for ch in bad_channels:
+                    self._generate_and_save_plot(
+                        self._run_name,
+                        preprocessed_dict,
+                        self._ses_name,
+                        diagnostic_path,
+                        f"{shank_name}_bad_channel_{ch}.png",
+                        mode="line",
+                    )
 
     def _save_preprocessed_slurm(
         self, overwrite: bool, chunk_duration_s: float, n_jobs: int, slurm: dict | bool
