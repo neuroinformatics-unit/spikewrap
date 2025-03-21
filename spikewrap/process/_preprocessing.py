@@ -29,6 +29,10 @@ def _preprocess_recording(
         {step_num_str : [preprocessing_func_name, {pp_func_args}]
     """
     pp_funcs = _get_pp_funcs()
+    try:
+        pp_step_names = list(pp_steps.values())
+    except Exception:
+        pp_step_names = []
 
     checked_pp_steps, pp_step_names = _check_and_sort_pp_steps(pp_steps, pp_funcs)
 
@@ -74,15 +78,13 @@ def _check_and_sort_pp_steps(pp_steps: dict, pp_funcs: dict) -> tuple[dict, list
         List of ordered preprocessing step names (e.g. "bandpass_filter").
     """
     _validate_pp_steps(pp_steps)
-    pp_step_names = [item[0] for item in pp_steps.values()]
-
-    # Check the preprocessing function names are valid and print steps used
+    pp_step_names = [step[0] for step in pp_steps.values()]
     canonical_step_names = list(pp_funcs.keys())
 
     for user_passed_name in pp_step_names:
         assert (
             user_passed_name in canonical_step_names
-        ), f"{user_passed_name} not in allowed names: ({canonical_step_names}"
+        ), f"{user_passed_name} not in allowed names: ({canonical_step_names})"
 
     return pp_steps, pp_step_names
 
