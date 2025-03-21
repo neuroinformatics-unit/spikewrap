@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import os
 from typing import TYPE_CHECKING, Literal
 
 import yaml
@@ -104,7 +105,6 @@ class Session:
     # ---------------------------------------------------------------------------
     # Public Functions
     # ---------------------------------------------------------------------------
-
     def preprocess(
         self,
         configs: dict | str | Path,
@@ -200,8 +200,44 @@ class Session:
             with default arguments. If a `dict` is provided, it should contain SLURM arguments.
             See `tutorials` in the documentation for details.
         """
+        save_dir = "prepocessed_plots"
+
+        if not self._pp_runs:
+            raise RuntimeError("No runs available in _pp_runs to process.")
+
+        last_run = None
+
         for run in self._pp_runs:
             run.save_preprocessed(overwrite, chunk_duration_s, n_jobs, slurm)
+            last_run = run
+
+        fig_start = run.plot_preprocessed(
+            time_range=(0.0, 0.5),
+            show=False,
+            mode="map",
+            show_channel_ids=True,
+            figsize=(10, 5),
+        )
+
+        if last_run is None:
+            raise RuntimeError("No valid run found in _pp_runs to process.")
+
+        start_path = os.path.join(save_dir, f"{last_run._run_name}_start.png")
+        fig_start.savefig(start_path, dpi=300)
+        print(f"Saved start chunk plot to {start_path}")
+
+        total_duration = 10.0
+        fig_end = run.plot_preprocessed(
+            time_range=(total_duration - 0.5, total_duration),
+            show=False,
+            mode="map",
+            show_channel_ids=True,
+            figsize=(10, 6),
+        )
+
+        end_path = os.path.join(save_dir, f"{run._run_name}_end.png")
+        fig_end.savefig(end_path, dpi=300)
+        print(f"Saved end chunk plot to {end_path}")
 
     def plot_preprocessed(
         self,
