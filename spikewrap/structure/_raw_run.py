@@ -239,14 +239,15 @@ class RawRun:
             self._sync_output_path is not None
         ), "SeparateRawRun only contains self._sync_output_path"
 
-        job = _slurm.run_in_slurm_core(
+        job = _slurm._run_in_slurm_core(
             slurm_ops,
             func_to_run=self._save_sync_channel_slurm,
             func_opts={
                 "overwrite": overwrite,
                 "slurm": False,
             },
-            log_base_path=self._sync_output_path,
+            log_base_path=self._sync_output_path.parent,
+            suffix_name="_sync"
         )
 
         return job

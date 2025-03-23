@@ -14,7 +14,7 @@ from spikewrap.utils import _utils
 from spikewrap.utils._checks import _system_call_success
 
 
-def run_in_slurm(slurm_opts: None | dict, func_to_run: Callable, log_base_path: Path):
+def run_in_slurm(slurm_opts: None | dict, func_to_run: Callable, log_base_path: Path, suffix_name: str | None = None):
     """
     Run a function in a slurm job.
 
@@ -31,8 +31,11 @@ def run_in_slurm(slurm_opts: None | dict, func_to_run: Callable, log_base_path: 
     log_base_path
         The path where a folder slurm logs will be output
 
+    suffix_name
+        If given (default `None`), a suffix for the output folder e.g. _sort
+
     """
-    _run_in_slurm_core(slurm_opts, func_to_run, {}, log_base_path)
+    _run_in_slurm_core(slurm_opts, func_to_run, {}, log_base_path, suffix_name)
 
 
 # Private Functions
@@ -44,6 +47,7 @@ def _run_in_slurm_core(
     func_to_run: Callable,
     func_opts: dict,
     log_base_path: Path,
+    suffix_name: str | None = None
 ):
     """
     Run a function in SLURM using submitit.
@@ -63,6 +67,9 @@ def _run_in_slurm_core(
 
     func_opts
         A dictionary of kwargs to run in `func_to_run`.
+
+    suffix_name
+        If given (default `None`), a suffix for the output folder e.g. _sort
     """
     if not _is_slurm_installed():
         raise RuntimeError("Cannot run with slurm, slurm is not found on this system.")
@@ -75,7 +82,7 @@ def _run_in_slurm_core(
     should_wait = used_slurm_opts.pop("wait")
     env_name = used_slurm_opts.pop("env_name")
 
-    log_path = _make_job_log_output_path(log_base_path)
+    log_path = _make_job_log_output_path(log_base_path, suffix_name)
 
     executor = _get_executor(log_path, used_slurm_opts)
 
@@ -155,7 +162,7 @@ def _wrap_function_with_env_setup(
     function(**func_opts)
 
 
-def _make_job_log_output_path(log_base_path: Path) -> Path:
+def _make_job_log_output_path(log_base_path: Path, suffix_name: str | None) -> Path:
     """
     The SLURM job logs are saved to a folder 'slurm_logs'.
 
@@ -172,7 +179,12 @@ def _make_job_log_output_path(log_base_path: Path) -> Path:
     """
     now = datetime.datetime.now()
 
-    log_subpath = Path("slurm_logs") / f"{now.strftime('%Y-%m-%d_%H-%M-%S')}"
+    folder_name = f"{now.strftime('%Y-%m-%d_%H-%M-%S')}"
+
+    if suffix_name is not None:
+        folder_name += suffix_name
+
+    log_subpath = Path("slurm_logs") / folder_name
 
     log_path = log_base_path / log_subpath
 

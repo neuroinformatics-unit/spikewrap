@@ -270,7 +270,7 @@ class Session:
     def sort(
         self,
         configs: str | dict,
-        run_sorter_method: str = "singularity",
+        run_sorter_method: str = "local",
         per_shank: bool = False,
         concat_runs: bool = False,
         overwrite: bool = True,

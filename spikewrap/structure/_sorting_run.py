@@ -11,6 +11,7 @@ import spikeinterface
 import spikeinterface.full as si
 from spikeinterface.sorters import run_sorter
 from spikeinterface.sorters.runsorter import SORTER_DOCKER_MAP
+from spikewrap.configs._backend import canon
 
 from spikewrap.utils import _checks, _managing_sorters, _slurm, _utils
 
@@ -105,7 +106,7 @@ class BaseSortingRun:
         """
         if self._output_path.is_dir():
             if overwrite:
-                shutil.rmtree(self._output_path)  # TODO: ADD BACK!
+                shutil.rmtree(self._output_path)
             else:
                 raise RuntimeError(
                     f"`overwrite=False` but a folder already exists at: {self._output_path}"
@@ -135,7 +136,8 @@ class BaseSortingRun:
                 "overwrite": overwrite,
                 "slurm": False,
             },
-            log_base_path=self._output_path,
+            log_base_path=self._output_path.parent,
+            suffix_name="_sort"
         )
 
         return job
@@ -302,7 +304,7 @@ class SeparateSortingRun(BaseSortingRun):
         A class to handle sorting of an individual preprocessed run.
         """
         run_name = pp_run._run_name
-        output_path = session_output_path / run_name / "sorting"
+        output_path = session_output_path / run_name / canon.sorting_folder()
 
         preprocessed_recording = {
             shank_id: _utils._get_dict_value_from_step_num(
@@ -327,7 +329,7 @@ class ConcatSortingRun(BaseSortingRun):
                run names (in concatenation order).
         """
         run_name = "concat_run"
-        output_path = session_output_path / run_name / "sorting"
+        output_path = session_output_path / run_name / canon.sorting_folder()
 
         shank_ids = list(pp_runs_list[0]._preprocessed.keys())
 

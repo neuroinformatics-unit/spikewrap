@@ -246,7 +246,8 @@ class PreprocessedRun:
                 "n_jobs": n_jobs,
                 "slurm": False,
             },
-            log_base_path=self._output_path,
+            log_base_path=self._output_path.parent,
+            suffix_name="_prepro"
         )
 
         return job
