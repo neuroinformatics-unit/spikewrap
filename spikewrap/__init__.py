@@ -24,6 +24,7 @@ from .configs.config_utils import (
     save_config_dict,
 )
 from .configs.hpc import default_slurm_options
+from .utils._slurm import run_in_slurm
 
 # TODO: there must be a better way!
 # this is necessary for doc api linking? can I just remove!?!??
@@ -37,4 +38,5 @@ __all__ = [
     "load_config_dict",
     "save_config_dict",
     "default_slurm_options",
+    "run_in_slurm",
 ]

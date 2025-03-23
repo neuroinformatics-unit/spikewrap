@@ -2,6 +2,10 @@ def preprocessed_folder():
     return "preprocessed"
 
 
+def sorting_folder():
+    return "sorting"
+
+
 def sync_folder():
     return "sync"
 

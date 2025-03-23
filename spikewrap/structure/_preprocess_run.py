@@ -9,6 +9,7 @@ if TYPE_CHECKING:
     from pathlib import Path
 
     import matplotlib
+    import submitit
 
 
 import spikeinterface.full as si
@@ -75,15 +76,17 @@ class PreprocessedRun:
 
     def save_preprocessed(
         self, overwrite: bool, chunk_duration_s: float, n_jobs: int, slurm: dict | bool
-    ) -> None:
+    ) -> None | submitit.Job:
         """
         Save the fully preprocessed run to binary.
 
         see the public session.save_preprocessed() for arguments.
         """
         if slurm:
-            self._save_preprocessed_slurm(overwrite, chunk_duration_s, n_jobs, slurm)
-            return
+            job = self._save_preprocessed_slurm(
+                overwrite, chunk_duration_s, n_jobs, slurm
+            )
+            return job
 
         _utils.message_user(f"Saving data for: {self._run_name}...")
 
@@ -119,6 +122,8 @@ class PreprocessedRun:
                 "w",
             ) as file:
                 file.write("\n".join(self._orig_run_names))
+
+        return None
 
     def save_class_attributes_to_yaml(self, path_to_save):
         """
@@ -213,7 +218,7 @@ class PreprocessedRun:
 
     def _save_preprocessed_slurm(
         self, overwrite: bool, chunk_duration_s: float, n_jobs: int, slurm: dict | bool
-    ) -> None:
+    ) -> submitit.Job:
         """
         Use ``submitit`` to run the ``save_preprocessed``
         function for this run in a SLURM job.
@@ -235,7 +240,7 @@ class PreprocessedRun:
         """
         slurm_ops: dict | bool = slurm if isinstance(slurm, dict) else False
 
-        _slurm.run_in_slurm(
+        job = _slurm._run_in_slurm_core(
             slurm_ops,
             func_to_run=self.save_preprocessed,
             func_opts={
@@ -244,5 +249,8 @@ class PreprocessedRun:
                 "n_jobs": n_jobs,
                 "slurm": False,
             },
-            log_base_path=self._output_path,
+            log_base_path=self._output_path.parent,
+            suffix_name="_prepro",
         )
+
+        return job

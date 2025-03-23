@@ -8,6 +8,7 @@ if TYPE_CHECKING:
 
     import matplotlib
     import numpy as np
+    import submitit
     from probeinterface import Probe
     from spikeinterface.core import BaseRecording
 
@@ -195,7 +196,7 @@ class RawRun:
 
     def save_sync_channel(
         self, overwrite: bool = False, slurm: bool | dict = False
-    ) -> None:
+    ) -> None | submitit.Job:
         """
         Save the sync channel as a ``.npy`` file.
 
@@ -206,7 +207,8 @@ class RawRun:
         if self._sync is not None:
 
             if slurm:
-                self._save_sync_channel_slurm(overwrite, slurm)
+                job = self._save_sync_channel_slurm(overwrite, slurm)
+                return job
 
             sync_output_folder = self._sync_output_path / canon.sync_folder()
 
@@ -230,6 +232,8 @@ class RawRun:
             sync_output_folder.mkdir(parents=True, exist_ok=True)
             np.save(sync_output_folder / canon.saved_sync_filename(), sync_data)
 
+        return None
+
     def _save_sync_channel_slurm(self, overwrite: bool, slurm: dict | bool) -> None:
         """ """
         slurm_ops: dict | bool = slurm if isinstance(slurm, dict) else False
@@ -238,15 +242,18 @@ class RawRun:
             self._sync_output_path is not None
         ), "SeparateRawRun only contains self._sync_output_path"
 
-        _slurm.run_in_slurm(
+        job = _slurm._run_in_slurm_core(
             slurm_ops,
             func_to_run=self._save_sync_channel_slurm,
             func_opts={
                 "overwrite": overwrite,
                 "slurm": False,
             },
-            log_base_path=self._sync_output_path,
+            log_base_path=self._sync_output_path.parent,
+            suffix_name="_sync",
         )
+
+        return job
 
     # ---------------------------------------------------------------------------
     # Private Functions

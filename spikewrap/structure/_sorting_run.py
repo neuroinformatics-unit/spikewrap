@@ -12,6 +12,7 @@ import spikeinterface.full as si
 from spikeinterface.sorters import run_sorter
 from spikeinterface.sorters.runsorter import SORTER_DOCKER_MAP
 
+from spikewrap.configs._backend import canon
 from spikewrap.utils import _checks, _managing_sorters, _slurm, _utils
 
 
@@ -61,10 +62,10 @@ class BaseSortingRun:
                 SpikeInterface functions to set the matlab path if required.
         `"""
         if slurm:
-            self._sort_slurm(
+            job = self._sort_slurm(
                 sorting_configs, run_sorter_method, per_shank, overwrite, slurm
             )
-            return
+            return job
 
         assert len(sorting_configs) == 1, "Only one sorter supported."
         ((sorter, sorter_kwargs),) = sorting_configs.items()
@@ -105,7 +106,7 @@ class BaseSortingRun:
         """
         if self._output_path.is_dir():
             if overwrite:
-                shutil.rmtree(self._output_path)  # TODO: ADD BACK!
+                shutil.rmtree(self._output_path)
             else:
                 raise RuntimeError(
                     f"`overwrite=False` but a folder already exists at: {self._output_path}"
@@ -125,7 +126,7 @@ class BaseSortingRun:
         """
         slurm_ops: dict | bool = slurm if isinstance(slurm, dict) else False
 
-        _slurm.run_in_slurm(
+        job = _slurm._run_in_slurm_core(
             slurm_ops,
             func_to_run=self.sort,
             func_opts={
@@ -135,8 +136,11 @@ class BaseSortingRun:
                 "overwrite": overwrite,
                 "slurm": False,
             },
-            log_base_path=self._output_path,
+            log_base_path=self._output_path.parent,
+            suffix_name="_sort",
         )
+
+        return job
 
     def split_per_shank(self):
         """
@@ -300,7 +304,7 @@ class SeparateSortingRun(BaseSortingRun):
         A class to handle sorting of an individual preprocessed run.
         """
         run_name = pp_run._run_name
-        output_path = session_output_path / run_name / "sorting"
+        output_path = session_output_path / run_name / canon.sorting_folder()
 
         preprocessed_recording = {
             shank_id: _utils._get_dict_value_from_step_num(
@@ -325,7 +329,7 @@ class ConcatSortingRun(BaseSortingRun):
                run names (in concatenation order).
         """
         run_name = "concat_run"
-        output_path = session_output_path / run_name / "sorting"
+        output_path = session_output_path / run_name / canon.sorting_folder()
 
         shank_ids = list(pp_runs_list[0]._preprocessed.keys())
 

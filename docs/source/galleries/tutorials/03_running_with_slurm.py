@@ -15,7 +15,7 @@ SLURM is a job-manager used in high-performance computing (HPC) systems).
 Its purpose is to ensure the resources of the HPC are distributed fairly
 between users. 
 
-Users 'request' resource from SLURM to run their jobs, and are allocated
+Users request resources from SLURM to run their jobs, and are allocated
 the resources in a priority order calculated by SLURM.
 
 Why use SLURM?
@@ -46,33 +46,174 @@ to do other things, as well as run multiple jobs at once in parallel.
 """
 
 # %%
-# Running a process with SLURM
-# ----------------------------
+# Running a single function with SLURM
+# ------------------------------------
 #
 # In ``spikewrap``, methods which are computationally intensive admit a ``slurm`` argument
-# (currently only :func:`spikewrap.Session.save_preprocessed`).
+# When set, the function will be run within a SLURM job:
 #
-# .. attention::
-#     Jobs are requested at the **run level**. For example, if a
-#     session has 2 runs (which are not concatenated),
-#     :func:`spikewrap.Session.save_preprocessed` will request two nodes.
+# .. code-block:: python
+#
+#     import spikewrap as sw
+#
+#     session = sw.Session(
+#         subject_path=sw.get_example_data_path() / "rawdata" / "sub-001",
+#         session_name="ses-001",
+#         file_format="spikeglx",
+#         run_names="all"
+#     )
+#
+#     session.preprocess(configs="neuropixels+kilosort2_5")
+#
+#     session.save_preprocessed(slurm=True)
 #
 # The ``slurm`` argument can take one of three possible inputs:
 #
-# ``False``:
-#   Do not run the job with SLURM.
-# ``True``:
-#   Run in SLURM with a set of default parameters (explained below)
-# ``dict``:
-#   Run in SLURM, passing the given job parameters in the dictionary to SLURM.
+# ``False`` (do not run the job with SLURM), ``True`` (run in SLURM with a set of
+# default parameters) or a ``dict`` of job parameters. See :ref:`configuring SLURM <configuring-slurm>`
+# for more details and :ref:`SLURM logs <slurm-logs>` to keep track of running SLURM jobs.
 #
-#   The arguments passed to SLURM tell it what kind of resources
-#   you want to request. These are usually passed in an script using `sbatch <https://slurm.schedmd.com/sbatch.html>`_.
-#   In ``spikewrap``, `submitit <https://github.com/facebookincubator/submitit>`_
-#   is used under the hood to submit SLURM jobs with ``sbatch``.
+# Note that jobs are requested at the **run level**. For example, if
+# a session has 2 runs (which are not concatenated), :func:`spikewrap.Session.save_preprocessed`
+# will request two nodes.
 #
+# .. warning::
+#
+#    Chaining functions with ``slurm=True`` can lead to out-of-order code execution.
+#    For example, imagine we run sorting after saving the preprocessed data:
+#
+#    .. code-block :: python
+#
+#        session.save_preprocessed(slurm=True)
+#
+#        session.sort("neuropixels+kilosort2_5", slurm=True)
+#
+#    Here, the ``save_preprocessed`` will be triggered to be run in a separate SLURM
+#    job, that will take a while to run. However, execution of the script will continue, and ``session.sort``
+#    will be called immediately. As the preprocessed data will not yet be saved, and an error will be called.
+#
+#    See below on how to chain multiple function calls together with SLURM.
+#
+# Chaining SLURM commands: processing a single-run
+# ------------------------------------------------
+# .. _chaining-slurm:
+#
+# To avoid the issue with out-of-order execution described above, we
+# can wrap multiple functions together and run them in a single SLURM job.
+#
+# We wrap functions calls in an inner function (these dont have to be
+# just functions with the ``slurm`` argument, and run with the function
+# :func:`spikewrap.run_in_slurm`.
+#
+# For example:
+#
+# .. code-block:: python
+#
+#     def capture_for_slurm():
+#
+#         session = sw.Session(
+#             subject_path=sw.get_example_data_path() / "rawdata" / "sub-001",
+#             session_name="ses-001",
+#             file_format="spikeglx",
+#             run_names="run-001
+#         )
+#
+#         session.preprocess(configs="neuropixels+kilosort2_5")
+#
+#         # We want to set `slurm=False` here, otherwise our SLURM jobs
+#         # will spawn more SLURM jobs!
+#
+#         session.save_preprocessed(slurm=False)
+#
+#         session.sort("neuropixels+kilosort2_5", slurm=False)
+#
+#     sw.run_in_slurm(
+#         slurm_opts=None,
+#         func_to_run=capture_for_slurm,
+#         log_base_path=session.get_output_path()
+#
+# Where ``slurm_opts`` are the slurm options :ref:`below <chaining-slurm>`),
+# ``func_to_run`` is the function to run in slurm, and ``log_base_path``
+# is where the slurm logs will be saved (we set to the session output path).
+
+# %%
+# Chaining SLURM commands: processing multiple runs
+# -------------------------------------------------
+#
+# When we have multiple runs, the above approach may not be ideal.
+# For example, imagine we have three runs associated with a session:
+#
+# .. code-block:: python
+#
+#     def capture_for_slurm():
+#
+#         session = sw.Session(
+#             subject_path="/path/to/sub,
+#             session_name="ses-001",
+#             file_format="spikeglx",
+#             run_names=["run-001, "run-002", "run-003"]
+#         )
+#
+#         session.preprocess(configs="neuropixels+kilosort2_5")
+#
+#         session.save_preprocessed(slurm=False)
+#
+#         session.wait_for_slurm()  # this will wait until all running SLURM jobs are finished
+#
+#         session.sort("neuropixels+kilosort2_5", concat_runs=True, slurm=False)
+#
+# Now ``session.save_preprocessed(slurm=False)`` will freeze execution
+# while all runs are saved sequentially, thanks to :func:`spikewrap.Session.wait_for_slurm`.
+# Then, it will move on to sorting, which will be run sequentially.
+# Therefore, processing the runs will not be parallelized.
+#
+# Instead, we can set ``slurm=True`` on ``save_preprocessed`` above. In this case, execution
+# of ``save_preprocessed`` will spawn three slurm jobs (one per run). Then the process
+# will wait until all three jobs have completed. Once completed, sorting will be run,
+# first concatenating the saved preprocessed recordings together. We do not need to run
+# that job in SLURM, because there is only one run (as data is concatenated).
+#
+# We can even run this entire job in SLURM, and from that job spawn more slurm jobs
+# to take advantage of parallelization of saving the preprocessing. This means we don't have
+# to use the current process, which may be killed if the connection to the HPC is lost. For example:
+#
+# .. code-block:: python
+#
+#  def capture_for_slurm():
+#
+#         session = sw.Session(
+#             subject_path=sw.get_example_data_path() / "rawdata" / "sub-001",
+#             session_name="ses-001",
+#             file_format="spikeglx",
+#             run_names=["run-001, "run-002", "run-003"]
+#         )
+#
+#         session.preprocess(configs="neuropixels+kilosort2_5")
+#
+#         session.save_preprocessed(slurm=True)
+#
+#         session.wait_for_slurm()
+#
+#         session.sort("neuropixels+kilosort2_5", concat_runs=True, slurm=False)
+#
+#  sw.run_in_slurm(
+#      slurm_opts=None,
+#      func_to_run=capture_for_slurm,
+#      log_base_path=session.get_output_path()
+#  )
+#
+# In the above example, the captured functions will be run in a SLURM job.
+# Within that SLURM job, 3 more SLURM jobs will be spawned to save the
+# three preprocessed runs. Then, once the 3 SLURM jobs are complete, the
+# sorting will be run in the original slurm job.
+
+# %%
+# Configuring SLURM
+# -----------------
+# .. _configuring-slurm:
 #
 # In ``spikewrap``, when ``slurm=True`` a set of default arguments are used.
+#
 # These can be inspected with:
 
 import spikewrap as sw
@@ -114,6 +255,7 @@ print(
 #
 # You can edit these arguments before passing to the ``slurm`` argument:
 
+
 gpu_arguments = sw.default_slurm_options("gpu")
 
 gpu_arguments["mem_gb"] = 60
@@ -140,8 +282,9 @@ print(
 #    When the SLURM job starts, ``n_jobs`` cores.  If these are not requested and available on the node,
 #    the job may run slower that it should.
 #
-#    **Note:** ``n_jobs`` here refers to cores for correspondance with SpikeInterface terminology.
+#    **Note:** ``n_jobs`` here refers to cores for correspondence with SpikeInterface terminology.
 #    This is not to be confused with a SLURM job.
+#
 
 # %%
 # Checking the progress of a job
@@ -164,6 +307,7 @@ print(
 #
 # Inspecting SLURM's output
 # -------------------------
+# .. _slurm-logs:
 #
 # As the SLURM job runs, it will output logs to a ``slurm_logs`` folder in the processed run folders.
 #
@@ -177,9 +321,6 @@ print(
 # intuitively (for example, pythons ``logging`` module will always write to ``stderr``.
 # Therefore, it is important to inspect both logs while inspecting the output of the progress.
 #
-# The actual outputs of the processing (e.g. preprocessed binaries)
-# will be written to the standard output folder as described [here]()
-
 
 
 
