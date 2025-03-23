@@ -8,6 +8,7 @@ if TYPE_CHECKING:
 
     import matplotlib
     import numpy as np
+    import submitit
     from probeinterface import Probe
     from spikeinterface.core import BaseRecording
 
@@ -195,7 +196,7 @@ class RawRun:
 
     def save_sync_channel(
         self, overwrite: bool = False, slurm: bool | dict = False
-    ) -> None:
+    ) -> None | submitit.Job:
         """
         Save the sync channel as a ``.npy`` file.
 
@@ -230,6 +231,8 @@ class RawRun:
 
             sync_output_folder.mkdir(parents=True, exist_ok=True)
             np.save(sync_output_folder / canon.saved_sync_filename(), sync_data)
+
+        return None
 
     def _save_sync_channel_slurm(self, overwrite: bool, slurm: dict | bool) -> None:
         """ """

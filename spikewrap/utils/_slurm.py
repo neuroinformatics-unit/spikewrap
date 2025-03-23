@@ -31,7 +31,7 @@ def run_in_slurm(
         job. See spikewrap.default_slurm_options() for details.
 
     func_to_run
-        The functino to run inside the slurm job.
+        The function to run inside the slurm job.
 
     log_base_path
         The path where a folder slurm logs will be output
@@ -48,7 +48,7 @@ def run_in_slurm(
 
 
 def _run_in_slurm_core(
-    slurm_opts: bool | dict,
+    slurm_opts: None | bool | dict,
     func_to_run: Callable,
     func_opts: dict,
     log_base_path: Path,

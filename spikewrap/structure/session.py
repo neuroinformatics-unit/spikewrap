@@ -6,6 +6,7 @@ import yaml
 
 if TYPE_CHECKING:
     import matplotlib
+    import submitit
     from probeinterface import Probe
 
 import time
@@ -98,7 +99,7 @@ class Session:
             Path(output_path) if output_path else self._output_from_parent_input_path()
         )
 
-        self._running_slurm_jobs = []
+        self._running_slurm_jobs: list[submitit.Job] = []
 
         self._raw_runs: list[SeparateRawRun] = []
         self._pp_runs: list[PreprocessedRun] = []

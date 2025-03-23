@@ -9,6 +9,7 @@ if TYPE_CHECKING:
     from pathlib import Path
 
     import matplotlib
+    import submitit
 
 
 import spikeinterface.full as si
@@ -75,7 +76,7 @@ class PreprocessedRun:
 
     def save_preprocessed(
         self, overwrite: bool, chunk_duration_s: float, n_jobs: int, slurm: dict | bool
-    ) -> None:
+    ) -> None | submitit.Job:
         """
         Save the fully preprocessed run to binary.
 
@@ -121,6 +122,8 @@ class PreprocessedRun:
                 "w",
             ) as file:
                 file.write("\n".join(self._orig_run_names))
+
+        return None
 
     def save_class_attributes_to_yaml(self, path_to_save):
         """
@@ -215,7 +218,7 @@ class PreprocessedRun:
 
     def _save_preprocessed_slurm(
         self, overwrite: bool, chunk_duration_s: float, n_jobs: int, slurm: dict | bool
-    ) -> None:
+    ) -> submitit.Job:
         """
         Use ``submitit`` to run the ``save_preprocessed``
         function for this run in a SLURM job.
