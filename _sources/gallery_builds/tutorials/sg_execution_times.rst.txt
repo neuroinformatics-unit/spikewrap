@@ -6,7 +6,7 @@
 
 Computation times
 =================
-**00:03.595** total execution time for 3 files **from gallery_builds/tutorials**:
+**03:28.430** total execution time for 6 files **from gallery_builds/tutorials**:
 
 .. container::
 
@@ -32,12 +32,21 @@ Computation times
    * - Example
      - Time
      - Mem (MB)
+   * - :ref:`sphx_glr_gallery_builds_tutorials_04_slow_spike_sorting.py` (``04_slow_spike_sorting.py``)
+     - 03:23.710
+     - 0.0
    * - :ref:`sphx_glr_gallery_builds_tutorials_01_preprocessing_sessions.py` (``01_preprocessing_sessions.py``)
-     - 00:03.586
+     - 00:04.469
+     - 0.0
+   * - :ref:`sphx_glr_gallery_builds_tutorials_05_sync_channel.py` (``05_sync_channel.py``)
+     - 00:00.240
      - 0.0
    * - :ref:`sphx_glr_gallery_builds_tutorials_02_managing_configs.py` (``02_managing_configs.py``)
-     - 00:00.008
+     - 00:00.009
      - 0.0
    * - :ref:`sphx_glr_gallery_builds_tutorials_03_running_with_slurm.py` (``03_running_with_slurm.py``)
      - 00:00.001
+     - 0.0
+   * - :ref:`sphx_glr_gallery_builds_tutorials_01a_supported_preprocessing_steps.py` (``01a_supported_preprocessing_steps.py``)
+     - 00:00.000
      - 0.0

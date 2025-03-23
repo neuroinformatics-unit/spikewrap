@@ -26,11 +26,46 @@ How to run in SLURM
 .. note::
     This is a quick how-to on SLURM. See :ref:`here <slurm-tutorial>` for a long-form tutorial.
 
-.. GENERATED FROM PYTHON SOURCE LINES 14-15
+.. GENERATED FROM PYTHON SOURCE LINES 14-46
 
-See the default SLURM options, used when ``slurm=True``
+The below code will run all captured code within a single slurm job.
+From within this SLURM job, the call to ``session.save_preprocessed(slurm=True)``
+will spawn three additional SLURM jobs (parallelising across three runs).
 
-.. GENERATED FROM PYTHON SOURCE LINES 15-26
+After they have finished running, sorting will be run and the SLURM job will terminate.
+
+.. code-block:: python
+
+    import spikewrap as sw
+
+    def capture_for_slurm():
+
+        session = sw.Session(
+            subject_path=sw.get_example_data_path() / "rawdata" / "sub-001",
+            session_name="ses-001",
+            file_format="spikeglx",
+            run_names=["run-001, "run-002", "run-003"]
+        )
+
+        session.preprocess(configs="neuropixels+kilosort2_5")
+
+        session.save_preprocessed(slurm=True)
+
+        session.wait_for_slurm()
+
+        session.sort("neuropixels+kilosort2_5", concat_runs=True, slurm=False)
+
+    sw.run_in_slurm(
+        slurm_opts=None,
+        func_to_run=capture_for_slurm,
+        log_base_path=session.get_output_path()
+    )
+
+.. GENERATED FROM PYTHON SOURCE LINES 49-50
+
+Managing SLURM options - see the default SLURM options, used when ``slurm=True``
+
+.. GENERATED FROM PYTHON SOURCE LINES 50-61
 
 .. code-block:: Python
 
@@ -67,11 +102,11 @@ See the default SLURM options, used when ``slurm=True``
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 27-28
+.. GENERATED FROM PYTHON SOURCE LINES 62-63
 
 Otherwise, we can update these as desired:
 
-.. GENERATED FROM PYTHON SOURCE LINES 28-40
+.. GENERATED FROM PYTHON SOURCE LINES 63-75
 
 .. code-block:: Python
 
@@ -105,7 +140,7 @@ Otherwise, we can update these as desired:
         "env_name": "my_conda_environment",
         "slurm_partition": "gpu",
         "slurm_gres": "gpu:1",
-        "exclude": "gpu-sr670-20,gpu-sr670-21,gpu-sr670-22"
+        "exclude": ""
     }
 
 

@@ -1,0 +1,685 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Supported Preprocessing Steps &#8212; spikewrap</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../_static/styles/theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+<link href="../../_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sg_gallery.css?v=d2d258e8" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sg_gallery-binder.css?v=f4aeca0c" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sg_gallery-dataframe.css?v=2082cf3c" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sg_gallery-rendered-html.css?v=1277b6f3" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sphinx-design.min.css?v=95c83b7e" />
+    <link rel="stylesheet" type="text/css" href="../../_static/css/custom.css?v=de3717dc" />
+  
+  <!-- So that users can add custom icons -->
+  <script src="../../_static/scripts/fontawesome.js?digest=8878045cc6db502f8baf"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
+<link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
+
+    <script src="../../_static/documentation_options.js?v=938c9ccc"></script>
+    <script src="../../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/design-tabs.js?v=f930bc37"></script>
+    <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'gallery_builds/tutorials/01a_supported_preprocessing_steps';</script>
+    <link rel="canonical" href="https://spikewrap.neuroinformatics.dev/gallery_builds/tutorials/01a_supported_preprocessing_steps.html" />
+    <link rel="icon" href="../../_static/light-logo-niu.png"/>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="Managing configs" href="02_managing_configs.html" />
+    <link rel="prev" title="Preprocessing Sessions" href="01_preprocessing_sessions.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="" />
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../../index.html">
+  
+  
+  
+  
+  
+  
+    <p class="title logo__title">spikewrap v0.2.0</p>
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../get_started/index.html">
+    Get Started
+  </a>
+</li>
+
+
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="index.html">
+    Tutorials
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../how_to/index.html">
+    How To
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../community/index.html">
+    Community
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../api_index.html">
+    API Reference
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item">
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
+      
+        <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/neuroinformatics-unit/spikewrap" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-github fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://neuroinformatics.zulipchat.com/#narrow/stream/406002-Spikewrap" title="Zulip (chat)" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-solid fa-comments fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">Zulip (chat)</span></a>
+        </li>
+</ul></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+    <button class="pst-navbar-icon sidebar-toggle secondary-toggle" aria-label="On this page">
+      <span class="fa-solid fa-outdent"></span>
+    </button>
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          
+          
+            <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../get_started/index.html">
+    Get Started
+  </a>
+</li>
+
+
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="index.html">
+    Tutorials
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../how_to/index.html">
+    How To
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../community/index.html">
+    Community
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../api_index.html">
+    API Reference
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+          
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
+        
+          <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/neuroinformatics-unit/spikewrap" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-github fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://neuroinformatics.zulipchat.com/#narrow/stream/406002-Spikewrap" title="Zulip (chat)" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-solid fa-comments fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">Zulip (chat)</span></a>
+        </li>
+</ul></div>
+        
+      </div>
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+<nav class="bd-docs-nav bd-links"
+     aria-label="Section Navigation">
+  <p class="bd-links__title" role="heading" aria-level="1">Section Navigation</p>
+  <div class="bd-toc-item navbar-nav"><ul class="current nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="01_preprocessing_sessions.html">Preprocessing Sessions</a></li>
+<li class="toctree-l1 current active"><a class="current reference internal" href="#">Supported Preprocessing Steps</a></li>
+<li class="toctree-l1"><a class="reference internal" href="02_managing_configs.html">Managing <code class="docutils literal notranslate"><span class="pre">configs</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="03_running_with_slurm.html">Running with SLURM</a></li>
+<li class="toctree-l1"><a class="reference internal" href="04_slow_spike_sorting.html">Spike Sorting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="05_sync_channel.html">Sync Channel Tutorial</a></li>
+</ul>
+</div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    
+    <li class="breadcrumb-item"><a href="index.html" class="nav-link">Tutorials</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">Supported Preprocessing Steps</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <div class="sphx-glr-download-link-note admonition note">
+<p class="admonition-title">Note</p>
+<p><a class="reference internal" href="#sphx-glr-download-gallery-builds-tutorials-01a-supported-preprocessing-steps-py"><span class="std std-ref">Go to the end</span></a>
+to download the full example code. or to run this example in your browser via Binder</p>
+</div>
+<section class="sphx-glr-example-title" id="supported-preprocessing-steps">
+<span id="supported-preprocessing-tutorial"></span><span id="sphx-glr-gallery-builds-tutorials-01a-supported-preprocessing-steps-py"></span><h1>Supported Preprocessing Steps<a class="headerlink" href="#supported-preprocessing-steps" title="Link to this heading">#</a></h1>
+<p>In <code class="docutils literal notranslate"><span class="pre">spikewrap</span></code>, all preprocessing is performed using
+<a class="reference external" href="https://spikeinterface.readthedocs.io/en/stable/">SpikeInterface</a>
+under the hood.</p>
+<p>In the majority of cases, preprocessing settings in the configuration dictionary
+map 1:1 with spikeinterface function names and their arguments.</p>
+<p>In a few cases (highlighted below) this is not possible, and these functions are documented below.
+In time, the aim will be to transfer all preprocessing into SpikeInterface.</p>
+<p>As a reminder, an example configuration dictionary is strictured like:</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">pp_steps</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">&quot;1&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;phase_shift&quot;</span><span class="p">,</span> <span class="p">{}],</span>
+    <span class="s2">&quot;2&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;bandpass_filter&quot;</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;freq_min&quot;</span><span class="p">:</span> <span class="mi">300</span><span class="p">,</span> <span class="s2">&quot;freq_max&quot;</span><span class="p">:</span> <span class="mi">6000</span><span class="p">}],</span>
+    <span class="s2">&quot;3&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;remove_bad_channels&quot;</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;detect_bad_channel_kwargs&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;chunk_duration_s&quot;</span><span class="p">:</span> <span class="mf">0.5</span><span class="p">}}],</span>
+    <span class="s2">&quot;4&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;common_reference&quot;</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;operator&quot;</span><span class="p">:</span> <span class="s2">&quot;median&quot;</span><span class="p">}],</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>(see the <a class="reference internal" href="02_managing_configs.html#configs-tutorial"><span class="std std-ref">the Managing Configs tutorials</span></a> for details).</p>
+<section id="steps-that-directly-map-spikeinterface">
+<h2>Steps that directly map SpikeInterface<a class="headerlink" href="#steps-that-directly-map-spikeinterface" title="Link to this heading">#</a></h2>
+<section id="phase-shift">
+<h3><code class="docutils literal notranslate"><span class="pre">phase_shift</span></code><a class="headerlink" href="#phase-shift" title="Link to this heading">#</a></h3>
+<p>The name and arguments map directly to SpikeInterface’s
+<a class="reference external" href="https://spikeinterface.readthedocs.io/en/latest/api.html#spikeinterface.preprocessing.phase_shift">phase_shift</a>
+function.</p>
+</section>
+<section id="bandpass-filter">
+<h3><code class="docutils literal notranslate"><span class="pre">bandpass_filter</span></code>:<a class="headerlink" href="#bandpass-filter" title="Link to this heading">#</a></h3>
+<p>The name and arguments map directly to SpikeInterface’s
+<a class="reference external" href="https://spikeinterface.readthedocs.io/en/latest/api.html#spikeinterface.preprocessing.bandpass_filter">bandpass_filter</a>
+function.</p>
+</section>
+<section id="common-reference">
+<h3><code class="docutils literal notranslate"><span class="pre">common_reference</span></code>:<a class="headerlink" href="#common-reference" title="Link to this heading">#</a></h3>
+<p>The name and arguments map directly to SpikeInterface’s
+<a class="reference external" href="https://spikeinterface.readthedocs.io/en/latest/api.html#spikeinterface.preprocessing.common_reference">common_reference</a>
+function.</p>
+</section>
+<section id="whiten">
+<h3><code class="docutils literal notranslate"><span class="pre">whiten</span></code>:<a class="headerlink" href="#whiten" title="Link to this heading">#</a></h3>
+<p>The name and arguments map directly to SpikeInterface’s
+<a class="reference external" href="https://spikeinterface.readthedocs.io/en/latest/api.html#spikeinterface.preprocessing.whiten">whiten</a>
+function.</p>
+</section>
+</section>
+<section id="steps-that-do-not-directly-map-spikeinterface">
+<h2>Steps that do not directly map SpikeInterface<a class="headerlink" href="#steps-that-do-not-directly-map-spikeinterface" title="Link to this heading">#</a></h2>
+<p>While these steps use SpikeInterface under the hood, they do not map 1:1 to
+the SpikeInterface API.</p>
+<p>For reference, their implementations are in <code class="docutils literal notranslate"><span class="pre">spikewrap.process._preprocessing</span></code>
+(however, they should not be called directly, instead use the config_dict as above).</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Currently, bad-channel detection is performed per-run (if not concatenated). In some cases it is useful
+to remove the union of all bad channels (across runs from each run). This is not currently implemented in
+spikewrap, but if you would like to use this, please get in contact.</p>
+</div>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>Bad-channel detection is performed at the <a class="reference internal" href="../../api_index.html#spikewrap.Session.preprocess" title="spikewrap.Session.preprocess"><code class="xref py py-class docutils literal notranslate"><span class="pre">spikewrap.Session.preprocess</span></code></a> stage,  and so may slow down
+this call. This is in contract to other preprocessing steps which are lazy.</p>
+</div>
+<section id="remove-bad-channels">
+<h3><code class="docutils literal notranslate"><span class="pre">remove_bad_channels</span></code><a class="headerlink" href="#remove-bad-channels" title="Link to this heading">#</a></h3>
+<p>This function removes bad channels from the recording. Under the hood it uses SpikeInterface’s
+<a class="reference external" href="https://spikeinterface.readthedocs.io/en/latest/api.html#spikeinterface.preprocessing.detect_bad_channels">detect_bad_channels</a>
+and <a class="reference external" href="https://spikeinterface.readthedocs.io/en/latest/modules/preprocessing.html#detect-bad-channels-interpolate-bad-channels">remove_channels</a> functions.
+The default settings use the International Brain Laboratory’s (IBLs)
+<a class="reference external" href="https://figshare.com/articles/online_resource/Spike_sorting_pipeline_for_the_International_Brain_Laboratory/19705522?file=49783080">detect bad channels approach</a>. It’s parameters are:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">labels_to_remove</span></code>: Set the bad-channel labels to remove. During bad channel detection, channels are labelled <code class="docutils literal notranslate"><span class="pre">&quot;good&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;out&quot;</span></code> (of brain), <code class="docutils literal notranslate"><span class="pre">&quot;noise&quot;</span></code> and <code class="docutils literal notranslate"><span class="pre">&quot;dead&quot;&quot;</span></code>. This argument removes channels that have the passed labels. e.g. <code class="docutils literal notranslate"><span class="pre">[&quot;noise&quot;,</span> <span class="pre">&quot;dead&quot;]</span></code> will remove only dead and noisy channels, but out of brain and good channels will be retained.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">detect_bad_channel_kwargs</span></code>: A dictionary of arguments that will be passed to SpikeInterface’s <a class="reference external" href="https://spikeinterface.readthedocs.io/en/latest/api.html#spikeinterface.preprocessing.detect_bad_channels">detect_bad_channels</a>.</p></li>
+</ul>
+</section>
+<section id="interpolate-bad-channels">
+<h3><code class="docutils literal notranslate"><span class="pre">interpolate_bad_channels</span></code><a class="headerlink" href="#interpolate-bad-channels" title="Link to this heading">#</a></h3>
+<p>This function interpolates (Kriging) bad channels in the recording. Under the hood it uses SpikeInterface’s
+<a class="reference external" href="https://spikeinterface.readthedocs.io/en/latest/api.html#spikeinterface.preprocessing.detect_bad_channels">detect_bad_channels</a> and
+<a class="reference external" href="https://spikeinterface.readthedocs.io/en/latest/modules/preprocessing.html#detect-bad-channels-interpolate-bad-channels">interpolate_bad_channels</a> function.
+Note that the spikeinterface <code class="docutils literal notranslate"><span class="pre">interpolate_bad_channels</span></code> only interpolates a given list of channels, rather than the detect-and-interpolate performed in <code class="docutils literal notranslate"><span class="pre">spikewrap</span></code>.
+The default method uses the International Brain Laboratory’s (IBLs)
+<a class="reference external" href="https://figshare.com/articles/online_resource/Spike_sorting_pipeline_for_the_International_Brain_Laboratory/19705522?file=49783080">detect bad channels approach</a></p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">labels_to_remove</span></code>: Set the bad-channel labels to interpolate. During bad channel detection, channels are labelled <code class="docutils literal notranslate"><span class="pre">&quot;good&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;out&quot;</span></code> (of brain), <code class="docutils literal notranslate"><span class="pre">&quot;noise&quot;</span></code> and <code class="docutils literal notranslate"><span class="pre">&quot;dead&quot;&quot;</span></code>. This argument interpolates channels that have the passed labels. e.g. <code class="docutils literal notranslate"><span class="pre">[&quot;noise&quot;,</span> <span class="pre">&quot;dead&quot;]</span></code> will interpolate only dead and noisy channels, but out of brain and good channels will be retained.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">detect_bad_channel_kwargs</span></code>: A dictionary of arguments that will be passed to SpikeInterface’s <a class="reference external" href="https://spikeinterface.readthedocs.io/en/latest/api.html#spikeinterface.preprocessing.detect_bad_channels">detect_bad_channels</a>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">interpolate_bad_channel_kwargs</span></code>: A dictionary of kwargs that will be passed to SpikeInterface’s <a class="reference external" href="https://spikeinterface.readthedocs.io/en/latest/modules/preprocessing.html#detect-bad-channels-interpolate-bad-channels">interpolate_bad_channels</a> function that performs the interpolation (but not detection).</p></li>
+</ul>
+</section>
+<section id="remove-channels">
+<h3><code class="docutils literal notranslate"><span class="pre">remove_channels</span></code><a class="headerlink" href="#remove-channels" title="Link to this heading">#</a></h3>
+<p>This function to remove a given list of channels from the recording.
+Uses SpikeInterface’s <a class="reference external" href="https://spikeinterface.readthedocs.io/en/latest/api.html#spikeinterface.preprocessing.whiten">whiten</a> function.</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">channel_ids</span></code>: A list of channel ids to remove from the recording.</p></li>
+</ul>
+</section>
+<section id="interpolate-channels">
+<h3><code class="docutils literal notranslate"><span class="pre">interpolate_channels</span></code><a class="headerlink" href="#interpolate-channels" title="Link to this heading">#</a></h3>
+<p>This function to interpolate (Kriging) a given list of channels in the recording.
+Uses SpikeInterface’s <a class="reference external" href="https://spikeinterface.readthedocs.io/en/latest/api.html#spikeinterface.preprocessing.whiten">interpolate_bad_channels</a> function.</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">channel_ids</span></code>: A list of channel ids to interpolate.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">interpolate_bad_channel_kwargs</span></code>: A dictionary of kwargs that will be passed to SpikeInterface’s <a class="reference external" href="https://spikeinterface.readthedocs.io/en/latest/modules/preprocessing.html#detect-bad-channels-interpolate-bad-channels">interpolate_bad_channels</a> function that performs the interpolation (but not detection).</p></li>
+</ul>
+<p class="sphx-glr-timing"><strong>Total running time of the script:</strong> (0 minutes 0.000 seconds)</p>
+<div class="sphx-glr-footer sphx-glr-footer-example docutils container" id="sphx-glr-download-gallery-builds-tutorials-01a-supported-preprocessing-steps-py">
+<div class="binder-badge docutils container">
+<a class="reference external image-reference" href="https://mybinder.org/v2/gh/neuroinformatics-unit/spikewrap/gh-pages?filepath=notebooks/gallery_builds/tutorials/01a_supported_preprocessing_steps.ipynb"><img alt="Launch binder" src="../../_images/binder_badge_logo2.svg" style="width: 150px;" />
+</a>
+</div>
+<div class="sphx-glr-download sphx-glr-download-jupyter docutils container">
+<p><a class="reference download internal" download="" href="../../_downloads/fb6c5015252dad11a7cb0dd481e535c0/01a_supported_preprocessing_steps.ipynb"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">Jupyter</span> <span class="pre">notebook:</span> <span class="pre">01a_supported_preprocessing_steps.ipynb</span></code></a></p>
+</div>
+<div class="sphx-glr-download sphx-glr-download-python docutils container">
+<p><a class="reference download internal" download="" href="../../_downloads/9a2400ad3ad3578c3545cc06699262c8/01a_supported_preprocessing_steps.py"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">Python</span> <span class="pre">source</span> <span class="pre">code:</span> <span class="pre">01a_supported_preprocessing_steps.py</span></code></a></p>
+</div>
+<div class="sphx-glr-download sphx-glr-download-zip docutils container">
+<p><a class="reference download internal" download="" href="../../_downloads/9b0eeec1258ae9d494888bee67737dd9/01a_supported_preprocessing_steps.zip"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">zipped:</span> <span class="pre">01a_supported_preprocessing_steps.zip</span></code></a></p>
+</div>
+</div>
+<p class="sphx-glr-signature"><a class="reference external" href="https://sphinx-gallery.github.io">Gallery generated by Sphinx-Gallery</a></p>
+</section>
+</section>
+</section>
+
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="01_preprocessing_sessions.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">Preprocessing Sessions</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="02_managing_configs.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Managing <code class="docutils literal notranslate"><span class="pre">configs</span></code></p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <dialog id="pst-secondary-sidebar-modal"></dialog>
+                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+<div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> On this page
+  </div>
+  <nav class="bd-toc-nav page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#steps-that-directly-map-spikeinterface">Steps that directly map SpikeInterface</a><ul class="visible nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#phase-shift"><code class="docutils literal notranslate"><span class="pre">phase_shift</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#bandpass-filter"><code class="docutils literal notranslate"><span class="pre">bandpass_filter</span></code>:</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#common-reference"><code class="docutils literal notranslate"><span class="pre">common_reference</span></code>:</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#whiten"><code class="docutils literal notranslate"><span class="pre">whiten</span></code>:</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#steps-that-do-not-directly-map-spikeinterface">Steps that do not directly map SpikeInterface</a><ul class="visible nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#remove-bad-channels"><code class="docutils literal notranslate"><span class="pre">remove_bad_channels</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#interpolate-bad-channels"><code class="docutils literal notranslate"><span class="pre">interpolate_bad_channels</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#remove-channels"><code class="docutils literal notranslate"><span class="pre">remove_channels</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#interpolate-channels"><code class="docutils literal notranslate"><span class="pre">interpolate_channels</span></code></a></li>
+</ul>
+</li>
+</ul>
+  </nav></div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf"></script>
+<script defer src="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item"><p class="sphinx-version">
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.1.3.
+    <br/>
+    </p>
+    <p class="theme-version">
+    Built with the
+    <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a>
+    0.16.1.
+    </p></div>
+      
+    </div>
+  
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item"><div class="things-in-a-row">
+    <a href="https://neuroinformatics.dev/">
+        <img src="../../_static/light-logo-niu.png" alt="Sponsors" class="only-light img-sponsor"/>
+        <img src="../../_static/dark-logo-niu.png" alt="Sponsors" class="only-dark img-sponsor"/>
+    </a>
+    <a href="https://www.sainsburywellcome.org/web/">
+        <img src="../../_static/light-logo-swc.png" alt="Sponsors" class="only-light img-sponsor"/>
+        <img src="../../_static/dark-logo-swc.png" alt="Sponsors" class="only-dark img-sponsor"/>
+    </a>
+    <a href="https://www.ucl.ac.uk/gatsby/gatsby-computational-neuroscience-unit">
+        <img src="../../_static/light-logo-gatsby.png" alt="Sponsors" class="only-light img-sponsor"/>
+        <img src="../../_static/dark-logo-gatsby.png" alt="Sponsors" class="only-dark img-sponsor"/>
+    </a>
+    <a href="https://www.ucl.ac.uk/">
+        <img src="../../_static/light-logo-ucl.png" alt="Sponsors" class="only-light img-sponsor"/>
+        <img src="../../_static/dark-logo-ucl.png" alt="Sponsors" class="only-dark img-sponsor"/>
+    </a>
+</div></div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>

@@ -32,6 +32,23 @@ Tutorials
 
 .. raw:: html
 
+    <div class="sphx-glr-thumbcontainer" tooltip="In spikewrap, all preprocessing is performed using SpikeInterface under the hood.">
+
+.. only:: html
+
+  .. image:: /gallery_builds/tutorials/images/thumb/sphx_glr_01a_supported_preprocessing_steps_thumb.png
+    :alt:
+
+  :ref:`sphx_glr_gallery_builds_tutorials_01a_supported_preprocessing_steps.py`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">Supported Preprocessing Steps</div>
+    </div>
+
+
+.. raw:: html
+
     <div class="sphx-glr-thumbcontainer" tooltip="In spikewrap, configs encode the preprocessing and sorting settings for a pipeline. The emphasis is on convenient sharing of pipelines, while allowing flexibility for prototyping.">
 
 .. only:: html
@@ -64,6 +81,40 @@ Tutorials
     </div>
 
 
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="Spike Sorting">
+
+.. only:: html
+
+  .. image:: /gallery_builds/tutorials/images/thumb/sphx_glr_04_slow_spike_sorting_thumb.png
+    :alt:
+
+  :ref:`sphx_glr_gallery_builds_tutorials_04_slow_spike_sorting.py`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">Spike Sorting</div>
+    </div>
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="Sync Channel Tutorial">
+
+.. only:: html
+
+  .. image:: /gallery_builds/tutorials/images/thumb/sphx_glr_05_sync_channel_thumb.png
+    :alt:
+
+  :ref:`sphx_glr_gallery_builds_tutorials_05_sync_channel.py`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">Sync Channel Tutorial</div>
+    </div>
+
+
 .. thumbnail-parent-div-close
 
 .. raw:: html
@@ -75,8 +126,11 @@ Tutorials
    :hidden:
 
    /gallery_builds/tutorials/01_preprocessing_sessions
+   /gallery_builds/tutorials/01a_supported_preprocessing_steps
    /gallery_builds/tutorials/02_managing_configs
    /gallery_builds/tutorials/03_running_with_slurm
+   /gallery_builds/tutorials/04_slow_spike_sorting
+   /gallery_builds/tutorials/05_sync_channel
 
 
 .. only:: html

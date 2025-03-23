@@ -98,7 +98,7 @@ Show available ``configs``
  .. code-block:: none
 
     These are stored at:
-    /home/runner/.spikewrap/configs
+    /home/runner/spikewrap/configs
 
 
 
@@ -124,7 +124,7 @@ We can create and save our own ``configs``, from the currently supported steps.
 
 
     Currently supported preprocessing steps are:
-    ['phase_shift', 'bandpass_filter', 'common_reference']
+    ['phase_shift', 'bandpass_filter', 'common_reference', 'whiten', 'remove_bad_channels', 'interpolate_bad_channels', 'remove_channels', 'interpolate_channels']
 
 
 

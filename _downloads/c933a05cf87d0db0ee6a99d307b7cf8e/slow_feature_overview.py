@@ -119,12 +119,13 @@ session = sw.Session(
     probe=None,  # optional argument to set probe
 )
 
+session.save_sync_channel()
 
 # Run (lazy) preprocessing, for fast plotting
 # and prototyping of preprocessing steps
 
 session.preprocess(
-    configs="neuropixels+kilosort2_5",
+    configs="neuropixels+mountainsort5",
     per_shank=True,
     concat_runs=False,
 )
@@ -145,29 +146,44 @@ session.save_preprocessed(
     slurm=False
 )
 
+# In this example, runs were preprocessed separately,
+# and are concatenated together before sorting.
+session.sort(
+    configs="neuropixels+mountainsort5",
+    run_sorter_method="local",
+    concat_runs=True,
+)
+
 # %%
 # with data output to the standardised
 # `NeuroBlueprint <https://neuroblueprint.neuroinformatics.dev/latest/index.html>`_
 # structure:
 #
-# .. code-block::
+# .. code-block:: none
 #
-#    └── root_folder/
-#        └── derivatives/
-#            └── sub-001/
-#                └── ses-001  /
-#                    └── ephys/
-#                        └── run-001_g0_imec0/
-#                        │   ├── preprocessed/
-#                        │   │   ├── shank_0/
-#                        │   │   │   └── si_recording/
-#                        │   │   │       └── <spikeinterface binary>
-#                        │   │   └── shank_1/
-#                        │   │       └── si_recording/
-#                        │   │           └── <spikeinterface binary>
-#                        │   └── sync/
-#                        │       └── sync_channel.npy
-#                        └── run-002_g0_imec0/
-#                            └── ...
-#
+#     └── root_folder/
+#         └── derivatives/
+#             └── sub-001/
+#                 └── ses-001  /
+#                     └── ephys/
+#                         ├── run-001_g0_imec0/
+#                         │   ├── preprocessed/
+#                         │   │   ├── shank_0/
+#                         │   │   │   └── si_recording/
+#                         │   │   │       └── <spikeinterface_binary>
+#                         │   │   └── shank_1/
+#                         │   │       └── si_recording/
+#                         │   │           └── <spikeinterface_binary>
+#                         │   └── sync/
+#                         │       └── sync_channel.npy
+#                         ├── run-002_g0_imec0/
+#                         │   └── preprocessed/
+#                         │       └── ...
+#                         └── concat_run/
+#                             └── sorting/
+#                                 ├── shank_0/
+#                                 │   └── ...
+#                                 └── ...
+
+# %%
 # Next, visit :ref:`get-started` and :ref:`tutorials_index` to try out ``spikewrap``.

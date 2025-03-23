@@ -39,7 +39,11 @@ We will cover:
    ``spikewrap``'s features are currently limited. See the :ref:`Roadmap <roadmap>`
    for planned features.
 
-.. GENERATED FROM PYTHON SOURCE LINES 27-72
+Under the hood, spikewrap uses SpikeInterface to perform all preprocessing steps.
+See the :ref:`Supported Preprocessing Steps <supported-preprocessing-tutorial>` for details
+on supported functionality.
+
+.. GENERATED FROM PYTHON SOURCE LINES 32-77
 
 Loading Data
 ------------
@@ -87,7 +91,7 @@ Let's say we have a dataset (available at :class:`spikewrap.get_example_data_pat
                                         └── ...
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 74-90
+.. GENERATED FROM PYTHON SOURCE LINES 79-95
 
 This dataset is installed with ``spikewrap`` so you can run this tutorial locally.
 
@@ -106,7 +110,7 @@ First, we import and instantiate the :class:`spikewrap.Session` object with the:
    Otherwise, a `ProbeInterface <https://probeinterface.readthedocs.io/en/main/>`_
    object. This probe will be set on all runs.
 
-.. GENERATED FROM PYTHON SOURCE LINES 90-104
+.. GENERATED FROM PYTHON SOURCE LINES 95-107
 
 .. code-block:: Python
 
@@ -120,9 +124,7 @@ First, we import and instantiate the :class:`spikewrap.Session` object with the:
         run_names="all"
     )
 
-    session.load_raw_data()
-
-    session.preprocess(configs="neuropixels+kilosort2_5")
+    session.preprocess(configs="neuropixels+kilosort2_5", concat_runs=True)
 
 
 
@@ -132,20 +134,6 @@ First, we import and instantiate the :class:`spikewrap.Session` object with the:
 
  .. code-block:: none
 
-    /home/runner/work/spikewrap/spikewrap/spikewrap/process/_loading.py:139: UserWarning: The sessions or runs provided for are not in creation datetime order.
-    They will be concatenated in the order provided, as:
-    ['run-002_g0_imec0', 'run-001_g0_imec0'].
-      warnings.warn(
-
-    Loading runs from session path: /home/runner/work/spikewrap/spikewrap/spikewrap/examples/example_tiny_data/spikeglx/rawdata/sub-001
-
-    Loading run: run-002_g0_imec0
-
-    Loading data from path: /home/runner/work/spikewrap/spikewrap/spikewrap/examples/example_tiny_data/spikeglx/rawdata/sub-001/ses-001/ephys/run-002_g0_imec0
-
-    Loading run: run-001_g0_imec0
-
-    Loading data from path: /home/runner/work/spikewrap/spikewrap/spikewrap/examples/example_tiny_data/spikeglx/rawdata/sub-001/ses-001/ephys/run-001_g0_imec0
 
 
     The preprocessing options are: {
@@ -168,27 +156,36 @@ First, we import and instantiate the :class:`spikewrap.Session` object with the:
             }
         ]
     }
+    /home/runner/work/spikewrap/spikewrap/spikewrap/process/_loading.py:147: UserWarning: The sessions or runs provided for are not in creation datetime order.
+    They will be concatenated in the order provided, as:
+    ['run-002_g0_imec0', 'run-001_g0_imec0'].
+      warnings.warn(
 
     Loading data from path: /home/runner/work/spikewrap/spikewrap/spikewrap/examples/example_tiny_data/spikeglx/rawdata/sub-001/ses-001/ephys/run-002_g0_imec0
 
     Loading data from path: /home/runner/work/spikewrap/spikewrap/spikewrap/examples/example_tiny_data/spikeglx/rawdata/sub-001/ses-001/ephys/run-001_g0_imec0
 
+    Concatenating raw recordings in the following order:['run-002_g0_imec0', 'run-001_g0_imec0']
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 105-109
 
-Due to the magic of SpikeInterface, all data loading is 'lazy' and will be very fast.
-Note that **nothing is written to disk at this stage**.
+.. GENERATED FROM PYTHON SOURCE LINES 108-112
+
+Due to the magic of SpikeInterface, data loading and most preprocessing functions
+are 'lazy' and will be very fast. Note that **nothing is written to disk at this stage**.
 
 We can inspect the detected run names with:
 
-.. GENERATED FROM PYTHON SOURCE LINES 109-112
+.. GENERATED FROM PYTHON SOURCE LINES 112-118
 
 .. code-block:: Python
 
+    print(session.get_raw_run_names())
 
-    print(session.get_run_names())
+    # and the names of the preprocessed runs (which may change to "concat_run"
+    # if the runs are concatenated prior to preprocessing:
+    print(session.get_preprocessed_run_names())
 
 
 
@@ -199,11 +196,12 @@ We can inspect the detected run names with:
  .. code-block:: none
 
     ['run-002_g0_imec0', 'run-001_g0_imec0']
+    ['concat_run']
 
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 113-122
+.. GENERATED FROM PYTHON SOURCE LINES 119-128
 
 Preprocessing Options
 ---------------------
@@ -215,7 +213,7 @@ Briefly, a configuration file related to your data can be used to preprocess by 
 
 We can print the configs used with:
 
-.. GENERATED FROM PYTHON SOURCE LINES 122-125
+.. GENERATED FROM PYTHON SOURCE LINES 128-131
 
 .. code-block:: Python
 
@@ -264,20 +262,22 @@ We can print the configs used with:
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 126-128
+.. GENERATED FROM PYTHON SOURCE LINES 132-135
 
 Otherwise, we can define a dictionary with the steps to pass to :class:`spikewrap.Session.preprocess()`.
-All preprocess steps are defined with their underlying SpikeInterface function name.
+Preprocess steps generally take the underlying SpikeInterface function name and parameters, see
+:ref:`Supported Preprocessing Steps <supported-preprocessing-tutorial>` for details.
 
-.. GENERATED FROM PYTHON SOURCE LINES 128-136
+.. GENERATED FROM PYTHON SOURCE LINES 135-144
 
 .. code-block:: Python
 
 
     configs = {
         "preprocessing": {
-            "1": ["bandpass_filter", {"freq_min": 300, "freq_max": 6000}],
-            "2": ["common_reference", {"operator": "median"}],
+            "1": ["phase_shift", {}],
+            "2": ["bandpass_filter", {"freq_min": 300, "freq_max": 6000}],
+            "3": ["common_reference", {"operator": "median"}],
         }
     }
 
@@ -288,18 +288,19 @@ All preprocess steps are defined with their underlying SpikeInterface function n
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 137-138
+.. GENERATED FROM PYTHON SOURCE LINES 145-146
 
 :class:`spikewrap.Session.preprocess()` will also accept a dictionary with the top-level omitted
 
-.. GENERATED FROM PYTHON SOURCE LINES 138-144
+.. GENERATED FROM PYTHON SOURCE LINES 146-153
 
 .. code-block:: Python
 
 
     pp_steps = {
-        "1": ["bandpass_filter", {"freq_min": 300, "freq_max": 6000}],
-        "2": ["common_reference", {"operator": "median"}],
+        "1": ["phase_shift", {}],
+        "2": ["bandpass_filter", {"freq_min": 300, "freq_max": 6000}],
+        "3": ["common_reference", {"operator": "median"}],
     }
 
 
@@ -309,7 +310,7 @@ All preprocess steps are defined with their underlying SpikeInterface function n
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 145-154
+.. GENERATED FROM PYTHON SOURCE LINES 154-163
 
 Concatenation Arguments
 ~~~~~~~~~~~~~~~~~~~~~~~
@@ -321,7 +322,7 @@ For multi-run sessions or multi-shank probes, we can set:
 ``concat runs``:
     If ``True``, concatenate all runs together before processing.
 
-.. GENERATED FROM PYTHON SOURCE LINES 154-161
+.. GENERATED FROM PYTHON SOURCE LINES 163-170
 
 .. code-block:: Python
 
@@ -344,36 +345,32 @@ For multi-run sessions or multi-shank probes, we can set:
 
     The preprocessing options are: {
         "1": [
+            "phase_shift",
+            {}
+        ],
+        "2": [
             "bandpass_filter",
             {
                 "freq_max": 6000,
                 "freq_min": 300
             }
         ],
-        "2": [
+        "3": [
             "common_reference",
             {
                 "operator": "median"
             }
         ]
     }
-    /home/runner/work/spikewrap/spikewrap/spikewrap/process/_loading.py:139: UserWarning: The sessions or runs provided for are not in creation datetime order.
-    They will be concatenated in the order provided, as:
-    ['run-002_g0_imec0', 'run-001_g0_imec0'].
-      warnings.warn(
 
-    Loading data from path: /home/runner/work/spikewrap/spikewrap/spikewrap/examples/example_tiny_data/spikeglx/rawdata/sub-001/ses-001/ephys/run-002_g0_imec0
-
-    Loading data from path: /home/runner/work/spikewrap/spikewrap/spikewrap/examples/example_tiny_data/spikeglx/rawdata/sub-001/ses-001/ephys/run-001_g0_imec0
-
-    Concatenating runs in the following order:['run-002_g0_imec0', 'run-001_g0_imec0']
+    Concatenating raw recordings in the following order:['run-002_g0_imec0', 'run-001_g0_imec0']
 
     Split run: concat_run by shank. There are 2 shanks. 
 
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 162-168
+.. GENERATED FROM PYTHON SOURCE LINES 171-177
 
 Visualising Preprocessing
 -------------------------
@@ -382,7 +379,7 @@ Visualising Preprocessing
 configurations and arguments, then re-plotting. This can be performed in a
 `Jupyter notebook <https://jupyter.org/>`_ if desired.
 
-.. GENERATED FROM PYTHON SOURCE LINES 168-175
+.. GENERATED FROM PYTHON SOURCE LINES 177-184
 
 .. code-block:: Python
 
@@ -397,7 +394,7 @@ configurations and arguments, then re-plotting. This can be performed in a
 
 
 .. image-sg:: /gallery_builds/tutorials/images/sphx_glr_01_preprocessing_sessions_001.png
-   :alt: Session: ses-001, Run: concat_run Shank: 1, Session: ses-001, Run: concat_run Shank: 2
+   :alt: Session: ses-001, Run: concat_run, shank_0, Session: ses-001, Run: concat_run, shank_1
    :srcset: /gallery_builds/tutorials/images/sphx_glr_01_preprocessing_sessions_001.png
    :class: sphx-glr-single-img
 
@@ -405,11 +402,11 @@ configurations and arguments, then re-plotting. This can be performed in a
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 176-177
+.. GENERATED FROM PYTHON SOURCE LINES 185-186
 
 ``plots`` (a ``dict`` of matplotlib figures) contains the figures for (optional) further editing.
 
-.. GENERATED FROM PYTHON SOURCE LINES 177-180
+.. GENERATED FROM PYTHON SOURCE LINES 186-189
 
 .. code-block:: Python
 
@@ -429,11 +426,11 @@ configurations and arguments, then re-plotting. This can be performed in a
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 181-182
+.. GENERATED FROM PYTHON SOURCE LINES 190-191
 
 Now, let's update a preprocessing step and plot again:
 
-.. GENERATED FROM PYTHON SOURCE LINES 182-203
+.. GENERATED FROM PYTHON SOURCE LINES 191-212
 
 .. code-block:: Python
 
@@ -446,7 +443,7 @@ Now, let's update a preprocessing step and plot again:
     # This is currently quite verbose. It is the second preprocessing
     # step, second element of the list ["function_name", {function_kwargs...}]
     # (see processing dictionary defined above)
-    pp_attempt_2["preprocessing"]["2"][1]["operator"] = "average"
+    pp_attempt_2["preprocessing"]["3"][1]["operator"] = "average"
 
     session.preprocess(
         configs=pp_attempt_2,
@@ -487,27 +484,23 @@ Now, let's update a preprocessing step and plot again:
 
     The preprocessing options are: {
         "1": [
+            "phase_shift",
+            {}
+        ],
+        "2": [
             "bandpass_filter",
             {
                 "freq_max": 6000,
                 "freq_min": 300
             }
         ],
-        "2": [
+        "3": [
             "common_reference",
             {
                 "operator": "average"
             }
         ]
     }
-    /home/runner/work/spikewrap/spikewrap/spikewrap/process/_loading.py:139: UserWarning: The sessions or runs provided for are not in creation datetime order.
-    They will be concatenated in the order provided, as:
-    ['run-002_g0_imec0', 'run-001_g0_imec0'].
-      warnings.warn(
-
-    Loading data from path: /home/runner/work/spikewrap/spikewrap/spikewrap/examples/example_tiny_data/spikeglx/rawdata/sub-001/ses-001/ephys/run-002_g0_imec0
-
-    Loading data from path: /home/runner/work/spikewrap/spikewrap/spikewrap/examples/example_tiny_data/spikeglx/rawdata/sub-001/ses-001/ephys/run-001_g0_imec0
     /opt/hostedtoolcache/Python/3.11.11/x64/lib/python3.11/site-packages/spikeinterface/widgets/traces.py:150: UserWarning: You have selected a time after the end of the segment. The range will be clipped to 0.4999999999999989
       warnings.warn(
     /opt/hostedtoolcache/Python/3.11.11/x64/lib/python3.11/site-packages/spikeinterface/widgets/traces.py:150: UserWarning: You have selected a time after the end of the segment. The range will be clipped to 0.4999999999999989
@@ -516,7 +509,7 @@ Now, let's update a preprocessing step and plot again:
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 204-209
+.. GENERATED FROM PYTHON SOURCE LINES 213-218
 
 Save Preprocessing
 ------------------
@@ -524,7 +517,7 @@ Save Preprocessing
 When you are ready to save the preprocessed recording with your
 chosen settings, you can run:
 
-.. GENERATED FROM PYTHON SOURCE LINES 209-212
+.. GENERATED FROM PYTHON SOURCE LINES 218-221
 
 .. code-block:: Python
 
@@ -541,29 +534,19 @@ chosen settings, you can run:
 
 
     Saving data for: run-002_g0_imec0...
-
-    `overwrite=True`, so deleting all files and folders (except for slurm_logs) at the path:
-    /home/runner/work/spikewrap/spikewrap/spikewrap/examples/example_tiny_data/spikeglx/derivatives/sub-001/ses-001/ephys/run-002_g0_imec0
-
-    Saving sync channel for: run-002_g0_imec0...
     write_binary_recording 
     engine=process - n_jobs=4 - samples_per_chunk=60,000 - chunk_memory=43.95 MiB - total_memory=175.78 MiB - chunk_duration=2.00s
-    write_binary_recording (workers: 1 processes):   0%|          | 0/1 [00:00<?, ?it/s]    write_binary_recording (workers: 1 processes): 100%|██████████| 1/1 [00:00<00:00,  3.31it/s]    write_binary_recording (workers: 1 processes): 100%|██████████| 1/1 [00:00<00:00,  3.31it/s]
+    write_binary_recording (workers: 1 processes):   0%|          | 0/1 [00:00<?, ?it/s]    write_binary_recording (workers: 1 processes): 100%|██████████| 1/1 [00:00<00:00,  2.01it/s]    write_binary_recording (workers: 1 processes): 100%|██████████| 1/1 [00:00<00:00,  2.01it/s]
 
     Saving data for: run-001_g0_imec0...
-
-    `overwrite=True`, so deleting all files and folders (except for slurm_logs) at the path:
-    /home/runner/work/spikewrap/spikewrap/spikewrap/examples/example_tiny_data/spikeglx/derivatives/sub-001/ses-001/ephys/run-001_g0_imec0
-
-    Saving sync channel for: run-001_g0_imec0...
     write_binary_recording 
     engine=process - n_jobs=4 - samples_per_chunk=60,000 - chunk_memory=43.95 MiB - total_memory=175.78 MiB - chunk_duration=2.00s
-    write_binary_recording (workers: 1 processes):   0%|          | 0/1 [00:00<?, ?it/s]    write_binary_recording (workers: 1 processes): 100%|██████████| 1/1 [00:00<00:00,  3.29it/s]    write_binary_recording (workers: 1 processes): 100%|██████████| 1/1 [00:00<00:00,  3.28it/s]
+    write_binary_recording (workers: 1 processes):   0%|          | 0/1 [00:00<?, ?it/s]    write_binary_recording (workers: 1 processes): 100%|██████████| 1/1 [00:00<00:00,  2.14it/s]    write_binary_recording (workers: 1 processes): 100%|██████████| 1/1 [00:00<00:00,  2.13it/s]
 
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 213-227
+.. GENERATED FROM PYTHON SOURCE LINES 222-236
 
 .. attention::
 
@@ -580,7 +563,7 @@ chosen settings, you can run:
            import spikewrap as sw
            ...
 
-.. GENERATED FROM PYTHON SOURCE LINES 229-251
+.. GENERATED FROM PYTHON SOURCE LINES 238-260
 
 Using SLURM
 ~~~~~~~~~~~
@@ -608,7 +591,7 @@ See the
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** (0 minutes 3.586 seconds)
+   **Total running time of the script:** (0 minutes 4.469 seconds)
 
 
 .. _sphx_glr_download_gallery_builds_tutorials_01_preprocessing_sessions.py:

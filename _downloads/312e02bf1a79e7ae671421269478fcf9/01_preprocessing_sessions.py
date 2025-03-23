@@ -21,7 +21,12 @@ We will cover:
    ``spikewrap``'s features are currently limited. See the :ref:`Roadmap <roadmap>`
    for planned features.
 
+Under the hood, spikewrap uses SpikeInterface to perform all preprocessing steps.
+See the :ref:`Supported Preprocessing Steps <supported-preprocessing-tutorial>` for details
+on supported functionality.
 """
+
+
 
 # %%
 # Loading Data
@@ -97,17 +102,18 @@ session = sw.Session(
     run_names="all"
 )
 
-session.load_raw_data()
-
-session.preprocess(configs="neuropixels+kilosort2_5")
+session.preprocess(configs="neuropixels+kilosort2_5", concat_runs=True)
 
 # %%
-# Due to the magic of SpikeInterface, all data loading is 'lazy' and will be very fast.
-# Note that **nothing is written to disk at this stage**.
+# Due to the magic of SpikeInterface, data loading and most preprocessing functions
+# are 'lazy' and will be very fast. Note that **nothing is written to disk at this stage**.
 #
 # We can inspect the detected run names with:
+print(session.get_raw_run_names())
 
-print(session.get_run_names())
+# and the names of the preprocessed runs (which may change to "concat_run"
+# if the runs are concatenated prior to preprocessing:
+print(session.get_preprocessed_run_names())
 
 # %%
 # Preprocessing Options
@@ -124,12 +130,14 @@ sw.show_configs("neuropixels+kilosort2_5")
 
 # %%
 # Otherwise, we can define a dictionary with the steps to pass to :class:`spikewrap.Session.preprocess()`.
-# All preprocess steps are defined with their underlying SpikeInterface function name.
+# Preprocess steps generally take the underlying SpikeInterface function name and parameters, see
+# :ref:`Supported Preprocessing Steps <supported-preprocessing-tutorial>` for details.
 
 configs = {
     "preprocessing": {
-        "1": ["bandpass_filter", {"freq_min": 300, "freq_max": 6000}],
-        "2": ["common_reference", {"operator": "median"}],
+        "1": ["phase_shift", {}],
+        "2": ["bandpass_filter", {"freq_min": 300, "freq_max": 6000}],
+        "3": ["common_reference", {"operator": "median"}],
     }
 }
 
@@ -137,8 +145,9 @@ configs = {
 # :class:`spikewrap.Session.preprocess()` will also accept a dictionary with the top-level omitted
 
 pp_steps = {
-    "1": ["bandpass_filter", {"freq_min": 300, "freq_max": 6000}],
-    "2": ["common_reference", {"operator": "median"}],
+    "1": ["phase_shift", {}],
+    "2": ["bandpass_filter", {"freq_min": 300, "freq_max": 6000}],
+    "3": ["common_reference", {"operator": "median"}],
 }
 
 # %%
@@ -188,7 +197,7 @@ pp_attempt_2 = copy.deepcopy(configs)
 # This is currently quite verbose. It is the second preprocessing
 # step, second element of the list ["function_name", {function_kwargs...}]
 # (see processing dictionary defined above)
-pp_attempt_2["preprocessing"]["2"][1]["operator"] = "average"
+pp_attempt_2["preprocessing"]["3"][1]["operator"] = "average"
 
 session.preprocess(
     configs=pp_attempt_2,

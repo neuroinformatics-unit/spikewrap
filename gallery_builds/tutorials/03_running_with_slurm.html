@@ -44,7 +44,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../../_static/documentation_options.js?v=a58bc63e"></script>
+    <script src="../../_static/documentation_options.js?v=938c9ccc"></script>
     <script src="../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/design-tabs.js?v=f930bc37"></script>
@@ -54,7 +54,7 @@
     <link rel="icon" href="../../_static/light-logo-niu.png"/>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
-    <link rel="next" title="How To" href="../how_to/index.html" />
+    <link rel="next" title="Spike Sorting" href="04_slow_spike_sorting.html" />
     <link rel="prev" title="Managing configs" href="02_managing_configs.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
@@ -120,7 +120,7 @@
   
   
   
-    <p class="title logo__title">spikewrap v0.1.1</p>
+    <p class="title logo__title">spikewrap v0.2.0</p>
   
 </a></div>
     
@@ -360,8 +360,11 @@
   <p class="bd-links__title" role="heading" aria-level="1">Section Navigation</p>
   <div class="bd-toc-item navbar-nav"><ul class="current nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="01_preprocessing_sessions.html">Preprocessing Sessions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="01a_supported_preprocessing_steps.html">Supported Preprocessing Steps</a></li>
 <li class="toctree-l1"><a class="reference internal" href="02_managing_configs.html">Managing <code class="docutils literal notranslate"><span class="pre">configs</span></code></a></li>
 <li class="toctree-l1 current active"><a class="current reference internal" href="#">Running with SLURM</a></li>
+<li class="toctree-l1"><a class="reference internal" href="04_slow_spike_sorting.html">Spike Sorting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="05_sync_channel.html">Sync Channel Tutorial</a></li>
 </ul>
 </div>
 </nav></div>
@@ -438,7 +441,7 @@ to download the full example code. or to run this example in your browser via Bi
 <p>SLURM is a job-manager used in high-performance computing (HPC) systems).
 Its purpose is to ensure the resources of the HPC are distributed fairly
 between users.</p>
-<p>Users ‘request’ resource from SLURM to run their jobs, and are allocated
+<p>Users request resources from SLURM to run their jobs, and are allocated
 the resources in a priority order calculated by SLURM.</p>
 </section>
 <section id="why-use-slurm">
@@ -446,7 +449,7 @@ the resources in a priority order calculated by SLURM.</p>
 <p>SLURM can be used to run jobs at certain computationally-heavy steps
 in the preprocessing pipeline.</p>
 <p>In <a class="reference external" href="https://spikeinterface.readthedocs.io/en/stable/">SpikeInterface</a>,
-data loading and preprocessing is ‘lazy’, meaning operations are only
+data loading and many preprocessing steps are ‘lazy’, meaning operations are only
 performed on data as they are needed. This makes certain operations very fast,
 such as:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">session</span><span class="o">.</span><span class="n">preprocess</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>
@@ -460,31 +463,149 @@ such as:</p>
 dedicated resources to run the job on. It will then run in the background, allowing you
 to do other things, as well as run multiple jobs at once in parallel.</p>
 </section>
-<section id="running-a-process-with-slurm">
-<h2>Running a process with SLURM<a class="headerlink" href="#running-a-process-with-slurm" title="Link to this heading">#</a></h2>
+<section id="running-a-single-function-with-slurm">
+<h2>Running a single function with SLURM<a class="headerlink" href="#running-a-single-function-with-slurm" title="Link to this heading">#</a></h2>
 <p>In <code class="docutils literal notranslate"><span class="pre">spikewrap</span></code>, methods which are computationally intensive admit a <code class="docutils literal notranslate"><span class="pre">slurm</span></code> argument
-(currently only <a class="reference internal" href="../../api_index.html#spikewrap.Session.save_preprocessed" title="spikewrap.Session.save_preprocessed"><code class="xref py py-func docutils literal notranslate"><span class="pre">spikewrap.Session.save_preprocessed()</span></code></a>).</p>
-<div class="admonition attention">
-<p class="admonition-title">Attention</p>
-<p>Jobs are requested at the <strong>run level</strong>. For example, if a
-session has 2 runs (which are not concatenated),
-<a class="reference internal" href="../../api_index.html#spikewrap.Session.save_preprocessed" title="spikewrap.Session.save_preprocessed"><code class="xref py py-func docutils literal notranslate"><span class="pre">spikewrap.Session.save_preprocessed()</span></code></a> will request two nodes.</p>
+When set, the function will be run within a SLURM job:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">spikewrap</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">sw</span>
+
+<span class="n">session</span> <span class="o">=</span> <span class="n">sw</span><span class="o">.</span><span class="n">Session</span><span class="p">(</span>
+    <span class="n">subject_path</span><span class="o">=</span><span class="n">sw</span><span class="o">.</span><span class="n">get_example_data_path</span><span class="p">()</span> <span class="o">/</span> <span class="s2">&quot;rawdata&quot;</span> <span class="o">/</span> <span class="s2">&quot;sub-001&quot;</span><span class="p">,</span>
+    <span class="n">session_name</span><span class="o">=</span><span class="s2">&quot;ses-001&quot;</span><span class="p">,</span>
+    <span class="n">file_format</span><span class="o">=</span><span class="s2">&quot;spikeglx&quot;</span><span class="p">,</span>
+    <span class="n">run_names</span><span class="o">=</span><span class="s2">&quot;all&quot;</span>
+<span class="p">)</span>
+
+<span class="n">session</span><span class="o">.</span><span class="n">preprocess</span><span class="p">(</span><span class="n">configs</span><span class="o">=</span><span class="s2">&quot;neuropixels+kilosort2_5&quot;</span><span class="p">)</span>
+
+<span class="n">session</span><span class="o">.</span><span class="n">save_preprocessed</span><span class="p">(</span><span class="n">slurm</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</pre></div>
 </div>
 <p>The <code class="docutils literal notranslate"><span class="pre">slurm</span></code> argument can take one of three possible inputs:</p>
-<dl>
-<dt><code class="docutils literal notranslate"><span class="pre">False</span></code>:</dt><dd><p>Do not run the job with SLURM.</p>
-</dd>
-<dt><code class="docutils literal notranslate"><span class="pre">True</span></code>:</dt><dd><p>Run in SLURM with a set of default parameters (explained below)</p>
-</dd>
-<dt><code class="docutils literal notranslate"><span class="pre">dict</span></code>:</dt><dd><p>Run in SLURM, passing the given job parameters in the dictionary to SLURM.</p>
-<p>The arguments passed to SLURM tell it what kind of resources
-you want to request. These are usually passed in an script using <a class="reference external" href="https://slurm.schedmd.com/sbatch.html">sbatch</a>.
-In <code class="docutils literal notranslate"><span class="pre">spikewrap</span></code>, <a class="reference external" href="https://github.com/facebookincubator/submitit">submitit</a>
-is used under the hood to submit SLURM jobs with <code class="docutils literal notranslate"><span class="pre">sbatch</span></code>.</p>
-</dd>
-</dl>
-<p>In <code class="docutils literal notranslate"><span class="pre">spikewrap</span></code>, when <code class="docutils literal notranslate"><span class="pre">slurm=True</span></code> a set of default arguments are used.
-These can be inspected with:</p>
+<p><code class="docutils literal notranslate"><span class="pre">False</span></code> (do not run the job with SLURM), <code class="docutils literal notranslate"><span class="pre">True</span></code> (run in SLURM with a set of
+default parameters) or a <code class="docutils literal notranslate"><span class="pre">dict</span></code> of job parameters. See <a class="reference internal" href="#id1"><span class="std std-ref">configuring SLURM</span></a>
+for more details and <a class="reference internal" href="#slurm-logs"><span class="std std-ref">SLURM logs</span></a> to keep track of running SLURM jobs.</p>
+<p>Note that jobs are requested at the <strong>run level</strong>. For example, if
+a session has 2 runs (which are not concatenated), <a class="reference internal" href="../../api_index.html#spikewrap.Session.save_preprocessed" title="spikewrap.Session.save_preprocessed"><code class="xref py py-func docutils literal notranslate"><span class="pre">spikewrap.Session.save_preprocessed()</span></code></a>
+will request two nodes.</p>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>Chaining functions with <code class="docutils literal notranslate"><span class="pre">slurm=True</span></code> can lead to out-of-order code execution.
+For example, imagine we run sorting after saving the preprocessed data:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">session</span><span class="o">.</span><span class="n">save_preprocessed</span><span class="p">(</span><span class="n">slurm</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+<span class="n">session</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="s2">&quot;neuropixels+kilosort2_5&quot;</span><span class="p">,</span> <span class="n">slurm</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Here, the <code class="docutils literal notranslate"><span class="pre">save_preprocessed</span></code> will be triggered to be run in a separate SLURM
+job, that will take a while to run. However, execution of the script will continue, and <code class="docutils literal notranslate"><span class="pre">session.sort</span></code>
+will be called immediately. As the preprocessed data will not yet be saved, and an error will be called.</p>
+<p>See below on how to chain multiple function calls together with SLURM.</p>
+</div>
+</section>
+<section id="chaining-slurm-commands-processing-a-single-run">
+<h2>Chaining SLURM commands: processing a single-run<a class="headerlink" href="#chaining-slurm-commands-processing-a-single-run" title="Link to this heading">#</a></h2>
+<p id="chaining-slurm">To avoid the issue with out-of-order execution described above, we
+can wrap multiple functions together and run them in a single SLURM job.</p>
+<p>We wrap functions calls in an inner function (these dont have to be
+just functions with the <code class="docutils literal notranslate"><span class="pre">slurm</span></code> argument, and run with the function
+<a class="reference internal" href="../../api_index.html#spikewrap.run_in_slurm" title="spikewrap.run_in_slurm"><code class="xref py py-func docutils literal notranslate"><span class="pre">spikewrap.run_in_slurm()</span></code></a>.</p>
+<p>For example:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">capture_for_slurm</span><span class="p">():</span>
+
+    <span class="n">session</span> <span class="o">=</span> <span class="n">sw</span><span class="o">.</span><span class="n">Session</span><span class="p">(</span>
+        <span class="n">subject_path</span><span class="o">=</span><span class="n">sw</span><span class="o">.</span><span class="n">get_example_data_path</span><span class="p">()</span> <span class="o">/</span> <span class="s2">&quot;rawdata&quot;</span> <span class="o">/</span> <span class="s2">&quot;sub-001&quot;</span><span class="p">,</span>
+        <span class="n">session_name</span><span class="o">=</span><span class="s2">&quot;ses-001&quot;</span><span class="p">,</span>
+        <span class="n">file_format</span><span class="o">=</span><span class="s2">&quot;spikeglx&quot;</span><span class="p">,</span>
+        <span class="n">run_names</span><span class="o">=</span><span class="s2">&quot;run-001</span>
+    <span class="p">)</span>
+
+    <span class="n">session</span><span class="o">.</span><span class="n">preprocess</span><span class="p">(</span><span class="n">configs</span><span class="o">=</span><span class="s2">&quot;neuropixels+kilosort2_5&quot;</span><span class="p">)</span>
+
+    <span class="c1"># We want to set `slurm=False` here, otherwise our SLURM jobs</span>
+    <span class="c1"># will spawn more SLURM jobs!</span>
+
+    <span class="n">session</span><span class="o">.</span><span class="n">save_preprocessed</span><span class="p">(</span><span class="n">slurm</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+    <span class="n">session</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="s2">&quot;neuropixels+kilosort2_5&quot;</span><span class="p">,</span> <span class="n">slurm</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+<span class="n">sw</span><span class="o">.</span><span class="n">run_in_slurm</span><span class="p">(</span>
+    <span class="n">slurm_opts</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">func_to_run</span><span class="o">=</span><span class="n">capture_for_slurm</span><span class="p">,</span>
+    <span class="n">log_base_path</span><span class="o">=</span><span class="n">session</span><span class="o">.</span><span class="n">get_output_path</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>Where <code class="docutils literal notranslate"><span class="pre">slurm_opts</span></code> are the slurm options <a class="reference internal" href="#chaining-slurm"><span class="std std-ref">below</span></a>),
+<code class="docutils literal notranslate"><span class="pre">func_to_run</span></code> is the function to run in slurm, and <code class="docutils literal notranslate"><span class="pre">log_base_path</span></code>
+is where the slurm logs will be saved (we set to the session output path).</p>
+</section>
+<section id="chaining-slurm-commands-processing-multiple-runs">
+<h2>Chaining SLURM commands: processing multiple runs<a class="headerlink" href="#chaining-slurm-commands-processing-multiple-runs" title="Link to this heading">#</a></h2>
+<p>When we have multiple runs, the above approach may not be ideal.
+For example, imagine we have three runs associated with a session:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">capture_for_slurm</span><span class="p">():</span>
+
+    <span class="n">session</span> <span class="o">=</span> <span class="n">sw</span><span class="o">.</span><span class="n">Session</span><span class="p">(</span>
+        <span class="n">subject_path</span><span class="o">=</span><span class="s2">&quot;/path/to/sub,</span>
+        <span class="n">session_name</span><span class="o">=</span><span class="s2">&quot;ses-001&quot;</span><span class="p">,</span>
+        <span class="n">file_format</span><span class="o">=</span><span class="s2">&quot;spikeglx&quot;</span><span class="p">,</span>
+        <span class="n">run_names</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;run-001, &quot;</span><span class="n">run</span><span class="o">-</span><span class="mi">002</span><span class="s2">&quot;, &quot;</span><span class="n">run</span><span class="o">-</span><span class="mi">003</span><span class="s2">&quot;]</span>
+    <span class="p">)</span>
+
+    <span class="n">session</span><span class="o">.</span><span class="n">preprocess</span><span class="p">(</span><span class="n">configs</span><span class="o">=</span><span class="s2">&quot;neuropixels+kilosort2_5&quot;</span><span class="p">)</span>
+
+    <span class="n">session</span><span class="o">.</span><span class="n">save_preprocessed</span><span class="p">(</span><span class="n">slurm</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+    <span class="n">session</span><span class="o">.</span><span class="n">wait_for_slurm</span><span class="p">()</span>  <span class="c1"># this will wait until all running SLURM jobs are finished</span>
+
+    <span class="n">session</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="s2">&quot;neuropixels+kilosort2_5&quot;</span><span class="p">,</span> <span class="n">concat_runs</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">slurm</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Now <code class="docutils literal notranslate"><span class="pre">session.save_preprocessed(slurm=False)</span></code> will freeze execution
+while all runs are saved sequentially, thanks to <a class="reference internal" href="../../api_index.html#spikewrap.Session.wait_for_slurm" title="spikewrap.Session.wait_for_slurm"><code class="xref py py-func docutils literal notranslate"><span class="pre">spikewrap.Session.wait_for_slurm()</span></code></a>.
+Then, it will move on to sorting, which will be run sequentially.
+Therefore, processing the runs will not be parallelized.</p>
+<p>Instead, we can set <code class="docutils literal notranslate"><span class="pre">slurm=True</span></code> on <code class="docutils literal notranslate"><span class="pre">save_preprocessed</span></code> above. In this case, execution
+of <code class="docutils literal notranslate"><span class="pre">save_preprocessed</span></code> will spawn three slurm jobs (one per run). Then the process
+will wait until all three jobs have completed. Once completed, sorting will be run,
+first concatenating the saved preprocessed recordings together. We do not need to run
+that job in SLURM, because there is only one run (as data is concatenated).</p>
+<p>We can even run this entire job in SLURM, and from that job spawn more slurm jobs
+to take advantage of parallelization of saving the preprocessing. This means we don’t have
+to use the current process, which may be killed if the connection to the HPC is lost. For example:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">capture_for_slurm</span><span class="p">():</span>
+
+       <span class="n">session</span> <span class="o">=</span> <span class="n">sw</span><span class="o">.</span><span class="n">Session</span><span class="p">(</span>
+           <span class="n">subject_path</span><span class="o">=</span><span class="n">sw</span><span class="o">.</span><span class="n">get_example_data_path</span><span class="p">()</span> <span class="o">/</span> <span class="s2">&quot;rawdata&quot;</span> <span class="o">/</span> <span class="s2">&quot;sub-001&quot;</span><span class="p">,</span>
+           <span class="n">session_name</span><span class="o">=</span><span class="s2">&quot;ses-001&quot;</span><span class="p">,</span>
+           <span class="n">file_format</span><span class="o">=</span><span class="s2">&quot;spikeglx&quot;</span><span class="p">,</span>
+           <span class="n">run_names</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;run-001, &quot;</span><span class="n">run</span><span class="o">-</span><span class="mi">002</span><span class="s2">&quot;, &quot;</span><span class="n">run</span><span class="o">-</span><span class="mi">003</span><span class="s2">&quot;]</span>
+       <span class="p">)</span>
+
+       <span class="n">session</span><span class="o">.</span><span class="n">preprocess</span><span class="p">(</span><span class="n">configs</span><span class="o">=</span><span class="s2">&quot;neuropixels+kilosort2_5&quot;</span><span class="p">)</span>
+
+       <span class="n">session</span><span class="o">.</span><span class="n">save_preprocessed</span><span class="p">(</span><span class="n">slurm</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+       <span class="n">session</span><span class="o">.</span><span class="n">wait_for_slurm</span><span class="p">()</span>
+
+       <span class="n">session</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="s2">&quot;neuropixels+kilosort2_5&quot;</span><span class="p">,</span> <span class="n">concat_runs</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">slurm</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+<span class="n">sw</span><span class="o">.</span><span class="n">run_in_slurm</span><span class="p">(</span>
+    <span class="n">slurm_opts</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">func_to_run</span><span class="o">=</span><span class="n">capture_for_slurm</span><span class="p">,</span>
+    <span class="n">log_base_path</span><span class="o">=</span><span class="n">session</span><span class="o">.</span><span class="n">get_output_path</span><span class="p">()</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<p>In the above example, the captured functions will be run in a SLURM job.
+Within that SLURM job, 3 more SLURM jobs will be spawned to save the
+three preprocessed runs. Then, once the 3 SLURM jobs are complete, the
+sorting will be run in the original slurm job.</p>
+</section>
+<section id="configuring-slurm">
+<h2>Configuring SLURM<a class="headerlink" href="#configuring-slurm" title="Link to this heading">#</a></h2>
+<p id="id1">In <code class="docutils literal notranslate"><span class="pre">spikewrap</span></code>, when <code class="docutils literal notranslate"><span class="pre">slurm=True</span></code> a set of default arguments are used.</p>
+<p>These can be inspected with:</p>
 <div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">spikewrap</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">sw</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">json</span>
 
@@ -552,7 +673,7 @@ To use a different environment name, edit the options as shown below.</p>
     &quot;env_name&quot;: &quot;my_conda_environment&quot;,
     &quot;slurm_partition&quot;: &quot;gpu&quot;,
     &quot;slurm_gres&quot;: &quot;gpu:1&quot;,
-    &quot;exclude&quot;: &quot;gpu-sr670-20,gpu-sr670-21,gpu-sr670-22&quot;
+    &quot;exclude&quot;: &quot;&quot;
 }
 </pre></div>
 </div>
@@ -567,7 +688,7 @@ as the <code class="docutils literal notranslate"><span class="pre">slurm</span>
 to check you have requested at least as many cpu cores as you set with <code class="docutils literal notranslate"><span class="pre">n_jobs</span></code>.</p>
 <p>When the SLURM job starts, <code class="docutils literal notranslate"><span class="pre">n_jobs</span></code> cores.  If these are not requested and available on the node,
 the job may run slower that it should.</p>
-<p><strong>Note:</strong> <code class="docutils literal notranslate"><span class="pre">n_jobs</span></code> here refers to cores for correspondance with SpikeInterface terminology.
+<p><strong>Note:</strong> <code class="docutils literal notranslate"><span class="pre">n_jobs</span></code> here refers to cores for correspondence with SpikeInterface terminology.
 This is not to be confused with a SLURM job.</p>
 </div>
 </section>
@@ -584,7 +705,7 @@ in two ways.</p>
 </section>
 <section id="inspecting-slurm-s-output">
 <span id="inspect-the-slurm-output-files"></span><h2>Inspecting SLURM’s output<a class="headerlink" href="#inspecting-slurm-s-output" title="Link to this heading">#</a></h2>
-<p>As the SLURM job runs, it will output logs to a <code class="docutils literal notranslate"><span class="pre">slurm_logs</span></code> folder in the processed run folders.</p>
+<p id="slurm-logs">As the SLURM job runs, it will output logs to a <code class="docutils literal notranslate"><span class="pre">slurm_logs</span></code> folder in the processed run folders.</p>
 <p>The two main log files are the <code class="docutils literal notranslate"><span class="pre">.out</span></code> and <code class="docutils literal notranslate"><span class="pre">.err</span></code> files are written to
 the run folder These refer to
 the <code class="docutils literal notranslate"><span class="pre">stdout</span></code> and <code class="docutils literal notranslate"><span class="pre">stderr</span></code> streams common across the major operating systems,
@@ -593,8 +714,6 @@ which manage text.</p>
 is for error messages, warnings and debugging output. However, this is not always handled
 intuitively (for example, pythons <code class="docutils literal notranslate"><span class="pre">logging</span></code> module will always write to <code class="docutils literal notranslate"><span class="pre">stderr</span></code>.
 Therefore, it is important to inspect both logs while inspecting the output of the progress.</p>
-<p>The actual outputs of the processing (e.g. preprocessed binaries)
-will be written to the standard output folder as described [here]()</p>
 <p class="sphx-glr-timing"><strong>Total running time of the script:</strong> (0 minutes 0.001 seconds)</p>
 <div class="sphx-glr-footer sphx-glr-footer-example docutils container" id="sphx-glr-download-gallery-builds-tutorials-03-running-with-slurm-py">
 <div class="binder-badge docutils container">
@@ -635,11 +754,11 @@ will be written to the standard output folder as described [here]()</p>
       </div>
     </a>
     <a class="right-next"
-       href="../how_to/index.html"
+       href="04_slow_spike_sorting.html"
        title="next page">
       <div class="prev-next-info">
         <p class="prev-next-subtitle">next</p>
-        <p class="prev-next-title">How To</p>
+        <p class="prev-next-title">Spike Sorting</p>
       </div>
       <i class="fa-solid fa-angle-right"></i>
     </a>
@@ -664,7 +783,10 @@ will be written to the standard output folder as described [here]()</p>
     <ul class="visible nav section-nav flex-column">
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#what-is-slurm">What is SLURM?</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#why-use-slurm">Why use SLURM?</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#running-a-process-with-slurm">Running a process with SLURM</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#running-a-single-function-with-slurm">Running a single function with SLURM</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#chaining-slurm-commands-processing-a-single-run">Chaining SLURM commands: processing a single-run</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#chaining-slurm-commands-processing-multiple-runs">Chaining SLURM commands: processing multiple runs</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#configuring-slurm">Configuring SLURM</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#checking-the-progress-of-a-job">Checking the progress of a job</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#inspecting-slurm-s-output">Inspecting SLURM’s output</a></li>
 </ul>
@@ -692,7 +814,7 @@ will be written to the standard output folder as described [here]()</p>
     <div class="footer-items__start">
       
         <div class="footer-item"><p class="sphinx-version">
-    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.2.1.
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.1.3.
     <br/>
     </p>
     <p class="theme-version">

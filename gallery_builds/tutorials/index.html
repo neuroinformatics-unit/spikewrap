@@ -44,7 +44,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../../_static/documentation_options.js?v=a58bc63e"></script>
+    <script src="../../_static/documentation_options.js?v=938c9ccc"></script>
     <script src="../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/design-tabs.js?v=f930bc37"></script>
@@ -120,7 +120,7 @@
   
   
   
-    <p class="title logo__title">spikewrap v0.1.1</p>
+    <p class="title logo__title">spikewrap v0.2.0</p>
   
 </a></div>
     
@@ -356,8 +356,11 @@
   <p class="bd-links__title" role="heading" aria-level="1">Section Navigation</p>
   <div class="bd-toc-item navbar-nav"><ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="01_preprocessing_sessions.html">Preprocessing Sessions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="01a_supported_preprocessing_steps.html">Supported Preprocessing Steps</a></li>
 <li class="toctree-l1"><a class="reference internal" href="02_managing_configs.html">Managing <code class="docutils literal notranslate"><span class="pre">configs</span></code></a></li>
 <li class="toctree-l1"><a class="reference internal" href="03_running_with_slurm.html">Running with SLURM</a></li>
+<li class="toctree-l1"><a class="reference internal" href="04_slow_spike_sorting.html">Spike Sorting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="05_sync_channel.html">Sync Channel Tutorial</a></li>
 </ul>
 </div>
 </nav></div>
@@ -420,12 +423,21 @@
 <div class="sphx-glr-thumbnails"><div class="sphx-glr-thumbcontainer" tooltip="In this how-to we will use the spikewrap.Session interface to manage the preprocessing and visualisation of a dataset."><img alt="" src="../../_images/sphx_glr_01_preprocessing_sessions_thumb.png" />
 <p><a class="reference internal" href="01_preprocessing_sessions.html#sphx-glr-gallery-builds-tutorials-01-preprocessing-sessions-py"><span class="std std-ref">Preprocessing Sessions</span></a></p>
   <div class="sphx-glr-thumbnail-title">Preprocessing Sessions</div>
+</div><div class="sphx-glr-thumbcontainer" tooltip="In spikewrap, all preprocessing is performed using SpikeInterface under the hood."><img alt="" src="../../_images/sphx_glr_01a_supported_preprocessing_steps_thumb.png" />
+<p><a class="reference internal" href="01a_supported_preprocessing_steps.html#sphx-glr-gallery-builds-tutorials-01a-supported-preprocessing-steps-py"><span class="std std-ref">Supported Preprocessing Steps</span></a></p>
+  <div class="sphx-glr-thumbnail-title">Supported Preprocessing Steps</div>
 </div><div class="sphx-glr-thumbcontainer" tooltip="In spikewrap, configs encode the preprocessing and sorting settings for a pipeline. The emphasis is on convenient sharing of pipelines, while allowing flexibility for prototyping."><img alt="" src="../../_images/sphx_glr_02_managing_configs_thumb.png" />
 <p><a class="reference internal" href="02_managing_configs.html#sphx-glr-gallery-builds-tutorials-02-managing-configs-py"><span class="std std-ref">Managing configs</span></a></p>
   <div class="sphx-glr-thumbnail-title">Managing configs</div>
 </div><div class="sphx-glr-thumbcontainer" tooltip="What is SLURM? --------------"><img alt="" src="../../_images/sphx_glr_03_running_with_slurm_thumb.png" />
 <p><a class="reference internal" href="03_running_with_slurm.html#sphx-glr-gallery-builds-tutorials-03-running-with-slurm-py"><span class="std std-ref">Running with SLURM</span></a></p>
   <div class="sphx-glr-thumbnail-title">Running with SLURM</div>
+</div><div class="sphx-glr-thumbcontainer" tooltip="Spike Sorting"><img alt="" src="../../_images/sphx_glr_04_slow_spike_sorting_thumb1.png" />
+<p><a class="reference internal" href="04_slow_spike_sorting.html#sphx-glr-gallery-builds-tutorials-04-slow-spike-sorting-py"><span class="std std-ref">Spike Sorting</span></a></p>
+  <div class="sphx-glr-thumbnail-title">Spike Sorting</div>
+</div><div class="sphx-glr-thumbcontainer" tooltip="Sync Channel Tutorial"><img alt="" src="../../_images/sphx_glr_05_sync_channel_thumb1.png" />
+<p><a class="reference internal" href="05_sync_channel.html#sphx-glr-gallery-builds-tutorials-05-sync-channel-py"><span class="std std-ref">Sync Channel Tutorial</span></a></p>
+  <div class="sphx-glr-thumbnail-title">Sync Channel Tutorial</div>
 </div></div><div class="toctree-wrapper compound">
 </div>
 <div class="sphx-glr-footer sphx-glr-footer-gallery docutils container">
@@ -494,7 +506,7 @@
     <div class="footer-items__start">
       
         <div class="footer-item"><p class="sphinx-version">
-    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.2.1.
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.1.3.
     <br/>
     </p>
     <p class="theme-version">

@@ -61,6 +61,40 @@ How To
     </div>
 
 
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="How  to run Spike Sorting">
+
+.. only:: html
+
+  .. image:: /gallery_builds/how_to/images/thumb/sphx_glr_04_slow_spike_sorting_thumb.png
+    :alt:
+
+  :ref:`sphx_glr_gallery_builds_how_to_04_slow_spike_sorting.py`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">How  to run Spike Sorting</div>
+    </div>
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="How to Edit the Sync Channel">
+
+.. only:: html
+
+  .. image:: /gallery_builds/how_to/images/thumb/sphx_glr_05_sync_channel_thumb.png
+    :alt:
+
+  :ref:`sphx_glr_gallery_builds_how_to_05_sync_channel.py`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">How to Edit the Sync Channel</div>
+    </div>
+
+
 .. thumbnail-parent-div-close
 
 .. raw:: html
@@ -74,6 +108,8 @@ How To
    /gallery_builds/how_to/01_preprocess_a_session
    /gallery_builds/how_to/02_manage_configs
    /gallery_builds/how_to/03_run_in_slurm
+   /gallery_builds/how_to/04_slow_spike_sorting
+   /gallery_builds/how_to/05_sync_channel
 
 
 .. only:: html

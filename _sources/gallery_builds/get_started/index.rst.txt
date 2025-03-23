@@ -15,10 +15,10 @@
 
 .. only:: html
 
-  .. image:: /gallery_builds/get_started/images/thumb/sphx_glr_feature_overview_thumb.png
+  .. image:: /gallery_builds/get_started/images/thumb/sphx_glr_slow_feature_overview_thumb.png
     :alt:
 
-  :ref:`sphx_glr_gallery_builds_get_started_feature_overview.py`
+  :ref:`sphx_glr_gallery_builds_get_started_slow_feature_overview.py`
 
 .. raw:: html
 
@@ -36,7 +36,7 @@
 .. toctree::
    :hidden:
 
-   /gallery_builds/get_started/feature_overview
+   /gallery_builds/get_started/slow_feature_overview
 
 
 .. only:: html

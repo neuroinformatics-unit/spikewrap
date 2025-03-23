@@ -43,7 +43,7 @@
   <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../../../_static/documentation_options.js?v=a58bc63e"></script>
+    <script src="../../../_static/documentation_options.js?v=938c9ccc"></script>
     <script src="../../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../../_static/design-tabs.js?v=f930bc37"></script>
@@ -117,7 +117,7 @@
   
   
   
-    <p class="title logo__title">spikewrap v0.1.1</p>
+    <p class="title logo__title">spikewrap v0.2.0</p>
   
 </a></div>
     
@@ -485,7 +485,7 @@
 <span class="sd">    Path</span>
 <span class="sd">        The path to the spikewrap `configs` directory.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">configs_path</span> <span class="o">=</span> <span class="n">Path</span><span class="o">.</span><span class="n">home</span><span class="p">()</span> <span class="o">/</span> <span class="s2">&quot;.spikewrap&quot;</span> <span class="o">/</span> <span class="s2">&quot;configs&quot;</span>
+    <span class="n">configs_path</span> <span class="o">=</span> <span class="n">Path</span><span class="o">.</span><span class="n">home</span><span class="p">()</span> <span class="o">/</span> <span class="s2">&quot;spikewrap&quot;</span> <span class="o">/</span> <span class="s2">&quot;configs&quot;</span>
 
     <span class="k">if</span> <span class="ow">not</span> <span class="n">configs_path</span><span class="o">.</span><span class="n">is_dir</span><span class="p">():</span>
         <span class="n">_create_user_configs_folder</span><span class="p">(</span><span class="n">configs_path</span><span class="p">)</span>
@@ -494,7 +494,9 @@
 
 
 
-<span class="k">def</span><span class="w"> </span><span class="nf">_create_user_configs_folder</span><span class="p">(</span><span class="n">configs_path</span><span class="p">:</span> <span class="n">Path</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_create_user_configs_folder</span><span class="p">(</span>
+    <span class="n">configs_path</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>  <span class="c1"># TODO: generalise this, run every startup!?</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Create the spikewrap configs path where config YAML files</span>
 <span class="sd">    are stored. Copy the YAMLs  from the spikewrap install</span>
@@ -504,7 +506,7 @@
 <span class="sd">    Once this folder is set up, all config YAMLs are managed</span>
 <span class="sd">    in the user directory.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">configs_path</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">configs_path</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 
     <span class="n">default_configs_path</span> <span class="o">=</span> <span class="p">(</span>
         <span class="n">Path</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">realpath</span><span class="p">(</span><span class="vm">__file__</span><span class="p">)))</span>
@@ -656,7 +658,7 @@
     <div class="footer-items__start">
       
         <div class="footer-item"><p class="sphinx-version">
-    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.2.1.
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.1.3.
     <br/>
     </p>
     <p class="theme-version">

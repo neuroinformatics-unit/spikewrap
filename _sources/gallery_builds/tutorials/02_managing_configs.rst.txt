@@ -115,7 +115,7 @@ and print the underlying steps with:
 
 It is possible to create and share your own keyword configs. Under the hood,
 these are ``.yaml`` files that hold a python dictionary representation of the steps.
-These are stored in a dedicated path, (``.spikewrap`` in your user directory), which
+These are stored in a dedicated path, (``spikewrap`` in your user directory), which
 you can find with:
 
 .. GENERATED FROM PYTHON SOURCE LINES 55-58
@@ -134,7 +134,7 @@ you can find with:
  .. code-block:: none
 
 
-    PosixPath('/home/runner/.spikewrap/configs')
+    PosixPath('/home/runner/spikewrap/configs')
 
 
 
@@ -159,7 +159,7 @@ and see what configs you have available at this path:
 
 
     The available configs are:
-    ['my_config.yaml', 'neuropixels+kilosort2_5.yaml']
+    ['neuropixels+mountainsort5.yaml', 'my_config.yaml', 'neuropixels+kilosort2_5.yaml']
 
 
 
@@ -235,7 +235,7 @@ To see the currently available preproecssing steps supported by ``spikewrap``, r
 
 
     Currently supported preprocessing steps are:
-    ['phase_shift', 'bandpass_filter', 'common_reference']
+    ['phase_shift', 'bandpass_filter', 'common_reference', 'whiten', 'remove_bad_channels', 'interpolate_bad_channels', 'remove_channels', 'interpolate_channels']
 
 
 
@@ -374,7 +374,7 @@ and we can load ``configs`` from file:
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** (0 minutes 0.008 seconds)
+   **Total running time of the script:** (0 minutes 0.009 seconds)
 
 
 .. _sphx_glr_download_gallery_builds_tutorials_02_managing_configs.py:

@@ -44,7 +44,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../_static/documentation_options.js?v=a58bc63e"></script>
+    <script src="../_static/documentation_options.js?v=938c9ccc"></script>
     <script src="../_static/doctools.js?v=9bcbadda"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/design-tabs.js?v=f930bc37"></script>
@@ -120,7 +120,7 @@
   
   
   
-    <p class="title logo__title">spikewrap v0.1.1</p>
+    <p class="title logo__title">spikewrap v0.2.0</p>
   
 </a></div>
     
@@ -428,36 +428,32 @@
 <p>Currently, the interface of <code class="docutils literal notranslate"><span class="pre">spikewrap</span></code> is under review. The features described
 below will be added with high priority once the review is complete.</p>
 </div>
-<section id="more-preprocessing-steps-and-sorting">
-<h2>More Preprocessing Steps, and Sorting!<a class="headerlink" href="#more-preprocessing-steps-and-sorting" title="Link to this heading">#</a></h2>
-<p>Currently only <code class="docutils literal notranslate"><span class="pre">phase_shift</span></code>, <code class="docutils literal notranslate"><span class="pre">bandpass_filter</span></code> and <code class="docutils literal notranslate"><span class="pre">common_reference</span></code> are exposed.
-Similarly, sorting routines are not yet available.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span>
-<span class="n">session</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">configs</span><span class="o">=</span><span class="s2">&quot;neuropixel+kilsort2_5&quot;</span><span class="p">)</span>
+<section id="more-preprocessing-steps">
+<h2>More Preprocessing Steps<a class="headerlink" href="#more-preprocessing-steps" title="Link to this heading">#</a></h2>
+<p>Currently only <code class="docutils literal notranslate"><span class="pre">phase_shift</span></code>, <code class="docutils literal notranslate"><span class="pre">bandpass_filter</span></code> and <code class="docutils literal notranslate"><span class="pre">common_reference</span></code> are exposed.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>
+## Subject level
 
-</pre></div>
-</div>
-</section>
-<section id="subject-level">
-<h2>Subject level<a class="headerlink" href="#subject-level" title="Link to this heading">#</a></h2>
-<p>Extending the level of control to <code class="docutils literal notranslate"><span class="pre">Subject</span></code>, allowing the running and
-concatenation of multiple sessions and runs at once.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span>
-<span class="n">subject</span> <span class="o">=</span> <span class="n">sw</span><span class="o">.</span><span class="n">Subject</span><span class="p">(</span>
-   <span class="n">subject_path</span><span class="o">=</span><span class="s2">&quot;...&quot;</span><span class="p">,</span>
-   <span class="n">sessions_and_runs</span><span class="o">=</span><span class="p">{</span>
-        <span class="s2">&quot;ses-001&quot;</span><span class="p">:</span> <span class="s2">&quot;all&quot;</span><span class="p">,</span> 
-        <span class="s2">&quot;ses-002&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;run-001&quot;</span><span class="p">,</span> <span class="s2">&quot;run-003&quot;</span><span class="p">],</span> <span class="o">...</span><span class="p">},</span>  <span class="c1"># e.g. sub-002 run-002 is bad</span>
-<span class="p">)</span>
+Extending the level of control to ``Subject``, allowing the running and
+concatenation of multiple sessions and runs at once.
 
-<span class="n">subject</span><span class="o">.</span><span class="n">preprocess</span><span class="p">(</span>
-    <span class="s2">&quot;neuropixels+kilosort2_5&quot;</span><span class="p">,</span> 
-    <span class="n">per_shank</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> 
-    <span class="n">concat_sessions</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> 
-    <span class="n">concat_runs</span><span class="o">=</span><span class="kc">True</span>
-<span class="p">)</span>
+```python
 
-<span class="n">subject</span><span class="o">.</span><span class="n">plot_preprocessed</span><span class="p">(</span><span class="s2">&quot;ses-001&quot;</span><span class="p">,</span> <span class="n">runs</span><span class="o">=</span><span class="s2">&quot;all&quot;</span><span class="p">)</span>
+subject = sw.Subject(
+   subject_path=&quot;...&quot;,
+   sessions_and_runs={
+        &quot;ses-001&quot;: &quot;all&quot;, 
+        &quot;ses-002&quot;: [&quot;run-001&quot;, &quot;run-003&quot;], ...},  # e.g. sub-002 run-002 is bad
+)
+
+subject.preprocess(
+    &quot;neuropixels+kilosort2_5&quot;, 
+    per_shank=True, 
+    concat_sessions=False, 
+    concat_runs=True
+)
+
+subject.plot_preprocessed(&quot;ses-001&quot;, runs=&quot;all&quot;)
 </pre></div>
 </div>
 </section>
@@ -529,8 +525,7 @@ concatenation of multiple sessions and runs at once.</p>
   </div>
   <nav class="bd-toc-nav page-toc" aria-labelledby="pst-page-navigation-heading-2">
     <ul class="visible nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#more-preprocessing-steps-and-sorting">More Preprocessing Steps, and Sorting!</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#subject-level">Subject level</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#more-preprocessing-steps">More Preprocessing Steps</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#quality-of-life">Quality of Life</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#data-quality-metrics">Data Quality Metrics</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#postprocessing">Postprocessing</a></li>
@@ -559,7 +554,7 @@ concatenation of multiple sessions and runs at once.</p>
     <div class="footer-items__start">
       
         <div class="footer-item"><p class="sphinx-version">
-    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.2.1.
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.1.3.
     <br/>
     </p>
     <p class="theme-version">

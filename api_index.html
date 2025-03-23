@@ -44,7 +44,7 @@
   <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="_static/documentation_options.js?v=a58bc63e"></script>
+    <script src="_static/documentation_options.js?v=938c9ccc"></script>
     <script src="_static/doctools.js?v=9bcbadda"></script>
     <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="_static/design-tabs.js?v=f930bc37"></script>
@@ -119,7 +119,7 @@
   
   
   
-    <p class="title logo__title">spikewrap v0.1.1</p>
+    <p class="title logo__title">spikewrap v0.2.0</p>
   
 </a></div>
     
@@ -417,10 +417,10 @@
 <span id="api-reference"></span><h1>API Reference<a class="headerlink" href="#module-spikewrap" title="Link to this heading">#</a></h1>
 <dl class="py class">
 <dt class="sig sig-object py" id="spikewrap.Session">
-<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">spikewrap.</span></span><span class="sig-name descname"><span class="pre">Session</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">subject_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">session_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">file_format</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">run_names</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'all'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">probe</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/spikewrap/structure/session.html#Session"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spikewrap.Session" title="Link to this definition">#</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">spikewrap.</span></span><span class="sig-name descname"><span class="pre">Session</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">subject_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">session_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">file_format</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">run_names</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'all'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">probe</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/spikewrap/structure/session.html#Session"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spikewrap.Session" title="Link to this definition">#</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
-<p>Represents an electrophysiological recording session, consisting of a single or multiple runs.</p>
-<p>Exposes <code class="docutils literal notranslate"><span class="pre">preprocess()</span></code>, <code class="docutils literal notranslate"><span class="pre">plot_preprocessed()`,</span> <span class="pre">and</span> <span class="pre">``save_preprocessed()</span></code> functions to handle preprocessing of all runs.</p>
+<p>Represents an electrophysiological recording session, consisting of a single or multiple runs.
+Exposes functions for preproecssing and sorting data from the session.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
@@ -439,103 +439,16 @@ auto-detection of probe is attempted.</p></li>
 </dl>
 <p class="rubric">Notes</p>
 <p>The responsibility of this class is to manage the processing of runs
-contained within the session. Runs are held in <code class="docutils literal notranslate"><span class="pre">self._runs</span></code>, a list of
-<code class="docutils literal notranslate"><span class="pre">SeparateRun</span></code> or <code class="docutils literal notranslate"><span class="pre">ConcatRun</span></code> classes. Runs are loaded from raw data
-as separate runs, and will be converted to a <code class="docutils literal notranslate"><span class="pre">ConcatRun</span></code> if concatenated.</p>
-<p>The attributes on this class (except for <code class="docutils literal notranslate"><span class="pre">self._runs</span></code>) are to be treated
-as constant for the lifetime of the class. For example, the output path
-should not be changed during the class instance lifetime.</p>
-<p>When <code class="docutils literal notranslate"><span class="pre">preprocess</span></code> is called, all runs are re-loaded and operations performed
-from scratch. This is to cleanly handle concatenation of runs and possible
-splitting of multi-shank recordings. This is more robust than attempting
-to continually concatenate / split runs and shanks.</p>
-<dl class="py method">
-<dt class="sig sig-object py" id="spikewrap.Session.get_output_path">
-<span class="sig-name descname"><span class="pre">get_output_path</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/spikewrap/structure/session.html#Session.get_output_path"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spikewrap.Session.get_output_path" title="Link to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="spikewrap.Session.get_passed_run_names">
-<span class="sig-name descname"><span class="pre">get_passed_run_names</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/spikewrap/structure/session.html#Session.get_passed_run_names"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spikewrap.Session.get_passed_run_names" title="Link to this definition">#</a></dt>
-<dd><dl class="field-list simple">
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-data docutils literal notranslate"><span class="pre">Literal</span></code>[<code class="docutils literal notranslate"><span class="pre">'all'</span></code>], <code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>]]</span></p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="spikewrap.Session.get_run_names">
-<span class="sig-name descname"><span class="pre">get_run_names</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/spikewrap/structure/session.html#Session.get_run_names"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spikewrap.Session.get_run_names" title="Link to this definition">#</a></dt>
-<dd><p>Return a list of run names from the self._runs list.</p>
-<p>If run concatenation is performed, the order of this
-list will be the order of concatenation. If concatenation
-was already performed, the run name will be <code class="docutils literal notranslate"><span class="pre">&quot;concat_run&quot;</span></code>.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>]</span></p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="spikewrap.Session.load_raw_data">
-<span class="sig-name descname"><span class="pre">load_raw_data</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/spikewrap/structure/session.html#Session.load_raw_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spikewrap.Session.load_raw_data" title="Link to this definition">#</a></dt>
-<dd><p>Load the raw data from each run into SpikeInterface
-recording objects.</p>
-<p>This function can be used to check data is loading successfully,
-but can be skipped, with <code class="docutils literal notranslate"><span class="pre">preprocess()</span></code> run directly.</p>
-<p>Data is loaded lazily at this stage (recording objects are created
-but no data is actually loaded from disk).</p>
-<dl class="field-list simple">
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></span></p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="spikewrap.Session.parent_input_path">
-<span class="sig-name descname"><span class="pre">parent_input_path</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/spikewrap/structure/session.html#Session.parent_input_path"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spikewrap.Session.parent_input_path" title="Link to this definition">#</a></dt>
-<dd><dl class="field-list simple">
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">Path</span></code></span></p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="spikewrap.Session.plot_preprocessed">
-<span class="sig-name descname"><span class="pre">plot_preprocessed</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">run_idx</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'all'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mode</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'map'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">time_range</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">(0.0,</span> <span class="pre">1.0)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">show_channel_ids</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">show</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">figsize</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">(10,</span> <span class="pre">6)</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/spikewrap/structure/session.html#Session.plot_preprocessed"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spikewrap.Session.plot_preprocessed" title="Link to this definition">#</a></dt>
-<dd><p>Plot preprocessed run data.</p>
-<p>One plot will be generated for each run. For preprocessing
-per-shank, each shank will appear in a subplot. Under the hood,
-calls SpikeInterface’s <code class="docutils literal notranslate"><span class="pre">plot_traces()</span></code> function.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>run_idx</strong> – <ul>
-<li><p>If <code class="docutils literal notranslate"><span class="pre">&quot;all&quot;</span></code>, plots preprocessed data for all runs in the session.</p></li>
-<li><p>If an integer, plots preprocessed data for the run at the specified index in <code class="docutils literal notranslate"><span class="pre">self._runs</span></code>.</p></li>
-</ul>
-</p></li>
-<li><p><strong>mode</strong> – Determines the plotting style, a heatmap-style or line plot.</p></li>
-<li><p><strong>time_range</strong> – Time range (start, end), in seconds, to plot. e.g. (0.0, 1.0)</p></li>
-<li><p><strong>show_channel_ids</strong> – If <code class="docutils literal notranslate"><span class="pre">True</span></code>, displays the channel identifiers on the plots.</p></li>
-<li><p><strong>show</strong> – If <code class="docutils literal notranslate"><span class="pre">True</span></code>, displays the plots immediately. If <code class="docutils literal notranslate"><span class="pre">False</span></code>, the
-plots are generated and returned without being displayed.</p></li>
-<li><p><strong>figsize</strong> – Specifies the size of the figure in inches as <code class="docutils literal notranslate"><span class="pre">(width,</span> <span class="pre">height)</span></code>.</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p><strong>dict of {str</strong> – A dictionary mapping each run’s name to its corresponding <code class="docutils literal notranslate"><span class="pre">matplotlib.Figure</span></code> object.</p>
-</dd>
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>matplotlib.Figure}</p>
-</dd>
-</dl>
-</dd></dl>
-
+contained within the session. Raw data are held in <code class="docutils literal notranslate"><span class="pre">self._raw_runs</span></code>, a list of
+<code class="docutils literal notranslate"><span class="pre">SeparateRawRun</span></code>. The sync channel (if available) is held on the raw run in a
+recording object (other channels unused) and possibly mutated.
+<code class="docutils literal notranslate"><span class="pre">load_raw_runs()</span></code> will refresh the run sync channels.</p>
+<p>self._pp_runs is filled by self.preprocess(). Copies of _raw_runs are concatenated
+and / or split-by-shank before preprocessing, which fills self._pp_runs.
+The sync channel is attached in-memory (no longer on a recording).</p>
+<p>self._sorting_runs contains the sorting based on self._pp_runs. Again, copies
+of preprocessing runs are concatenated and / or split by shank before sorting.</p>
+<p>Properties of this class should never be modified from outside the class.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="spikewrap.Session.preprocess">
 <span class="sig-name descname"><span class="pre">preprocess</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">configs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">concat_runs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">per_shank</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/spikewrap/structure/session.html#Session.preprocess"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spikewrap.Session.preprocess" title="Link to this definition">#</a></dt>
@@ -555,8 +468,9 @@ or the <code class="docutils literal notranslate"><span class="pre">&quot;prepro
 </ul>
 </p></li>
 <li><p><strong>concat_runs</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></span>) – If <code class="docutils literal notranslate"><span class="pre">True</span></code>, all runs will be concatenated together before preprocessing.
-Use <code class="docutils literal notranslate"><span class="pre">session.get_run_names()</span></code> to check the order of concatenation.</p></li>
+Use <code class="docutils literal notranslate"><span class="pre">session.get_raw_run_names()</span></code> to check the order of concatenation.</p></li>
 <li><p><strong>per_shank</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></span>) – If <code class="docutils literal notranslate"><span class="pre">True</span></code>, perform preprocessing on each shank separately.</p></li>
+<li><p><strong>overwrite_in_memory</strong> – If <code class="docutils literal notranslate"><span class="pre">False</span></code> (default), the</p></li>
 </ul>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
@@ -592,6 +506,216 @@ See <cite>tutorials</cite> in the documentation for details.</p></li>
 </dd>
 </dl>
 </dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="spikewrap.Session.plot_preprocessed">
+<span class="sig-name descname"><span class="pre">plot_preprocessed</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">run_idx</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'all'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mode</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'map'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">time_range</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">(0.0,</span> <span class="pre">1.0)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">show_channel_ids</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">show</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">figsize</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">(10,</span> <span class="pre">6)</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/spikewrap/structure/session.html#Session.plot_preprocessed"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spikewrap.Session.plot_preprocessed" title="Link to this definition">#</a></dt>
+<dd><p>Plot preprocessed run data.</p>
+<p>One plot will be generated for each run. For preprocessing
+per-shank, each shank will appear in a subplot. Under the hood,
+calls SpikeInterface’s <code class="docutils literal notranslate"><span class="pre">plot_traces()</span></code> function.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>run_idx</strong> – <ul>
+<li><p>If <code class="docutils literal notranslate"><span class="pre">&quot;all&quot;</span></code>, plots preprocessed data for all runs in the session.</p></li>
+<li><p>If an integer, plots preprocessed data for the run at the specified index in <code class="docutils literal notranslate"><span class="pre">self._pp_runs</span></code>.</p></li>
+</ul>
+</p></li>
+<li><p><strong>mode</strong> – Determines the plotting style, a heatmap-style or line plot.</p></li>
+<li><p><strong>time_range</strong> – Time range (start, end), in seconds, to plot. e.g. (0.0, 1.0)</p></li>
+<li><p><strong>show_channel_ids</strong> – If <code class="docutils literal notranslate"><span class="pre">True</span></code>, displays the channel identifiers on the plots.</p></li>
+<li><p><strong>show</strong> – If <code class="docutils literal notranslate"><span class="pre">True</span></code>, displays the plots immediately. If <code class="docutils literal notranslate"><span class="pre">False</span></code>, the
+plots are generated and returned without being displayed.</p></li>
+<li><p><strong>figsize</strong> – Specifies the size of the figure in inches as <code class="docutils literal notranslate"><span class="pre">(width,</span> <span class="pre">height)</span></code>.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>dict of {str</strong> – A dictionary mapping each run’s name to its corresponding <code class="docutils literal notranslate"><span class="pre">matplotlib.Figure</span></code> object.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>matplotlib.Figure}</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="spikewrap.Session.sort">
+<span class="sig-name descname"><span class="pre">sort</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">configs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">run_sorter_method</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'local'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">per_shank</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">concat_runs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">overwrite</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">slurm</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/spikewrap/structure/session.html#Session.sort"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spikewrap.Session.sort" title="Link to this definition">#</a></dt>
+<dd><p>Sort the preprocessed recordings (self.get_preprocessed_run_names())
+and save the output to disk.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>configs</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code> | <code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></span>) – <ul>
+<li><p>If a <code class="docutils literal notranslate"><span class="pre">str</span></code> is provided, expects the name of a stored configuration file.
+See <code class="docutils literal notranslate"><span class="pre">show_available_configs()</span></code> and <code class="docutils literal notranslate"><span class="pre">save_config_dict()</span></code> for details.</p></li>
+<li><p>If a <code class="docutils literal notranslate"><span class="pre">Path</span></code> is provided, expects the path to a valid spikewrap config YAML file.</p></li>
+<li><p>A spikewrap configs dictionary, either including the <code class="docutils literal notranslate"><span class="pre">&quot;sorting&quot;</span></code> level
+or the <code class="docutils literal notranslate"><span class="pre">&quot;sorting&quot;</span></code> level itself. Only 1 sorter at a time currently supported.</p></li>
+</ul>
+</p></li>
+<li><p><strong>run_sorter_method</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span>) – <ul>
+<li><p>if “local”, use the current python environment to run sorting (e.g. for <cite>kilosort4</cite>)</p></li>
+<li><p>if a path (either string or Path), must be the path to a matlab repository
+used to run the sorter (e.g. kilosort 2.5 repository).</p></li>
+<li><p>if “docker” or “singularity”, docker or singularity will be used to run the sorting.
+singularity images are stored in a folder at the level of “rawdata” and “derivatives”.</p></li>
+</ul>
+</p></li>
+<li><p><strong>per_shank</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></span>) – If <cite>True</cite>, preprocessed recordings will be split by shank. If preprocessed recordings
+were already split by shank for preprocessing, this should be <cite>False</cite>.</p></li>
+<li><p><strong>concat_runs</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></span>) – If <cite>True</cite>, preprocessed runs will be concatenated togerher before sorting. If runs were
+already concatenated before preprocessing, this should be <cite>False</cite>.</p></li>
+<li><p><strong>overwrite</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></span>) – If <cite>True</cite>, existing outputs will be overwritten. Otherwise, an error will be raised
+if existing outputs are found.</p></li>
+<li><p><strong>slurm</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></span>) – Configuration for submitting the save jobs to a SLURM workload manager.
+If <cite>False</cite> (default), jobs will be run locally. If <cite>True</cite>, job will be run in SLURM
+with default arguments. If a <cite>dict</cite> is provided, it should contain SLURM arguments.
+See <cite>tutorials</cite> in the documentation for details.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="spikewrap.Session.wait_for_slurm">
+<span class="sig-name descname"><span class="pre">wait_for_slurm</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/spikewrap/structure/session.html#Session.wait_for_slurm"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spikewrap.Session.wait_for_slurm" title="Link to this definition">#</a></dt>
+<dd><p>Run a while loop with pause until
+all slurm jobs are complete.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="spikewrap.Session.get_raw_run_names">
+<span class="sig-name descname"><span class="pre">get_raw_run_names</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/spikewrap/structure/session.html#Session.get_raw_run_names"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spikewrap.Session.get_raw_run_names" title="Link to this definition">#</a></dt>
+<dd><p>Return a list of run names for the raw data.</p>
+<p>Their order is the order in which any concatenation
+will be performed.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>]</span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="spikewrap.Session.get_preprocessed_run_names">
+<span class="sig-name descname"><span class="pre">get_preprocessed_run_names</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/spikewrap/structure/session.html#Session.get_preprocessed_run_names"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spikewrap.Session.get_preprocessed_run_names" title="Link to this definition">#</a></dt>
+<dd><p>Return a list of names of the preprocessed data.
+If data was concatenated, the run name will be “concat_run”.</p>
+<p>If not concatenated, their order is the order
+concatenation will take place prior to sorting
+(if <code class="docutils literal notranslate"><span class="pre">concat_run=True</span></code>).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>]</span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="spikewrap.Session.parent_input_path">
+<span class="sig-name descname"><span class="pre">parent_input_path</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/spikewrap/structure/session.html#Session.parent_input_path"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spikewrap.Session.parent_input_path" title="Link to this definition">#</a></dt>
+<dd><p>Name of the parent path for this sessions raw data
+(i.e. the path of the subject folder).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">Path</span></code></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="spikewrap.Session.get_output_path">
+<span class="sig-name descname"><span class="pre">get_output_path</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/spikewrap/structure/session.html#Session.get_output_path"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spikewrap.Session.get_output_path" title="Link to this definition">#</a></dt>
+<dd><p>The path where processed data will be output for this session.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">Path</span></code></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="spikewrap.Session.load_raw_data">
+<span class="sig-name descname"><span class="pre">load_raw_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">overwrite</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/spikewrap/structure/session.html#Session.load_raw_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spikewrap.Session.load_raw_data" title="Link to this definition">#</a></dt>
+<dd><p>Load raw data, to allow editing of the sync channel.
+Note this will overwrite any previous editing of the
+sync channel.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="spikewrap.Session.get_sync_channel">
+<span class="sig-name descname"><span class="pre">get_sync_channel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">run_idx</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/spikewrap/structure/session.html#Session.get_sync_channel"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spikewrap.Session.get_sync_channel" title="Link to this definition">#</a></dt>
+<dd><p>Return the sync channel in a numpy array. Currently only
+Neuropixels (sync channel is 385th channel) supported.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>run_idx</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></span>) – Index of the run to get the sync channel from,
+as ordered by <code class="docutils literal notranslate"><span class="pre">self.get_raw_run_names()</span></code>.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="spikewrap.Session.plot_sync_channel">
+<span class="sig-name descname"><span class="pre">plot_sync_channel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">run_idx</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">show</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/spikewrap/structure/session.html#Session.plot_sync_channel"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spikewrap.Session.plot_sync_channel" title="Link to this definition">#</a></dt>
+<dd><p>Plot the sync channel for the run.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>run_idx</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></span>) – Index of the run to get the sync channel from,
+as ordered by <code class="docutils literal notranslate"><span class="pre">self.get_raw_run_names()</span></code>.</p></li>
+<li><p><strong>show</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></span>) – If <code class="docutils literal notranslate"><span class="pre">True</span></code>, plt.show() is called.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">Line2D</span></code>]</span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="spikewrap.Session.silence_sync_channel">
+<span class="sig-name descname"><span class="pre">silence_sync_channel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">run_idx</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">periods_to_silence</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/spikewrap/structure/session.html#Session.silence_sync_channel"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spikewrap.Session.silence_sync_channel" title="Link to this definition">#</a></dt>
+<dd><p>Set periods on the sync channel to zero.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>run_idx</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></span>) – Index of the run to get the sync channel from,
+as ordered by <code class="docutils literal notranslate"><span class="pre">self.get_raw_run_names()</span></code>.</p></li>
+<li><p><strong>periods_to_silence</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">tuple</span></code>]</span>) – A list of 2-tuples, where each entry in the tuples are
+the (start, stop) sample to silence. For example,
+[(0, 10), (50, 500)] will set the samples 0 - 10 and
+50 - 500 to zero.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="spikewrap.Session.save_sync_channel">
+<span class="sig-name descname"><span class="pre">save_sync_channel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">overwrite</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">slurm</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/spikewrap/structure/session.html#Session.save_sync_channel"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spikewrap.Session.save_sync_channel" title="Link to this definition">#</a></dt>
+<dd><p>Save all loaded runs sync channel to disk.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="spikewrap.Session.raw_runs_loaded">
+<span class="sig-name descname"><span class="pre">raw_runs_loaded</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/spikewrap/structure/session.html#Session.raw_runs_loaded"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spikewrap.Session.raw_runs_loaded" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
 
 </dd></dl>
 
@@ -711,10 +835,40 @@ To modify this, update the returned dictionary directly.</p>
 <dd class="field-odd"><p><strong>partition</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Literal</span></code>[<code class="docutils literal notranslate"><span class="pre">'cpu'</span></code>, <code class="docutils literal notranslate"><span class="pre">'gpu'</span></code>]</span>) – The SLURM partition to use.</p>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>Dictionary of SLURM job settings.</p>
+<dd class="field-even"><p><dl class="simple">
+<dt>Dictionary of SLURM job settings, including:</dt><dd><p>nodes - The number of nodes to allocate for the job.
+mem_gb - The amount of memory (in gigabytes) to allocate per node for the job.
+timeout_min - The maximum runtime in minutes before the job is terminated.
+cpus_per_task - The number of CPUs allocated per task.
+tasks_per_node - The number of tasks to run on each node.
+slurm_partition - The SLURM partition (queue) to submit the job to.
+slurm_gres - The generic resources (e.g., GPUs) to allocate for the job, specified in the format required by SLURM.
+exclude - A list of nodes to exclude from the job allocation.
+wait - if <code class="docutils literal notranslate"><span class="pre">True</span></code>, freeze execution until slurm job is finished.
+env_name - The name of the environment (e.g., conda or virtualenv) to activate before running the job.</p>
+</dd>
+</dl>
+</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>options</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="spikewrap.run_in_slurm">
+<span class="sig-prename descclassname"><span class="pre">spikewrap.</span></span><span class="sig-name descname"><span class="pre">run_in_slurm</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">slurm_opts</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">func_to_run</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">log_base_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">suffix_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/spikewrap/utils/_slurm.html#run_in_slurm"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#spikewrap.run_in_slurm" title="Link to this definition">#</a></dt>
+<dd><p>Run a function in a slurm job.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>slurm_opts</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code> | <code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></span>) – A dictionary of options that control execution of the slurm
+job. See spikewrap.default_slurm_options() for details.</p></li>
+<li><p><strong>func_to_run</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Callable</span></code></span>) – The function to run inside the slurm job.</p></li>
+<li><p><strong>log_base_path</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">Path</span></code></span>) – The path where a folder slurm logs will be output</p></li>
+<li><p><strong>suffix_name</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code> | <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></span>) – If given (default <cite>None</cite>), a suffix for the output folder e.g. _sort</p></li>
+</ul>
 </dd>
 </dl>
 </dd></dl>
@@ -760,14 +914,21 @@ To modify this, update the returned dictionary directly.</p>
   <nav class="bd-toc-nav page-toc" aria-labelledby="pst-page-navigation-heading-2">
     <ul class="visible nav section-nav flex-column">
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#spikewrap.Session"><code class="docutils literal notranslate"><span class="pre">Session</span></code></a><ul class="visible nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spikewrap.Session.get_output_path"><code class="docutils literal notranslate"><span class="pre">Session.get_output_path()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spikewrap.Session.get_passed_run_names"><code class="docutils literal notranslate"><span class="pre">Session.get_passed_run_names()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spikewrap.Session.get_run_names"><code class="docutils literal notranslate"><span class="pre">Session.get_run_names()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spikewrap.Session.load_raw_data"><code class="docutils literal notranslate"><span class="pre">Session.load_raw_data()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spikewrap.Session.parent_input_path"><code class="docutils literal notranslate"><span class="pre">Session.parent_input_path()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spikewrap.Session.plot_preprocessed"><code class="docutils literal notranslate"><span class="pre">Session.plot_preprocessed()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spikewrap.Session.preprocess"><code class="docutils literal notranslate"><span class="pre">Session.preprocess()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spikewrap.Session.save_preprocessed"><code class="docutils literal notranslate"><span class="pre">Session.save_preprocessed()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spikewrap.Session.plot_preprocessed"><code class="docutils literal notranslate"><span class="pre">Session.plot_preprocessed()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spikewrap.Session.sort"><code class="docutils literal notranslate"><span class="pre">Session.sort()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spikewrap.Session.wait_for_slurm"><code class="docutils literal notranslate"><span class="pre">Session.wait_for_slurm()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spikewrap.Session.get_raw_run_names"><code class="docutils literal notranslate"><span class="pre">Session.get_raw_run_names()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spikewrap.Session.get_preprocessed_run_names"><code class="docutils literal notranslate"><span class="pre">Session.get_preprocessed_run_names()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spikewrap.Session.parent_input_path"><code class="docutils literal notranslate"><span class="pre">Session.parent_input_path()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spikewrap.Session.get_output_path"><code class="docutils literal notranslate"><span class="pre">Session.get_output_path()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spikewrap.Session.load_raw_data"><code class="docutils literal notranslate"><span class="pre">Session.load_raw_data()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spikewrap.Session.get_sync_channel"><code class="docutils literal notranslate"><span class="pre">Session.get_sync_channel()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spikewrap.Session.plot_sync_channel"><code class="docutils literal notranslate"><span class="pre">Session.plot_sync_channel()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spikewrap.Session.silence_sync_channel"><code class="docutils literal notranslate"><span class="pre">Session.silence_sync_channel()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spikewrap.Session.save_sync_channel"><code class="docutils literal notranslate"><span class="pre">Session.save_sync_channel()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spikewrap.Session.raw_runs_loaded"><code class="docutils literal notranslate"><span class="pre">Session.raw_runs_loaded()</span></code></a></li>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#spikewrap.get_example_data_path"><code class="docutils literal notranslate"><span class="pre">get_example_data_path()</span></code></a></li>
@@ -778,6 +939,7 @@ To modify this, update the returned dictionary directly.</p>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#spikewrap.load_config_dict"><code class="docutils literal notranslate"><span class="pre">load_config_dict()</span></code></a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#spikewrap.save_config_dict"><code class="docutils literal notranslate"><span class="pre">save_config_dict()</span></code></a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#spikewrap.default_slurm_options"><code class="docutils literal notranslate"><span class="pre">default_slurm_options()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#spikewrap.run_in_slurm"><code class="docutils literal notranslate"><span class="pre">run_in_slurm()</span></code></a></li>
 </ul>
   </nav></div>
 
@@ -803,7 +965,7 @@ To modify this, update the returned dictionary directly.</p>
     <div class="footer-items__start">
       
         <div class="footer-item"><p class="sphinx-version">
-    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.2.1.
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.1.3.
     <br/>
     </p>
     <p class="theme-version">

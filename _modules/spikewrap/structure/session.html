@@ -43,7 +43,7 @@
   <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../../../_static/documentation_options.js?v=a58bc63e"></script>
+    <script src="../../../_static/documentation_options.js?v=938c9ccc"></script>
     <script src="../../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../../_static/design-tabs.js?v=f930bc37"></script>
@@ -117,7 +117,7 @@
   
   
   
-    <p class="title logo__title">spikewrap v0.1.1</p>
+    <p class="title logo__title">spikewrap v0.2.0</p>
   
 </a></div>
     
@@ -408,17 +408,31 @@
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">TYPE_CHECKING</span><span class="p">,</span> <span class="n">Literal</span>
 
+<span class="kn">import</span><span class="w"> </span><span class="nn">yaml</span>
+
 <span class="k">if</span> <span class="n">TYPE_CHECKING</span><span class="p">:</span>
     <span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib</span>
+    <span class="kn">import</span><span class="w"> </span><span class="nn">submitit</span>
     <span class="kn">from</span><span class="w"> </span><span class="nn">probeinterface</span><span class="w"> </span><span class="kn">import</span> <span class="n">Probe</span>
 
+<span class="kn">import</span><span class="w"> </span><span class="nn">time</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">spikeinterface.full</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">si</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">spikewrap.configs</span><span class="w"> </span><span class="kn">import</span> <span class="n">config_utils</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">spikewrap.configs._backend</span><span class="w"> </span><span class="kn">import</span> <span class="n">canon</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">spikewrap.process</span><span class="w"> </span><span class="kn">import</span> <span class="n">_loading</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">spikewrap.structure._run</span><span class="w"> </span><span class="kn">import</span> <span class="n">ConcatRun</span><span class="p">,</span> <span class="n">SeparateRun</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">spikewrap.structure._preprocess_run</span><span class="w"> </span><span class="kn">import</span> <span class="n">PreprocessedRun</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">spikewrap.structure._raw_run</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">ConcatRawRun</span><span class="p">,</span>
+    <span class="n">SeparateRawRun</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">spikewrap.structure._sorting_run</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">ConcatSortingRun</span><span class="p">,</span>
+    <span class="n">SeparateSortingRun</span><span class="p">,</span>
+<span class="p">)</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">spikewrap.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">_utils</span>
 
 
@@ -427,8 +441,7 @@
 <span class="k">class</span><span class="w"> </span><span class="nc">Session</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Represents an electrophysiological recording session, consisting of a single or multiple runs.</span>
-
-<span class="sd">    Exposes ``preprocess()``, ``plot_preprocessed()`, and ``save_preprocessed()`` functions to handle preprocessing of all runs.</span>
+<span class="sd">    Exposes functions for preproecssing and sorting data from the session.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
@@ -452,18 +465,19 @@
 <span class="sd">    Notes</span>
 <span class="sd">    -----</span>
 <span class="sd">    The responsibility of this class is to manage the processing of runs</span>
-<span class="sd">    contained within the session. Runs are held in ``self._runs``, a list of</span>
-<span class="sd">    ``SeparateRun`` or ``ConcatRun`` classes. Runs are loaded from raw data</span>
-<span class="sd">    as separate runs, and will be converted to a ``ConcatRun`` if concatenated.</span>
+<span class="sd">    contained within the session. Raw data are held in ``self._raw_runs``, a list of</span>
+<span class="sd">    ``SeparateRawRun``. The sync channel (if available) is held on the raw run in a</span>
+<span class="sd">    recording object (other channels unused) and possibly mutated.</span>
+<span class="sd">    ``load_raw_runs()`` will refresh the run sync channels.</span>
 
-<span class="sd">    The attributes on this class (except for ``self._runs``) are to be treated</span>
-<span class="sd">    as constant for the lifetime of the class. For example, the output path</span>
-<span class="sd">    should not be changed during the class instance lifetime.</span>
+<span class="sd">    self._pp_runs is filled by self.preprocess(). Copies of _raw_runs are concatenated</span>
+<span class="sd">    and / or split-by-shank before preprocessing, which fills self._pp_runs.</span>
+<span class="sd">    The sync channel is attached in-memory (no longer on a recording).</span>
 
-<span class="sd">    When ``preprocess`` is called, all runs are re-loaded and operations performed</span>
-<span class="sd">    from scratch. This is to cleanly handle concatenation of runs and possible</span>
-<span class="sd">    splitting of multi-shank recordings. This is more robust than attempting</span>
-<span class="sd">    to continually concatenate / split runs and shanks.</span>
+<span class="sd">    self._sorting_runs contains the sorting based on self._pp_runs. Again, copies</span>
+<span class="sd">    of preprocessing runs are concatenated and / or split by shank before sorting.</span>
+
+<span class="sd">    Properties of this class should never be modified from outside the class.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
@@ -475,14 +489,14 @@
         <span class="n">output_path</span><span class="p">:</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">probe</span><span class="p">:</span> <span class="n">Probe</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot; &quot;&quot;&quot;</span>
+
         <span class="n">parent_input_path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">subject_path</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_check_input_path</span><span class="p">(</span><span class="n">parent_input_path</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_check_file_format</span><span class="p">(</span><span class="n">file_format</span><span class="p">)</span>
 
-        <span class="c1"># These parameters should be treated as constant and never changed</span>
-        <span class="c1"># during the lifetime of the class. Use the properties (which do not</span>
-        <span class="c1"># expose a setter) for both internal and external calls.</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">run_names</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">run_names</span> <span class="o">==</span> <span class="s2">&quot;all&quot;</span><span class="p">:</span>
+            <span class="n">run_names</span> <span class="o">=</span> <span class="p">[</span><span class="n">run_names</span><span class="p">]</span>
+
         <span class="bp">self</span><span class="o">.</span><span class="n">_passed_run_names</span> <span class="o">=</span> <span class="n">run_names</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_file_format</span> <span class="o">=</span> <span class="n">file_format</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_probe</span> <span class="o">=</span> <span class="n">probe</span>
@@ -493,36 +507,15 @@
             <span class="n">Path</span><span class="p">(</span><span class="n">output_path</span><span class="p">)</span> <span class="k">if</span> <span class="n">output_path</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">_output_from_parent_input_path</span><span class="p">()</span>
         <span class="p">)</span>
 
-        <span class="c1"># self._runs may be updated during the lifetime of the object,</span>
-        <span class="c1"># but is private to this class.</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_runs</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">SeparateRun</span> <span class="o">|</span> <span class="n">ConcatRun</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_create_run_objects</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_running_slurm_jobs</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">submitit</span><span class="o">.</span><span class="n">Job</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_raw_runs</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">SeparateRawRun</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_pp_runs</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">PreprocessedRun</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_sorting_runs</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">SeparateSortingRun</span> <span class="o">|</span> <span class="n">ConcatSortingRun</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
 
     <span class="c1"># ---------------------------------------------------------------------------</span>
     <span class="c1"># Public Functions</span>
     <span class="c1"># ---------------------------------------------------------------------------</span>
-
-<div class="viewcode-block" id="Session.load_raw_data">
-<a class="viewcode-back" href="../../../api_index.html#spikewrap.Session.load_raw_data">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">load_raw_data</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Load the raw data from each run into SpikeInterface</span>
-<span class="sd">        recording objects.</span>
-
-<span class="sd">        This function can be used to check data is loading successfully,</span>
-<span class="sd">        but can be skipped, with ``preprocess()`` run directly.</span>
-
-<span class="sd">        Data is loaded lazily at this stage (recording objects are created</span>
-<span class="sd">        but no data is actually loaded from disk).</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">_utils</span><span class="o">.</span><span class="n">message_user</span><span class="p">(</span>
-            <span class="sa">f</span><span class="s2">&quot;Loading runs from session path: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_parent_input_path</span><span class="si">}</span><span class="s2">&quot;</span>
-        <span class="p">)</span>
-
-        <span class="k">for</span> <span class="n">run</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_runs</span><span class="p">:</span>
-            <span class="n">_utils</span><span class="o">.</span><span class="n">message_user</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Loading run: </span><span class="si">{</span><span class="n">run</span><span class="o">.</span><span class="n">_run_name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-            <span class="n">run</span><span class="o">.</span><span class="n">load_raw_data</span><span class="p">()</span></div>
-
 
 <div class="viewcode-block" id="Session.preprocess">
 <a class="viewcode-back" href="../../../api_index.html#spikewrap.Session.preprocess">[docs]</a>
@@ -549,29 +542,49 @@
 <span class="sd">              or the ``&quot;preprocessing&quot;`` level itself. See documentation for details.</span>
 <span class="sd">        concat_runs</span>
 <span class="sd">            If ``True``, all runs will be concatenated together before preprocessing.</span>
-<span class="sd">            Use ``session.get_run_names()`` to check the order of concatenation.</span>
+<span class="sd">            Use ``session.get_raw_run_names()`` to check the order of concatenation.</span>
 <span class="sd">        per_shank</span>
 <span class="sd">            If ``True``, perform preprocessing on each shank separately.</span>
+<span class="sd">        overwrite_in_memory</span>
+<span class="sd">            If ``False`` (default), the</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">pp_steps</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_infer_pp_steps_from_configs_argument</span><span class="p">(</span><span class="n">configs</span><span class="p">)</span>
+        <span class="n">pp_steps</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_infer_steps_from_configs_argument</span><span class="p">(</span><span class="n">configs</span><span class="p">,</span> <span class="s2">&quot;preprocessing&quot;</span><span class="p">)</span>
 
         <span class="n">_utils</span><span class="o">.</span><span class="n">show_preprocessing_configs</span><span class="p">(</span><span class="n">pp_steps</span><span class="p">)</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">_create_run_objects</span><span class="p">(</span><span class="n">internal_overwrite</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>  <span class="c1"># refresh everything</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">any</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_raw_runs</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_load_raw_data</span><span class="p">(</span><span class="n">internal_overwrite</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
 
-        <span class="k">for</span> <span class="n">run</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_runs</span><span class="p">:</span>
-            <span class="n">run</span><span class="o">.</span><span class="n">load_raw_data</span><span class="p">()</span>
-
+        <span class="n">runs_to_preprocess</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">SeparateRawRun</span> <span class="o">|</span> <span class="n">ConcatRawRun</span><span class="p">]</span>
         <span class="k">if</span> <span class="n">concat_runs</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_concat_runs</span><span class="p">()</span>
+            <span class="n">runs_to_preprocess</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_get_concat_raw_run</span><span class="p">()]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">runs_to_preprocess</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_raw_runs</span>  <span class="c1"># type: ignore</span>
 
-        <span class="k">for</span> <span class="n">run</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_runs</span><span class="p">:</span>
-            <span class="n">run</span><span class="o">.</span><span class="n">preprocess</span><span class="p">(</span><span class="n">pp_steps</span><span class="p">,</span> <span class="n">per_shank</span><span class="p">)</span></div>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_pp_runs</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">run</span> <span class="ow">in</span> <span class="n">runs_to_preprocess</span><span class="p">:</span>
+
+            <span class="n">preprocessed_run</span> <span class="o">=</span> <span class="n">run</span><span class="o">.</span><span class="n">preprocess</span><span class="p">(</span><span class="n">pp_steps</span><span class="p">,</span> <span class="n">per_shank</span><span class="p">)</span>
+
+            <span class="n">orig_run_names</span> <span class="o">=</span> <span class="n">run</span><span class="o">.</span><span class="n">_orig_run_names</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">_pp_runs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                <span class="n">PreprocessedRun</span><span class="p">(</span>
+                    <span class="n">raw_data_path</span><span class="o">=</span><span class="n">run</span><span class="o">.</span><span class="n">_parent_input_path</span><span class="p">,</span>
+                    <span class="n">ses_name</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_ses_name</span><span class="p">,</span>
+                    <span class="n">run_name</span><span class="o">=</span><span class="n">run</span><span class="o">.</span><span class="n">_run_name</span><span class="p">,</span>
+                    <span class="n">file_format</span><span class="o">=</span><span class="n">run</span><span class="o">.</span><span class="n">_file_format</span><span class="p">,</span>
+                    <span class="n">session_output_path</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_output_path</span><span class="p">,</span>
+                    <span class="n">preprocessed_data</span><span class="o">=</span><span class="n">preprocessed_run</span><span class="p">,</span>
+                    <span class="n">pp_steps</span><span class="o">=</span><span class="n">pp_steps</span><span class="p">,</span>
+                    <span class="n">orig_run_names</span><span class="o">=</span><span class="n">orig_run_names</span><span class="p">,</span>
+                <span class="p">)</span>
+            <span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="Session.save_preprocessed">
 <a class="viewcode-back" href="../../../api_index.html#spikewrap.Session.save_preprocessed">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">save_preprocessed</span><span class="p">(</span>  <span class="c1"># TODO: document, each run is in a separate SLURM job! keep like this for now</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">save_preprocessed</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">overwrite</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
         <span class="n">chunk_duration_s</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mi">2</span><span class="p">,</span>
@@ -602,8 +615,12 @@
 <span class="sd">            with default arguments. If a `dict` is provided, it should contain SLURM arguments.</span>
 <span class="sd">            See `tutorials` in the documentation for details.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">for</span> <span class="n">run</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_runs</span><span class="p">:</span>
-            <span class="n">run</span><span class="o">.</span><span class="n">save_preprocessed</span><span class="p">(</span><span class="n">overwrite</span><span class="p">,</span> <span class="n">chunk_duration_s</span><span class="p">,</span> <span class="n">n_jobs</span><span class="p">,</span> <span class="n">slurm</span><span class="p">)</span></div>
+        <span class="k">for</span> <span class="n">run</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_pp_runs</span><span class="p">:</span>
+            <span class="n">job_if_slurm</span> <span class="o">=</span> <span class="n">run</span><span class="o">.</span><span class="n">save_preprocessed</span><span class="p">(</span>
+                <span class="n">overwrite</span><span class="p">,</span> <span class="n">chunk_duration_s</span><span class="p">,</span> <span class="n">n_jobs</span><span class="p">,</span> <span class="n">slurm</span>
+            <span class="p">)</span>
+            <span class="k">if</span> <span class="n">slurm</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_running_slurm_jobs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">job_if_slurm</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="Session.plot_preprocessed">
@@ -628,7 +645,7 @@
 <span class="sd">        ----------</span>
 <span class="sd">        run_idx</span>
 <span class="sd">            - If ``&quot;all&quot;``, plots preprocessed data for all runs in the session.</span>
-<span class="sd">            - If an integer, plots preprocessed data for the run at the specified index in ``self._runs``.</span>
+<span class="sd">            - If an integer, plots preprocessed data for the run at the specified index in ``self._pp_runs``.</span>
 <span class="sd">        mode</span>
 <span class="sd">            Determines the plotting style, a heatmap-style or line plot.</span>
 <span class="sd">        time_range</span>
@@ -648,7 +665,7 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">time_range</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">time_range</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span>
 
-        <span class="n">all_runs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_runs</span> <span class="k">if</span> <span class="n">run_idx</span> <span class="o">==</span> <span class="s2">&quot;all&quot;</span> <span class="k">else</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_runs</span><span class="p">[</span><span class="n">run_idx</span><span class="p">]]</span>
+        <span class="n">all_runs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_pp_runs</span> <span class="k">if</span> <span class="n">run_idx</span> <span class="o">==</span> <span class="s2">&quot;all&quot;</span> <span class="k">else</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_pp_runs</span><span class="p">[</span><span class="n">run_idx</span><span class="p">]]</span>
 
         <span class="n">all_figs</span> <span class="o">=</span> <span class="p">{}</span>
 
@@ -666,38 +683,366 @@
         <span class="k">return</span> <span class="n">all_figs</span></div>
 
 
+<div class="viewcode-block" id="Session.sort">
+<a class="viewcode-back" href="../../../api_index.html#spikewrap.Session.sort">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">sort</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">configs</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="nb">dict</span><span class="p">,</span>
+        <span class="n">run_sorter_method</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;local&quot;</span><span class="p">,</span>
+        <span class="n">per_shank</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="n">concat_runs</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="n">overwrite</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+        <span class="n">slurm</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Sort the preprocessed recordings (self.get_preprocessed_run_names())</span>
+<span class="sd">        and save the output to disk.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+
+<span class="sd">        configs</span>
+<span class="sd">            - If a ``str`` is provided, expects the name of a stored configuration file.</span>
+<span class="sd">              See ``show_available_configs()`` and ``save_config_dict()`` for details.</span>
+<span class="sd">            - If a ``Path`` is provided, expects the path to a valid spikewrap config YAML file.</span>
+<span class="sd">            - A spikewrap configs dictionary, either including the ``&quot;sorting&quot;`` level</span>
+<span class="sd">              or the ``&quot;sorting&quot;`` level itself. Only 1 sorter at a time currently supported.</span>
+<span class="sd">        run_sorter_method</span>
+<span class="sd">            - if &quot;local&quot;, use the current python environment to run sorting (e.g. for `kilosort4`)</span>
+<span class="sd">            - if a path (either string or Path), must be the path to a matlab repository</span>
+<span class="sd">              used to run the sorter (e.g. kilosort 2.5 repository).</span>
+<span class="sd">            - if &quot;docker&quot; or &quot;singularity&quot;, docker or singularity will be used to run the sorting.</span>
+<span class="sd">              singularity images are stored in a folder at the level of &quot;rawdata&quot; and &quot;derivatives&quot;.</span>
+<span class="sd">        per_shank</span>
+<span class="sd">            If `True`, preprocessed recordings will be split by shank. If preprocessed recordings</span>
+<span class="sd">            were already split by shank for preprocessing, this should be `False`.</span>
+<span class="sd">        concat_runs</span>
+<span class="sd">            If `True`, preprocessed runs will be concatenated togerher before sorting. If runs were</span>
+<span class="sd">            already concatenated before preprocessing, this should be `False`.</span>
+<span class="sd">        overwrite</span>
+<span class="sd">            If `True`, existing outputs will be overwritten. Otherwise, an error will be raised</span>
+<span class="sd">            if existing outputs are found.</span>
+<span class="sd">        slurm</span>
+<span class="sd">            Configuration for submitting the save jobs to a SLURM workload manager.</span>
+<span class="sd">            If `False` (default), jobs will be run locally. If `True`, job will be run in SLURM</span>
+<span class="sd">            with default arguments. If a `dict` is provided, it should contain SLURM arguments.</span>
+<span class="sd">            See `tutorials` in the documentation for details.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">pp_runs</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">PreprocessedRun</span><span class="p">]</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">any</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_pp_runs</span><span class="p">):</span>
+            <span class="n">pp_runs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_load_pp_runs_from_disk</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">pp_runs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_pp_runs</span>
+
+        <span class="n">sorting_configs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_infer_steps_from_configs_argument</span><span class="p">(</span><span class="n">configs</span><span class="p">,</span> <span class="s2">&quot;sorting&quot;</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_sorting_runs</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="k">if</span> <span class="n">concat_runs</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">pp_runs</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;`concat_runs=True` but there is only one preprocessed run: </span><span class="si">{</span><span class="n">pp_runs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">_run_name</span><span class="si">}</span><span class="s2">&quot;</span>
+                <span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_sorting_runs</span> <span class="o">=</span> <span class="p">[</span><span class="n">ConcatSortingRun</span><span class="p">(</span><span class="n">pp_runs</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_output_path</span><span class="p">)]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_sorting_runs</span> <span class="o">=</span> <span class="p">[</span>
+                <span class="n">SeparateSortingRun</span><span class="p">(</span><span class="n">pp_run</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_output_path</span><span class="p">)</span> <span class="k">for</span> <span class="n">pp_run</span> <span class="ow">in</span> <span class="n">pp_runs</span>
+            <span class="p">]</span>
+
+        <span class="k">for</span> <span class="n">run</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sorting_runs</span><span class="p">:</span>
+            <span class="n">job_if_slurm</span> <span class="o">=</span> <span class="n">run</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span>
+                <span class="n">sorting_configs</span><span class="p">,</span> <span class="n">run_sorter_method</span><span class="p">,</span> <span class="n">per_shank</span><span class="p">,</span> <span class="n">overwrite</span><span class="p">,</span> <span class="n">slurm</span>
+            <span class="p">)</span>
+            <span class="k">if</span> <span class="n">slurm</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_running_slurm_jobs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">job_if_slurm</span><span class="p">)</span></div>
+
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_load_pp_runs_from_disk</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">PreprocessedRun</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Load a list of PreprocessedRun, that have been previously saved, from disk.</span>
+
+<span class="sd">        This is used to allow sorting from previously saved data, allowing `session.preprocess()`</span>
+<span class="sd">        to be skipped. These will be loaded in the order specified in the run names passed to</span>
+<span class="sd">        this class on instantiation. If this is &quot;all&quot; they will be loaded from disk in glob order.</span>
+
+<span class="sd">        TODO</span>
+<span class="sd">        ----</span>
+<span class="sd">        It would be nice to load these into self._pp_runs so that they can be re-visualised.</span>
+
+<span class="sd">        TODO</span>
+<span class="sd">        ----</span>
+<span class="sd">        This badly needs a tidy up</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_passed_run_names</span> <span class="o">==</span> <span class="s2">&quot;all&quot;</span><span class="p">:</span>
+            <span class="c1"># Find all folderes with &quot;preprocessed&quot; folder inside,</span>
+            <span class="c1"># assuming this is an already-preprocessed run.</span>
+            <span class="n">run_folders</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_output_path</span><span class="o">.</span><span class="n">glob</span><span class="p">(</span><span class="s2">&quot;*&quot;</span><span class="p">))</span>
+            <span class="n">passed_run_names</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">for</span> <span class="n">run_path</span> <span class="ow">in</span> <span class="n">run_folders</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">run_path</span><span class="o">.</span><span class="n">is_dir</span><span class="p">()</span> <span class="ow">and</span> <span class="nb">any</span><span class="p">(</span><span class="n">run_path</span><span class="o">.</span><span class="n">glob</span><span class="p">(</span><span class="s2">&quot;preprocessed&quot;</span><span class="p">)):</span>
+                    <span class="n">passed_run_names</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">run_path</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">passed_run_names</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_passed_run_names</span>
+
+        <span class="k">if</span> <span class="s2">&quot;concat_run&quot;</span> <span class="ow">in</span> <span class="n">passed_run_names</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">passed_run_names</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">&quot;Cannot load `concat_run` alongside separate runs. Specify &quot;</span>
+                <span class="s2">&quot;the exact runs to sort with the `run_names` argument of `Session`.&quot;</span>
+            <span class="p">)</span>
+
+        <span class="n">_utils</span><span class="o">.</span><span class="n">message_user</span><span class="p">(</span>
+            <span class="s2">&quot;Preprocessed runs were loaded from disk, in the order:&quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">passed_run_names</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="p">)</span>
+        <span class="n">pp_runs</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="k">for</span> <span class="n">run_name</span> <span class="ow">in</span> <span class="n">passed_run_names</span><span class="p">:</span>
+
+            <span class="c1"># For each run, load the stored spikewrap info.</span>
+            <span class="n">run_folder</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_output_path</span> <span class="o">/</span> <span class="n">run_name</span>
+
+            <span class="n">file_path</span> <span class="o">=</span> <span class="n">run_folder</span> <span class="o">/</span> <span class="s2">&quot;preprocessed&quot;</span> <span class="o">/</span> <span class="n">canon</span><span class="o">.</span><span class="n">spikewrap_info_filename</span><span class="p">()</span>
+
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">file_path</span><span class="o">.</span><span class="n">is_file</span><span class="p">():</span>
+                <span class="k">raise</span> <span class="ne">FileNotFoundError</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;No saved preprocessed data found at: </span><span class="si">{</span><span class="n">file_path</span><span class="si">}</span><span class="s2">&quot;</span>
+                <span class="p">)</span>
+
+            <span class="k">with</span> <span class="n">file_path</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s2">&quot;r&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">file</span><span class="p">:</span>
+                <span class="n">run_info</span> <span class="o">=</span> <span class="n">yaml</span><span class="o">.</span><span class="n">safe_load</span><span class="p">(</span><span class="n">file</span><span class="p">)</span>
+
+            <span class="c1"># Based on the number of saved shanks, load the recording objects</span>
+            <span class="c1"># into a dictionary (keys are shank_id)</span>
+            <span class="n">preprocessed_shanks</span> <span class="o">=</span> <span class="p">{}</span>
+            <span class="k">for</span> <span class="n">shank_id</span> <span class="ow">in</span> <span class="n">run_info</span><span class="p">[</span><span class="s2">&quot;shank_ids&quot;</span><span class="p">]:</span>
+
+                <span class="k">if</span> <span class="n">shank_id</span> <span class="o">==</span> <span class="s2">&quot;grouped&quot;</span><span class="p">:</span>
+                    <span class="n">recording_path</span> <span class="o">=</span> <span class="n">run_folder</span> <span class="o">/</span> <span class="s2">&quot;preprocessed&quot;</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">recording_path</span> <span class="o">=</span> <span class="n">run_folder</span> <span class="o">/</span> <span class="s2">&quot;preprocessed&quot;</span> <span class="o">/</span> <span class="n">shank_id</span>
+
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">recording_path</span><span class="o">.</span><span class="n">is_dir</span><span class="p">():</span>
+                    <span class="k">raise</span> <span class="ne">FileNotFoundError</span><span class="p">(</span>
+                        <span class="sa">f</span><span class="s2">&quot;No preprocessed data found at: </span><span class="si">{</span><span class="n">recording_path</span><span class="si">}</span><span class="s2">&quot;</span>
+                    <span class="p">)</span>
+
+                <span class="n">recording</span> <span class="o">=</span> <span class="n">si</span><span class="o">.</span><span class="n">load_extractor</span><span class="p">(</span><span class="n">recording_path</span><span class="p">)</span>
+
+                <span class="n">prepro_dict</span> <span class="o">=</span> <span class="p">{</span>
+                    <span class="n">run_info</span><span class="p">[</span><span class="s2">&quot;prepro_key&quot;</span><span class="p">]:</span> <span class="n">recording</span>
+                <span class="p">}</span>  <span class="c1"># TODO: check naming of this and make sure its consistent</span>
+
+                <span class="n">preprocessed_shanks</span><span class="p">[</span><span class="n">shank_id</span><span class="p">]</span> <span class="o">=</span> <span class="n">prepro_dict</span>
+
+            <span class="c1"># Instantiate the class based on the above parameters</span>
+            <span class="n">run</span> <span class="o">=</span> <span class="n">PreprocessedRun</span><span class="p">(</span>
+                <span class="n">Path</span><span class="p">(</span><span class="n">run_info</span><span class="p">[</span><span class="s2">&quot;raw_data_path&quot;</span><span class="p">]),</span>
+                <span class="n">run_info</span><span class="p">[</span><span class="s2">&quot;ses_name&quot;</span><span class="p">],</span>
+                <span class="n">run_info</span><span class="p">[</span><span class="s2">&quot;run_name&quot;</span><span class="p">],</span>
+                <span class="n">run_info</span><span class="p">[</span><span class="s2">&quot;file_format&quot;</span><span class="p">],</span>
+                <span class="n">Path</span><span class="p">(</span><span class="n">run_info</span><span class="p">[</span><span class="s2">&quot;session_output_path&quot;</span><span class="p">]),</span>
+                <span class="n">preprocessed_shanks</span><span class="p">,</span>
+                <span class="n">pp_steps</span><span class="o">=</span><span class="n">run_info</span><span class="p">[</span><span class="s2">&quot;pp_steps&quot;</span><span class="p">],</span>
+                <span class="n">orig_run_names</span><span class="o">=</span><span class="n">run_info</span><span class="p">[</span><span class="s2">&quot;orig_run_names&quot;</span><span class="p">],</span>
+            <span class="p">)</span>
+
+            <span class="n">pp_runs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">run</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">pp_runs</span>
+
     <span class="c1"># Getters -----------------------------------------------------------------</span>
 
-<div class="viewcode-block" id="Session.get_run_names">
-<a class="viewcode-back" href="../../../api_index.html#spikewrap.Session.get_run_names">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">get_run_names</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+<div class="viewcode-block" id="Session.wait_for_slurm">
+<a class="viewcode-back" href="../../../api_index.html#spikewrap.Session.wait_for_slurm">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">wait_for_slurm</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Return a list of run names from the self._runs list.</span>
-
-<span class="sd">        If run concatenation is performed, the order of this</span>
-<span class="sd">        list will be the order of concatenation. If concatenation</span>
-<span class="sd">        was already performed, the run name will be ``&quot;concat_run&quot;``.</span>
+<span class="sd">        Run a while loop with pause until</span>
+<span class="sd">        all slurm jobs are complete.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="p">[</span><span class="n">run</span><span class="o">.</span><span class="n">_run_name</span> <span class="k">for</span> <span class="n">run</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_runs</span><span class="p">]</span></div>
+        <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">_running_slurm_jobs</span> <span class="o">=</span> <span class="p">[</span>
+                <span class="n">job</span> <span class="k">for</span> <span class="n">job</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_running_slurm_jobs</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">job</span><span class="o">.</span><span class="n">done</span><span class="p">()</span>
+            <span class="p">]</span>
+
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">any</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_running_slurm_jobs</span><span class="p">):</span>
+                <span class="k">break</span>
+
+            <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span></div>
+
+
+    <span class="c1"># Getters -----------------------------------------------------------------</span>
+
+<div class="viewcode-block" id="Session.get_raw_run_names">
+<a class="viewcode-back" href="../../../api_index.html#spikewrap.Session.get_raw_run_names">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_raw_run_names</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return a list of run names for the raw data.</span>
+
+<span class="sd">        Their order is the order in which any concatenation</span>
+<span class="sd">        will be performed.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">run</span><span class="o">.</span><span class="n">_run_name</span> <span class="k">for</span> <span class="n">run</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_raw_runs</span><span class="p">]</span></div>
+
+
+<div class="viewcode-block" id="Session.get_preprocessed_run_names">
+<a class="viewcode-back" href="../../../api_index.html#spikewrap.Session.get_preprocessed_run_names">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_preprocessed_run_names</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return a list of names of the preprocessed data.</span>
+<span class="sd">        If data was concatenated, the run name will be &quot;concat_run&quot;.</span>
+
+<span class="sd">        If not concatenated, their order is the order</span>
+<span class="sd">        concatenation will take place prior to sorting</span>
+<span class="sd">        (if ``concat_run=True``).</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">run</span><span class="o">.</span><span class="n">_run_name</span> <span class="k">for</span> <span class="n">run</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_pp_runs</span><span class="p">]</span></div>
 
 
 <div class="viewcode-block" id="Session.parent_input_path">
 <a class="viewcode-back" href="../../../api_index.html#spikewrap.Session.parent_input_path">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">parent_input_path</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Path</span><span class="p">:</span>  <span class="c1"># TODO: add docs</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">parent_input_path</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Path</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Name of the parent path for this sessions raw data</span>
+<span class="sd">        (i.e. the path of the subject folder).</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_parent_input_path</span></div>
-
-
-<div class="viewcode-block" id="Session.get_passed_run_names">
-<a class="viewcode-back" href="../../../api_index.html#spikewrap.Session.get_passed_run_names">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">get_passed_run_names</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;all&quot;</span><span class="p">]</span> <span class="o">|</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_passed_run_names</span></div>
 
 
 <div class="viewcode-block" id="Session.get_output_path">
 <a class="viewcode-back" href="../../../api_index.html#spikewrap.Session.get_output_path">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">get_output_path</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_output_path</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Path</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        The path where processed data will be output for this session.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_output_path</span></div>
 
+
+<div class="viewcode-block" id="Session.load_raw_data">
+<a class="viewcode-back" href="../../../api_index.html#spikewrap.Session.load_raw_data">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">load_raw_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">overwrite</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Load raw data, to allow editing of the sync channel.</span>
+<span class="sd">        Note this will overwrite any previous editing of the</span>
+<span class="sd">        sync channel.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_raw_runs</span><span class="p">)</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">overwrite</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
+                <span class="s2">&quot;Runs have already been loaded for this session. &quot;</span>
+                <span class="s2">&quot;Use `overwrite=True` to load again.&quot;</span>
+            <span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_load_raw_data</span><span class="p">(</span><span class="n">internal_overwrite</span><span class="o">=</span><span class="n">overwrite</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Session.get_sync_channel">
+<a class="viewcode-back" href="../../../api_index.html#spikewrap.Session.get_sync_channel">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_sync_channel</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">run_idx</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return the sync channel in a numpy array. Currently only</span>
+<span class="sd">        Neuropixels (sync channel is 385th channel) supported.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        __________</span>
+
+<span class="sd">        run_idx</span>
+<span class="sd">            Index of the run to get the sync channel from,</span>
+<span class="sd">            as ordered by ``self.get_raw_run_names()``.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_assert_sync_channel_checks</span><span class="p">()</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_raw_runs</span><span class="p">[</span><span class="n">run_idx</span><span class="p">]</span><span class="o">.</span><span class="n">get_sync_channel</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="Session.plot_sync_channel">
+<a class="viewcode-back" href="../../../api_index.html#spikewrap.Session.plot_sync_channel">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">plot_sync_channel</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">run_idx</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">show</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">matplotlib</span><span class="o">.</span><span class="n">lines</span><span class="o">.</span><span class="n">Line2D</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Plot the sync channel for the run.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+
+<span class="sd">        run_idx</span>
+<span class="sd">            Index of the run to get the sync channel from,</span>
+<span class="sd">            as ordered by ``self.get_raw_run_names()``.</span>
+<span class="sd">        show</span>
+<span class="sd">            If ``True``, plt.show() is called.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_assert_sync_channel_checks</span><span class="p">()</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_raw_runs</span><span class="p">[</span><span class="n">run_idx</span><span class="p">]</span><span class="o">.</span><span class="n">plot_sync_channel</span><span class="p">(</span><span class="n">show</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Session.silence_sync_channel">
+<a class="viewcode-back" href="../../../api_index.html#spikewrap.Session.silence_sync_channel">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">silence_sync_channel</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">run_idx</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">periods_to_silence</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">tuple</span><span class="p">]</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Set periods on the sync channel to zero.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+
+<span class="sd">        run_idx</span>
+<span class="sd">            Index of the run to get the sync channel from,</span>
+<span class="sd">            as ordered by ``self.get_raw_run_names()``.</span>
+<span class="sd">        periods_to_silence</span>
+<span class="sd">            A list of 2-tuples, where each entry in the tuples are</span>
+<span class="sd">            the (start, stop) sample to silence. For example,</span>
+<span class="sd">            [(0, 10), (50, 500)] will set the samples 0 - 10 and</span>
+<span class="sd">            50 - 500 to zero.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_assert_sync_channel_checks</span><span class="p">()</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_raw_runs</span><span class="p">[</span><span class="n">run_idx</span><span class="p">]</span><span class="o">.</span><span class="n">silence_sync_channel</span><span class="p">(</span><span class="n">periods_to_silence</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Session.save_sync_channel">
+<a class="viewcode-back" href="../../../api_index.html#spikewrap.Session.save_sync_channel">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">save_sync_channel</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">overwrite</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">slurm</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">|</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Save all loaded runs sync channel to disk.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">raw_runs_loaded</span><span class="p">():</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_load_raw_data</span><span class="p">(</span><span class="n">internal_overwrite</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">run</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_raw_runs</span><span class="p">:</span>
+            <span class="n">job_if_slurm</span> <span class="o">=</span> <span class="n">run</span><span class="o">.</span><span class="n">save_sync_channel</span><span class="p">(</span><span class="n">overwrite</span><span class="p">,</span> <span class="n">slurm</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">slurm</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_running_slurm_jobs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">job_if_slurm</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Session.raw_runs_loaded">
+<a class="viewcode-back" href="../../../api_index.html#spikewrap.Session.raw_runs_loaded">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">raw_runs_loaded</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">all</span><span class="p">(</span><span class="n">run</span><span class="o">.</span><span class="n">_raw</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">for</span> <span class="n">run</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_raw_runs</span><span class="p">)</span></div>
+
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_assert_sync_channel_checks</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">any</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_raw_runs</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
+                <span class="s2">&quot;Cannot work with sync channels until raw data loaded. &quot;</span>
+                <span class="s2">&quot;Use `session.load_raw_data()`.&quot;</span>
+            <span class="p">)</span>
+
+        <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_pp_runs</span><span class="p">)</span> <span class="ow">or</span> <span class="nb">any</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_sorting_runs</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
+                <span class="s2">&quot;Cannot work with the sync channel after preprocessing. &quot;</span>
+                <span class="s2">&quot;Sync channel must be handled prior to preprocessing. &quot;</span>
+                <span class="s2">&quot;Instantiate a new Session object to begin a new workflow. &quot;</span>
+                <span class="s2">&quot;If this is annoying please contact spikewrap.&quot;</span>
+            <span class="p">)</span>
 
     <span class="c1"># ---------------------------------------------------------------------------</span>
     <span class="c1"># Private Functions</span>
@@ -705,78 +1050,76 @@
 
     <span class="c1"># Manage `Runs` -------------------------------------------------------------</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">_create_run_objects</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">internal_overwrite</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_load_raw_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">internal_overwrite</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Fill self._runs with a list of `SeparateRun` objects, each</span>
-<span class="sd">        holding data for the run. The objects are instantiated here but</span>
-<span class="sd">        recordings are not loaded, these are loaded with self.load_raw_data().</span>
-
-<span class="sd">        This function overwrites all exiting runs.</span>
+<span class="sd">        Fill self._raw_runs with a list of `SeparateRawRun` objects,</span>
+<span class="sd">        each holding data for the run.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
 <span class="sd">        internal_overwrite</span>
 <span class="sd">            Safety flag to ensure overwriting existing runs is intended.</span>
+
+<span class="sd">        Notes</span>
+<span class="sd">        -----</span>
+<span class="sd">        The session may include a `ephys` folder (NeuroBlueprint) but currently</span>
+<span class="sd">        non-NeuroBlueprint (no `ephys` folder) is included. `session_path` is the</span>
+<span class="sd">        path to the `ses-xxx` folder but `get_raw_run_paths` will detect and</span>
+<span class="sd">        include the `ephys` folder if necessary.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_runs</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">internal_overwrite</span><span class="p">:</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_raw_runs</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">internal_overwrite</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Cannot overwrite _runs for session </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_ses_name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 
-        <span class="n">session_path</span> <span class="o">=</span> <span class="p">(</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_parent_input_path</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ses_name</span>
-        <span class="p">)</span>  <span class="c1"># will not include &quot;ephys&quot;</span>
+        <span class="n">session_path</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_parent_input_path</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ses_name</span>
 
-        <span class="n">run_paths</span> <span class="o">=</span> <span class="n">_loading</span><span class="o">.</span><span class="n">get_run_paths</span><span class="p">(</span>
+        <span class="n">run_paths</span> <span class="o">=</span> <span class="n">_loading</span><span class="o">.</span><span class="n">get_raw_run_paths</span><span class="p">(</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_file_format</span><span class="p">,</span>
             <span class="n">session_path</span><span class="p">,</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_passed_run_names</span><span class="p">,</span>
         <span class="p">)</span>
 
-        <span class="n">runs</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">SeparateRun</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">runs</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">SeparateRawRun</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
 
         <span class="k">for</span> <span class="n">run_path</span> <span class="ow">in</span> <span class="n">run_paths</span><span class="p">:</span>
-            <span class="n">runs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
-                <span class="n">SeparateRun</span><span class="p">(</span>
-                    <span class="n">parent_input_path</span><span class="o">=</span><span class="n">run_path</span><span class="o">.</span><span class="n">parent</span><span class="p">,</span>  <span class="c1"># may include &quot;ephys&quot; if NeuroBlueprint</span>
-                    <span class="n">parent_ses_name</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_ses_name</span><span class="p">,</span>
-                    <span class="n">run_name</span><span class="o">=</span><span class="n">run_path</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
-                    <span class="n">session_output_path</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_output_path</span><span class="p">,</span>
-                    <span class="n">file_format</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_file_format</span><span class="p">,</span>
-                    <span class="n">probe</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_probe</span><span class="p">,</span>
-                <span class="p">)</span>
+
+            <span class="n">separate_run</span> <span class="o">=</span> <span class="n">SeparateRawRun</span><span class="p">(</span>
+                <span class="n">parent_input_path</span><span class="o">=</span><span class="n">run_path</span><span class="o">.</span><span class="n">parent</span><span class="p">,</span>
+                <span class="n">parent_ses_name</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_ses_name</span><span class="p">,</span>
+                <span class="n">run_name</span><span class="o">=</span><span class="n">run_path</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+                <span class="n">file_format</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_file_format</span><span class="p">,</span>
+                <span class="n">probe</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_probe</span><span class="p">,</span>
+                <span class="n">sync_output_path</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_output_path</span> <span class="o">/</span> <span class="n">run_path</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
             <span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_runs</span> <span class="o">=</span> <span class="n">runs</span>  <span class="c1"># type: ignore</span>
+            <span class="n">separate_run</span><span class="o">.</span><span class="n">load_raw_data</span><span class="p">()</span>
+            <span class="n">runs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">separate_run</span><span class="p">)</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">_concat_runs</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_raw_runs</span> <span class="o">=</span> <span class="n">runs</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_get_concat_raw_run</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ConcatRawRun</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Concatenate multiple separate runs into a single consolidated `ConcatRun`.</span>
+<span class="sd">        Concatenate multiple separate runs into a single consolidated `ConcatRawRun`.</span>
 
-<span class="sd">        `SeparateRun` and `ConcatRun` both expose processing functionality</span>
+<span class="sd">        `SeparateRawRun` and `ConcatRawRun` both expose processing functionality</span>
 <span class="sd">        can be substituted for one another in this context.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_runs</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_raw_runs</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;Cannot concatenate runs, only one run found.&quot;</span><span class="p">)</span>
 
-        <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_run_names</span><span class="p">()</span> <span class="o">!=</span> <span class="p">(</span>
-            <span class="s2">&quot;concat_run&quot;</span>
-        <span class="p">),</span> <span class="s2">&quot;Expected, runs are already concatenated.&quot;</span>  <span class="c1"># TODO: Expose</span>
+        <span class="k">assert</span> <span class="nb">all</span><span class="p">(</span>
+            <span class="p">[</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">run</span><span class="p">,</span> <span class="n">SeparateRawRun</span><span class="p">)</span> <span class="k">for</span> <span class="n">run</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_raw_runs</span><span class="p">]</span>
+        <span class="p">),</span> <span class="s2">&quot;All runs must be type `SeparateRawRun` for `ConcatRawRun&quot;</span>
 
         <span class="n">_utils</span><span class="o">.</span><span class="n">message_user</span><span class="p">(</span>
-            <span class="sa">f</span><span class="s2">&quot;Concatenating runs in the following order:&quot;</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">get_run_names</span><span class="p">()</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;Concatenating raw recordings in the following order:&quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">get_raw_run_names</span><span class="p">()</span><span class="si">}</span><span class="s2">&quot;</span>
         <span class="p">)</span>
 
-        <span class="k">assert</span> <span class="nb">all</span><span class="p">(</span>
-            <span class="p">[</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">run</span><span class="p">,</span> <span class="n">SeparateRun</span><span class="p">)</span> <span class="k">for</span> <span class="n">run</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_runs</span><span class="p">]</span>
-        <span class="p">),</span> <span class="s2">&quot;All runs must be type `SeparateRun` for `ConcatRun&quot;</span>
-
-        <span class="bp">self</span><span class="o">.</span><span class="n">_runs</span> <span class="o">=</span> <span class="p">[</span>
-            <span class="n">ConcatRun</span><span class="p">(</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">_runs</span><span class="p">,</span>  <span class="c1"># type: ignore</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">_parent_input_path</span><span class="p">,</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">_ses_name</span><span class="p">,</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">_output_path</span><span class="p">,</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">_file_format</span><span class="p">,</span>
-            <span class="p">)</span>
-        <span class="p">]</span>
+        <span class="k">return</span> <span class="n">ConcatRawRun</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_raw_runs</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_parent_input_path</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_ses_name</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_file_format</span><span class="p">,</span>
+        <span class="p">)</span>
 
     <span class="c1"># Path Resolving -----------------------------------------------------------</span>
 
@@ -845,7 +1188,9 @@
             <span class="p">)</span>
 
     <span class="nd">@staticmethod</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">_infer_pp_steps_from_configs_argument</span><span class="p">(</span><span class="n">configs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">list</span><span class="p">]:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_infer_steps_from_configs_argument</span><span class="p">(</span>
+        <span class="n">configs</span><span class="p">,</span> <span class="n">preprocessing_or_sorting</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">list</span><span class="p">]:</span>  <span class="c1"># TODO: RENAME !</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Given the possible arguments for `configs` in `preprocess()`,</span>
 <span class="sd">        infer the `pp_steps` dictionary of preprocessing steps to run.</span>
@@ -857,14 +1202,19 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">configs</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
             <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">configs</span><span class="p">,</span> <span class="n">Path</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">&quot;/&quot;</span> <span class="ow">in</span> <span class="n">configs</span> <span class="ow">or</span> <span class="s2">&quot;</span><span class="se">\\</span><span class="s2">&quot;</span> <span class="ow">in</span> <span class="n">configs</span><span class="p">:</span>
-                <span class="n">pp_steps</span> <span class="o">=</span> <span class="n">config_utils</span><span class="o">.</span><span class="n">load_config_dict</span><span class="p">(</span><span class="n">configs</span><span class="p">)[</span><span class="s2">&quot;preprocessing&quot;</span><span class="p">]</span>
+                <span class="n">settings</span> <span class="o">=</span> <span class="n">config_utils</span><span class="o">.</span><span class="n">load_config_dict</span><span class="p">(</span><span class="n">configs</span><span class="p">)[</span>
+                    <span class="n">preprocessing_or_sorting</span>
+                <span class="p">]</span>
             <span class="k">else</span><span class="p">:</span>
-                <span class="n">pp_steps</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">config_utils</span><span class="o">.</span><span class="n">get_configs</span><span class="p">(</span><span class="n">configs</span><span class="p">)</span>
+                <span class="n">pp_steps</span><span class="p">,</span> <span class="n">sorting</span> <span class="o">=</span> <span class="n">config_utils</span><span class="o">.</span><span class="n">get_configs</span><span class="p">(</span><span class="n">configs</span><span class="p">)</span>
+                <span class="n">settings</span> <span class="o">=</span> <span class="p">(</span>
+                    <span class="n">pp_steps</span> <span class="k">if</span> <span class="n">preprocessing_or_sorting</span> <span class="o">==</span> <span class="s2">&quot;preprocessing&quot;</span> <span class="k">else</span> <span class="n">sorting</span>
+                <span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="c1"># maybe the user did not include the &quot;preprocessing&quot; top level</span>
-            <span class="n">pp_steps</span> <span class="o">=</span> <span class="n">configs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;preprocessing&quot;</span><span class="p">,</span> <span class="n">configs</span><span class="p">)</span>
+            <span class="c1"># maybe the user did not include the &quot;preprocessing&quot; or &quot;sorting&quot; top level</span>
+            <span class="n">settings</span> <span class="o">=</span> <span class="n">configs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">preprocessing_or_sorting</span><span class="p">,</span> <span class="n">configs</span><span class="p">)</span>
 
-        <span class="k">return</span> <span class="n">pp_steps</span></div>
+        <span class="k">return</span> <span class="n">settings</span></div>
 
 </pre></div>
 
@@ -904,7 +1254,7 @@
     <div class="footer-items__start">
       
         <div class="footer-item"><p class="sphinx-version">
-    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.2.1.
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.1.3.
     <br/>
     </p>
     <p class="theme-version">

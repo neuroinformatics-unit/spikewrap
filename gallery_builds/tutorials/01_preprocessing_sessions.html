@@ -44,7 +44,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../../_static/documentation_options.js?v=a58bc63e"></script>
+    <script src="../../_static/documentation_options.js?v=938c9ccc"></script>
     <script src="../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/design-tabs.js?v=f930bc37"></script>
@@ -54,7 +54,7 @@
     <link rel="icon" href="../../_static/light-logo-niu.png"/>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
-    <link rel="next" title="Managing configs" href="02_managing_configs.html" />
+    <link rel="next" title="Supported Preprocessing Steps" href="01a_supported_preprocessing_steps.html" />
     <link rel="prev" title="Tutorials" href="index.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
@@ -120,7 +120,7 @@
   
   
   
-    <p class="title logo__title">spikewrap v0.1.1</p>
+    <p class="title logo__title">spikewrap v0.2.0</p>
   
 </a></div>
     
@@ -360,8 +360,11 @@
   <p class="bd-links__title" role="heading" aria-level="1">Section Navigation</p>
   <div class="bd-toc-item navbar-nav"><ul class="current nav bd-sidenav">
 <li class="toctree-l1 current active"><a class="current reference internal" href="#">Preprocessing Sessions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="01a_supported_preprocessing_steps.html">Supported Preprocessing Steps</a></li>
 <li class="toctree-l1"><a class="reference internal" href="02_managing_configs.html">Managing <code class="docutils literal notranslate"><span class="pre">configs</span></code></a></li>
 <li class="toctree-l1"><a class="reference internal" href="03_running_with_slurm.html">Running with SLURM</a></li>
+<li class="toctree-l1"><a class="reference internal" href="04_slow_spike_sorting.html">Spike Sorting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="05_sync_channel.html">Sync Channel Tutorial</a></li>
 </ul>
 </div>
 </nav></div>
@@ -448,6 +451,9 @@ the preprocessing and visualisation of a dataset.</p>
 <p><code class="docutils literal notranslate"><span class="pre">spikewrap</span></code>’s features are currently limited. See the <a class="reference internal" href="../../community/feature_roadmap.html#roadmap"><span class="std std-ref">Roadmap</span></a>
 for planned features.</p>
 </div>
+<p>Under the hood, spikewrap uses SpikeInterface to perform all preprocessing steps.
+See the <a class="reference internal" href="01a_supported_preprocessing_steps.html#supported-preprocessing-tutorial"><span class="std std-ref">Supported Preprocessing Steps</span></a> for details
+on supported functionality.</p>
 <section id="loading-data">
 <h2>Loading Data<a class="headerlink" href="#loading-data" title="Link to this heading">#</a></h2>
 <p>To load a session data, we must instantiate <a class="reference internal" href="../../api_index.html#spikewrap.Session" title="spikewrap.Session"><code class="xref py py-class docutils literal notranslate"><span class="pre">spikewrap.Session</span></code></a> object,
@@ -515,28 +521,10 @@ object. This probe will be set on all runs.</p>
     <span class="n">run_names</span><span class="o">=</span><span class="s2">&quot;all&quot;</span>
 <span class="p">)</span>
 
-<a href="../../api_index.html#spikewrap.Session.load_raw_data" title="spikewrap.Session.load_raw_data" class="sphx-glr-backref-module-spikewrap sphx-glr-backref-type-py-method"><span class="n">session</span><span class="o">.</span><span class="n">load_raw_data</span></a><span class="p">()</span>
-
-<a href="../../api_index.html#spikewrap.Session.preprocess" title="spikewrap.Session.preprocess" class="sphx-glr-backref-module-spikewrap sphx-glr-backref-type-py-method"><span class="n">session</span><span class="o">.</span><span class="n">preprocess</span></a><span class="p">(</span><span class="n">configs</span><span class="o">=</span><span class="s2">&quot;neuropixels+kilosort2_5&quot;</span><span class="p">)</span>
+<a href="../../api_index.html#spikewrap.Session.preprocess" title="spikewrap.Session.preprocess" class="sphx-glr-backref-module-spikewrap sphx-glr-backref-type-py-method"><span class="n">session</span><span class="o">.</span><span class="n">preprocess</span></a><span class="p">(</span><span class="n">configs</span><span class="o">=</span><span class="s2">&quot;neuropixels+kilosort2_5&quot;</span><span class="p">,</span> <span class="n">concat_runs</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 </pre></div>
 </div>
-<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>/home/runner/work/spikewrap/spikewrap/spikewrap/process/_loading.py:139: UserWarning: The sessions or runs provided for are not in creation datetime order.
-They will be concatenated in the order provided, as:
-[&#39;run-002_g0_imec0&#39;, &#39;run-001_g0_imec0&#39;].
-  warnings.warn(
-
-Loading runs from session path: /home/runner/work/spikewrap/spikewrap/spikewrap/examples/example_tiny_data/spikeglx/rawdata/sub-001
-
-Loading run: run-002_g0_imec0
-
-Loading data from path: /home/runner/work/spikewrap/spikewrap/spikewrap/examples/example_tiny_data/spikeglx/rawdata/sub-001/ses-001/ephys/run-002_g0_imec0
-
-Loading run: run-001_g0_imec0
-
-Loading data from path: /home/runner/work/spikewrap/spikewrap/spikewrap/examples/example_tiny_data/spikeglx/rawdata/sub-001/ses-001/ephys/run-001_g0_imec0
-
-
-The preprocessing options are: {
+<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>The preprocessing options are: {
     &quot;1&quot;: [
         &quot;phase_shift&quot;,
         {}
@@ -556,19 +544,30 @@ The preprocessing options are: {
         }
     ]
 }
+/home/runner/work/spikewrap/spikewrap/spikewrap/process/_loading.py:147: UserWarning: The sessions or runs provided for are not in creation datetime order.
+They will be concatenated in the order provided, as:
+[&#39;run-002_g0_imec0&#39;, &#39;run-001_g0_imec0&#39;].
+  warnings.warn(
 
 Loading data from path: /home/runner/work/spikewrap/spikewrap/spikewrap/examples/example_tiny_data/spikeglx/rawdata/sub-001/ses-001/ephys/run-002_g0_imec0
 
 Loading data from path: /home/runner/work/spikewrap/spikewrap/spikewrap/examples/example_tiny_data/spikeglx/rawdata/sub-001/ses-001/ephys/run-001_g0_imec0
+
+Concatenating raw recordings in the following order:[&#39;run-002_g0_imec0&#39;, &#39;run-001_g0_imec0&#39;]
 </pre></div>
 </div>
-<p>Due to the magic of SpikeInterface, all data loading is ‘lazy’ and will be very fast.
-Note that <strong>nothing is written to disk at this stage</strong>.</p>
+<p>Due to the magic of SpikeInterface, data loading and most preprocessing functions
+are ‘lazy’ and will be very fast. Note that <strong>nothing is written to disk at this stage</strong>.</p>
 <p>We can inspect the detected run names with:</p>
-<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="nb">print</span><span class="p">(</span><a href="../../api_index.html#spikewrap.Session.get_run_names" title="spikewrap.Session.get_run_names" class="sphx-glr-backref-module-spikewrap sphx-glr-backref-type-py-method"><span class="n">session</span><span class="o">.</span><span class="n">get_run_names</span></a><span class="p">())</span>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="nb">print</span><span class="p">(</span><a href="../../api_index.html#spikewrap.Session.get_raw_run_names" title="spikewrap.Session.get_raw_run_names" class="sphx-glr-backref-module-spikewrap sphx-glr-backref-type-py-method"><span class="n">session</span><span class="o">.</span><span class="n">get_raw_run_names</span></a><span class="p">())</span>
+
+<span class="c1"># and the names of the preprocessed runs (which may change to &quot;concat_run&quot;</span>
+<span class="c1"># if the runs are concatenated prior to preprocessing:</span>
+<span class="nb">print</span><span class="p">(</span><a href="../../api_index.html#spikewrap.Session.get_preprocessed_run_names" title="spikewrap.Session.get_preprocessed_run_names" class="sphx-glr-backref-module-spikewrap sphx-glr-backref-type-py-method"><span class="n">session</span><span class="o">.</span><span class="n">get_preprocessed_run_names</span></a><span class="p">())</span>
 </pre></div>
 </div>
 <div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>[&#39;run-002_g0_imec0&#39;, &#39;run-001_g0_imec0&#39;]
+[&#39;concat_run&#39;]
 </pre></div>
 </div>
 </section>
@@ -612,19 +611,22 @@ The sorting options are: {
 </pre></div>
 </div>
 <p>Otherwise, we can define a dictionary with the steps to pass to <a class="reference internal" href="../../api_index.html#spikewrap.Session.preprocess" title="spikewrap.Session.preprocess"><code class="xref py py-class docutils literal notranslate"><span class="pre">spikewrap.Session.preprocess()</span></code></a>.
-All preprocess steps are defined with their underlying SpikeInterface function name.</p>
+Preprocess steps generally take the underlying SpikeInterface function name and parameters, see
+<a class="reference internal" href="01a_supported_preprocessing_steps.html#supported-preprocessing-tutorial"><span class="std std-ref">Supported Preprocessing Steps</span></a> for details.</p>
 <div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">configs</span> <span class="o">=</span> <span class="p">{</span>
     <span class="s2">&quot;preprocessing&quot;</span><span class="p">:</span> <span class="p">{</span>
-        <span class="s2">&quot;1&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;bandpass_filter&quot;</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;freq_min&quot;</span><span class="p">:</span> <span class="mi">300</span><span class="p">,</span> <span class="s2">&quot;freq_max&quot;</span><span class="p">:</span> <span class="mi">6000</span><span class="p">}],</span>
-        <span class="s2">&quot;2&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;common_reference&quot;</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;operator&quot;</span><span class="p">:</span> <span class="s2">&quot;median&quot;</span><span class="p">}],</span>
+        <span class="s2">&quot;1&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;phase_shift&quot;</span><span class="p">,</span> <span class="p">{}],</span>
+        <span class="s2">&quot;2&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;bandpass_filter&quot;</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;freq_min&quot;</span><span class="p">:</span> <span class="mi">300</span><span class="p">,</span> <span class="s2">&quot;freq_max&quot;</span><span class="p">:</span> <span class="mi">6000</span><span class="p">}],</span>
+        <span class="s2">&quot;3&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;common_reference&quot;</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;operator&quot;</span><span class="p">:</span> <span class="s2">&quot;median&quot;</span><span class="p">}],</span>
     <span class="p">}</span>
 <span class="p">}</span>
 </pre></div>
 </div>
 <p><a class="reference internal" href="../../api_index.html#spikewrap.Session.preprocess" title="spikewrap.Session.preprocess"><code class="xref py py-class docutils literal notranslate"><span class="pre">spikewrap.Session.preprocess()</span></code></a> will also accept a dictionary with the top-level omitted</p>
 <div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">pp_steps</span> <span class="o">=</span> <span class="p">{</span>
-    <span class="s2">&quot;1&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;bandpass_filter&quot;</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;freq_min&quot;</span><span class="p">:</span> <span class="mi">300</span><span class="p">,</span> <span class="s2">&quot;freq_max&quot;</span><span class="p">:</span> <span class="mi">6000</span><span class="p">}],</span>
-    <span class="s2">&quot;2&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;common_reference&quot;</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;operator&quot;</span><span class="p">:</span> <span class="s2">&quot;median&quot;</span><span class="p">}],</span>
+    <span class="s2">&quot;1&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;phase_shift&quot;</span><span class="p">,</span> <span class="p">{}],</span>
+    <span class="s2">&quot;2&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;bandpass_filter&quot;</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;freq_min&quot;</span><span class="p">:</span> <span class="mi">300</span><span class="p">,</span> <span class="s2">&quot;freq_max&quot;</span><span class="p">:</span> <span class="mi">6000</span><span class="p">}],</span>
+    <span class="s2">&quot;3&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;common_reference&quot;</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;operator&quot;</span><span class="p">:</span> <span class="s2">&quot;median&quot;</span><span class="p">}],</span>
 <span class="p">}</span>
 </pre></div>
 </div>
@@ -646,29 +648,25 @@ All preprocess steps are defined with their underlying SpikeInterface function n
 </div>
 <div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>The preprocessing options are: {
     &quot;1&quot;: [
+        &quot;phase_shift&quot;,
+        {}
+    ],
+    &quot;2&quot;: [
         &quot;bandpass_filter&quot;,
         {
             &quot;freq_max&quot;: 6000,
             &quot;freq_min&quot;: 300
         }
     ],
-    &quot;2&quot;: [
+    &quot;3&quot;: [
         &quot;common_reference&quot;,
         {
             &quot;operator&quot;: &quot;median&quot;
         }
     ]
 }
-/home/runner/work/spikewrap/spikewrap/spikewrap/process/_loading.py:139: UserWarning: The sessions or runs provided for are not in creation datetime order.
-They will be concatenated in the order provided, as:
-[&#39;run-002_g0_imec0&#39;, &#39;run-001_g0_imec0&#39;].
-  warnings.warn(
 
-Loading data from path: /home/runner/work/spikewrap/spikewrap/spikewrap/examples/example_tiny_data/spikeglx/rawdata/sub-001/ses-001/ephys/run-002_g0_imec0
-
-Loading data from path: /home/runner/work/spikewrap/spikewrap/spikewrap/examples/example_tiny_data/spikeglx/rawdata/sub-001/ses-001/ephys/run-001_g0_imec0
-
-Concatenating runs in the following order:[&#39;run-002_g0_imec0&#39;, &#39;run-001_g0_imec0&#39;]
+Concatenating raw recordings in the following order:[&#39;run-002_g0_imec0&#39;, &#39;run-001_g0_imec0&#39;]
 
 Split run: concat_run by shank. There are 2 shanks.
 </pre></div>
@@ -687,7 +685,7 @@ configurations and arguments, then re-plotting. This can be performed in a
 <span class="p">)</span>
 </pre></div>
 </div>
-<img src="../../_images/sphx_glr_01_preprocessing_sessions_001.png" srcset="../../_images/sphx_glr_01_preprocessing_sessions_001.png" alt="Session: ses-001, Run: concat_run Shank: 1, Session: ses-001, Run: concat_run Shank: 2" class = "sphx-glr-single-img"/><p><code class="docutils literal notranslate"><span class="pre">plots</span></code> (a <code class="docutils literal notranslate"><span class="pre">dict</span></code> of matplotlib figures) contains the figures for (optional) further editing.</p>
+<img src="../../_images/sphx_glr_01_preprocessing_sessions_001.png" srcset="../../_images/sphx_glr_01_preprocessing_sessions_001.png" alt="Session: ses-001, Run: concat_run, shank_0, Session: ses-001, Run: concat_run, shank_1" class = "sphx-glr-single-img"/><p><code class="docutils literal notranslate"><span class="pre">plots</span></code> (a <code class="docutils literal notranslate"><span class="pre">dict</span></code> of matplotlib figures) contains the figures for (optional) further editing.</p>
 <div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="n">plots</span><span class="p">)</span>
 </pre></div>
 </div>
@@ -703,7 +701,7 @@ configurations and arguments, then re-plotting. This can be performed in a
 <span class="c1"># This is currently quite verbose. It is the second preprocessing</span>
 <span class="c1"># step, second element of the list [&quot;function_name&quot;, {function_kwargs...}]</span>
 <span class="c1"># (see processing dictionary defined above)</span>
-<span class="n">pp_attempt_2</span><span class="p">[</span><span class="s2">&quot;preprocessing&quot;</span><span class="p">][</span><span class="s2">&quot;2&quot;</span><span class="p">][</span><span class="mi">1</span><span class="p">][</span><span class="s2">&quot;operator&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;average&quot;</span>
+<span class="n">pp_attempt_2</span><span class="p">[</span><span class="s2">&quot;preprocessing&quot;</span><span class="p">][</span><span class="s2">&quot;3&quot;</span><span class="p">][</span><span class="mi">1</span><span class="p">][</span><span class="s2">&quot;operator&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;average&quot;</span>
 
 <a href="../../api_index.html#spikewrap.Session.preprocess" title="spikewrap.Session.preprocess" class="sphx-glr-backref-module-spikewrap sphx-glr-backref-type-py-method"><span class="n">session</span><span class="o">.</span><span class="n">preprocess</span></a><span class="p">(</span>
     <span class="n">configs</span><span class="o">=</span><span class="n">pp_attempt_2</span><span class="p">,</span>
@@ -722,27 +720,23 @@ configurations and arguments, then re-plotting. This can be performed in a
 </ul>
 <div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>The preprocessing options are: {
     &quot;1&quot;: [
+        &quot;phase_shift&quot;,
+        {}
+    ],
+    &quot;2&quot;: [
         &quot;bandpass_filter&quot;,
         {
             &quot;freq_max&quot;: 6000,
             &quot;freq_min&quot;: 300
         }
     ],
-    &quot;2&quot;: [
+    &quot;3&quot;: [
         &quot;common_reference&quot;,
         {
             &quot;operator&quot;: &quot;average&quot;
         }
     ]
 }
-/home/runner/work/spikewrap/spikewrap/spikewrap/process/_loading.py:139: UserWarning: The sessions or runs provided for are not in creation datetime order.
-They will be concatenated in the order provided, as:
-[&#39;run-002_g0_imec0&#39;, &#39;run-001_g0_imec0&#39;].
-  warnings.warn(
-
-Loading data from path: /home/runner/work/spikewrap/spikewrap/spikewrap/examples/example_tiny_data/spikeglx/rawdata/sub-001/ses-001/ephys/run-002_g0_imec0
-
-Loading data from path: /home/runner/work/spikewrap/spikewrap/spikewrap/examples/example_tiny_data/spikeglx/rawdata/sub-001/ses-001/ephys/run-001_g0_imec0
 /opt/hostedtoolcache/Python/3.11.11/x64/lib/python3.11/site-packages/spikeinterface/widgets/traces.py:150: UserWarning: You have selected a time after the end of the segment. The range will be clipped to 0.4999999999999989
   warnings.warn(
 /opt/hostedtoolcache/Python/3.11.11/x64/lib/python3.11/site-packages/spikeinterface/widgets/traces.py:150: UserWarning: You have selected a time after the end of the segment. The range will be clipped to 0.4999999999999989
@@ -758,30 +752,20 @@ chosen settings, you can run:</p>
 </pre></div>
 </div>
 <div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>Saving data for: run-002_g0_imec0...
-
-`overwrite=True`, so deleting all files and folders (except for slurm_logs) at the path:
-/home/runner/work/spikewrap/spikewrap/spikewrap/examples/example_tiny_data/spikeglx/derivatives/sub-001/ses-001/ephys/run-002_g0_imec0
-
-Saving sync channel for: run-002_g0_imec0...
 write_binary_recording
 engine=process - n_jobs=4 - samples_per_chunk=60,000 - chunk_memory=43.95 MiB - total_memory=175.78 MiB - chunk_duration=2.00s
 
 write_binary_recording (workers: 1 processes):   0%|          | 0/1 [00:00&lt;?, ?it/s]
-write_binary_recording (workers: 1 processes): 100%|██████████| 1/1 [00:00&lt;00:00,  3.31it/s]
-write_binary_recording (workers: 1 processes): 100%|██████████| 1/1 [00:00&lt;00:00,  3.31it/s]
+write_binary_recording (workers: 1 processes): 100%|██████████| 1/1 [00:00&lt;00:00,  2.01it/s]
+write_binary_recording (workers: 1 processes): 100%|██████████| 1/1 [00:00&lt;00:00,  2.01it/s]
 
 Saving data for: run-001_g0_imec0...
-
-`overwrite=True`, so deleting all files and folders (except for slurm_logs) at the path:
-/home/runner/work/spikewrap/spikewrap/spikewrap/examples/example_tiny_data/spikeglx/derivatives/sub-001/ses-001/ephys/run-001_g0_imec0
-
-Saving sync channel for: run-001_g0_imec0...
 write_binary_recording
 engine=process - n_jobs=4 - samples_per_chunk=60,000 - chunk_memory=43.95 MiB - total_memory=175.78 MiB - chunk_duration=2.00s
 
 write_binary_recording (workers: 1 processes):   0%|          | 0/1 [00:00&lt;?, ?it/s]
-write_binary_recording (workers: 1 processes): 100%|██████████| 1/1 [00:00&lt;00:00,  3.29it/s]
-write_binary_recording (workers: 1 processes): 100%|██████████| 1/1 [00:00&lt;00:00,  3.28it/s]
+write_binary_recording (workers: 1 processes): 100%|██████████| 1/1 [00:00&lt;00:00,  2.14it/s]
+write_binary_recording (workers: 1 processes): 100%|██████████| 1/1 [00:00&lt;00:00,  2.13it/s]
 </pre></div>
 </div>
 <div class="admonition attention">
@@ -815,7 +799,7 @@ session has 2 runs (which are not concatenated),
 <section id="output-data-organisation">
 <h3>Output data organisation<a class="headerlink" href="#output-data-organisation" title="Link to this heading">#</a></h3>
 <p>See the</p>
-<p class="sphx-glr-timing"><strong>Total running time of the script:</strong> (0 minutes 3.586 seconds)</p>
+<p class="sphx-glr-timing"><strong>Total running time of the script:</strong> (0 minutes 4.469 seconds)</p>
 <div class="sphx-glr-footer sphx-glr-footer-example docutils container" id="sphx-glr-download-gallery-builds-tutorials-01-preprocessing-sessions-py">
 <div class="binder-badge docutils container">
 <a class="reference external image-reference" href="https://mybinder.org/v2/gh/neuroinformatics-unit/spikewrap/gh-pages?filepath=notebooks/gallery_builds/tutorials/01_preprocessing_sessions.ipynb"><img alt="Launch binder" src="../../_images/binder_badge_logo2.svg" style="width: 150px;" />
@@ -856,11 +840,11 @@ session has 2 runs (which are not concatenated),
       </div>
     </a>
     <a class="right-next"
-       href="02_managing_configs.html"
+       href="01a_supported_preprocessing_steps.html"
        title="next page">
       <div class="prev-next-info">
         <p class="prev-next-subtitle">next</p>
-        <p class="prev-next-title">Managing <code class="docutils literal notranslate"><span class="pre">configs</span></code></p>
+        <p class="prev-next-title">Supported Preprocessing Steps</p>
       </div>
       <i class="fa-solid fa-angle-right"></i>
     </a>
@@ -919,7 +903,7 @@ session has 2 runs (which are not concatenated),
     <div class="footer-items__start">
       
         <div class="footer-item"><p class="sphinx-version">
-    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.2.1.
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.1.3.
     <br/>
     </p>
     <p class="theme-version">
