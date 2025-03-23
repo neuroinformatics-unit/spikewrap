@@ -15,14 +15,13 @@ if __name__ == "__main__":
         concat_runs=False,
     )
 
-    if False:
-        session.plot_preprocessed(
-            run_idx="all",
-            mode="map",
-            show_channel_ids=False,
-            show=True,
-            figsize=(12, 8),
-        )
+    session.plot_preprocessed(
+        run_idx="all",
+        mode="map",
+        show_channel_ids=False,
+        show=True,
+        figsize=(12, 8),
+    )
 
     session.save_preprocessed(
         overwrite=True,
@@ -31,15 +30,11 @@ if __name__ == "__main__":
         chunk_duration_s=0.1,
     )
 
-    print("Waiting for slurm")
-    session.wait_for_slurm()
-
-    if False:
-        session.sort(
-            configs="neuropixels+mountainsort5",
-            run_sorter_method="local",
-            per_shank=False,
-            concat_runs=False,
-            overwrite=True,
-            slurm=False,
-        )
+    session.sort(
+        configs="neuropixels+mountainsort5",
+        run_sorter_method="local",
+        per_shank=False,
+        concat_runs=False,
+        overwrite=True,
+        slurm=False,
+    )
