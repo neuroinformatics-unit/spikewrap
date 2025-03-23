@@ -247,7 +247,7 @@ class RawRun:
                 "slurm": False,
             },
             log_base_path=self._sync_output_path.parent,
-            suffix_name="_sync"
+            suffix_name="_sync",
         )
 
         return job

@@ -11,8 +11,8 @@ import spikeinterface
 import spikeinterface.full as si
 from spikeinterface.sorters import run_sorter
 from spikeinterface.sorters.runsorter import SORTER_DOCKER_MAP
-from spikewrap.configs._backend import canon
 
+from spikewrap.configs._backend import canon
 from spikewrap.utils import _checks, _managing_sorters, _slurm, _utils
 
 
@@ -137,7 +137,7 @@ class BaseSortingRun:
                 "slurm": False,
             },
             log_base_path=self._output_path.parent,
-            suffix_name="_sort"
+            suffix_name="_sort",
         )
 
         return job

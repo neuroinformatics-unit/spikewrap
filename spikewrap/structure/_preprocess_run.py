@@ -247,7 +247,7 @@ class PreprocessedRun:
                 "slurm": False,
             },
             log_base_path=self._output_path.parent,
-            suffix_name="_prepro"
+            suffix_name="_prepro",
         )
 
         return job

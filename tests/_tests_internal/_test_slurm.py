@@ -1,15 +1,12 @@
 from __future__ import annotations
 
 import shutil
-from pathlib import Path
 
+import numpy as np
 import pytest
+import spikeinterface.full as si
 
 import spikewrap as sw
-import numpy as np
-import spikeinterface.full as si
-from sympy.physics.units import years
-
 
 # IN PROGRESS
 # TODO
@@ -18,6 +15,7 @@ from sympy.physics.units import years
 # 3) Only preprocessing performs an equality test, all other
 #    tests just check it ran successfully. Extend equality checks
 #    to all other tests.
+
 
 class TestSlurmInternal:
 
@@ -32,8 +30,7 @@ class TestSlurmInternal:
         yield
 
     def test_slurm_sync(self, teardown_derivatives_fixture):
-        """
-        """
+        """ """
         session = sw.Session(
             subject_path=sw.get_example_data_path() / "rawdata" / "sub-001",
             session_name="ses-001",
@@ -47,7 +44,6 @@ class TestSlurmInternal:
 
         session.save_sync_channel(slurm=slurm_opts)
 
-
     def test_slurm_prepro(self, teardown_derivatives_fixture):
         """ """
         session = sw.Session(
@@ -56,16 +52,12 @@ class TestSlurmInternal:
             file_format="spikeglx",
         )
         session.preprocess(
-            configs="neuropixels+kilosort2_5",
-            per_shank=False,
-            concat_runs=False
+            configs="neuropixels+kilosort2_5", per_shank=False, concat_runs=False
         )
 
         slurm_opts = sw.default_slurm_options("cpu")
         slurm_opts["wait"] = True
         session.save_preprocessed(overwrite=True, n_jobs=6, slurm=slurm_opts)
-
-        import spikeinterface.full as si
 
         for run_idx in range(2):
 
@@ -73,16 +65,22 @@ class TestSlurmInternal:
 
             out_path_run = si.load_extractor(run_path / "preprocessed")
 
-            assert np.array_equal(out_path_run.get_traces(), session._pp_runs[run_idx]._preprocessed["grouped"]["3-raw-phase_shift-bandpass_filter-common_reference"].get_traces())
+            assert np.array_equal(
+                out_path_run.get_traces(),
+                session._pp_runs[run_idx]
+                ._preprocessed["grouped"][
+                    "3-raw-phase_shift-bandpass_filter-common_reference"
+                ]
+                .get_traces(),
+            )
 
             slurm_folder = list((run_path.parent / "slurm_logs").glob("*"))[-1]
             slurm_file = list(slurm_folder.glob("*.out"))[0]
 
-            with open(slurm_file, 'r') as file:
+            with open(slurm_file, "r") as file:
                 content = file.read()
 
             assert "Exiting after successful completion" in content
-
 
     def test_slurm_sort(self, teardown_derivatives_fixture):
         """"""
@@ -92,9 +90,7 @@ class TestSlurmInternal:
             file_format="spikeglx",
         )
         session.preprocess(
-            configs="neuropixels+mountainsort5",
-            per_shank=False,
-            concat_runs=False
+            configs="neuropixels+mountainsort5", per_shank=False, concat_runs=False
         )
 
         slurm_opts = sw.default_slurm_options("cpu")
@@ -105,15 +101,15 @@ class TestSlurmInternal:
         )
         config_dict["sorting"]["mountainsort5"] = {"whiten": False}
 
-        session.sort(
-            configs=config_dict,
-            overwrite=True,
-            slurm=slurm_opts
-        )
+        session.sort(configs=config_dict, overwrite=True, slurm=slurm_opts)
 
         # Check output exists.
         for run_idx in range(2):
-            assert (session._sorting_runs[run_idx]._output_path / "sorter_output" / "firings.npz").is_file()
+            assert (
+                session._sorting_runs[run_idx]._output_path
+                / "sorter_output"
+                / "firings.npz"
+            ).is_file()
 
     def test_run_double_job_in_slurm(self, teardown_derivatives_fixture):
         """"""
@@ -125,31 +121,27 @@ class TestSlurmInternal:
 
         def wrap_for_slurm():
             session.preprocess(
-                configs="neuropixels+mountainsort5",
-                per_shank=False,
-                concat_runs=False
+                configs="neuropixels+mountainsort5", per_shank=False, concat_runs=False
             )
 
             session.save_preprocessed(overwrite=True, n_jobs=6, slurm=False)
 
             session.sort(
-                configs="neuropixels+mountainsort5",
-                overwrite=True,
-                slurm=False
+                configs="neuropixels+mountainsort5", overwrite=True, slurm=False
             )
 
         slurm_opts = sw.default_slurm_options("cpu")
         slurm_opts["wait"] = True
 
-        sw.run_in_slurm(
-            slurm_opts,
-            wrap_for_slurm,
-            session.get_output_path()
-        )
+        sw.run_in_slurm(slurm_opts, wrap_for_slurm, session.get_output_path())
 
         # Check output exists.
         session.load_raw_data()
 
-        assert (session.get_output_path() / session.get_raw_run_names()[0] / "sorting").is_dir()
+        assert (
+            session.get_output_path() / session.get_raw_run_names()[0] / "sorting"
+        ).is_dir()
 
-        assert (session.get_output_path() / session.get_raw_run_names()[0] / "preprocessed").is_dir()
+        assert (
+            session.get_output_path() / session.get_raw_run_names()[0] / "preprocessed"
+        ).is_dir()

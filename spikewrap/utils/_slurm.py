@@ -14,7 +14,12 @@ from spikewrap.utils import _utils
 from spikewrap.utils._checks import _system_call_success
 
 
-def run_in_slurm(slurm_opts: None | dict, func_to_run: Callable, log_base_path: Path, suffix_name: str | None = None):
+def run_in_slurm(
+    slurm_opts: None | dict,
+    func_to_run: Callable,
+    log_base_path: Path,
+    suffix_name: str | None = None,
+):
     """
     Run a function in a slurm job.
 
@@ -47,7 +52,7 @@ def _run_in_slurm_core(
     func_to_run: Callable,
     func_opts: dict,
     log_base_path: Path,
-    suffix_name: str | None = None
+    suffix_name: str | None = None,
 ):
     """
     Run a function in SLURM using submitit.
