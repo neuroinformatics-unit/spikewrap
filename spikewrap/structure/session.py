@@ -152,9 +152,7 @@ class Session:
 
             preprocessed_run = run.preprocess(pp_steps, per_shank)
 
-            orig_run_names = (  # TODO: this is not nice :(
-                run._orig_run_names if isinstance(run, ConcatRawRun) else None
-            )
+            orig_run_names = run._orig_run_names
 
             self._pp_runs.append(
                 PreprocessedRun(

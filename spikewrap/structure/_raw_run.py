@@ -300,6 +300,7 @@ class SeparateRawRun(RawRun):
     ):
         self._parent_input_path: Path
         self._probe = probe
+        self._orig_run_names = None
 
         super(SeparateRawRun, self).__init__(
             parent_input_path, parent_ses_name, run_name, file_format, sync_output_path
