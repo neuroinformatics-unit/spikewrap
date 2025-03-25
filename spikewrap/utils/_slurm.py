@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 import datetime
+import logging
+import pickle
 import subprocess
 from pathlib import Path
 from typing import Callable
@@ -12,6 +14,39 @@ from spikewrap.configs.hpc import (
 )
 from spikewrap.utils import _utils
 from spikewrap.utils._checks import _system_call_success
+
+
+def verify_pickling(obj: object) -> tuple[bool, str]:
+    """
+    Verify that an object can be correctly pickled and unpickled.
+
+    Parameters
+    ----------
+    obj
+        The object to test pickling on
+
+    Returns
+    -------
+    success : bool
+        Whether pickling and unpickling succeeded
+    message : str
+        Description of any errors that occurred
+    """
+    try:
+        # Try pickling
+        pickled = pickle.dumps(obj)
+
+        # Try unpickling
+        unpickled = pickle.loads(pickled)
+
+        # Basic equality check
+        if obj.__dict__ != unpickled.__dict__:
+            return False, "Unpickled object differs from original"
+
+        return True, "Pickling successful"
+
+    except Exception as e:
+        return False, f"Pickling failed: {str(e)}"
 
 
 def run_in_slurm(
@@ -78,6 +113,14 @@ def _run_in_slurm_core(
     """
     if not _is_slurm_installed():
         raise RuntimeError("Cannot run with slurm, slurm is not found on this system.")
+
+    # Verify pickling of function arguments
+    for arg_name, arg_value in func_opts.items():
+        success, message = verify_pickling(arg_value)
+        if not success:
+            logging.warning(
+                f"Potential pickling issue with argument {arg_name}: {message}"
+            )
 
     used_slurm_opts = default_slurm_options()
 
