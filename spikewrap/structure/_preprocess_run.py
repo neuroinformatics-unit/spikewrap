@@ -1,19 +1,20 @@
 from __future__ import annotations
 
 import shutil
+from pathlib import Path
 from typing import TYPE_CHECKING, Literal
 
 import matplotlib.pyplot as plt
 import yaml
 
 if TYPE_CHECKING:
-    from pathlib import Path
 
     import matplotlib
     import submitit
 
 
 import spikeinterface.full as si
+from probeinterface.plotting import plot_probe
 
 from spikewrap.configs._backend import canon
 from spikewrap.utils import _slurm, _utils
@@ -70,6 +71,34 @@ class PreprocessedRun:
         self._orig_run_names = orig_run_names
 
         self._preprocessed = preprocessed_data
+
+    def get_probe(self) -> dict:
+        """
+        Retrieve the probe configuration(s) used in this preprocessed run.
+
+        Returns
+        -------
+        dict
+            A dictionary where keys are shank identifiers (e.g., "shank_0", "grouped")
+            and values are `probeinterface.Probe` objects for each shank.
+
+        Raises
+        ------
+        RuntimeError
+            If no preprocessed data is available.
+        """
+        if not self._preprocessed:
+            raise RuntimeError(f"No preprocessed data found for run {self._run_name}.")
+
+        probes = {}
+        for shank_name, preprocessed_dict in self._preprocessed.items():
+            recording, _ = _utils._get_dict_value_from_step_num(
+                preprocessed_dict, "last"
+            )
+            probe = recording.get_probe()
+            probes[shank_name] = probe
+
+        return probes
 
     # ---------------------------------------------------------------------------
     # Public Functions
@@ -259,36 +288,23 @@ class PreprocessedRun:
 
         return job
 
-    def save_probe_plot(self, output_folder: str | None = None) -> None:
+    def save_probe_plot(self, output_folder=None, figsize=(10, 6)) -> None:
         """
-        Save a plot of the probe associated with this run's preprocessed recording.
-        The probe is obtained via get_probe() from the final preprocessed recording.
-        The plot is generated using probeinterface's plot_probe function and saved
-        as a PNG in a subfolder (by default, within the run folder).
-
-        Parameters:
-            output_folder (str, optional): Folder to save the probe plot.
-                Defaults to self._output_path (the run folder).
+        Save the probe plot(s) for this run to the disk.
+        Handles both grouped and per-shank formats.
         """
-        try:
-            _, first_preprocessed_dict = next(iter(self._preprocessed.items()))
-        except StopIteration:
-            _utils.message_user("No preprocessed data available to retrieve the probe.")
-            return
+        probes = self.get_probe()
 
-        preprocessed_recording, _ = _utils._get_dict_value_from_step_num(
-            first_preprocessed_dict, "last"
+        n_shanks = len(probes)
+        fig, axes = plt.subplots(
+            1, n_shanks, figsize=(figsize[0] * n_shanks, figsize[1])
         )
+        if n_shanks == 1:
+            axes = [axes]
 
-        probe = preprocessed_recording.get_probe()
-        if probe is None:
-            _utils.message_user("No probe information available in the recording.")
-            return
-
-        from probeinterface.plotting import plot_probe
-
-        fig, ax = plt.subplots(figsize=(10, 6))
-        plot_probe(probe, ax=ax)
+        for ax, (shank_id, probe) in zip(axes, probes.items()):
+            plot_probe(probe, ax=ax)
+            ax.set_title(shank_id)
 
         out_folder = Path(output_folder) if output_folder else self._output_path
         probe_plots_folder = out_folder / "probe_plots"

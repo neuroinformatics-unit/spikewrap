@@ -12,8 +12,10 @@ if TYPE_CHECKING:
 import time
 from pathlib import Path
 
+import matplotlib.pyplot as plt
 import numpy as np
 import spikeinterface.full as si
+from probeinterface.plotting import plot_probe
 
 from spikewrap.configs import config_utils
 from spikewrap.configs._backend import canon
@@ -265,6 +267,71 @@ class Session:
             all_figs[run._run_name] = fig
 
         return all_figs
+
+    def plot_probe(self, show=True, output_folder=None, figsize=(10, 6)):
+        """
+        Plot the probe geometry for this session using data from preprocessed runs.
+
+        Ensures consistency across all runs before plotting. If multiple shanks
+        are present, each will be shown in its own subplot.
+
+        Parameters
+        ----------
+        show : bool, optional
+            If True, displays the plot with `plt.show()`. Default is True.
+        output_folder : Path or None, optional
+            Folder where the plot will be saved. Defaults to the session's output path.
+        figsize : tuple[int, int], optional
+            Figure size in inches per shank (width, height). Default is (10, 6).
+
+        Returns
+        -------
+        matplotlib.Figure
+            The generated figure object containing the probe plot.
+
+        Raises
+        ------
+        RuntimeError
+            If no preprocessed runs are available.
+        ValueError
+            If probes differ across runs or shank structure mismatches.
+        """
+        if not self._pp_runs:
+            raise RuntimeError("No runs available in this session.")
+
+        probe_dicts = [run.get_probe() for run in self._pp_runs]
+        first_probe_dict = probe_dicts[0]
+
+        for other_probe_dict in probe_dicts[1:]:
+            if other_probe_dict.keys() != first_probe_dict.keys():
+                raise ValueError("Mismatch in shank structure across runs.")
+            for key in first_probe_dict:
+                if not first_probe_dict[key].is_equal(other_probe_dict[key]):
+                    raise ValueError("Probes differ across runs for shank: " + key)
+
+        n_shanks = len(first_probe_dict)
+        fig, axes = plt.subplots(
+            1, n_shanks, figsize=(figsize[0] * n_shanks, figsize[1])
+        )
+        if n_shanks == 1:
+            axes = [axes]
+
+        for ax, (shank_id, probe) in zip(axes, first_probe_dict.items()):
+            plot_probe(probe, ax=ax)
+            ax.set_title(shank_id)
+
+        if show:
+            plt.show()
+
+        out_folder = Path(output_folder) if output_folder else self._output_path
+        probe_plots_folder = out_folder / "probe_plots"
+        probe_plots_folder.mkdir(parents=True, exist_ok=True)
+
+        plot_filename = probe_plots_folder / "probe_plot.png"
+        fig.savefig(str(plot_filename))
+        _utils.message_user(f"Probe plot saved to {plot_filename}")
+        plt.close(fig)
+        return fig
 
     def sort(
         self,
@@ -667,49 +734,6 @@ class Session:
             self._ses_name,
             self._file_format,
         )
-
-    def plot_probe(
-        self, show: bool = True, figsize: tuple[int, int] = (10, 6)
-    ) -> matplotlib.figure.Figure | None:
-        """
-        Plot the probe associated with this session. This function checks that all runs
-        have the same probe and then plots it using probeinterface's plot_probe function.
-
-        Parameters:
-            show (bool): If True, display the plot.
-            figsize (tuple): Dimensions of the figure.
-
-        Returns:
-            The Matplotlib figure containing the probe plot, or None if no probe is available.
-        """
-        if not self.runs:
-            _utils.message_user("No runs available in this session.")
-            return None
-
-        first_run = self.runs[0]
-        preprocessed_recording, _ = _utils._get_dict_value_from_step_num(
-            first_run._preprocessed, "last"
-        )
-        probe = preprocessed_recording.get_probe()
-        if probe is None:
-            _utils.message_user("No probe information available in the first run.")
-            return None
-
-        for run in self.runs[1:]:
-            rec, _ = _utils._get_dict_value_from_step_num(run._preprocessed, "last")
-            run_probe = rec.get_probe()
-            if run_probe is None or run_probe != probe:
-                _utils.message_user(
-                    "Probes differ across runs; using the probe from the first run."
-                )
-                break
-
-        from probeinterface.plotting import plot_probe
-
-        fig = plot_probe(probe, figsize=figsize)
-        if show:
-            fig.show()
-        return fig
 
     # Path Resolving -----------------------------------------------------------
 
