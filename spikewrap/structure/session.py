@@ -668,6 +668,42 @@ class Session:
             self._file_format,
         )
 
+    def plot_probe(self, show: bool = True, figsize: tuple[int, int] = (10, 6)) -> matplotlib.figure.Figure | None:
+        """
+        Plot the probe associated with this session. This function checks that all runs
+        have the same probe and then plots it using probeinterface's plot_probe function.
+        
+        Parameters:
+            show (bool): If True, display the plot.
+            figsize (tuple): Dimensions of the figure.
+        
+        Returns:
+            The Matplotlib figure containing the probe plot, or None if no probe is available.
+        """
+        if not self.runs:
+            _utils.message_user("No runs available in this session.")
+            return None
+        
+        first_run = self.runs[0]
+        preprocessed_recording, _ = _utils._get_dict_value_from_step_num(first_run._preprocessed, "last")
+        probe = preprocessed_recording.get_probe()
+        if probe is None:
+            _utils.message_user("No probe information available in the first run.")
+            return None
+        
+        for run in self.runs[1:]:
+            rec, _ = _utils._get_dict_value_from_step_num(run._preprocessed, "last")
+            run_probe = rec.get_probe()
+            if run_probe is None or run_probe != probe:
+                _utils.message_user("Probes differ across runs; using the probe from the first run.")
+                break
+
+        from probeinterface.plotting import plot_probe
+        fig = plot_probe(probe, figsize=figsize)
+        if show:
+            fig.show()
+        return fig
+
     # Path Resolving -----------------------------------------------------------
 
     def _output_from_parent_input_path(self) -> Path:

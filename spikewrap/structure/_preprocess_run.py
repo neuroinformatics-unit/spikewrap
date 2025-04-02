@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import shutil
 from typing import TYPE_CHECKING, Literal
+import matplotlib.pyplot as plt
 
 import yaml
 
@@ -110,7 +111,10 @@ class PreprocessedRun:
             preprocessed_recording.save(
                 folder=preprocessed_path,
                 chunk_duration=f"{chunk_duration_s}s",
+                overwrite=True
             )
+
+            self.save_probe_plot() 
 
         self.save_class_attributes_to_yaml(
             self._output_path / canon.preprocessed_folder()
@@ -254,3 +258,40 @@ class PreprocessedRun:
         )
 
         return job
+
+    def save_probe_plot(self, output_folder: str | None = None) -> None:
+        """
+        Save a plot of the probe associated with this run's preprocessed recording.
+        The probe is obtained via get_probe() from the final preprocessed recording.
+        The plot is generated using probeinterface's plot_probe function and saved
+        as a PNG in a subfolder (by default, within the run folder).
+        
+        Parameters:
+            output_folder (str, optional): Folder to save the probe plot. 
+                Defaults to self._output_path (the run folder).
+        """
+        try:
+            _, first_preprocessed_dict = next(iter(self._preprocessed.items()))
+        except StopIteration:
+            _utils.message_user("No preprocessed data available to retrieve the probe.")
+            return
+
+        preprocessed_recording, _ = _utils._get_dict_value_from_step_num(first_preprocessed_dict, "last")
+
+        probe = preprocessed_recording.get_probe()
+        if probe is None:
+            _utils.message_user("No probe information available in the recording.")
+            return
+
+        from probeinterface.plotting import plot_probe
+        fig, ax = plt.subplots(figsize=(10, 6))
+        plot_probe(probe, ax=ax)
+        
+        out_folder = Path(output_folder) if output_folder else self._output_path
+        probe_plots_folder = out_folder / "probe_plots"
+        probe_plots_folder.mkdir(parents=True, exist_ok=True)
+        
+        plot_filename = probe_plots_folder / "probe_plot.png"
+        fig.savefig(str(plot_filename))
+        _utils.message_user(f"Probe plot saved to {plot_filename}")
+        plt.close(fig)
