@@ -3,7 +3,7 @@ name = "spikewrap"
 authors = [{name = "Joe Ziminski", email= "joseph.j.ziminski@gmail.com"}]
 description = "Run extracellular electrophysiology analysis with SpikeInterface"
 readme = "README.md"
-requires-python = ">=3.9.0"
+requires-python = ">=3.9.0, <3.13"
 dynamic = ["version"]
 
 license = {text = "BSD-3-Clause"}
