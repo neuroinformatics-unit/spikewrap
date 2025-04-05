@@ -88,7 +88,6 @@ class TestSetProbe(BaseTest):
         fig = session.plot_probe(output_folder=tmp_path, show=False)
         assert fig is not None
 
-        # Check that probe plot was saved
         saved_plot = tmp_path / "probe_plots" / "probe_plot.png"
         assert saved_plot.exists()
 
@@ -118,7 +117,6 @@ class TestSetProbe(BaseTest):
         )
         session.preprocess(self.get_pp_steps(), per_shank=False)
 
-        # Monkey-patch mismatched probe structure
         session._pp_runs[1].get_probe = lambda: {"shank_0": self.get_mock_probe()}
         session._pp_runs[0].get_probe = lambda: {"shank_1": self.get_mock_probe()}
 
@@ -159,7 +157,7 @@ class TestSetProbe(BaseTest):
             run_name="run-001",
             file_format="spikeglx",
             session_output_path=Path("/tmp/out"),
-            preprocessed_data={},  # Empty dict simulates missing data
+            preprocessed_data={},
             pp_steps={},
         )
 
