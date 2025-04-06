@@ -118,8 +118,12 @@ class RawRun:
         else:
             runs_to_preprocess = self._raw
 
+        if not runs_to_preprocess:
+            raise ValueError("ERROR: No data found in runs_to_preprocess!")
+
         preprocessed = {}
         for shank_id, raw_rec in runs_to_preprocess.items():
+
             prepro_dict = {"0-raw": raw_rec}
             preprocessed[shank_id] = _preprocess_recording(prepro_dict, pp_steps)
 

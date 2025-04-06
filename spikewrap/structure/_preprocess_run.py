@@ -1,8 +1,10 @@
 from __future__ import annotations
 
+import os
 import shutil
 from typing import TYPE_CHECKING, Literal
 
+import matplotlib.pyplot as plt
 import yaml
 
 if TYPE_CHECKING:
@@ -95,7 +97,6 @@ class PreprocessedRun:
 
         self._handle_overwrite_output(overwrite)
 
-        # Save the recordings to disk, handling shank ids
         for shank_name, preprocessed_dict in self._preprocessed.items():
 
             preprocessed_path = self._output_path / canon.preprocessed_folder()
@@ -111,6 +112,23 @@ class PreprocessedRun:
                 folder=preprocessed_path,
                 chunk_duration=f"{chunk_duration_s}s",
             )
+
+        figure_path = preprocessed_path / "figures"
+        os.makedirs(figure_path, exist_ok=True)
+
+        figure, ax = plt.subplots(figsize=(10, 5))
+        si.plot_traces(
+            preprocessed_recording,
+            time_range=(0, 0.5),  # first 500ms
+            return_scaled=True,
+            show_channel_ids=False,
+            mode="line",
+            ax=ax,
+            segment_index=0,
+        )
+        ax.set_title(f"Preprocessed Data - {shank_name}")
+        plt.savefig(figure_path / f"{shank_name}preprocessed.png")
+        plt.close(figure)
 
         self.save_class_attributes_to_yaml(
             self._output_path / canon.preprocessed_folder()
