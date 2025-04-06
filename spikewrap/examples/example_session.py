@@ -12,15 +12,22 @@ if __name__ == "__main__":
     session.preprocess(
         configs="neuropixels+mountainsort5",
         per_shank=True,
-        concat_runs=True,
+        concat_runs=False,
     )
 
     session.plot_preprocessed(
-        run_idx="all", mode="map", show_channel_ids=False, show=True, figsize=(12, 8)
+        run_idx="all",
+        mode="map",
+        show_channel_ids=False,
+        show=True,
+        figsize=(12, 8),
     )
 
     session.save_preprocessed(
-        overwrite=True, n_jobs=1, slurm=False, chunk_duration_s=0.1
+        overwrite=True,
+        n_jobs=1,
+        slurm=True,
+        chunk_duration_s=0.1,
     )
 
     session.sort(

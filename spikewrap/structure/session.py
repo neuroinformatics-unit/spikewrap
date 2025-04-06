@@ -7,8 +7,10 @@ import yaml
 
 if TYPE_CHECKING:
     import matplotlib
+    import submitit
     from probeinterface import Probe
 
+import time
 from pathlib import Path
 
 import matplotlib.pyplot as plt
@@ -99,6 +101,8 @@ class Session:
             Path(output_path) if output_path else self._output_from_parent_input_path()
         )
 
+        self._running_slurm_jobs: list[submitit.Job] = []
+
         self._raw_runs: list[SeparateRawRun] = []
         self._pp_runs: list[PreprocessedRun] = []
         self._sorting_runs: list[SeparateSortingRun | ConcatSortingRun] = []
@@ -153,9 +157,7 @@ class Session:
 
             preprocessed_run = run.preprocess(pp_steps, per_shank)
 
-            orig_run_names = (  # TODO: this is not nice :(
-                run._orig_run_names if isinstance(run, ConcatRawRun) else None
-            )
+            orig_run_names = run._orig_run_names
 
             self._pp_runs.append(
                 PreprocessedRun(
@@ -208,6 +210,7 @@ class Session:
         last_run = None
 
         for run in self._pp_runs:
+ feature-add-preprocessing-figures
             run.save_preprocessed(overwrite, chunk_duration_s, n_jobs, slurm)
             last_run = run
 
@@ -364,6 +367,13 @@ class Session:
         except Exception as e:
             print(f"ERROR saving preprocessing plots: {e}")
 
+            job_if_slurm = run.save_preprocessed(
+                overwrite, chunk_duration_s, n_jobs, slurm
+            )
+            if slurm:
+                self._running_slurm_jobs.append(job_if_slurm)
+                
+
     def plot_preprocessed(
         self,
         run_idx: Literal["all"] | int = "all",
@@ -424,7 +434,7 @@ class Session:
     def sort(
         self,
         configs: str | dict,
-        run_sorter_method: str = "singularity",
+        run_sorter_method: str = "local",
         per_shank: bool = False,
         concat_runs: bool = False,
         overwrite: bool = True,
@@ -488,7 +498,11 @@ class Session:
             ]
 
         for run in self._sorting_runs:
-            run.sort(sorting_configs, run_sorter_method, per_shank, overwrite, slurm)
+            job_if_slurm = run.sort(
+                sorting_configs, run_sorter_method, per_shank, overwrite, slurm
+            )
+            if slurm:
+                self._running_slurm_jobs.append(job_if_slurm)
 
     def _load_pp_runs_from_disk(self) -> list[PreprocessedRun]:
         """
@@ -583,6 +597,24 @@ class Session:
             pp_runs.append(run)
 
         return pp_runs
+
+    # Getters -----------------------------------------------------------------
+
+    def wait_for_slurm(self):
+        """
+        Run a while loop with pause until
+        all slurm jobs are complete.
+        """
+        while True:
+
+            self._running_slurm_jobs = [
+                job for job in self._running_slurm_jobs if not job.done()
+            ]
+
+            if not any(self._running_slurm_jobs):
+                break
+
+            time.sleep(5)
 
     # Getters -----------------------------------------------------------------
 
@@ -700,7 +732,10 @@ class Session:
             self._load_raw_data(internal_overwrite=False)
 
         for run in self._raw_runs:
-            run.save_sync_channel(overwrite, slurm)
+            job_if_slurm = run.save_sync_channel(overwrite, slurm)
+
+            if slurm:
+                self._running_slurm_jobs.append(job_if_slurm)
 
     def raw_runs_loaded(self):
         return all(run._raw is not None for run in self._raw_runs)
