@@ -11,6 +11,7 @@ if TYPE_CHECKING:
 
 from pathlib import Path
 
+import matplotlib.pyplot as plt
 import numpy as np
 import spikeinterface.full as si
 
@@ -200,7 +201,6 @@ class Session:
             with default arguments. If a `dict` is provided, it should contain SLURM arguments.
             See `tutorials` in the documentation for details.
         """
-        save_dir = "prepocessed_plots"
 
         if not self._pp_runs:
             raise RuntimeError("No runs available in _pp_runs to process.")
@@ -211,33 +211,158 @@ class Session:
             run.save_preprocessed(overwrite, chunk_duration_s, n_jobs, slurm)
             last_run = run
 
-        fig_start = run.plot_preprocessed(
-            time_range=(0.0, 0.5),
-            show=False,
-            mode="map",
-            show_channel_ids=True,
-            figsize=(10, 5),
-        )
-
         if last_run is None:
-            raise RuntimeError("No valid run found in _pp_runs to process.")
+            print(" skipping plot generation.")
+            return
 
-        start_path = os.path.join(save_dir, f"{last_run._run_name}_start.png")
-        fig_start.savefig(start_path, dpi=300)
-        print(f"Saved start chunk plot to {start_path}")
+        print(f"Attempting to plot for last_run: {last_run._run_name}")
 
-        total_duration = 10.0
-        fig_end = run.plot_preprocessed(
-            time_range=(total_duration - 0.5, total_duration),
-            show=False,
-            mode="map",
-            show_channel_ids=True,
-            figsize=(10, 6),
-        )
+        total_duration = 1.0
 
-        end_path = os.path.join(save_dir, f"{run._run_name}_end.png")
-        fig_end.savefig(end_path, dpi=300)
-        print(f"Saved end chunk plot to {end_path}")
+        try:
+            first_shank_id = list(last_run._preprocessed.keys())[0]
+            last_step_key = _utils._get_dict_value_from_step_num(
+                last_run._preprocessed[first_shank_id], "last"
+            )[1]
+            actual_duration = last_run._preprocessed[first_shank_id][
+                last_step_key
+            ].get_duration()
+        except Exception:
+            print("Warning: Could not determine actual duration")
+            actual_duration = total_duration
+        if actual_duration < 0.5:
+            print(
+                "Warning: Recording duration is too short for end chunk plot. Skipping end plot."
+            )
+            fig_end = None
+
+        if actual_duration < 0.5:
+            print(
+                f"Warning: Recording duration ({actual_duration:.2f}s) is too short for end chunk plot. Skipping end plot."
+            )
+            fig_end = None
+        else:
+            end_plot_start_time = max(0.0, actual_duration - 0.5)
+            fig_end = last_run.plot_preprocessed(
+                time_range=(end_plot_start_time, actual_duration),
+                show=False,
+                mode="map",
+                show_channel_ids=True,
+                figsize=(10, 6),
+            )
+        plot_output_dir = self._output_path / "preprocessed_plots"
+        print(f"Target plot directory: {plot_output_dir}")
+
+        try:
+            print("Creating plot directory ")
+            os.makedirs(plot_output_dir, exist_ok=True)
+            print("Plot directory confirmed.")
+        except Exception as e:
+            print(f"ERROR: Could not create plot directory: {e}")
+            return
+
+        actual_duration = -1.0
+
+        try:
+            first_shank_id = list(last_run._preprocessed.keys())[0]
+            last_step_key = _utils._get_dict_value_from_step_num(
+                last_run._preprocessed[first_shank_id], "last"
+            )[1]
+            recording_to_plot = last_run._preprocessed[first_shank_id][last_step_key]
+            actual_duration = recording_to_plot.get_duration()
+            print(f"Actual duration of recording: {actual_duration:.2f}s")
+        except Exception as e:
+            print(f"Warning: Could not determine actual duration. Error: {e}")
+
+        fig_start = None
+        try:
+            print("Generating start plot.")
+            try:
+                first_shank_id_plot = list(last_run._preprocessed.keys())[0]
+                last_step_key_plot = _utils._get_dict_value_from_step_num(
+                    last_run._preprocessed[first_shank_id_plot], "last"
+                )[1]
+                rec_to_plot = last_run._preprocessed[first_shank_id_plot][
+                    last_step_key_plot
+                ]
+                if self._probe is not None:
+                    num_chans_probe = self._probe.get_channel_count()
+                    num_chans_rec = rec_to_plot.get_num_channels()
+                    if num_chans_probe != num_chans_rec:
+                        print(
+                            "WARNING: Mock probe channel count differs from recording channel count"
+                        )
+                else:
+                    print("Cannot compare channel")
+
+            except Exception as e_inspect:
+                print(f"ERROR inspecting data before plotting: {e_inspect}")
+
+            fig_start = last_run.plot_preprocessed(
+                time_range=(0.0, 0.5),
+                show=False,
+                mode="map",
+                show_channel_ids=True,
+                figsize=(10, 5),
+            )
+
+            if not fig_start:
+                print("Line plot failed. Trying map")
+                fig_start = last_run.plot_preprocessed(
+                    time_range=(0.0, 0.5),
+                    show=False,
+                    mode="map",
+                    show_channel_ids=True,
+                    figsize=(10, 5),
+                )
+
+            print(
+                f"Start plot generated: {'Success (Figure object)' if fig_start else 'Failed (None)'}"
+            )
+        except:
+            print("Didn't generate plot.")
+
+        fig_end = None
+        if actual_duration < 0.5:
+            print(
+                f"Skipping end plot because duration ({actual_duration:.2f}s) is too short."
+            )
+        else:
+            try:
+                print("Generating end plot...")
+                end_plot_start_time = max(0.0, actual_duration - 0.5)
+                fig_end = last_run.plot_preprocessed(
+                    time_range=(end_plot_start_time, actual_duration),
+                    show=False,
+                    mode="map",
+                    show_channel_ids=True,
+                    figsize=(10, 6),
+                )
+                print(
+                    f"End plot generated: {'Success (Figure object)' if fig_end else 'Failed (None)'}"
+                )
+            except Exception as e:
+                print(f"ERROR generating end plot: {e}")
+
+        start_path = plot_output_dir / f"{last_run._run_name}_start.png"
+        end_path = plot_output_dir / f"{last_run._run_name}_end.png"
+
+        try:
+            if fig_start:
+                print("Saving start figure...")
+                fig_start.savefig(start_path, dpi=300)
+                print("SAVED start chunk plot.")
+                plt.close(fig_start)
+            if fig_end:
+                print("Saving end figure...")
+                fig_end.savefig(end_path, dpi=300)
+                print("SAVED end chunk plot.")
+                plt.close(fig_end)
+            else:
+                print("Skipping save for end plot ")
+
+        except Exception as e:
+            print(f"ERROR saving preprocessing plots: {e}")
 
     def plot_preprocessed(
         self,
