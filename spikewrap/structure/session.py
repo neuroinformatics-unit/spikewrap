@@ -372,7 +372,7 @@ class Session:
             )
             if slurm:
                 self._running_slurm_jobs.append(job_if_slurm)
-                
+
 
     def plot_preprocessed(
         self,
