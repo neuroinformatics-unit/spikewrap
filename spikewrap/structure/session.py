@@ -211,6 +211,9 @@ class Session:
             if slurm:
                 self._running_slurm_jobs.append(job_if_slurm)
 
+        if not slurm:
+            self.plot_probe(show=False)
+
     def plot_preprocessed(
         self,
         run_idx: Literal["all"] | int = "all",
@@ -306,7 +309,7 @@ class Session:
             if other_probe_dict.keys() != first_probe_dict.keys():
                 raise ValueError("Mismatch in shank structure across runs.")
             for key in first_probe_dict:
-                if not first_probe_dict[key].is_equal(other_probe_dict[key]):
+                if first_probe_dict[key] != other_probe_dict[key]:
                     raise ValueError("Probes differ across runs for shank: " + key)
 
         n_shanks = len(first_probe_dict)

@@ -1,20 +1,18 @@
 from __future__ import annotations
 
 import shutil
-from pathlib import Path
 from typing import TYPE_CHECKING, Literal
 
-import matplotlib.pyplot as plt
 import yaml
 
 if TYPE_CHECKING:
+    from pathlib import Path
 
     import matplotlib
     import submitit
 
 
 import spikeinterface.full as si
-from probeinterface.plotting import plot_probe
 
 from spikewrap.configs._backend import canon
 from spikewrap.utils import _slurm, _utils
@@ -142,8 +140,6 @@ class PreprocessedRun:
                 chunk_duration=f"{chunk_duration_s}s",
                 overwrite=True,
             )
-
-            self.save_probe_plot()
 
         self.save_class_attributes_to_yaml(
             self._output_path / canon.preprocessed_folder()
@@ -287,30 +283,3 @@ class PreprocessedRun:
         )
 
         return job
-
-    def save_probe_plot(self, output_folder=None, figsize=(10, 6)) -> None:
-        """
-        Save the probe plot(s) for this run to the disk.
-        Handles both grouped and per-shank formats.
-        """
-        probes = self.get_probe()
-
-        n_shanks = len(probes)
-        fig, axes = plt.subplots(
-            1, n_shanks, figsize=(figsize[0] * n_shanks, figsize[1])
-        )
-        if n_shanks == 1:
-            axes = [axes]
-
-        for ax, (shank_id, probe) in zip(axes, probes.items()):
-            plot_probe(probe, ax=ax)
-            ax.set_title(shank_id)
-
-        out_folder = Path(output_folder) if output_folder else self._output_path
-        probe_plots_folder = out_folder / "probe_plots"
-        probe_plots_folder.mkdir(parents=True, exist_ok=True)
-
-        plot_filename = probe_plots_folder / "probe_plot.png"
-        fig.savefig(str(plot_filename))
-        _utils.message_user(f"Probe plot saved to {plot_filename}")
-        plt.close(fig)
