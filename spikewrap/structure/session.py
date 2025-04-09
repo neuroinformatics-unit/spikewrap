@@ -12,8 +12,10 @@ if TYPE_CHECKING:
 import time
 from pathlib import Path
 
+import matplotlib.pyplot as plt
 import numpy as np
 import spikeinterface.full as si
+from probeinterface.plotting import plot_probe
 
 from spikewrap.configs import config_utils
 from spikewrap.configs._backend import canon
@@ -209,6 +211,9 @@ class Session:
             if slurm:
                 self._running_slurm_jobs.append(job_if_slurm)
 
+        if not slurm:
+            self.plot_probe(show=False)
+
     def plot_preprocessed(
         self,
         run_idx: Literal["all"] | int = "all",
@@ -265,6 +270,71 @@ class Session:
             all_figs[run._run_name] = fig
 
         return all_figs
+
+    def plot_probe(self, show=True, output_folder=None, figsize=(10, 6)):
+        """
+        Plot the probe geometry for this session using data from preprocessed runs.
+
+        Ensures consistency across all runs before plotting. If multiple shanks
+        are present, each will be shown in its own subplot.
+
+        Parameters
+        ----------
+        show : bool, optional
+            If True, displays the plot with `plt.show()`. Default is True.
+        output_folder : Path or None, optional
+            Folder where the plot will be saved. Defaults to the session's output path.
+        figsize : tuple[int, int], optional
+            Figure size in inches per shank (width, height). Default is (10, 6).
+
+        Returns
+        -------
+        matplotlib.Figure
+            The generated figure object containing the probe plot.
+
+        Raises
+        ------
+        RuntimeError
+            If no preprocessed runs are available.
+        ValueError
+            If probes differ across runs or shank structure mismatches.
+        """
+        if not self._pp_runs:
+            raise RuntimeError("No runs available in this session.")
+
+        probe_dicts = [run.get_probe() for run in self._pp_runs]
+        first_probe_dict = probe_dicts[0]
+
+        for other_probe_dict in probe_dicts[1:]:
+            if other_probe_dict.keys() != first_probe_dict.keys():
+                raise ValueError("Mismatch in shank structure across runs.")
+            for key in first_probe_dict:
+                if first_probe_dict[key] != other_probe_dict[key]:
+                    raise ValueError("Probes differ across runs for shank: " + key)
+
+        n_shanks = len(first_probe_dict)
+        fig, axes = plt.subplots(
+            1, n_shanks, figsize=(figsize[0] * n_shanks, figsize[1])
+        )
+        if n_shanks == 1:
+            axes = [axes]
+
+        for ax, (shank_id, probe) in zip(axes, first_probe_dict.items()):
+            plot_probe(probe, ax=ax)
+            ax.set_title(shank_id)
+
+        if show:
+            plt.show()
+
+        out_folder = Path(output_folder) if output_folder else self._output_path
+        probe_plots_folder = out_folder / "probe_plots"
+        probe_plots_folder.mkdir(parents=True, exist_ok=True)
+
+        plot_filename = probe_plots_folder / "probe_plot.png"
+        fig.savefig(str(plot_filename))
+        _utils.message_user(f"Probe plot saved to {plot_filename}")
+        plt.close(fig)
+        return fig
 
     def sort(
         self,
