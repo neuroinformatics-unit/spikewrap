@@ -2,7 +2,7 @@ exclude: 'README.md|docs'
 
 repos:
     - repo: https://github.com/pre-commit/pre-commit-hooks
-      rev: v5.0.0
+      rev: v6.0.0
       hooks:
           - id: check-docstring-first
           - id: check-executables-have-shebangs
@@ -14,7 +14,7 @@ repos:
           - id: requirements-txt-fixer
           - id: trailing-whitespace
     - repo: https://github.com/astral-sh/ruff-pre-commit
-      rev: v0.11.2
+      rev: v0.13.0
       hooks:
         - id: ruff
     - repo: https://github.com/psf/black
@@ -22,7 +22,7 @@ repos:
       hooks:
           - id: black
     - repo: https://github.com/pre-commit/mirrors-mypy
-      rev: v1.15.0
+      rev: v1.18.1
       hooks:
           - id: mypy
             additional_dependencies:
