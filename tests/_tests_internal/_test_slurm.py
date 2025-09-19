@@ -7,6 +7,7 @@ import pytest
 import spikeinterface.full as si
 
 import spikewrap as sw
+from spikewrap.configs._backend import canon
 
 # IN PROGRESS
 # TODO
@@ -43,6 +44,11 @@ class TestSlurmInternal:
         slurm_opts["wait"] = True
 
         session.save_sync_channel(slurm=slurm_opts)
+
+        for run in session._raw_runs:
+            sync_dir = run._sync_output_path / canon.sync_folder()
+            sync_file = sync_dir / canon.saved_sync_filename()
+            assert sync_file.exists(), f"Sync file {sync_file} not found."
 
     def test_slurm_prepro(self, teardown_derivatives_fixture):
         """ """
