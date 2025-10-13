@@ -234,6 +234,8 @@ class Session:
             Determines the plotting style, a heatmap-style or line plot.
         time_range
             Time range (start, end), in seconds, to plot. e.g. (0.0, 1.0)
+            This is relative to the first sample, and not the absolute time.
+            i.e. `0` is always the first timepoint.
         show_channel_ids
             If ``True``, displays the channel identifiers on the plots.
         show
