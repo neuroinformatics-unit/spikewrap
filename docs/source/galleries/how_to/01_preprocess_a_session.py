@@ -34,7 +34,7 @@ if __name__ == "__main__":  # for multiprocessing
 
     plots = session.plot_preprocessed(
         show=True,
-        time_range=(0, 0.5),
+        time_range=(0, 0.5),  # time relative to the first sample (not absolute)
         show_channel_ids=False,  # also, "mode"="map" or "line"
     )
 

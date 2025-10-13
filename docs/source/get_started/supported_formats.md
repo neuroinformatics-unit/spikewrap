@@ -141,7 +141,7 @@ Use [catGT](https://billkarsh.github.io/SpikeGLX/help/dmx_vs_gbl/dmx_vs_gbl) for
 
 :::{tab-item} OpenEphys
 
-Currently, the [flat binary format](https://open-ephys.github.io/gui-docs/User-Manual/Recording-data/Binary-format.html)
+Currently, the [flat binary format](https://open-ephys.github.io/gui-docs/User-Manual/Data-formats/Binary-format.html)
 (the OpenEphys default) is supported.
 
 [OpenEphys](https://open-ephys.org/) flat binary recordings
