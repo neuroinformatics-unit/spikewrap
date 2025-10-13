@@ -32,7 +32,9 @@ class TestSorting(BaseTest):
 
         for run_idx, run_name in enumerate(session.get_raw_run_names()):
             assert session._raw_runs[run_idx]._run_name == run_name
-            assert run_name == session._passed_run_names[run_idx], f"session.get_raw_run_names(){session.get_raw_run_names()} ------  session._passed_run_names {session._passed_run_names}"
+            assert (
+                run_name == session._passed_run_names[run_idx]
+            ), f"session.get_raw_run_names(){session.get_raw_run_names()} ------  session._passed_run_names {session._passed_run_names}"
 
     def test_get_sync(self, session):
         """
