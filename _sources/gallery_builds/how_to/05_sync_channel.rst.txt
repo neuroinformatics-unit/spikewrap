@@ -79,18 +79,22 @@ How to Edit the Sync Channel
 
  .. code-block:: none
 
+    /home/runner/work/spikewrap/spikewrap/spikewrap/process/_loading.py:146: UserWarning: The sessions or runs provided for are not in creation datetime order.
+    They will be concatenated in the order provided, as:
+    ['recording2', 'recording1'].
+      warnings.warn(
+
+    Loading data from path: /home/runner/work/spikewrap/spikewrap/spikewrap/examples/example_tiny_data/openephys/rawdata/sub-001/ses-001/ephys/Record Node 104/experiment1/recording2
 
     Loading data from path: /home/runner/work/spikewrap/spikewrap/spikewrap/examples/example_tiny_data/openephys/rawdata/sub-001/ses-001/ephys/Record Node 104/experiment1/recording1
 
     Loading data from path: /home/runner/work/spikewrap/spikewrap/spikewrap/examples/example_tiny_data/openephys/rawdata/sub-001/ses-001/ephys/Record Node 104/experiment1/recording2
 
     Loading data from path: /home/runner/work/spikewrap/spikewrap/spikewrap/examples/example_tiny_data/openephys/rawdata/sub-001/ses-001/ephys/Record Node 104/experiment1/recording1
-
-    Loading data from path: /home/runner/work/spikewrap/spikewrap/spikewrap/examples/example_tiny_data/openephys/rawdata/sub-001/ses-001/ephys/Record Node 104/experiment1/recording2
-
-    Saving sync channel for: recording1...
 
     Saving sync channel for: recording2...
+
+    Saving sync channel for: recording1...
 
 
 
@@ -98,7 +102,7 @@ How to Edit the Sync Channel
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** (0 minutes 0.157 seconds)
+   **Total running time of the script:** (0 minutes 0.207 seconds)
 
 
 .. _sphx_glr_download_gallery_builds_how_to_05_sync_channel.py:

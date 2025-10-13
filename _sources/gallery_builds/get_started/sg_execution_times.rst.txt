@@ -6,7 +6,7 @@
 
 Computation times
 =================
-**01:37.744** total execution time for 1 file **from gallery_builds/get_started**:
+**01:27.624** total execution time for 1 file **from gallery_builds/get_started**:
 
 .. container::
 
@@ -33,5 +33,5 @@ Computation times
      - Time
      - Mem (MB)
    * - :ref:`sphx_glr_gallery_builds_get_started_slow_feature_overview.py` (``slow_feature_overview.py``)
-     - 01:37.744
+     - 01:27.624
      - 0.0

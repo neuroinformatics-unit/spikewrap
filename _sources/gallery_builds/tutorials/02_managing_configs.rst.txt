@@ -159,7 +159,7 @@ and see what configs you have available at this path:
 
 
     The available configs are:
-    ['neuropixels+mountainsort5.yaml', 'my_config.yaml', 'neuropixels+kilosort2_5.yaml']
+    ['my_config.yaml', 'neuropixels+kilosort2_5.yaml', 'neuropixels+mountainsort5.yaml']
 
 
 
@@ -374,7 +374,7 @@ and we can load ``configs`` from file:
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** (0 minutes 0.009 seconds)
+   **Total running time of the script:** (0 minutes 0.007 seconds)
 
 
 .. _sphx_glr_download_gallery_builds_tutorials_02_managing_configs.py:

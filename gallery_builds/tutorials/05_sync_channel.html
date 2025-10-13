@@ -44,7 +44,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../../_static/documentation_options.js?v=938c9ccc"></script>
+    <script src="../../_static/documentation_options.js?v=e259d695"></script>
     <script src="../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/design-tabs.js?v=f930bc37"></script>
@@ -120,7 +120,7 @@
   
   
   
-    <p class="title logo__title">spikewrap v0.2.0</p>
+    <p class="title logo__title">spikewrap v0.3.0</p>
   
 </a></div>
     
@@ -490,9 +490,14 @@ it would be all <code class="docutils literal notranslate"><span class="pre">0</
 <span class="n">plot</span> <span class="o">=</span> <a href="../../api_index.html#spikewrap.Session.plot_sync_channel" title="spikewrap.Session.plot_sync_channel" class="sphx-glr-backref-module-spikewrap sphx-glr-backref-type-py-method"><span class="n">session</span><span class="o">.</span><span class="n">plot_sync_channel</span></a><span class="p">(</span><span class="n">run_idx</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">show</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>  <span class="c1"># TODO: accept the plot and explain. also explain the results</span>
 </pre></div>
 </div>
-<img src="../../_images/sphx_glr_05_sync_channel_001.png" srcset="../../_images/sphx_glr_05_sync_channel_001.png" alt="05 sync channel" class = "sphx-glr-single-img"/><div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>Loading data from path: /home/runner/work/spikewrap/spikewrap/spikewrap/examples/example_tiny_data/openephys/rawdata/sub-001/ses-001/ephys/Record Node 104/experiment1/recording1
+<img src="../../_images/sphx_glr_05_sync_channel_001.png" srcset="../../_images/sphx_glr_05_sync_channel_001.png" alt="05 sync channel" class = "sphx-glr-single-img"/><div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>/home/runner/work/spikewrap/spikewrap/spikewrap/process/_loading.py:146: UserWarning: The sessions or runs provided for are not in creation datetime order.
+They will be concatenated in the order provided, as:
+[&#39;recording2&#39;, &#39;recording1&#39;].
+  warnings.warn(
 
 Loading data from path: /home/runner/work/spikewrap/spikewrap/spikewrap/examples/example_tiny_data/openephys/rawdata/sub-001/ses-001/ephys/Record Node 104/experiment1/recording2
+
+Loading data from path: /home/runner/work/spikewrap/spikewrap/spikewrap/examples/example_tiny_data/openephys/rawdata/sub-001/ses-001/ephys/Record Node 104/experiment1/recording1
 </pre></div>
 </div>
 </section>
@@ -527,9 +532,9 @@ can be reloaded:</p>
 <span class="n">plot</span> <span class="o">=</span> <a href="../../api_index.html#spikewrap.Session.plot_sync_channel" title="spikewrap.Session.plot_sync_channel" class="sphx-glr-backref-module-spikewrap sphx-glr-backref-type-py-method"><span class="n">session</span><span class="o">.</span><span class="n">plot_sync_channel</span></a><span class="p">(</span><span class="n">run_idx</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">show</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 </pre></div>
 </div>
-<img src="../../_images/sphx_glr_05_sync_channel_003.png" srcset="../../_images/sphx_glr_05_sync_channel_003.png" alt="05 sync channel" class = "sphx-glr-single-img"/><div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>Loading data from path: /home/runner/work/spikewrap/spikewrap/spikewrap/examples/example_tiny_data/openephys/rawdata/sub-001/ses-001/ephys/Record Node 104/experiment1/recording1
+<img src="../../_images/sphx_glr_05_sync_channel_003.png" srcset="../../_images/sphx_glr_05_sync_channel_003.png" alt="05 sync channel" class = "sphx-glr-single-img"/><div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>Loading data from path: /home/runner/work/spikewrap/spikewrap/spikewrap/examples/example_tiny_data/openephys/rawdata/sub-001/ses-001/ephys/Record Node 104/experiment1/recording2
 
-Loading data from path: /home/runner/work/spikewrap/spikewrap/spikewrap/examples/example_tiny_data/openephys/rawdata/sub-001/ses-001/ephys/Record Node 104/experiment1/recording2
+Loading data from path: /home/runner/work/spikewrap/spikewrap/spikewrap/examples/example_tiny_data/openephys/rawdata/sub-001/ses-001/ephys/Record Node 104/experiment1/recording1
 </pre></div>
 </div>
 </section>
@@ -539,14 +544,14 @@ Loading data from path: /home/runner/work/spikewrap/spikewrap/spikewrap/examples
 <div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><a href="../../api_index.html#spikewrap.Session.save_sync_channel" title="spikewrap.Session.save_sync_channel" class="sphx-glr-backref-module-spikewrap sphx-glr-backref-type-py-method"><span class="n">session</span><span class="o">.</span><span class="n">save_sync_channel</span></a><span class="p">(</span><span class="n">overwrite</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">slurm</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
 </pre></div>
 </div>
-<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>Saving sync channel for: recording1...
+<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>Saving sync channel for: recording2...
 
-Saving sync channel for: recording2...
+Saving sync channel for: recording1...
 </pre></div>
 </div>
 <p>which will save the sync channel for all loaded runs to the run folder.
 See the <a class="reference internal" href="03_running_with_slurm.html#slurm-tutorial"><span class="std std-ref">SLURM tutorial</span></a> for more information on using slurm.</p>
-<p class="sphx-glr-timing"><strong>Total running time of the script:</strong> (0 minutes 0.240 seconds)</p>
+<p class="sphx-glr-timing"><strong>Total running time of the script:</strong> (0 minutes 0.291 seconds)</p>
 <div class="sphx-glr-footer sphx-glr-footer-example docutils container" id="sphx-glr-download-gallery-builds-tutorials-05-sync-channel-py">
 <div class="binder-badge docutils container">
 <a class="reference external image-reference" href="https://mybinder.org/v2/gh/neuroinformatics-unit/spikewrap/gh-pages?filepath=notebooks/gallery_builds/tutorials/05_sync_channel.ipynb"><img alt="Launch binder" src="../../_images/binder_badge_logo2.svg" style="width: 150px;" />
