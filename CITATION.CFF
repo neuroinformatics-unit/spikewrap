@@ -1,0 +1,25 @@
+cff-version: 1.2.0
+title: spikewrap
+message: >-
+  If you use spikewrap in your work, please cite the following Zenodo DOI.
+  Please also cite SpikeInterface, which contains all the processing tools
+  that are wrapped in spikewrap.
+authors:
+  - given-names: Joseph J.
+    family-names: Ziminski
+    orcid: 'https://orcid.org/0000-0003-4286-6868'
+    email: joseph.j.ziminski@gmail.com
+identifiers:
+  - type: doi
+    value: 10.5281/zenodo.18316830
+    description: 'A collection of archived snapshots of spikewrap on Zenodo.'
+repository-code: 'https://github.com/neuroinformatics-unit/spikewrap'
+url: 'https://spikewrap.neuroinformatics.dev/'
+abstract: >-
+    A Python package for managing extracellular electrophysiology pipelines.
+keywords:
+    - neuroscience
+    - systems neuroscience
+    - extracellular electrophysiology
+    - spike sorting
+license: CC-BY-4.0
