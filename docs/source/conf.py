@@ -213,7 +213,7 @@ notfound_context = {
 # because we have no '/<language>/<version>/' in the URL
 notfound_urls_prefix = None
 
-# A list of regular expressions that match URIs that should not be checked
+# A list of regular expressions that match URLs that should not be checked
 linkcheck_ignore = [
     "https://github.com/SpikeInterface/*",
     "https://github.com/billkarsh/CatGT/*",
