@@ -664,7 +664,7 @@ class Session:
         )
 
         return ConcatRawRun(
-            cast(list[SeparateRawRun], self._raw_runs),
+            cast("list[SeparateRawRun]", self._raw_runs),
             self._parent_input_path,
             self._ses_name,
             self._file_format,
