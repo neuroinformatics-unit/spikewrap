@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Literal
+from typing import TYPE_CHECKING, Literal, cast
 
 import yaml
 
@@ -101,7 +101,7 @@ class Session:
 
         self._running_slurm_jobs: list[submitit.Job] = []
 
-        self._raw_runs: list[SeparateRawRun] = []
+        self._raw_runs: list[SeparateRawRun | ConcatRawRun] = []
         self._pp_runs: list[PreprocessedRun] = []
         self._sorting_runs: list[SeparateSortingRun | ConcatSortingRun] = []
 
@@ -149,7 +149,7 @@ class Session:
         if concat_runs:
             runs_to_preprocess = [self._get_concat_raw_run()]
         else:
-            runs_to_preprocess = self._raw_runs  # type: ignore
+            runs_to_preprocess = self._raw_runs
 
         self._pp_runs = []
         for run in runs_to_preprocess:
@@ -627,7 +627,7 @@ class Session:
             self._passed_run_names,
         )
 
-        runs: list[SeparateRawRun] = []
+        runs: list[SeparateRawRun | ConcatRawRun] = []
 
         for run_path in run_paths:
 
@@ -664,7 +664,7 @@ class Session:
         )
 
         return ConcatRawRun(
-            self._raw_runs,
+            cast("list[SeparateRawRun]", self._raw_runs),
             self._parent_input_path,
             self._ses_name,
             self._file_format,
