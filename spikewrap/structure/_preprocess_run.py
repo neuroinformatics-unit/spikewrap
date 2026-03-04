@@ -70,6 +70,34 @@ class PreprocessedRun:
 
         self._preprocessed = preprocessed_data
 
+    def get_probe(self) -> dict:
+        """
+        Retrieve the probe configuration(s) used in this preprocessed run.
+
+        Returns
+        -------
+        dict
+            A dictionary where keys are shank identifiers (e.g., "shank_0", "grouped")
+            and values are `probeinterface.Probe` objects for each shank.
+
+        Raises
+        ------
+        RuntimeError
+            If no preprocessed data is available.
+        """
+        if not self._preprocessed:
+            raise RuntimeError(f"No preprocessed data found for run {self._run_name}.")
+
+        probes = {}
+        for shank_name, preprocessed_dict in self._preprocessed.items():
+            recording, _ = _utils._get_dict_value_from_step_num(
+                preprocessed_dict, "last"
+            )
+            probe = recording.get_probe()
+            probes[shank_name] = probe
+
+        return probes
+
     # ---------------------------------------------------------------------------
     # Public Functions
     # ---------------------------------------------------------------------------
@@ -110,6 +138,7 @@ class PreprocessedRun:
             preprocessed_recording.save(
                 folder=preprocessed_path,
                 chunk_duration=f"{chunk_duration_s}s",
+                overwrite=True,
             )
 
         self.save_class_attributes_to_yaml(
