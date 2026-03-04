@@ -21,7 +21,7 @@ classifiers = [
 ]
 
 dependencies = [
-    "spikeinterface[full]>=0.103,<0.104",
+    "spikeinterface[full]>=0.103.2,<0.104",
     "neo==0.14.1",
     "submitit",
     "slurmio",
