@@ -21,8 +21,8 @@ classifiers = [
 ]
 
 dependencies = [
-    "spikeinterface[full]==0.102.3",
-    "neo==0.14.1",
+    "spikeinterface[full]>=0.103.2,<0.104",
+    "neo>=0.14.3",
     "submitit",
     "slurmio",
     "psutil",
