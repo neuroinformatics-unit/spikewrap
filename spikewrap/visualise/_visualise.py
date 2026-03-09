@@ -71,16 +71,19 @@ def visualise_run_preprocessed(
             preprocessed, "last"
         )
 
+        time_range_adjusted = time_range + recording_to_plot.get_times()[0]
+
         si.plot_traces(
             recording_to_plot,
             order_channel_by_depth=True,
-            time_range=time_range,
+            time_range=time_range_adjusted,
             return_scaled=True,
             show_channel_ids=show_channel_ids,
             mode=mode,
             ax=ax,
             segment_index=0,
         )
+
         if key == canon.grouped_shankname():
             ax.set_title(f"Session: {ses_name}, Run: {run_name}")
         else:

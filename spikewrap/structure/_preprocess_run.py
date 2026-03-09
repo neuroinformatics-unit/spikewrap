@@ -193,6 +193,8 @@ class PreprocessedRun:
             The type of plot to generate. ``"map"`` for a heatmap and ``"line"`` for a line plot.
         time_range
             The time range (start, end) to plot the data within, in seconds.
+            This is relative to the first sample, and not the absolute time.
+            i.e. `0` is always the first timepoint.
         show_channel_ids
             If True, the plot will display channel IDs.
         show

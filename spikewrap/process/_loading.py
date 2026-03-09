@@ -133,15 +133,14 @@ def get_raw_run_paths(
     if passed_run_names == "all":
         run_paths = detected_run_paths
     else:
-        detected_run_names = [path_.name for path_ in detected_run_paths]
+        detected_runs = {path_.name: path_ for path_ in detected_run_paths}
 
         for passed_name in passed_run_names:
-            if passed_name not in detected_run_names:
+            if passed_name not in detected_runs:
                 raise ValueError(f"{passed_name} not found in folder: {ses_path}")
 
-        run_paths = [
-            path_ for path_ in detected_run_paths if path_.name in detected_run_names
-        ]
+        # We need to maintain the same order as `passed_run_names`
+        run_paths = [detected_runs[name] for name in passed_run_names]
 
     if not _utils._paths_are_in_datetime_order(run_paths, "creation"):
         warnings.warn(
