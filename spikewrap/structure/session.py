@@ -10,6 +10,7 @@ if TYPE_CHECKING:
     from probeinterface import Probe
 
 import time
+import warnings
 from pathlib import Path
 
 import matplotlib.pyplot as plt
@@ -314,7 +315,7 @@ class Session:
         figsize: tuple = ((6, 8)),
         aspect_ratio: float | str = 0.4,
     ) -> tuple[matplotlib.collections.PolyCollection] | None:
-        """ Plot the probe geometry for this session.
+        """Plot the probe geometry for this session.
 
         Assumes the probe used is the same for all runs, will
         raise an error if not. This returns the probe before

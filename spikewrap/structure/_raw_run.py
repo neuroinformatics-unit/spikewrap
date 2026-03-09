@@ -3,13 +3,12 @@ from __future__ import annotations
 import shutil
 from typing import TYPE_CHECKING, Literal
 
-import probeinterface
-
 if TYPE_CHECKING:
     from pathlib import Path
 
     import matplotlib
     import numpy as np
+    import probeinterface
     import submitit
     from probeinterface import Probe
     from spikeinterface.core import BaseRecording
@@ -80,7 +79,7 @@ class RawRun:
     # Public Functions
     # ---------------------------------------------------------------------------
 
-    def get_probe(self) -> probeinterface.Probe:
+    def get_probe(self) -> probeinterface.Probe | None:
         """
         Retrieve the probe associated with this runs recording.
 
@@ -89,7 +88,9 @@ class RawRun:
         probe
             A Probeinterface probe object.
         """
-        return self._raw["grouped"].get_probe()
+        if self._raw["grouped"].has_probe():
+            return self._raw["grouped"].get_probe()
+        return None
 
     def load_raw_data(self, internal_overwrite: bool = False) -> None:
         """

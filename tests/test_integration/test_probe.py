@@ -154,13 +154,19 @@ class TestSetProbe(BaseTest):
         assert kwargs.get("with_device_index") is set_arg_bool
         assert kwargs.get("show_channel_on_click") is set_arg_bool
 
-   # @pytest.mark.parametrize("save_preprocessed", [True, False])
-    def test_empty_probe(self):
+    @pytest.mark.parametrize("save_preprocessed", [True, False])
+    def test_empty_probe(self, tmp_path, save_preprocessed):
+        """
+        Test the case where no probe is attached to the recording.
+        Preprocessing (which attempts to save the probe plot) and other
+        probe-related functions should handle this situation gracefully.
+        """
         session = sw.Session(
             sw.get_example_data_path() / "rawdata" / "sub-001",
             "ses-001",
             "spikeglx",
             run_names="all",
+            output_path=tmp_path,
         )
         session.load_raw_data()
 
@@ -168,16 +174,18 @@ class TestSetProbe(BaseTest):
             raw_run._raw["grouped"]._properties.pop("contact_vector")
 
         session.get_probe()
-        breakpoint()
 
-        if save_preprocessed:
-            session.preprocess(self.get_pp_steps(), per_shank=False)
-            session.save_preprocessed(overwrite=True)
-        else:
-            fig = session.plot_probe(save=True)
-            # just do this check for good measure here
-            assert isinstance(fig, matplotlib.figure.Figure)
+        assert session.get_probe() is None
+
+        with pytest.warns(
+            UserWarning, match="No probe detected. Probe plot was not generated."
+        ):
+            if save_preprocessed:
+                session.preprocess(self.get_pp_steps(), per_shank=False)
+                session.save_preprocessed(overwrite=True)
+            else:
+                session.plot_probe(save=True)
 
         saved_plot_path = session._output_path / "probe_plot.png"
 
-        assert saved_plot_path.exists()
+        assert not saved_plot_path.exists()
