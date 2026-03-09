@@ -1,13 +1,15 @@
 from __future__ import annotations
 
+import copy
+
+import matplotlib
 import probeinterface as pi
 import pytest
 from base import BaseTest
 
 import spikewrap as sw
 from spikewrap.utils import _utils
-import matplotlib
-import copy
+
 
 class TestSetProbe(BaseTest):
 
@@ -84,7 +86,7 @@ class TestSetProbe(BaseTest):
             "ses-001",
             "spikeglx",
             run_names="all",
-            output_path=tmp_path
+            output_path=tmp_path,
         )
 
         if save_preprocessed:
@@ -120,6 +122,6 @@ class TestSetProbe(BaseTest):
 
         with pytest.raises(
             ValueError,
-            match="The probe for run: run-001_g0_imec0 is different than for run: run-002_g0_imec0"
+            match="The probe for run: run-001_g0_imec0 is different than for run: run-002_g0_imec0",
         ):
             session.get_probe()

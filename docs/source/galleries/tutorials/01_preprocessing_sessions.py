@@ -219,6 +219,8 @@ plots = session.plot_preprocessed(
 session.save_preprocessed(overwrite=True, n_jobs=6)
 
 # %%
+# This will also save an image of the probe.
+#
 # .. attention::
 #
 #    On some systems, you may encounter strange behaviour when running multiple

@@ -14,8 +14,8 @@ from pathlib import Path
 
 import matplotlib.pyplot as plt
 import numpy as np
-import spikeinterface.full as si
 import probeinterface.plotting as pi_plotting
+import spikeinterface.full as si
 
 from spikewrap.configs import config_utils
 from spikewrap.configs._backend import canon
@@ -270,9 +270,7 @@ class Session:
         return all_figs
 
     def get_probe(self):
-        """
-
-        """
+        """ """
         if not any(self._raw_runs):
             self._load_raw_data(internal_overwrite=False)
 
@@ -293,14 +291,13 @@ class Session:
 
         return first_probe
 
-
     def plot_probe(
         self,
         show: bool = False,
         save: bool = False,
         with_contact_id: bool = False,
         with_device_index: bool = False,
-        show_channel_on_click: bool = False
+        show_channel_on_click: bool = False,
     ) -> tuple[matplotlib.collections.PolyCollection]:
         """
         Plot the probe geometry for this session using data from preprocessed runs.
@@ -720,7 +717,7 @@ class Session:
                 parent_ses_name=self._ses_name,
                 run_name=run_path.name,
                 file_format=self._file_format,
-                probe=self._probe,  # TODO: this should not be held on the class, once the data is loaded it should be hidden. Because probe is dupliated on the recording and on the class...
+                probe=self._probe,
                 sync_output_path=self._output_path / run_path.name,
             )
             separate_run.load_raw_data()
