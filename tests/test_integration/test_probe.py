@@ -3,6 +3,7 @@ from __future__ import annotations
 import copy
 
 import matplotlib
+import probeinterface
 import probeinterface as pi
 import pytest
 from base import BaseTest
@@ -125,3 +126,30 @@ class TestSetProbe(BaseTest):
             match="The probe for run: run-001_g0_imec0 is different than for run: run-002_g0_imec0",
         ):
             session.get_probe()
+
+    @pytest.mark.parametrize("set_arg_bool", [True, False])
+    def test_plot_probe_arguments_propagated(self, mocker, set_arg_bool):
+        """
+        Mock the probeinterface plot_probe function to ensure the
+        arguments are propagated as expected (they are default False)
+        """
+        session = sw.Session(
+            sw.get_example_data_path() / "rawdata" / "sub-001",
+            "ses-001",
+            "spikeglx",
+            run_names="all",
+        )
+
+        spy = mocker.spy(probeinterface.plotting, "plot_probe")
+
+        session.plot_probe(
+            with_contact_id=set_arg_bool,
+            with_device_index=set_arg_bool,
+            show_channel_on_click=set_arg_bool,
+        )
+
+        spy.assert_called_once()
+        _, kwargs = spy.call_args
+        assert kwargs.get("with_contact_id") is set_arg_bool
+        assert kwargs.get("with_device_index") is set_arg_bool
+        assert kwargs.get("show_channel_on_click") is set_arg_bool
