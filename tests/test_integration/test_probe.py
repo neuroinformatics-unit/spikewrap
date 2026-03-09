@@ -6,7 +6,8 @@ from base import BaseTest
 
 import spikewrap as sw
 from spikewrap.utils import _utils
-
+import matplotlib
+import copy
 
 class TestSetProbe(BaseTest):
 
@@ -71,39 +72,32 @@ class TestSetProbe(BaseTest):
 
         assert "A probe was already auto-detected." in str(e.value)
 
-    def test_plot_probe_saves_image(self, tmp_path):
+    @pytest.mark.parametrize("save_preprocessed", [True, False])
+    def test_plot_probe_saves_image(self, tmp_path, save_preprocessed):
         """
         Test that `plot_probe()` generates and saves the probe plot image.
+        It can be saved either automatically, when preprocessing is performed,
+        or explicitly with the plot_probe method.
         """
         session = sw.Session(
             sw.get_example_data_path() / "rawdata" / "sub-001",
             "ses-001",
             "spikeglx",
             run_names="all",
+            output_path=tmp_path
         )
 
-        session.preprocess(self.get_pp_steps(), per_shank=False)
-        session.save_preprocessed(overwrite=True)
+        if save_preprocessed:
+            session.preprocess(self.get_pp_steps(), per_shank=False)
+            session.save_preprocessed(overwrite=True)
+        else:
+            fig = session.plot_probe(save=True)
+            # just do this check for good measure here
+            assert isinstance(fig, matplotlib.figure.Figure)
 
-        fig = session.plot_probe(output_folder=tmp_path, show=False)
-        assert fig is not None
+        saved_plot_path = session._output_path / "probe_plot.png"
 
-        saved_plot = tmp_path / "probe_plots" / "probe_plot.png"
-        assert saved_plot.exists()
-
-    def test_plot_probe_raises_on_empty_session(self):
-        """
-        Test that calling `plot_probe()` with no preprocessed runs raises an error.
-        """
-        session = sw.Session(
-            sw.get_example_data_path() / "rawdata" / "sub-001",
-            "ses-001",
-            "spikeglx",
-            run_names="all",
-        )
-
-        with pytest.raises(RuntimeError, match="No runs available in this session."):
-            session.plot_probe()
+        assert saved_plot_path.exists()
 
     def test_plot_probe_raises_on_probe_mismatch(self):
         """
@@ -115,72 +109,17 @@ class TestSetProbe(BaseTest):
             "spikeglx",
             run_names="all",
         )
-        session.preprocess(self.get_pp_steps(), per_shank=False)
+        session.load_raw_data()
 
-        session._pp_runs[1].get_probe = lambda: {"shank_0": self.get_mock_probe()}
-        session._pp_runs[0].get_probe = lambda: {"shank_1": self.get_mock_probe()}
+        probe = self.get_mock_probe()
+        different_probe = copy.deepcopy(probe)
+        different_probe._contact_positions += 1
+
+        session._raw_runs[0].get_probe = lambda: probe
+        session._raw_runs[1].get_probe = lambda: different_probe
 
         with pytest.raises(
-            ValueError, match="Mismatch in shank structure across runs."
+            ValueError,
+            match="The probe for run: run-001_g0_imec0 is different than for run: run-002_g0_imec0"
         ):
-            session.plot_probe()
-
-    def test_get_probe_dict_structure(self):
-        """
-        Verify get_probe() returns a dict with correct keys and Probe objects.
-        """
-        session = sw.Session(
-            sw.get_example_data_path() / "rawdata" / "sub-001",
-            "ses-001",
-            "spikeglx",
-            run_names="all",
-        )
-        session.preprocess(self.get_pp_steps(), per_shank=True)
-        run = session._pp_runs[0]
-
-        probe_dict = run.get_probe()
-        assert isinstance(probe_dict, dict)
-        assert all(isinstance(k, str) for k in probe_dict)
-        assert all(isinstance(v, pi.Probe) for v in probe_dict.values())
-
-    def test_get_probe_raises_when_data_missing(self):
-        """
-        Ensure get_probe raises a RuntimeError if no preprocessed data is available.
-        """
-        from pathlib import Path
-
-        from spikewrap.structure._preprocess_run import PreprocessedRun
-
-        dummy_run = PreprocessedRun(
-            raw_data_path=Path("/tmp"),
-            ses_name="ses-001",
-            run_name="run-001",
-            file_format="spikeglx",
-            session_output_path=Path("/tmp/out"),
-            preprocessed_data={},
-            pp_steps={},
-        )
-
-        with pytest.raises(RuntimeError, match="No preprocessed data found for run"):
-            dummy_run.get_probe()
-
-    def test_plot_probe_with_custom_output_folder(self, tmp_path):
-        """
-        Ensure the plot is saved in the specified output folder.
-        """
-        session = sw.Session(
-            sw.get_example_data_path() / "rawdata" / "sub-001",
-            "ses-001",
-            "spikeglx",
-            run_names="all",
-        )
-
-        session.preprocess(self.get_pp_steps(), per_shank=False)
-        session.save_preprocessed(overwrite=True)
-
-        custom_output = tmp_path / "custom_out"
-        fig = session.plot_probe(output_folder=custom_output, show=False)
-
-        expected_path = custom_output / "probe_plots" / "probe_plot.png"
-        assert expected_path.exists()
-        assert fig is not None
+            session.get_probe()
