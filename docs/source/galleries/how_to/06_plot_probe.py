@@ -21,5 +21,5 @@ session = sw.Session(
 session.plot_probe(
     show=True,
     save=False,
-    with_contact_ids=True
+    with_contact_id=True
 )
