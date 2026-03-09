@@ -3,7 +3,7 @@
 ``spikewrap`` is a tool for automating extracellular electrophysiology analysis.
 
 See the documentation for a quick
-[feature overview](https://spikewrap.neuroinformatics.dev/gallery_builds/get_started/feature_overview.html)
+[feature overview](https://spikewrap.neuroinformatics.dev/gallery_builds/get_started/slow_feature_overview.html#sphx-glr-gallery-builds-get-started-slow-feature-overview-py)
 and to [get started](https://spikewrap.neuroinformatics.dev/get_started/index.html).
 
 ## Overview
