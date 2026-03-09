@@ -18,8 +18,6 @@ session = sw.Session(
     run_names="all"
 )
 
-session.plot_probe(
-    show=True,
-    save=False,
-    with_contact_id=True
-)
+fig = session.plot_probe(
+    figsize=(12, 10),
+    aspect_ratio=0.2)

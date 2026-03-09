@@ -272,12 +272,23 @@ class Session:
         return all_figs
 
     def get_probe(self):
-        """ """
+        """
+        Return the probe associated with this recording session.
+
+        Assumes the probe used is the same for all runs, will
+        raise an error if not. This returns the probe before
+        any processing, as loaded from the raw data (e.g.
+        if the preprocessing splits the recording by shank,
+        this is not reflected here).
+        """
         if not any(self._raw_runs):
             self._load_raw_data(internal_overwrite=False)
 
         first_run = self._raw_runs[0]
         first_probe = first_run.get_probe()
+
+        if first_probe is None:
+            return None
 
         for run_idx in range(1, len(self._raw_runs)):
 
@@ -300,26 +311,36 @@ class Session:
         with_contact_id: bool = False,
         with_device_index: bool = False,
         show_channel_on_click: bool = False,
-    ) -> tuple[matplotlib.collections.PolyCollection]:
-        """
-        Plot the probe geometry for this session using data from preprocessed runs.
+        figsize: tuple = ((6, 8)),
+        aspect_ratio: float | str = 0.4,
+    ) -> tuple[matplotlib.collections.PolyCollection] | None:
+        """ Plot the probe geometry for this session.
 
-        Ensures consistency across all runs before plotting. If multiple shanks
-        are present, each will be shown in its own subplot.
+        Assumes the probe used is the same for all runs, will
+        raise an error if not. This returns the probe before
+        any processing, as loaded from the raw data (e.g.
+        if the preprocessing splits the recording by shank,
+        this is not reflected here).
+
 
         Parameters
         ----------
         show :
             If True, displays the plot with `plt.show()`.
-
         save :
-
+            If `True`, the probe plot will be saved to the session folder
+            in `derivatives`.
         with_contact_id :
             If True, channel ids are displayed on top of the channels.
         with_device_index :
             If True, device channel indices are displayed on top of the channels.
         show_channel_on_click :
             If True, the channel information is shown upon click.
+        figsize :
+            Size of the matplotlib figure in inches as ``(width, height)``.
+        aspect_ratio :
+            Aspect ratio applied to the axes via ``ax.set_aspect()``. Adjust this
+            to control how stretched or compressed the probe appears horizontally.
 
         Returns
         -------
@@ -328,7 +349,11 @@ class Session:
         """
         probe = self.get_probe()
 
-        fig, ax = plt.subplots(figsize=(6, 8))
+        if probe is None:
+            warnings.warn("No probe detected. Probe plot was not generated.")
+            return None
+
+        fig, ax = plt.subplots(figsize=figsize)
 
         pi_plotting.plot_probe(
             probe,
@@ -338,7 +363,7 @@ class Session:
             ax=ax,
         )
 
-        ax.set_aspect(0.4)  # try this out, to make the plot a little wider
+        ax.set_aspect(aspect_ratio)  # try this out, to make the plot a little wider
 
         if show:
             plt.show()

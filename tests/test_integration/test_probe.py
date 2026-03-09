@@ -153,3 +153,31 @@ class TestSetProbe(BaseTest):
         assert kwargs.get("with_contact_id") is set_arg_bool
         assert kwargs.get("with_device_index") is set_arg_bool
         assert kwargs.get("show_channel_on_click") is set_arg_bool
+
+   # @pytest.mark.parametrize("save_preprocessed", [True, False])
+    def test_empty_probe(self):
+        session = sw.Session(
+            sw.get_example_data_path() / "rawdata" / "sub-001",
+            "ses-001",
+            "spikeglx",
+            run_names="all",
+        )
+        session.load_raw_data()
+
+        for raw_run in session._raw_runs:
+            raw_run._raw["grouped"]._properties.pop("contact_vector")
+
+        session.get_probe()
+        breakpoint()
+
+        if save_preprocessed:
+            session.preprocess(self.get_pp_steps(), per_shank=False)
+            session.save_preprocessed(overwrite=True)
+        else:
+            fig = session.plot_probe(save=True)
+            # just do this check for good measure here
+            assert isinstance(fig, matplotlib.figure.Figure)
+
+        saved_plot_path = session._output_path / "probe_plot.png"
+
+        assert saved_plot_path.exists()

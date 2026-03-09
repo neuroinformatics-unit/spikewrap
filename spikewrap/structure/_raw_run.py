@@ -3,6 +3,8 @@ from __future__ import annotations
 import shutil
 from typing import TYPE_CHECKING, Literal
 
+import probeinterface
+
 if TYPE_CHECKING:
     from pathlib import Path
 
@@ -78,20 +80,14 @@ class RawRun:
     # Public Functions
     # ---------------------------------------------------------------------------
 
-    def get_probe(self) -> dict:
+    def get_probe(self) -> probeinterface.Probe:
         """
-        Retrieve the probe configuration(s) used in this preprocessed run.
+        Retrieve the probe associated with this runs recording.
 
         Returns
         -------
-        dict
-            A dictionary where keys are shank identifiers (e.g., "shank_0", "grouped")
-            and values are `probeinterface.Probe` objects for each shank.
-
-        Raises
-        ------
-        RuntimeError
-            If no preprocessed data is available.
+        probe
+            A Probeinterface probe object.
         """
         return self._raw["grouped"].get_probe()
 
