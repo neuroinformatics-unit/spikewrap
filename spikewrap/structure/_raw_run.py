@@ -46,7 +46,7 @@ class RawRun:
     -----
     The raw data is loaded directly into `self._raw` and this
     data is never mutated or split by shank. If splitting by
-    shank when preprocessing, a copied splt-by-shank version
+    shank when preprocessing, a copied split-by-shank version
     is generated and used in the preprocessing.
 
     TODO
@@ -77,6 +77,23 @@ class RawRun:
     # ---------------------------------------------------------------------------
     # Public Functions
     # ---------------------------------------------------------------------------
+
+    def get_probe(self) -> dict:
+        """
+        Retrieve the probe configuration(s) used in this preprocessed run.
+
+        Returns
+        -------
+        dict
+            A dictionary where keys are shank identifiers (e.g., "shank_0", "grouped")
+            and values are `probeinterface.Probe` objects for each shank.
+
+        Raises
+        ------
+        RuntimeError
+            If no preprocessed data is available.
+        """
+        return self._raw["grouped"].get_probe()
 
     def load_raw_data(self, internal_overwrite: bool = False) -> None:
         """

@@ -15,7 +15,7 @@ from pathlib import Path
 import matplotlib.pyplot as plt
 import numpy as np
 import spikeinterface.full as si
-from probeinterface.plotting import plot_probe
+import probeinterface.plotting as pi_plotting
 
 from spikewrap.configs import config_utils
 from spikewrap.configs._backend import canon
@@ -137,8 +137,6 @@ class Session:
             Use ``session.get_raw_run_names()`` to check the order of concatenation.
         per_shank
             If ``True``, perform preprocessing on each shank separately.
-        overwrite_in_memory
-            If ``False`` (default), the
         """
         pp_steps = self._infer_steps_from_configs_argument(configs, "preprocessing")
 
@@ -212,7 +210,7 @@ class Session:
                 self._running_slurm_jobs.append(job_if_slurm)
 
         if not slurm:
-            self.plot_probe(show=False)
+            self.plot_probe(show=False, save=True)
 
     def plot_preprocessed(
         self,
@@ -271,7 +269,39 @@ class Session:
 
         return all_figs
 
-    def plot_probe(self, show=True, output_folder=None, figsize=(10, 6)):
+    def get_probe(self):
+        """
+
+        """
+        if not any(self._raw_runs):
+            self._load_raw_data(internal_overwrite=False)
+
+        first_run = self._raw_runs[0]
+        first_probe = first_run.get_probe()
+
+        for run_idx in range(1, len(self._raw_runs)):
+
+            other_run = self._raw_runs[run_idx]
+            other_probe = other_run.get_probe()
+
+            if first_probe != other_probe:
+                raise ValueError(
+                    "Probes differ across runs.\n"
+                    f"The probe for run: {first_run._run_name} is different "
+                    f"than for run: {other_run._run_name}"
+                )
+
+        return first_probe
+
+
+    def plot_probe(
+        self,
+        show: bool = False,
+        save: bool = False,
+        with_contact_id: bool = False,
+        with_device_index: bool = False,
+        show_channel_on_click: bool = False
+    ) -> tuple[matplotlib.collections.PolyCollection]:
         """
         Plot the probe geometry for this session using data from preprocessed runs.
 
@@ -280,60 +310,46 @@ class Session:
 
         Parameters
         ----------
-        show : bool, optional
-            If True, displays the plot with `plt.show()`. Default is True.
-        output_folder : Path or None, optional
-            Folder where the plot will be saved. Defaults to the session's output path.
-        figsize : tuple[int, int], optional
-            Figure size in inches per shank (width, height). Default is (10, 6).
+        show :
+            If True, displays the plot with `plt.show()`.
+
+        save :
+
+        with_contact_id :
+            If True, channel ids are displayed on top of the channels.
+        with_device_index :
+            If True, device channel indices are displayed on top of the channels.
+        show_channel_on_click :
+            If True, the channel information is shown upon click.
 
         Returns
         -------
         matplotlib.Figure
             The generated figure object containing the probe plot.
-
-        Raises
-        ------
-        RuntimeError
-            If no preprocessed runs are available.
-        ValueError
-            If probes differ across runs or shank structure mismatches.
         """
-        if not self._pp_runs:
-            raise RuntimeError("No runs available in this session.")
+        probe = self.get_probe()
 
-        probe_dicts = [run.get_probe() for run in self._pp_runs]
-        first_probe_dict = probe_dicts[0]
+        fig, ax = plt.subplots(figsize=(6, 8))
 
-        for other_probe_dict in probe_dicts[1:]:
-            if other_probe_dict.keys() != first_probe_dict.keys():
-                raise ValueError("Mismatch in shank structure across runs.")
-            for key in first_probe_dict:
-                if first_probe_dict[key] != other_probe_dict[key]:
-                    raise ValueError("Probes differ across runs for shank: " + key)
-
-        n_shanks = len(first_probe_dict)
-        fig, axes = plt.subplots(
-            1, n_shanks, figsize=(figsize[0] * n_shanks, figsize[1])
+        pi_plotting.plot_probe(
+            probe,
+            with_contact_id=with_contact_id,
+            with_device_index=with_device_index,
+            show_channel_on_click=show_channel_on_click,
+            ax=ax,
         )
-        if n_shanks == 1:
-            axes = [axes]
 
-        for ax, (shank_id, probe) in zip(axes, first_probe_dict.items()):
-            plot_probe(probe, ax=ax)
-            ax.set_title(shank_id)
+        ax.set_aspect(0.4)  # try this out, to make the plot a little wider
 
         if show:
             plt.show()
 
-        out_folder = Path(output_folder) if output_folder else self._output_path
-        probe_plots_folder = out_folder / "probe_plots"
-        probe_plots_folder.mkdir(parents=True, exist_ok=True)
+        if save:
+            plot_filename = self._output_path / "probe_plot.png"
+            fig.savefig(str(plot_filename), dpi=300)
+            _utils.message_user(f"Probe plot saved to {plot_filename}")
+            plt.close(fig)
 
-        plot_filename = probe_plots_folder / "probe_plot.png"
-        fig.savefig(str(plot_filename))
-        _utils.message_user(f"Probe plot saved to {plot_filename}")
-        plt.close(fig)
         return fig
 
     def sort(
@@ -704,7 +720,7 @@ class Session:
                 parent_ses_name=self._ses_name,
                 run_name=run_path.name,
                 file_format=self._file_format,
-                probe=self._probe,
+                probe=self._probe,  # TODO: this should not be held on the class, once the data is loaded it should be hidden. Because probe is dupliated on the recording and on the class...
                 sync_output_path=self._output_path / run_path.name,
             )
             separate_run.load_raw_data()
