@@ -368,6 +368,7 @@ class Session:
             plt.show()
 
         if save:
+            self._output_path.mkdir(parents=True, exist_ok=True)
             plot_filename = self._output_path / "probe_plot.png"
             fig.savefig(str(plot_filename), dpi=300)
             _utils.message_user(f"Probe plot saved to {plot_filename}")
