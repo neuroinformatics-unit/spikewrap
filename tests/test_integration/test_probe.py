@@ -137,7 +137,7 @@ class TestSetProbe(BaseTest):
             sw.get_example_data_path() / "rawdata" / "sub-001",
             "ses-001",
             "spikeglx",
-            run_names="all",
+            run_names=["run-001_g0_imec0", "run-002_g0_imec0"],
         )
 
         spy = mocker.spy(probeinterface.plotting, "plot_probe")
