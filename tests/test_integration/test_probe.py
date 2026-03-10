@@ -170,6 +170,7 @@ class TestSetProbe(BaseTest):
         )
         session.load_raw_data()
 
+        # remove the probe-information so has_probe() returns False
         for raw_run in session._raw_runs:
             raw_run._raw["grouped"]._properties.pop("contact_vector")
 
@@ -177,6 +178,8 @@ class TestSetProbe(BaseTest):
 
         assert session.get_probe() is None
 
+        # For each way of saving data, check it runs without an error,
+        # but does not save the plot image, and does raise a warning
         with pytest.warns(
             UserWarning, match="No probe detected. Probe plot was not generated."
         ):

@@ -203,15 +203,14 @@ class Session:
             with default arguments. If a `dict` is provided, it should contain SLURM arguments.
             See `tutorials` in the documentation for details.
         """
+        self.plot_probe(show=False, save=True)
+
         for run in self._pp_runs:
             job_if_slurm = run.save_preprocessed(
                 overwrite, chunk_duration_s, n_jobs, slurm
             )
             if slurm:
                 self._running_slurm_jobs.append(job_if_slurm)
-
-        if not slurm:
-            self.plot_probe(show=False, save=True)
 
     def plot_preprocessed(
         self,
@@ -323,7 +322,6 @@ class Session:
         if the preprocessing splits the recording by shank,
         this is not reflected here).
 
-
         Parameters
         ----------
         show :
@@ -364,7 +362,7 @@ class Session:
             ax=ax,
         )
 
-        ax.set_aspect(aspect_ratio)  # try this out, to make the plot a little wider
+        ax.set_aspect(aspect_ratio)
 
         if show:
             plt.show()

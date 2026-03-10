@@ -110,7 +110,6 @@ class PreprocessedRun:
             preprocessed_recording.save(
                 folder=preprocessed_path,
                 chunk_duration=f"{chunk_duration_s}s",
-                overwrite=True,
             )
 
         self.save_class_attributes_to_yaml(
