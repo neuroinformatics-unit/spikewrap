@@ -20,4 +20,5 @@ session = sw.Session(
 
 fig = session.plot_probe(
     figsize=(12, 10),
-    aspect_ratio=0.2)
+    aspect_ratio=0.2
+)
