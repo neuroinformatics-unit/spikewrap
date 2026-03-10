@@ -8,6 +8,7 @@ if TYPE_CHECKING:
 
     import matplotlib
     import numpy as np
+    import probeinterface
     import submitit
     from probeinterface import Probe
     from spikeinterface.core import BaseRecording
@@ -46,7 +47,7 @@ class RawRun:
     -----
     The raw data is loaded directly into `self._raw` and this
     data is never mutated or split by shank. If splitting by
-    shank when preprocessing, a copied splt-by-shank version
+    shank when preprocessing, a copied split-by-shank version
     is generated and used in the preprocessing.
 
     TODO
@@ -77,6 +78,19 @@ class RawRun:
     # ---------------------------------------------------------------------------
     # Public Functions
     # ---------------------------------------------------------------------------
+
+    def get_probe(self) -> probeinterface.Probe | None:
+        """
+        Retrieve the probe associated with this runs recording.
+
+        Returns
+        -------
+        probe
+            A Probeinterface probe object.
+        """
+        if self._raw["grouped"].has_probe():
+            return self._raw["grouped"].get_probe()
+        return None
 
     def load_raw_data(self, internal_overwrite: bool = False) -> None:
         """

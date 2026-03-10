@@ -10,9 +10,12 @@ if TYPE_CHECKING:
     from probeinterface import Probe
 
 import time
+import warnings
 from pathlib import Path
 
+import matplotlib.pyplot as plt
 import numpy as np
+import probeinterface.plotting as pi_plotting
 import spikeinterface.full as si
 
 from spikewrap.configs import config_utils
@@ -135,8 +138,6 @@ class Session:
             Use ``session.get_raw_run_names()`` to check the order of concatenation.
         per_shank
             If ``True``, perform preprocessing on each shank separately.
-        overwrite_in_memory
-            If ``False`` (default), the
         """
         pp_steps = self._infer_steps_from_configs_argument(configs, "preprocessing")
 
@@ -202,6 +203,8 @@ class Session:
             with default arguments. If a `dict` is provided, it should contain SLURM arguments.
             See `tutorials` in the documentation for details.
         """
+        self.plot_probe(show=False, save=True)
+
         for run in self._pp_runs:
             job_if_slurm = run.save_preprocessed(
                 overwrite, chunk_duration_s, n_jobs, slurm
@@ -267,6 +270,111 @@ class Session:
             all_figs[run._run_name] = fig
 
         return all_figs
+
+    def get_probe(self):
+        """
+        Return the probe associated with this recording session.
+
+        Assumes the probe used is the same for all runs, will
+        raise an error if not. This returns the probe before
+        any processing, as loaded from the raw data (e.g.
+        if the preprocessing splits the recording by shank,
+        this is not reflected here).
+        """
+        if not any(self._raw_runs):
+            self._load_raw_data(internal_overwrite=False)
+
+        first_run = self._raw_runs[0]
+        first_probe = first_run.get_probe()
+
+        if first_probe is None:
+            return None
+
+        for run_idx in range(1, len(self._raw_runs)):
+
+            other_run = self._raw_runs[run_idx]
+            other_probe = other_run.get_probe()
+
+            if first_probe != other_probe:
+                raise ValueError(
+                    "Probes differ across runs.\n"
+                    f"The probe for run: {first_run._run_name} is different "
+                    f"than for run: {other_run._run_name}"
+                )
+
+        return first_probe
+
+    def plot_probe(
+        self,
+        show: bool = False,
+        save: bool = False,
+        with_contact_id: bool = False,
+        with_device_index: bool = False,
+        show_channel_on_click: bool = False,
+        figsize: tuple = ((6, 8)),
+        aspect_ratio: float | str = 0.4,
+    ) -> tuple[matplotlib.collections.PolyCollection] | None:
+        """Plot the probe geometry for this session.
+
+        Assumes the probe used is the same for all runs, will
+        raise an error if not. This returns the probe before
+        any processing, as loaded from the raw data (e.g.
+        if the preprocessing splits the recording by shank,
+        this is not reflected here).
+
+        Parameters
+        ----------
+        show :
+            If True, displays the plot with `plt.show()`.
+        save :
+            If `True`, the probe plot will be saved to the session folder
+            in `derivatives`.
+        with_contact_id :
+            If True, channel ids are displayed on top of the channels.
+        with_device_index :
+            If True, device channel indices are displayed on top of the channels.
+        show_channel_on_click :
+            If True, the channel information is shown upon click.
+        figsize :
+            Size of the matplotlib figure in inches as ``(width, height)``.
+        aspect_ratio :
+            Aspect ratio applied to the axes via ``ax.set_aspect()``. Adjust this
+            to control how stretched or compressed the probe appears horizontally.
+
+        Returns
+        -------
+        matplotlib.Figure
+            The generated figure object containing the probe plot.
+        """
+        probe = self.get_probe()
+
+        if probe is None:
+            warnings.warn("No probe detected. Probe plot was not generated.")
+            return None
+
+        fig, ax = plt.subplots(figsize=figsize)
+
+        pi_plotting.plot_probe(
+            probe,
+            with_contact_id=with_contact_id,
+            with_device_index=with_device_index,
+            show_channel_on_click=show_channel_on_click,
+            ax=ax,
+        )
+
+        ax.set_aspect(aspect_ratio)
+
+        if show:
+            plt.show()
+
+        if save:
+            self._output_path.mkdir(parents=True, exist_ok=True)
+            plot_filename = self._output_path / "probe_plot.png"
+            fig.savefig(str(plot_filename), dpi=300)
+            _utils.message_user(f"Probe plot saved to {plot_filename}")
+            plt.close(fig)
+
+        return fig
 
     def sort(
         self,

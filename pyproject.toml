@@ -42,6 +42,7 @@ user_support = "https://github.com/JoeZiminski/spikewrap/issues"
 dev = [
   "pytest",
   "pytest-cov",
+  "pytest-mock",
   "coverage",
   "tox",
   "black",
