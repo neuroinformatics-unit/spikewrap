@@ -292,7 +292,7 @@ class TestSorting(BaseTest):
         sys.platform == "darwin", reason="Isoplit not installing on macOS"
     )
     @pytest.mark.parametrize("prepro_per_shank", [True, False])
-    def test_load_prepro_from_file_for_sorting(self, prepro_per_shank):
+    def test_load_prepro_from_file_for_sorting(self, tmpdir, prepro_per_shank):
         """
         Test when session is created without preprocessing, the preprocessed
         data should be loaded from file for sorting.
@@ -305,6 +305,7 @@ class TestSorting(BaseTest):
             session._file_format,
             session._passed_run_names,
             probe=session._probe,
+            output_path=tmpdir,
         )
         assert session.get_preprocessed_run_names() == []
 
