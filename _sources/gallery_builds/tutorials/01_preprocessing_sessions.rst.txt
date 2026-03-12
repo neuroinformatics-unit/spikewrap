@@ -11,7 +11,7 @@
         :class: sphx-glr-download-link-note
 
         :ref:`Go to the end <sphx_glr_download_gallery_builds_tutorials_01_preprocessing_sessions.py>`
-        to download the full example code. or to run this example in your browser via Binder
+        to download the full example code or to run this example in your browser via Binder.
 
 .. rst-class:: sphx-glr-example-title
 
@@ -156,12 +156,18 @@ First, we import and instantiate the :class:`spikewrap.Session` object with the:
             }
         ]
     }
+    /home/runner/work/spikewrap/spikewrap/spikewrap/process/_loading.py:146: UserWarning: The sessions or runs provided for are not in creation datetime order.
+    They will be concatenated in the order provided, as:
+    ['run-002_g0_imec0', 'run-001_g0_imec0'].
+      warnings.warn(
+
+    Loading data from path: /home/runner/work/spikewrap/spikewrap/spikewrap/examples/example_tiny_data/spikeglx/rawdata/sub-001/ses-001/ephys/run-002_g0_imec0
+    /home/runner/work/spikewrap/spikewrap/spikewrap/process/_loading.py:30: UserWarning: Unable to find a corresponding metadata file for the recording. The probe information will not be loaded. 
+      si_extractors.read_spikeglx(
 
     Loading data from path: /home/runner/work/spikewrap/spikewrap/spikewrap/examples/example_tiny_data/spikeglx/rawdata/sub-001/ses-001/ephys/run-001_g0_imec0
 
-    Loading data from path: /home/runner/work/spikewrap/spikewrap/spikewrap/examples/example_tiny_data/spikeglx/rawdata/sub-001/ses-001/ephys/run-002_g0_imec0
-
-    Concatenating raw recordings in the following order:['run-001_g0_imec0', 'run-002_g0_imec0']
+    Concatenating raw recordings in the following order:['run-002_g0_imec0', 'run-001_g0_imec0']
 
 
 
@@ -191,7 +197,7 @@ We can inspect the detected run names with:
 
  .. code-block:: none
 
-    ['run-001_g0_imec0', 'run-002_g0_imec0']
+    ['run-002_g0_imec0', 'run-001_g0_imec0']
     ['concat_run']
 
 
@@ -359,7 +365,7 @@ For multi-run sessions or multi-shank probes, we can set:
         ]
     }
 
-    Concatenating raw recordings in the following order:['run-001_g0_imec0', 'run-002_g0_imec0']
+    Concatenating raw recordings in the following order:['run-002_g0_imec0', 'run-001_g0_imec0']
 
     Split run: concat_run by shank. There are 2 shanks. 
 
@@ -460,14 +466,14 @@ Now, let's update a preprocessing step and plot again:
     *
 
       .. image-sg:: /gallery_builds/tutorials/images/sphx_glr_01_preprocessing_sessions_002.png
-         :alt: Session: ses-001, Run: run-001_g0_imec0
+         :alt: Session: ses-001, Run: run-002_g0_imec0
          :srcset: /gallery_builds/tutorials/images/sphx_glr_01_preprocessing_sessions_002.png
          :class: sphx-glr-multi-img
 
     *
 
       .. image-sg:: /gallery_builds/tutorials/images/sphx_glr_01_preprocessing_sessions_003.png
-         :alt: Session: ses-001, Run: run-002_g0_imec0
+         :alt: Session: ses-001, Run: run-001_g0_imec0
          :srcset: /gallery_builds/tutorials/images/sphx_glr_01_preprocessing_sessions_003.png
          :class: sphx-glr-multi-img
 
@@ -497,9 +503,9 @@ Now, let's update a preprocessing step and plot again:
             }
         ]
     }
-    /opt/hostedtoolcache/Python/3.11.13/x64/lib/python3.11/site-packages/spikeinterface/widgets/traces.py:148: UserWarning: You have selected a time after the end of the segment. The range will be clipped to 24.918699999999998
+    /opt/hostedtoolcache/Python/3.11.14/x64/lib/python3.11/site-packages/spikeinterface/widgets/traces.py:162: UserWarning: You have selected a time after the end of the segment. The range will be clipped to 71.01536666666667
       warnings.warn(
-    /opt/hostedtoolcache/Python/3.11.13/x64/lib/python3.11/site-packages/spikeinterface/widgets/traces.py:148: UserWarning: You have selected a time after the end of the segment. The range will be clipped to 71.01536666666667
+    /opt/hostedtoolcache/Python/3.11.14/x64/lib/python3.11/site-packages/spikeinterface/widgets/traces.py:162: UserWarning: You have selected a time after the end of the segment. The range will be clipped to 24.918699999999998
       warnings.warn(
 
 
@@ -529,20 +535,24 @@ chosen settings, you can run:
  .. code-block:: none
 
 
-    Saving data for: run-001_g0_imec0...
-    write_binary_recording 
-    engine=process - n_jobs=4 - samples_per_chunk=60,000 - chunk_memory=43.95 MiB - total_memory=175.78 MiB - chunk_duration=2.00s
-    write_binary_recording (workers: 1 processes):   0%|          | 0/1 [00:00<?, ?it/s]    write_binary_recording (workers: 1 processes): 100%|██████████| 1/1 [00:00<00:00,  2.02it/s]    write_binary_recording (workers: 1 processes): 100%|██████████| 1/1 [00:00<00:00,  2.02it/s]
+    Probe plot saved to /home/runner/work/spikewrap/spikewrap/spikewrap/examples/example_tiny_data/spikeglx/derivatives/sub-001/ses-001/ephys/probe_plot.png
 
     Saving data for: run-002_g0_imec0...
     write_binary_recording 
     engine=process - n_jobs=4 - samples_per_chunk=60,000 - chunk_memory=43.95 MiB - total_memory=175.78 MiB - chunk_duration=2.00s
-    write_binary_recording (workers: 1 processes):   0%|          | 0/1 [00:00<?, ?it/s]    write_binary_recording (workers: 1 processes): 100%|██████████| 1/1 [00:00<00:00,  2.23it/s]    write_binary_recording (workers: 1 processes): 100%|██████████| 1/1 [00:00<00:00,  2.23it/s]
+    write_binary_recording (workers: 1 processes):   0%|          | 0/1 [00:00<?, ?it/s]    write_binary_recording (workers: 1 processes): 100%|██████████| 1/1 [00:00<00:00,  1.60it/s]    write_binary_recording (workers: 1 processes): 100%|██████████| 1/1 [00:00<00:00,  1.60it/s]
+
+    Saving data for: run-001_g0_imec0...
+    write_binary_recording 
+    engine=process - n_jobs=4 - samples_per_chunk=60,000 - chunk_memory=43.95 MiB - total_memory=175.78 MiB - chunk_duration=2.00s
+    write_binary_recording (workers: 1 processes):   0%|          | 0/1 [00:00<?, ?it/s]    write_binary_recording (workers: 1 processes): 100%|██████████| 1/1 [00:00<00:00,  1.66it/s]    write_binary_recording (workers: 1 processes): 100%|██████████| 1/1 [00:00<00:00,  1.65it/s]
 
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 222-236
+.. GENERATED FROM PYTHON SOURCE LINES 222-238
+
+This will also save an image of the probe.
 
 .. attention::
 
@@ -559,7 +569,7 @@ chosen settings, you can run:
            import spikewrap as sw
            ...
 
-.. GENERATED FROM PYTHON SOURCE LINES 238-260
+.. GENERATED FROM PYTHON SOURCE LINES 240-262
 
 Using SLURM
 ~~~~~~~~~~~
@@ -587,7 +597,7 @@ See the
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** (0 minutes 4.634 seconds)
+   **Total running time of the script:** (0 minutes 6.271 seconds)
 
 
 .. _sphx_glr_download_gallery_builds_tutorials_01_preprocessing_sessions.py:

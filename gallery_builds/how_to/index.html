@@ -44,9 +44,9 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../../_static/documentation_options.js?v=e259d695"></script>
-    <script src="../../_static/doctools.js?v=9bcbadda"></script>
-    <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/documentation_options.js?v=6c02275b"></script>
+    <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/design-tabs.js?v=f930bc37"></script>
     <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'gallery_builds/how_to/index';</script>
@@ -120,7 +120,7 @@
   
   
   
-    <p class="title logo__title">spikewrap v0.3.0</p>
+    <p class="title logo__title">spikewrap v0.4.0</p>
   
 </a></div>
     
@@ -360,6 +360,7 @@
 <li class="toctree-l1"><a class="reference internal" href="03_run_in_slurm.html">How to run in SLURM</a></li>
 <li class="toctree-l1"><a class="reference internal" href="04_slow_spike_sorting.html">How  to run Spike Sorting</a></li>
 <li class="toctree-l1"><a class="reference internal" href="05_sync_channel.html">How to Edit the Sync Channel</a></li>
+<li class="toctree-l1"><a class="reference internal" href="06_plot_probe.html">How to Plot the Probe</a></li>
 </ul>
 </div>
 </nav></div>
@@ -420,20 +421,23 @@
   <section id="how-to">
 <h1>How To<a class="headerlink" href="#how-to" title="Link to this heading">#</a></h1>
 <div class="sphx-glr-thumbnails"><div class="sphx-glr-thumbcontainer" tooltip="How to preprocess a session"><img alt="" src="../../_images/sphx_glr_01_preprocess_a_session_thumb.png" />
-<p><a class="reference internal" href="01_preprocess_a_session.html#sphx-glr-gallery-builds-how-to-01-preprocess-a-session-py"><span class="std std-ref">How to preprocess a session</span></a></p>
+<p><a class="reference internal" href="01_preprocess_a_session.html"><span class="doc">How to preprocess a session</span></a></p>
   <div class="sphx-glr-thumbnail-title">How to preprocess a session</div>
 </div><div class="sphx-glr-thumbcontainer" tooltip="How to manage configs"><img alt="" src="../../_images/sphx_glr_02_manage_configs_thumb.png" />
-<p><a class="reference internal" href="02_manage_configs.html#sphx-glr-gallery-builds-how-to-02-manage-configs-py"><span class="std std-ref">How to manage configs</span></a></p>
+<p><a class="reference internal" href="02_manage_configs.html"><span class="doc">How to manage configs</span></a></p>
   <div class="sphx-glr-thumbnail-title">How to manage configs</div>
 </div><div class="sphx-glr-thumbcontainer" tooltip="How to run in SLURM"><img alt="" src="../../_images/sphx_glr_03_run_in_slurm_thumb.png" />
-<p><a class="reference internal" href="03_run_in_slurm.html#sphx-glr-gallery-builds-how-to-03-run-in-slurm-py"><span class="std std-ref">How to run in SLURM</span></a></p>
+<p><a class="reference internal" href="03_run_in_slurm.html"><span class="doc">How to run in SLURM</span></a></p>
   <div class="sphx-glr-thumbnail-title">How to run in SLURM</div>
 </div><div class="sphx-glr-thumbcontainer" tooltip="How  to run Spike Sorting"><img alt="" src="../../_images/sphx_glr_04_slow_spike_sorting_thumb.png" />
-<p><a class="reference internal" href="04_slow_spike_sorting.html#sphx-glr-gallery-builds-how-to-04-slow-spike-sorting-py"><span class="std std-ref">How  to run Spike Sorting</span></a></p>
+<p><a class="reference internal" href="04_slow_spike_sorting.html"><span class="doc">How  to run Spike Sorting</span></a></p>
   <div class="sphx-glr-thumbnail-title">How  to run Spike Sorting</div>
 </div><div class="sphx-glr-thumbcontainer" tooltip="How to Edit the Sync Channel"><img alt="" src="../../_images/sphx_glr_05_sync_channel_thumb.png" />
-<p><a class="reference internal" href="05_sync_channel.html#sphx-glr-gallery-builds-how-to-05-sync-channel-py"><span class="std std-ref">How to Edit the Sync Channel</span></a></p>
+<p><a class="reference internal" href="05_sync_channel.html"><span class="doc">How to Edit the Sync Channel</span></a></p>
   <div class="sphx-glr-thumbnail-title">How to Edit the Sync Channel</div>
+</div><div class="sphx-glr-thumbcontainer" tooltip="This how-to demonstrates how to plot the probe. The probe can also be saved to the session output folder. To get the ProbeInterface object, use spikewrap.Session.get_probe()"><img alt="" src="../../_images/sphx_glr_06_plot_probe_thumb.png" />
+<p><a class="reference internal" href="06_plot_probe.html"><span class="doc">How to Plot the Probe</span></a></p>
+  <div class="sphx-glr-thumbnail-title">How to Plot the Probe</div>
 </div></div><div class="toctree-wrapper compound">
 </div>
 <div class="sphx-glr-footer sphx-glr-footer-gallery docutils container">
@@ -502,7 +506,7 @@
     <div class="footer-items__start">
       
         <div class="footer-item"><p class="sphinx-version">
-    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.1.3.
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 9.0.4.
     <br/>
     </p>
     <p class="theme-version">

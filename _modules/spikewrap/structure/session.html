@@ -43,9 +43,9 @@
   <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../../../_static/documentation_options.js?v=e259d695"></script>
-    <script src="../../../_static/doctools.js?v=9bcbadda"></script>
-    <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../../_static/documentation_options.js?v=6c02275b"></script>
+    <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../_static/design-tabs.js?v=f930bc37"></script>
     <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = '_modules/spikewrap/structure/session';</script>
@@ -117,7 +117,7 @@
   
   
   
-    <p class="title logo__title">spikewrap v0.3.0</p>
+    <p class="title logo__title">spikewrap v0.4.0</p>
   
 </a></div>
     
@@ -406,7 +406,7 @@
   <h1>Source code for spikewrap.structure.session</h1><div class="highlight"><pre>
 <span></span><span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
 
-<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">TYPE_CHECKING</span><span class="p">,</span> <span class="n">Literal</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">TYPE_CHECKING</span><span class="p">,</span> <span class="n">Literal</span><span class="p">,</span> <span class="n">cast</span>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">yaml</span>
 
@@ -416,9 +416,12 @@
     <span class="kn">from</span><span class="w"> </span><span class="nn">probeinterface</span><span class="w"> </span><span class="kn">import</span> <span class="n">Probe</span>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">time</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">warnings</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
 
+<span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.pyplot</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">plt</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">probeinterface.plotting</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pi_plotting</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">spikeinterface.full</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">si</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">spikewrap.configs</span><span class="w"> </span><span class="kn">import</span> <span class="n">config_utils</span>
@@ -509,7 +512,7 @@
 
         <span class="bp">self</span><span class="o">.</span><span class="n">_running_slurm_jobs</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">submitit</span><span class="o">.</span><span class="n">Job</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">_raw_runs</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">SeparateRawRun</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_raw_runs</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">SeparateRawRun</span> <span class="o">|</span> <span class="n">ConcatRawRun</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_pp_runs</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">PreprocessedRun</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_sorting_runs</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">SeparateSortingRun</span> <span class="o">|</span> <span class="n">ConcatSortingRun</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
 
@@ -545,8 +548,6 @@
 <span class="sd">            Use ``session.get_raw_run_names()`` to check the order of concatenation.</span>
 <span class="sd">        per_shank</span>
 <span class="sd">            If ``True``, perform preprocessing on each shank separately.</span>
-<span class="sd">        overwrite_in_memory</span>
-<span class="sd">            If ``False`` (default), the</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">pp_steps</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_infer_steps_from_configs_argument</span><span class="p">(</span><span class="n">configs</span><span class="p">,</span> <span class="s2">&quot;preprocessing&quot;</span><span class="p">)</span>
 
@@ -559,7 +560,7 @@
         <span class="k">if</span> <span class="n">concat_runs</span><span class="p">:</span>
             <span class="n">runs_to_preprocess</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_get_concat_raw_run</span><span class="p">()]</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="n">runs_to_preprocess</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_raw_runs</span>  <span class="c1"># type: ignore</span>
+            <span class="n">runs_to_preprocess</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_raw_runs</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">_pp_runs</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="k">for</span> <span class="n">run</span> <span class="ow">in</span> <span class="n">runs_to_preprocess</span><span class="p">:</span>
@@ -615,6 +616,8 @@
 <span class="sd">            with default arguments. If a `dict` is provided, it should contain SLURM arguments.</span>
 <span class="sd">            See `tutorials` in the documentation for details.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">plot_probe</span><span class="p">(</span><span class="n">show</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">save</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
         <span class="k">for</span> <span class="n">run</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_pp_runs</span><span class="p">:</span>
             <span class="n">job_if_slurm</span> <span class="o">=</span> <span class="n">run</span><span class="o">.</span><span class="n">save_preprocessed</span><span class="p">(</span>
                 <span class="n">overwrite</span><span class="p">,</span> <span class="n">chunk_duration_s</span><span class="p">,</span> <span class="n">n_jobs</span><span class="p">,</span> <span class="n">slurm</span>
@@ -683,6 +686,117 @@
             <span class="n">all_figs</span><span class="p">[</span><span class="n">run</span><span class="o">.</span><span class="n">_run_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">fig</span>
 
         <span class="k">return</span> <span class="n">all_figs</span></div>
+
+
+<div class="viewcode-block" id="Session.get_probe">
+<a class="viewcode-back" href="../../../api_index.html#spikewrap.Session.get_probe">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_probe</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return the probe associated with this recording session.</span>
+
+<span class="sd">        Assumes the probe used is the same for all runs, will</span>
+<span class="sd">        raise an error if not. This returns the probe before</span>
+<span class="sd">        any processing, as loaded from the raw data (e.g.</span>
+<span class="sd">        if the preprocessing splits the recording by shank,</span>
+<span class="sd">        this is not reflected here).</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">any</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_raw_runs</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_load_raw_data</span><span class="p">(</span><span class="n">internal_overwrite</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+        <span class="n">first_run</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_raw_runs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">first_probe</span> <span class="o">=</span> <span class="n">first_run</span><span class="o">.</span><span class="n">get_probe</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="n">first_probe</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">None</span>
+
+        <span class="k">for</span> <span class="n">run_idx</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_raw_runs</span><span class="p">)):</span>
+
+            <span class="n">other_run</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_raw_runs</span><span class="p">[</span><span class="n">run_idx</span><span class="p">]</span>
+            <span class="n">other_probe</span> <span class="o">=</span> <span class="n">other_run</span><span class="o">.</span><span class="n">get_probe</span><span class="p">()</span>
+
+            <span class="k">if</span> <span class="n">first_probe</span> <span class="o">!=</span> <span class="n">other_probe</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                    <span class="s2">&quot;Probes differ across runs.</span><span class="se">\n</span><span class="s2">&quot;</span>
+                    <span class="sa">f</span><span class="s2">&quot;The probe for run: </span><span class="si">{</span><span class="n">first_run</span><span class="o">.</span><span class="n">_run_name</span><span class="si">}</span><span class="s2"> is different &quot;</span>
+                    <span class="sa">f</span><span class="s2">&quot;than for run: </span><span class="si">{</span><span class="n">other_run</span><span class="o">.</span><span class="n">_run_name</span><span class="si">}</span><span class="s2">&quot;</span>
+                <span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">first_probe</span></div>
+
+
+<div class="viewcode-block" id="Session.plot_probe">
+<a class="viewcode-back" href="../../../api_index.html#spikewrap.Session.plot_probe">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">plot_probe</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">show</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="n">save</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="n">with_contact_id</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="n">with_device_index</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="n">show_channel_on_click</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="n">figsize</span><span class="p">:</span> <span class="nb">tuple</span> <span class="o">=</span> <span class="p">((</span><span class="mi">6</span><span class="p">,</span> <span class="mi">8</span><span class="p">)),</span>
+        <span class="n">aspect_ratio</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="nb">str</span> <span class="o">=</span> <span class="mf">0.4</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">matplotlib</span><span class="o">.</span><span class="n">collections</span><span class="o">.</span><span class="n">PolyCollection</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Plot the probe geometry for this session.</span>
+
+<span class="sd">        Assumes the probe used is the same for all runs, will</span>
+<span class="sd">        raise an error if not. This returns the probe before</span>
+<span class="sd">        any processing, as loaded from the raw data (e.g.</span>
+<span class="sd">        if the preprocessing splits the recording by shank,</span>
+<span class="sd">        this is not reflected here).</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        show :</span>
+<span class="sd">            If True, displays the plot with `plt.show()`.</span>
+<span class="sd">        save :</span>
+<span class="sd">            If `True`, the probe plot will be saved to the session folder</span>
+<span class="sd">            in `derivatives`.</span>
+<span class="sd">        with_contact_id :</span>
+<span class="sd">            If True, channel ids are displayed on top of the channels.</span>
+<span class="sd">        with_device_index :</span>
+<span class="sd">            If True, device channel indices are displayed on top of the channels.</span>
+<span class="sd">        show_channel_on_click :</span>
+<span class="sd">            If True, the channel information is shown upon click.</span>
+<span class="sd">        figsize :</span>
+<span class="sd">            Size of the matplotlib figure in inches as ``(width, height)``.</span>
+<span class="sd">        aspect_ratio :</span>
+<span class="sd">            Aspect ratio applied to the axes via ``ax.set_aspect()``. Adjust this</span>
+<span class="sd">            to control how stretched or compressed the probe appears horizontally.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        matplotlib.Figure</span>
+<span class="sd">            The generated figure object containing the probe plot.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">probe</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_probe</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="n">probe</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s2">&quot;No probe detected. Probe plot was not generated.&quot;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="kc">None</span>
+
+        <span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="n">figsize</span><span class="p">)</span>
+
+        <span class="n">pi_plotting</span><span class="o">.</span><span class="n">plot_probe</span><span class="p">(</span>
+            <span class="n">probe</span><span class="p">,</span>
+            <span class="n">with_contact_id</span><span class="o">=</span><span class="n">with_contact_id</span><span class="p">,</span>
+            <span class="n">with_device_index</span><span class="o">=</span><span class="n">with_device_index</span><span class="p">,</span>
+            <span class="n">show_channel_on_click</span><span class="o">=</span><span class="n">show_channel_on_click</span><span class="p">,</span>
+            <span class="n">ax</span><span class="o">=</span><span class="n">ax</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_aspect</span><span class="p">(</span><span class="n">aspect_ratio</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">show</span><span class="p">:</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="n">save</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_output_path</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="n">plot_filename</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_output_path</span> <span class="o">/</span> <span class="s2">&quot;probe_plot.png&quot;</span>
+            <span class="n">fig</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">plot_filename</span><span class="p">),</span> <span class="n">dpi</span><span class="o">=</span><span class="mi">300</span><span class="p">)</span>
+            <span class="n">_utils</span><span class="o">.</span><span class="n">message_user</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Probe plot saved to </span><span class="si">{</span><span class="n">plot_filename</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">close</span><span class="p">(</span><span class="n">fig</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">fig</span></div>
 
 
 <div class="viewcode-block" id="Session.sort">
@@ -1080,7 +1194,7 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">_passed_run_names</span><span class="p">,</span>
         <span class="p">)</span>
 
-        <span class="n">runs</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">SeparateRawRun</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">runs</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">SeparateRawRun</span> <span class="o">|</span> <span class="n">ConcatRawRun</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
 
         <span class="k">for</span> <span class="n">run_path</span> <span class="ow">in</span> <span class="n">run_paths</span><span class="p">:</span>
 
@@ -1117,7 +1231,7 @@
         <span class="p">)</span>
 
         <span class="k">return</span> <span class="n">ConcatRawRun</span><span class="p">(</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_raw_runs</span><span class="p">,</span>
+            <span class="n">cast</span><span class="p">(</span><span class="s2">&quot;list[SeparateRawRun]&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_raw_runs</span><span class="p">),</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_parent_input_path</span><span class="p">,</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_ses_name</span><span class="p">,</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_file_format</span><span class="p">,</span>
@@ -1256,7 +1370,7 @@
     <div class="footer-items__start">
       
         <div class="footer-item"><p class="sphinx-version">
-    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.1.3.
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 9.0.4.
     <br/>
     </p>
     <p class="theme-version">

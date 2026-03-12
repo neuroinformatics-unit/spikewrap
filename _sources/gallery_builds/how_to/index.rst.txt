@@ -19,7 +19,7 @@ How To
   .. image:: /gallery_builds/how_to/images/thumb/sphx_glr_01_preprocess_a_session_thumb.png
     :alt:
 
-  :ref:`sphx_glr_gallery_builds_how_to_01_preprocess_a_session.py`
+  :doc:`/gallery_builds/how_to/01_preprocess_a_session`
 
 .. raw:: html
 
@@ -36,7 +36,7 @@ How To
   .. image:: /gallery_builds/how_to/images/thumb/sphx_glr_02_manage_configs_thumb.png
     :alt:
 
-  :ref:`sphx_glr_gallery_builds_how_to_02_manage_configs.py`
+  :doc:`/gallery_builds/how_to/02_manage_configs`
 
 .. raw:: html
 
@@ -53,7 +53,7 @@ How To
   .. image:: /gallery_builds/how_to/images/thumb/sphx_glr_03_run_in_slurm_thumb.png
     :alt:
 
-  :ref:`sphx_glr_gallery_builds_how_to_03_run_in_slurm.py`
+  :doc:`/gallery_builds/how_to/03_run_in_slurm`
 
 .. raw:: html
 
@@ -70,7 +70,7 @@ How To
   .. image:: /gallery_builds/how_to/images/thumb/sphx_glr_04_slow_spike_sorting_thumb.png
     :alt:
 
-  :ref:`sphx_glr_gallery_builds_how_to_04_slow_spike_sorting.py`
+  :doc:`/gallery_builds/how_to/04_slow_spike_sorting`
 
 .. raw:: html
 
@@ -87,11 +87,28 @@ How To
   .. image:: /gallery_builds/how_to/images/thumb/sphx_glr_05_sync_channel_thumb.png
     :alt:
 
-  :ref:`sphx_glr_gallery_builds_how_to_05_sync_channel.py`
+  :doc:`/gallery_builds/how_to/05_sync_channel`
 
 .. raw:: html
 
       <div class="sphx-glr-thumbnail-title">How to Edit the Sync Channel</div>
+    </div>
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="This how-to demonstrates how to plot the probe. The probe can also be saved to the session output folder. To get the ProbeInterface object, use spikewrap.Session.get_probe()">
+
+.. only:: html
+
+  .. image:: /gallery_builds/how_to/images/thumb/sphx_glr_06_plot_probe_thumb.png
+    :alt:
+
+  :doc:`/gallery_builds/how_to/06_plot_probe`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">How to Plot the Probe</div>
     </div>
 
 
@@ -110,6 +127,7 @@ How To
    /gallery_builds/how_to/03_run_in_slurm
    /gallery_builds/how_to/04_slow_spike_sorting
    /gallery_builds/how_to/05_sync_channel
+   /gallery_builds/how_to/06_plot_probe
 
 
 .. only:: html

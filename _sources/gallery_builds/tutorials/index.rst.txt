@@ -22,7 +22,7 @@ Tutorials
   .. image:: /gallery_builds/tutorials/images/thumb/sphx_glr_01_preprocessing_sessions_thumb.png
     :alt:
 
-  :ref:`sphx_glr_gallery_builds_tutorials_01_preprocessing_sessions.py`
+  :doc:`/gallery_builds/tutorials/01_preprocessing_sessions`
 
 .. raw:: html
 
@@ -39,7 +39,7 @@ Tutorials
   .. image:: /gallery_builds/tutorials/images/thumb/sphx_glr_01a_supported_preprocessing_steps_thumb.png
     :alt:
 
-  :ref:`sphx_glr_gallery_builds_tutorials_01a_supported_preprocessing_steps.py`
+  :doc:`/gallery_builds/tutorials/01a_supported_preprocessing_steps`
 
 .. raw:: html
 
@@ -56,7 +56,7 @@ Tutorials
   .. image:: /gallery_builds/tutorials/images/thumb/sphx_glr_02_managing_configs_thumb.png
     :alt:
 
-  :ref:`sphx_glr_gallery_builds_tutorials_02_managing_configs.py`
+  :doc:`/gallery_builds/tutorials/02_managing_configs`
 
 .. raw:: html
 
@@ -73,7 +73,7 @@ Tutorials
   .. image:: /gallery_builds/tutorials/images/thumb/sphx_glr_03_running_with_slurm_thumb.png
     :alt:
 
-  :ref:`sphx_glr_gallery_builds_tutorials_03_running_with_slurm.py`
+  :doc:`/gallery_builds/tutorials/03_running_with_slurm`
 
 .. raw:: html
 
@@ -90,7 +90,7 @@ Tutorials
   .. image:: /gallery_builds/tutorials/images/thumb/sphx_glr_04_slow_spike_sorting_thumb.png
     :alt:
 
-  :ref:`sphx_glr_gallery_builds_tutorials_04_slow_spike_sorting.py`
+  :doc:`/gallery_builds/tutorials/04_slow_spike_sorting`
 
 .. raw:: html
 
@@ -107,7 +107,7 @@ Tutorials
   .. image:: /gallery_builds/tutorials/images/thumb/sphx_glr_05_sync_channel_thumb.png
     :alt:
 
-  :ref:`sphx_glr_gallery_builds_tutorials_05_sync_channel.py`
+  :doc:`/gallery_builds/tutorials/05_sync_channel`
 
 .. raw:: html
 

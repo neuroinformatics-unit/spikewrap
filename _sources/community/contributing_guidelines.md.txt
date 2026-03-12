@@ -109,10 +109,10 @@ please don't hesitate to make a contribution.
 The documentation is found in the `docs/source` folder, where the structure mirrors the rendered website.
 
 Dependencies for building the documentation locally can be found at `docs/requirements.txt`.
-To install these, change directory to the `docs` folder in your terminal and type:
+To install these, run the following command in your terminal from the `spikewrap` root folder:
 
 ```
-pip install -r requirements.txt
+pip install -r docs/requirements.txt
 ```
 
 The command to build the documentation is:
