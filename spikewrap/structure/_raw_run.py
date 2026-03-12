@@ -258,7 +258,7 @@ class RawRun:
 
         job = _slurm._run_in_slurm_core(
             slurm_ops,
-            func_to_run=self._save_sync_channel_slurm,
+            func_to_run=self.save_sync_channel,
             func_opts={
                 "overwrite": overwrite,
                 "slurm": False,
