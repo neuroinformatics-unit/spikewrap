@@ -151,16 +151,44 @@ class RawRun:
         # Sync Channel
         # ---------------------------------------------------------------------------
 
-    def plot_sync_channel(self, show: bool) -> list[matplotlib.lines.Line2D]:
+    def plot_sync_channel(
+        self,
+        time_range: tuple[float, float] | None = None,
+        use_seconds: bool = False,
+        show: bool = True,
+    ) -> list[matplotlib.lines.Line2D]:
         """
         TODO
         ----
         -  move this into _visualise
         - make it cleaner / look nicer.
         """
+
         traces = self.get_sync_channel()
 
-        plot = plt.plot(traces)
+        rec = self._raw[canon.grouped_shankname()]
+        fs = float(rec.get_sampling_frequency())
+
+        if time_range is not None:
+            start_frame = int(time_range[0] * fs) if use_seconds else int(time_range[0])
+            end_frame = int(time_range[1] * fs) if use_seconds else int(time_range[1])
+
+            end_frame = min(end_frame, len(traces))
+            plot_data = traces[start_frame:end_frame]
+            time_axis = np.linspace(
+                time_range[0], time_range[0] + len(plot_data) / fs, len(plot_data)
+            )
+        else:
+            plot_data = traces
+            time_axis = np.linspace(0, len(traces) / fs, len(traces))
+
+        fig, ax = plt.subplots(figsize=(12, 4))
+        plot = ax.plot(time_axis, plot_data, color="crimson", linewidth=1.5)
+
+        ax.set_title(f"Sync Channel: {self._run_name}", fontsize=12, fontweight="bold")
+        ax.set_xlabel("Time (s)", fontsize=10)
+        ax.set_ylabel("Voltage / Logic Level", fontsize=10)
+        ax.grid(True, alpha=0.3)
 
         if show:
             plt.show()

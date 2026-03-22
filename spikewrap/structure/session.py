@@ -627,7 +627,12 @@ class Session:
         return self._raw_runs[run_idx].get_sync_channel()
 
     def plot_sync_channel(
-        self, run_idx: int, show: bool = True
+        self,
+        run_idx: int,
+        *,
+        time_range: tuple[float, float] | None = (0, 10),
+        use_seconds: bool = False,
+        show: bool = True,
     ) -> list[matplotlib.lines.Line2D]:
         """
         Plot the sync channel for the run.
@@ -643,7 +648,9 @@ class Session:
         """
         self._assert_sync_channel_checks()
 
-        return self._raw_runs[run_idx].plot_sync_channel(show)
+        return self._raw_runs[run_idx].plot_sync_channel(
+            time_range=time_range, use_seconds=use_seconds, show=show
+        )
 
     def silence_sync_channel(
         self, run_idx: int, periods_to_silence: list[tuple]
